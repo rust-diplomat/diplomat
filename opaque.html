@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8c2a5dc3.js";
+            window.path_to_searchindex_js = "searchindex-736ee12d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-3258c0a7.js"></script>
@@ -198,24 +198,24 @@ mod ffi {
 <p>For example, say we have the following type:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
-</span>struct MyCollection {
+</span>struct Person {
     name: String,
-    items: Vec&lt;String&gt;,
+    age: u8,
 }
 
-impl MyCollection {
-    pub fn new(name: String) -&gt; Self {
+impl Person {
+    pub fn new(name: String, age: u8) -&gt; Self {
         Self {
-            name, items: vec![]
+            name, age
         }
     }
 
-    pub fn push(&amp;mut self, s: String) {
-        self.items.push(s)
+    pub fn get_age(&amp;self) -&gt; u8 {
+        self.age
     }
 
     pub fn dump(&amp;self) {
-        println!("Collection {} with items {:?}", self.name, self.items);
+        println!("Person {} of age {}", self.name, self.age);
     }
 }
 <span class="boring">}</span></code></pre>
@@ -226,18 +226,18 @@ impl MyCollection {
 mod ffi {
     // import this from wherever, does not need
     // to be the same crate
-    use super::MyCollection as RustCollection;
+    use super::Person as RustPerson;
 
     #[diplomat::opaque]
-    pub struct MyCollection(RustCollection);
+    pub struct Person(RustPerson);
 
-    impl MyCollection {
+    impl Person {
         pub fn create(s: &amp;str) -&gt; Box&lt;MyCollection&gt; {
-            Box::new(MyCollection(RustCollection::new(s.into())))
+            Box::new(Person(RustPerson::new(s.into())))
         }
 
-        pub fn push(&amp;mut self, s: &amp;str) {
-            self.0.push(s.into())
+        pub fn get_age(&amp;self) -&gt; u8 {
+            self.age
         }
 
         pub fn dump(&amp;self) {
@@ -246,12 +246,12 @@ mod ffi {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>This will generate code exposing <code>create()</code>, <code>push()</code>, and <code>dump()</code> over FFI, as well as glue to ensure the destructor is called. However this will not expose any way to get at the <code>RustCollection</code>.</p>
+<p>This will generate code exposing <code>create()</code>, <code>get_age()</code>, and <code>dump()</code> over FFI, as well as glue to ensure the destructor is called. However this will not expose any way to get at the <code>RustPerson</code>.</p>
 <p>For example, the generated C++ looks something like</p>
-<pre><code class="language-cpp">class MyCollection {
+<pre><code class="language-cpp">class Person {
  public:
-  static std::unique_ptr&lt;MyCollection&gt; create(const std::string_view s);
-  void push(const std::string_view s);
+  static std::unique_ptr&lt;Person&gt; create(const std::string_view s, int8_t age);
+  int8_t get_age();
   void dump();
   // snip
  private:
@@ -260,6 +260,10 @@ mod ffi {
 <p>When exposing your library over FFI, most of the main types will probably end up being “opaque”.</p>
 <h1 id="boxes-are-return-only"><a class="header" href="#boxes-are-return-only">Boxes are return-only</a></h1>
 <p><code>Box&lt;T&gt;</code> can only be returned, not accepted as a parameter. This is because in garbage collected languages it is not possible to know if we are the unique owner when converting back to Rust. There are some techniques we could use to add such functionality, see <a href="https://github.com/rust-diplomat/diplomat/issues/317">#317</a></p>
+<h1 id="mutation"><a class="header" href="#mutation">Mutation</a></h1>
+<p>There are some <a href="https://github.com/rust-diplomat/diplomat/issues/225">soundness concerns</a> around mutable types over FFI. To help with checking that, Diplomat requires explicit opt in for opaque types to be mutated, use <code>#[diplomat::opaque_mut]</code> if you wish to mutate an opaque type.</p>
+<p>Currently the full set of checks is not implemented yet. The general idea is that any type that can be mutated over FFI should not also hand out references to stuff within itself (copies are fine).</p>
+<p>If you need that property to implement borrowing iterators, consider using a <code>Cell</code> to store iterator state.</p>
 
                     </main>
 
