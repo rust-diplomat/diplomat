@@ -1,7 +1,7 @@
 #[diplomat::bridge]
 pub mod ffi {
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     #[diplomat::attr(auto, error)]
     pub struct ResultOpaque(i32);
 

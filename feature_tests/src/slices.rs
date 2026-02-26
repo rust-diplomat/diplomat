@@ -3,7 +3,7 @@ pub mod ffi {
     use diplomat_runtime::{DiplomatStr, DiplomatStrSlice, DiplomatWrite};
     use std::fmt::Write as _;
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct MyString(String);
 
     impl MyString {
@@ -50,7 +50,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     struct Float64Vec(Vec<f64>);
 
     impl Float64Vec {

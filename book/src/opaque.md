@@ -27,24 +27,24 @@ For this in Diplomat we declare _opaque types_, which can only exist behind poin
 For example, say we have the following type:
 
 ```rust
-struct MyCollection {
+struct Person {
     name: String,
-    items: Vec<String>,
+    age: u8,
 }
 
-impl MyCollection {
-    pub fn new(name: String) -> Self {
+impl Person {
+    pub fn new(name: String, age: u8) -> Self {
         Self {
-            name, items: vec![]
+            name, age
         }
     }
 
-    pub fn push(&mut self, s: String) {
-        self.items.push(s)
+    pub fn get_age(&self) -> u8 {
+        self.age
     }
 
     pub fn dump(&self) {
-        println!("Collection {} with items {:?}", self.name, self.items);
+        println!("Person {} of age {}", self.name, self.age);
     }
 }
 ```
@@ -56,18 +56,18 @@ To expose it over FFI, we'd do something like:
 mod ffi {
     // import this from wherever, does not need
     // to be the same crate
-    use super::MyCollection as RustCollection;
+    use super::Person as RustPerson;
 
     #[diplomat::opaque]
-    pub struct MyCollection(RustCollection);
+    pub struct Person(RustPerson);
 
-    impl MyCollection {
+    impl Person {
         pub fn create(s: &str) -> Box<MyCollection> {
-            Box::new(MyCollection(RustCollection::new(s.into())))
+            Box::new(Person(RustPerson::new(s.into())))
         }
 
-        pub fn push(&mut self, s: &str) {
-            self.0.push(s.into())
+        pub fn get_age(&self) -> u8 {
+            self.age
         }
 
         pub fn dump(&self) {
@@ -77,15 +77,15 @@ mod ffi {
 }
 ```
 
-This will generate code exposing `create()`, `push()`, and `dump()` over FFI, as well as glue to ensure the destructor is called. However this will not expose any way to get at the `RustCollection`.
+This will generate code exposing `create()`, `get_age()`, and `dump()` over FFI, as well as glue to ensure the destructor is called. However this will not expose any way to get at the `RustPerson`.
 
 For example, the generated C++ looks something like
 
 ```cpp
-class MyCollection {
+class Person {
  public:
-  static std::unique_ptr<MyCollection> create(const std::string_view s);
-  void push(const std::string_view s);
+  static std::unique_ptr<Person> create(const std::string_view s, int8_t age);
+  int8_t get_age();
   void dump();
   // snip
  private:
@@ -97,4 +97,11 @@ When exposing your library over FFI, most of the main types will probably end up
 # Boxes are return-only
 
 `Box<T>` can only be returned, not accepted as a parameter. This is because in garbage collected languages it is not possible to know if we are the unique owner when converting back to Rust. There are some techniques we could use to add such functionality, see [#317](https://github.com/rust-diplomat/diplomat/issues/317)
-    
+
+# Mutation
+
+There are some [soundness concerns](https://github.com/rust-diplomat/diplomat/issues/225) around mutable types over FFI. To help with checking that, Diplomat requires explicit opt in for opaque types to be mutated, use `#[diplomat::opaque_mut]` if you wish to mutate an opaque type.
+
+Currently the full set of checks is not implemented yet. The general idea is that any type that can be mutated over FFI should not also hand out references to stuff within itself (copies are fine).
+
+If you need that property to implement borrowing iterators, consider using a `Cell` to store iterator state.

@@ -507,7 +507,7 @@ pub mod ffi {
     }
 
     #[diplomat::cfg(supports=abi_compatibles)]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct PrimitiveStructVec(Vec<PrimitiveStruct>);
 
     impl PrimitiveStructVec {

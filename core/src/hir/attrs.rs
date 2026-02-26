@@ -1599,7 +1599,7 @@ mod tests {
             mod ffi {
                 use std::cmp;
 
-                #[diplomat::opaque]
+                #[diplomat::opaque_mut]
                 #[diplomat::attr(auto, namespace = "should_not_show_up")]
                 struct Opaque;
 
@@ -1632,7 +1632,7 @@ mod tests {
             mod ffi {
                 use std::cmp;
 
-                #[diplomat::opaque]
+                #[diplomat::opaque_mut]
                 struct Opaque;
 
                 struct Struct {
@@ -1709,7 +1709,7 @@ mod tests {
 
                 #[diplomat::opaque]
                 struct Opaque(Vec<u8>);
-                #[diplomat::opaque]
+                #[diplomat::opaque_mut]
                 struct OpaqueIterator<'a>(std::slice::Iter<'a>);
 
 

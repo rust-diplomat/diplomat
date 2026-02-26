@@ -437,7 +437,7 @@ impl AttributeInfo {
             } else if ident == "diplomat" {
                 if attr.path().segments.len() == 2 {
                     let seg = &attr.path().segments.iter().nth(1).unwrap().ident;
-                    if seg == "opaque" {
+                    if seg == "opaque" || seg == "opaque_mut" {
                         opaque = true;
                         return false;
                     } else if seg == "out" {
@@ -461,7 +461,7 @@ impl AttributeInfo {
                     } else if seg == "config" {
                         panic!("#[diplomat::config] is restricted to top level types in lib.rs.");
                     } else {
-                        panic!("Only #[diplomat::opaque] and #[diplomat::rust_link] are supported: {seg:?}")
+                        panic!("Only #[diplomat::opaque], #[diplomat::opaque_mut], and #[diplomat::rust_link] are supported: {seg:?}")
                     }
                 } else {
                     panic!("#[diplomat::foo] attrs have a single-segment path name")
@@ -788,7 +788,7 @@ macro_rules! expose_attrs {
     }
 }
 
-expose_attrs! {opaque, attr, demo}
+expose_attrs! {opaque, opaque_mut, attr, demo}
 
 #[cfg(test)]
 mod tests {

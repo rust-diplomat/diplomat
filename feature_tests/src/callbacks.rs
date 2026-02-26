@@ -156,7 +156,7 @@ mod ffi {
     }
 
     #[diplomat::cfg(supports = "callbacks")]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct MutableCallbackHolder {
         held: Box<dyn FnMut(i32) -> i32>,
     }

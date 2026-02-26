@@ -1,9 +1,9 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
     EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, Lifetime, LifetimeEnv,
-    LifetimeLowerer, LookupId, MaybeOwn, Method, NonOptional, OpaqueDef, OpaquePath, Optional,
-    OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer, ParamSelf,
-    PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef, OpaquePath,
+    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
+    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
     StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
     TypeDef, TypeId,
@@ -916,6 +916,11 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(opaque) => {
+                            if *mutability == Mutability::Mutable
+                                && opaque.mutability != Mutability::Mutable
+                            {
+                                self.errors.push(LoweringError::Other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
+                            }
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(
                                 &path.lifetimes[..],
@@ -1656,6 +1661,11 @@ impl<'ast> LoweringContext<'ast> {
                     .expect("opaque is in env");
 
                 if let Some((lifetime, mutability)) = &self_param.reference {
+                    if *mutability == Mutability::Mutable
+                        && opaque.mutability != Mutability::Mutable
+                    {
+                        self.errors.push(LoweringError::Other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
+                    }
                     let (borrow_lifetime, mut param_ltl) = self_param_ltl.lower_self_ref(lifetime);
                     let borrow = Borrow::new(borrow_lifetime, *mutability);
                     let lifetimes = param_ltl.lower_generics(

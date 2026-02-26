@@ -20,7 +20,7 @@ pub mod ffi {
     #[diplomat::macro_rules]
     macro_rules! create_vec {
         ($vec_name:ident contains "hello"; [$ty:ident]) => {
-            #[diplomat::opaque]
+            #[diplomat::opaque_mut]
             pub struct $vec_name(Vec<$ty>);
 
             impl $vec_name {
@@ -174,7 +174,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     #[diplomat::cfg(supports = iterators)]
     pub struct MyIterator<'a>(std::slice::Iter<'a, u8>);
     impl<'a> MyIterator<'a> {
@@ -207,7 +207,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     #[diplomat::cfg(supports = iterators)]
     struct OpaqueIterator<'a>(Box<dyn Iterator<Item = AttrOpaque1> + 'a>);
     impl<'a> OpaqueIterator<'a> {
@@ -233,7 +233,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     #[diplomat::cfg(supports = iterators)]
     struct OpaqueRefIterator<'a>(std::slice::Iter<'a, AttrOpaque1>);
     impl<'a> OpaqueRefIterator<'a> {
@@ -243,7 +243,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     #[diplomat::cfg(supports = arithmetic)]
     pub(crate) struct OpaqueArithmetic {
         x: i32,
@@ -514,7 +514,7 @@ pub mod ffi {
     pub struct FeatureTest();
 
     #[diplomat::attr(not(nanobind), disable)]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     /// Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
     /// C++ generates unique_ptrs for Opaque ZSTs, and Nanobind
     /// expects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.
