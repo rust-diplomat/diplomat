@@ -1,6 +1,7 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{
-    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
+    BorrowedLifetimeInfo, BorrowingParamVisitor, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
+    StructBorrowInfo,
 };
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
@@ -301,8 +302,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
     match edge.kind {
         // Opaque parameters are just retained as edges
         LifetimeEdgeKind::OpaqueParam => Some(param_name.into()),
-        // Slice parameters make an arena which is retained as an edge
-        LifetimeEdgeKind::SliceParam => Some(format!("{param_name}TODO").into()),
+        // Slice parameters make an arena which is handled in slice_conversions
+        LifetimeEdgeKind::SliceParam => None,
         // This is handled via append arrays
         LifetimeEdgeKind::StructLifetime(..) => None,
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
@@ -443,7 +444,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     format!("{name}SliceMemory.slice").into()
                 } else {
                     // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
-                    let slice_method = self.slice_method_for(s);
+                    let (slice_method, is_moving) = self.slice_method_for(s);
                     format!("PrimitiveArrayTools.{slice_method}({name}).slice").into()
                 }
             }
@@ -1021,62 +1022,75 @@ returnVal.option() ?: return null
         }
     }
 
-    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> &'static str {
+    /// Returned bool is whether or not this is moving
+    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> (&'static str, bool) {
         match slice_type {
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => "borrowUtf16",
-            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => "moveUtf16",
-            Slice::Str(Some(_), _) => "borrowUtf8",
-            Slice::Str(None, _) => "moveUtf8",
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => "borrow",
-            Slice::Primitive(_, _) => "move",
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "borrowUtf16s",
-            Slice::Strs(_) => "borrowUtf8s",
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16", false),
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16", true),
+            Slice::Str(Some(_), _) => ("borrowUtf8", false),
+            Slice::Str(None, _) => ("moveUtf8", true),
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow", false),
+            Slice::Primitive(_, _) => ("move", true),
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s", false),
+            Slice::Strs(_) => ("borrowUtf8s", false),
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
-                ""
+                ("", false)
             }
         }
     }
 
     fn gen_slice_conversion<P: TyPosition>(
         &self,
+        lifetimes: &LifetimeEnv,
         kt_param_name: Cow<'cx, str>,
         slice_type: Slice<P>,
+        param_borrow_kind: &ParamBorrowInfo,
+        cleanups: &mut Vec<Cow<str>>,
     ) -> Cow<'cx, str> {
+        let (slice_method, is_moving) = self.slice_method_for(&slice_type);
+        let borrowed_lt = match param_borrow_kind {
+            ParamBorrowInfo::Struct(_) => None,
+            ParamBorrowInfo::TemporarySlice => {
+                if !is_moving {
+                    // The GC should handle this, but explicit closing helps
+                    // This also ensures that fooSliceMemory is not prematurely cleaned up
+                    // (though the JVM never cleans up things before their stack frame is over)
+                    cleanups.push(format!("{kt_param_name}SliceMemory.close()").into());
+                }
+                None
+            }
+            ParamBorrowInfo::BorrowedSlice => {
+                let MaybeStatic::NonStatic(lt) = slice_type.lifetime().unwrap() else {
+                    unreachable!("BorrowedSlice won't occur with static lifetimes");
+                };
+                // We only need the current lifetime, not all longer lifetimes.
+                // Longer-lifetime relationships are handled in the return type.
+                Some(*lt)
+            }
+            ParamBorrowInfo::BorrowedOpaque => None,
+            ParamBorrowInfo::NotBorrowed => None,
+            _ => todo!(),
+        };
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
             slice_method: Cow<'d, str>,
             kt_param_name: Cow<'d, str>,
+            borrowed_lt: Option<Lifetime>,
+            lifetimes: &'d LifetimeEnv,
         }
-        let slice_method = self.slice_method_for(&slice_type).into();
 
         SliceConv {
             kt_param_name,
-            slice_method,
+            slice_method: slice_method.into(),
+            borrowed_lt,
+            lifetimes,
         }
         .render()
         .expect("Failed to render slice method")
         .into()
-    }
-
-    fn gen_cleanup<P: TyPosition>(
-        &self,
-        param_name: Cow<'cx, str>,
-        slice: Slice<P>,
-    ) -> Option<Cow<'cx, str>> {
-        // TODO(#1003) Is this actually needed?
-        match slice {
-            Slice::Str(Some(_), _) => Some(format!("{param_name}SliceMemory?.close()").into()),
-            Slice::Str(_, _) => None,
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => {
-                Some(format!("{param_name}SliceMemory?.close()").into())
-            }
-            Slice::Primitive(_, _) => None,
-            Slice::Strs(_) => Some(format!("{param_name}SliceMemory?.close()").into()),
-            _ => todo!(),
-        }
     }
 
     fn gen_method(
@@ -1152,23 +1166,13 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions
-                        .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
-
-                    match param_borrow_kind {
-                        ParamBorrowInfo::Struct(_) => (),
-                        ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) =
-                                self.gen_cleanup(param_name.clone(), slice.clone())
-                            {
-                                cleanups.push(cleanup)
-                            }
-                        }
-                        ParamBorrowInfo::BorrowedSlice => self.errors.push_error("Kotlin backend does not support borrowing slices across functions (#1003)".into()),
-                        ParamBorrowInfo::BorrowedOpaque => (),
-                        ParamBorrowInfo::NotBorrowed => (),
-                        _ => todo!(),
-                    };
+                    slice_conversions.push(self.gen_slice_conversion(
+                        &method.lifetime_env,
+                        param_name.clone(),
+                        slice.clone(),
+                        &param_borrow_kind,
+                        &mut cleanups,
+                    ));
                 }
                 Type::Callback(Callback {
                     param_self: _,

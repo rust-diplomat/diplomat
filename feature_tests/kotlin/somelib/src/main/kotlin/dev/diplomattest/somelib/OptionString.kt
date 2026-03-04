@@ -38,7 +38,7 @@ class OptionString internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = OptionString(handle, selfEdges)
             CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
-            diplomatStrSliceMemory?.close()
+            diplomatStrSliceMemory.close()
             return returnOpaque
         }
     }

@@ -186,15 +186,15 @@ class ResultOpaque internal constructor (
     *Test that this interacts gracefully with returning a reference type
     */
     fun takesStr(v: String): ResultOpaque {
-        val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
         // This lifetime edge depends on lifetimes: 'a
         val aEdges: MutableList<Any> = mutableListOf(this);
+        val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSliceMemory.slice);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
         val returnOpaque = ResultOpaque(handle, selfEdges)
-        vSliceMemory?.close()
+        vSliceMemory.close()
         return returnOpaque
     }
     

@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface BorrowedFieldsWithBoundsLib: Library {
+    fun BorrowedFieldsWithBounds_from_foo_and_strings(foo: Pointer, dstr16X: Slice, utf8StrZ: Slice): BorrowedFieldsWithBoundsNative
 }
 
 internal class BorrowedFieldsWithBoundsNative: Structure(), Structure.ByValue {
@@ -79,6 +80,22 @@ class BorrowedFieldsWithBounds (var fieldA: String, var fieldB: String, var fiel
             return BorrowedFieldsWithBounds(fieldA, fieldB, fieldC)
         }
 
+        @JvmStatic
+        
+        fun fromFooAndStrings(foo: Foo, dstr16X: String, utf8StrZ: String): BorrowedFieldsWithBounds {
+            // This lifetime edge depends on lifetimes: 'x, 'y, 'z
+            val xEdges: MutableList<Any> = mutableListOf(foo);
+            // This lifetime edge depends on lifetimes: 'y, 'z
+            val yEdges: MutableList<Any> = mutableListOf(foo);
+            // This lifetime edge depends on lifetimes: 'z
+            val zEdges: MutableList<Any> = mutableListOf();
+            val dstr16XSliceMemory = PrimitiveArrayTools.borrowUtf16(dstr16X).into(listOf(xEdges))
+            val utf8StrZSliceMemory = PrimitiveArrayTools.borrowUtf8(utf8StrZ).into(listOf(zEdges))
+            
+            val returnVal = lib.BorrowedFieldsWithBounds_from_foo_and_strings(foo.handle, dstr16XSliceMemory.slice, utf8StrZSliceMemory.slice);
+            val returnStruct = BorrowedFieldsWithBounds.fromNative(returnVal, xEdges, yEdges, zEdges)
+            return returnStruct
+        }
     }
     internal fun toNative(aAppendArray: Array<MutableList<Any>>, bAppendArray: Array<MutableList<Any>>, cAppendArray: Array<MutableList<Any>>): BorrowedFieldsWithBoundsNative {
         var native = BorrowedFieldsWithBoundsNative()
