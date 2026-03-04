@@ -7,6 +7,7 @@ import com.sun.jna.Structure
 
 internal interface MyIndexerLib: Library {
     fun namespace_MyIndexer_destroy(handle: Pointer)
+    fun namespace_MyIndexer_new(v: Slice): Pointer
     fun namespace_MyIndexer_get(handle: Pointer, i: FFISizet): OptionSlice
 }
 
@@ -26,6 +27,19 @@ class MyIndexer internal constructor (
     companion object {
         internal val libClass: Class<MyIndexerLib> = MyIndexerLib::class.java
         internal val lib: MyIndexerLib = Native.load("diplomat_feature_tests", libClass)
+        @JvmStatic
+        
+        fun new_(v: Array<String>): MyIndexer {
+            val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
+            
+            val returnVal = lib.namespace_MyIndexer_new(vSliceMemory.slice);
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = MyIndexer(handle, selfEdges)
+            CLEANER.register(returnOpaque, MyIndexer.MyIndexerCleaner(handle, MyIndexer.lib));
+            vSliceMemory?.close()
+            return returnOpaque
+        }
     }
     
     internal fun getInternal(i: ULong): String? {

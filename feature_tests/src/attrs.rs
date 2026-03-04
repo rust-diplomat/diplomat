@@ -191,9 +191,26 @@ pub mod ffi {
     }
 
     impl MyIndexer {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(v: DiplomatSlice<DiplomatStrSlice>) -> Box<Self> {
+            let boxed: &[DiplomatStrSlice] = v.into();
+            let new_vec = boxed
+                .iter()
+                .map(|sl| String::from_utf8(sl.to_vec()).unwrap())
+                .collect::<Vec<_>>();
+            Box::new(Self(new_vec))
+        }
+
         #[diplomat::attr(auto, indexer)]
         pub fn get<'a>(&'a self, i: usize) -> Option<&'a DiplomatStr> {
             self.0.get(i).as_ref().map(|string| string.as_bytes())
+        }
+
+        #[diplomat::cfg(all(supports=method_overloading, not(kotlin)))]
+        #[diplomat::attr(auto, indexer)]
+        pub fn get_str<'a>(&'a self, s: &DiplomatStr) -> Option<&'a DiplomatStr> {
+            let st = String::from_utf8(s.to_vec()).unwrap();
+            self.0.iter().find(|i| **i == st).map(|s| s.as_bytes())
         }
     }
 

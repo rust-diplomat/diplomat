@@ -23,6 +23,12 @@ final class RenamedMyIndexer implements ffi.Finalizable {
   @_DiplomatFfiUse('namespace_MyIndexer_destroy')
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIndexer_destroy));
 
+  factory RenamedMyIndexer(core.List<core.String> v) {
+    final temp = _FinalizedArena();
+    final result = _namespace_MyIndexer_new(v._utf8SliceAllocIn(temp.arena));
+    return RenamedMyIndexer._fromFfi(result, []);
+  }
+
   String? operator [](int i) {
     // This lifetime edge depends on lifetimes: 'a
     final aEdges = [this];
@@ -39,6 +45,11 @@ final class RenamedMyIndexer implements ffi.Finalizable {
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIndexer_destroy')
 // ignore: non_constant_identifier_names
 external void _namespace_MyIndexer_destroy(ffi.Pointer<ffi.Void> self);
+
+@_DiplomatFfiUse('namespace_MyIndexer_new')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'namespace_MyIndexer_new')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _namespace_MyIndexer_new(_SliceSliceUtf8 v);
 
 @_DiplomatFfiUse('namespace_MyIndexer_get')
 @ffi.Native<_ResultSliceUtf8Void Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_MyIndexer_get')
