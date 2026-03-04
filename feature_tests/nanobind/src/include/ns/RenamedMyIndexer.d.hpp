@@ -10,6 +10,13 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
+namespace somelib {
+namespace ns {
+namespace capi { struct RenamedMyIndexer; }
+class RenamedMyIndexer;
+} // namespace ns
+} // namespace somelib
+
 
 
 namespace somelib::ns {
@@ -22,7 +29,11 @@ namespace somelib::ns {
 class RenamedMyIndexer {
 public:
 
+  inline static std::unique_ptr<somelib::ns::RenamedMyIndexer> new_(somelib::diplomat::span<const diplomat::string_view_for_slice> v);
+
   inline std::optional<std::string_view> operator[](size_t i) const;
+
+  inline std::optional<std::string_view> operator[](std::string_view s) const;
 
     inline const somelib::ns::capi::RenamedMyIndexer* AsFFI() const;
     inline somelib::ns::capi::RenamedMyIndexer* AsFFI();
