@@ -16,6 +16,10 @@ def test_structs():
     assert s.g == -1, "enum fn"
     assert s.into_a() == 17, "struct fn"
 
+    
+    s2 = somelib.MyStruct(10)
+    assert s2.e == 10
+
     assert somelib.StructArithmetic.ORIGIN.x == 0
 
     sl = somelib.PrimitiveStructVec()

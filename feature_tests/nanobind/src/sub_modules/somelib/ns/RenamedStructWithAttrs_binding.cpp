@@ -15,14 +15,14 @@ void add_RenamedStructWithAttrs_binding(nb::module_ mod) {
     st
         .def_rw("a", &somelib::ns::RenamedStructWithAttrs::a)
         .def_rw("b", &somelib::ns::RenamedStructWithAttrs::b)
-        .def_prop_ro("c", &somelib::ns::RenamedStructWithAttrs::c)
-        .def("deprecated", &somelib::ns::RenamedStructWithAttrs::deprecated)
         .def("__init__",[](somelib::ns::RenamedStructWithAttrs* self, bool a, uint32_t b){ auto tmp = somelib::ns::RenamedStructWithAttrs::new_fallible(a, b);
-                    if(tmp.is_ok()) {
-                        *self = std::move(tmp).ok().value();
-                    } else {
-                        nb::cast(tmp); // This will raise a python error with the contents of the error type
-                    }}, "a"_a, "b"_a);
+                if(tmp.is_ok()) {
+                    *self = std::move(tmp).ok().value();
+                } else {
+                    nb::cast(tmp); // This will raise a python error with the contents of the error type
+                }}, "a"_a, "b"_a)
+        .def_prop_ro("c", &somelib::ns::RenamedStructWithAttrs::c)
+        .def("deprecated", &somelib::ns::RenamedStructWithAttrs::deprecated);
 }
 
 } 

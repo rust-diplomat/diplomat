@@ -12,8 +12,8 @@ void add_RenamedOpaqueIterable_binding(nb::module_ mod) {
     
     nb::class_<somelib::ns::RenamedOpaqueIterable> opaque(mod, "RenamedOpaqueIterable", nb::type_slots(somelib_ns_RenamedOpaqueIterable_slots));
     opaque
-        .def("__iter__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueIterable::iter)), nb::keep_alive<0, 1>())
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueIterable::new_))), "size"_a);
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueIterable::new_))), "size"_a)
+        .def("__iter__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueIterable::iter)), nb::keep_alive<0, 1>());
 }
 
 } 

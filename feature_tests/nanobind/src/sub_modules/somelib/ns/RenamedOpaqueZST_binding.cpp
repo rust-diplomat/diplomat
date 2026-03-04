@@ -12,8 +12,8 @@ void add_RenamedOpaqueZST_binding(nb::module_ mod) {
     
     nb::class_<somelib::ns::RenamedOpaqueZST> opaque(mod, "RenamedOpaqueZST", nb::type_slots(somelib_ns_RenamedOpaqueZST_slots));
     opaque
-        .def("__add__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator+)), nb::is_operator())
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::ctor))))
+        .def("__add__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator+)), nb::is_operator())
         .def("__truediv__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator/)), nb::is_operator())
         .def_static("fail_zst", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::fail_zst)), "return_success"_a)
         .def_prop_rw("getter", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::getter)), &somelib::ns::RenamedOpaqueZST::setter)

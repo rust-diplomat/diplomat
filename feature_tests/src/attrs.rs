@@ -64,6 +64,12 @@ pub mod ffi {
     pub struct AttrOpaque1;
 
     impl AttrOpaque1 {
+        #[diplomat::cfg(supports=method_overloading)]
+        #[diplomat::attr(auto, constructor)]
+        pub fn new_overload(_i: i32) -> Box<AttrOpaque1> {
+            Box::new(AttrOpaque1)
+        }
+
         #[diplomat::attr(not(kotlin), rename = "totally_not_{0}")]
         #[diplomat::attr(auto, constructor)]
         /// More example docs

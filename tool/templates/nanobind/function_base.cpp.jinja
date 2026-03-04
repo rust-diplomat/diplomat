@@ -1,10 +1,17 @@
-{% macro method_name_cpp_inner() -%}{%- block cpp_method_name -%}{%- endblock -%}{%- endmacro -%}
-{%- macro overload_method_name_cpp(overload_params) -%}
+{% macro method_name_cpp_inner(method_name=Option::<String>::None) -%}
+{%- block pre_cpp_method_name  -%}{%- endblock -%}
+{%- if let Some(m) = method_name -%}
+{{- m -}}
+{%- else -%}
+{%- block cpp_method_name -%}{%- endblock -%}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro overload_method_name_cpp(overload_params, method_name=Option::<String>::None) -%}
 {%- if overload_params.len() > 0 -%}
 nb::overload_cast<{% for p in overload_params -%} {{- p.type_name -}} {%- if !loop.last -%}, {% endif %} {%- endfor
     -%}>(
 {%- endif -%}
-&{{- method_name_cpp_inner() -}}
+&{{- method_name_cpp_inner(method_name) -}}
 {%- if m.overloads.len() > 0 -%} ) {%- endif -%}
 {%- endmacro -%}
 {%- macro method_name_cpp(pre_call="std::move(maybe_op_unwrap(", post_call="))") -%}
@@ -48,10 +55,12 @@ nb::overload_cast<{% for p in overload_params -%} {{- p.type_name -}} {%- if !lo
     {%- endif -%}
 
     {%- if m.overloads.len() > 0 %}
+    {#- Constructors have special overload behavior. -#}
+    {%- if let Some(hir::SpecialMethod::Constructor) = m.method.attrs.special_method -%}{%- else -%}
     {%- for o in m.overloads %}
-    .{{m.def}}("{{m.method_name}}", {% call method_name_cpp()-%} {{-overload_method_name_cpp(o.params.clone())-}}
+    .{{m.def}}("{{m.method_name}}", {% call method_name_cpp()-%} {{-overload_method_name_cpp(o.parameters.params.clone(), o.method_name)-}}
     {%- endcall -%}
-        {{- method_params::params(o.params, m.lifetime_args) -}})
+        {{- method_params::params(o.parameters.params, m.lifetime_args) -}})
         {%- endfor -%}
-
+    {%- endif -%}
         {%- endif -%}

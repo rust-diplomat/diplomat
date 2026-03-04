@@ -12,8 +12,8 @@ void add_Utf16Wrap_binding(nb::module_ mod) {
     
     nb::class_<somelib::Utf16Wrap> opaque(mod, "Utf16Wrap", nb::type_slots(somelib_Utf16Wrap_slots));
     opaque
-        .def("borrow_cont", &somelib::Utf16Wrap::borrow_cont)
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::Utf16Wrap::from_utf16))), "input"_a)
+        .def("borrow_cont", &somelib::Utf16Wrap::borrow_cont)
         .def("get_debug_str", &somelib::Utf16Wrap::get_debug_str);
 }
 

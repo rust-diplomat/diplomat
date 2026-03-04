@@ -27,6 +27,8 @@ namespace capi {
         void (*destructor)(const void*);
     } DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t;
 
+    somelib::ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new_overload(int32_t _i);
+
     somelib::ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
 
     void namespace_AttrOpaque1_test_namespaced_callback(DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t _t_cb_wrap);
@@ -48,6 +50,11 @@ namespace capi {
     } // extern "C"
 } // namespace capi
 } // namespace
+
+inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1Renamed::new_overload(int32_t _i) {
+    auto result = somelib::ns::capi::namespace_AttrOpaque1_new_overload(_i);
+    return std::unique_ptr<somelib::ns::AttrOpaque1Renamed>(somelib::ns::AttrOpaque1Renamed::FromFFI(result));
+}
 
 inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1Renamed::totally_not_new() {
     auto result = somelib::ns::capi::namespace_AttrOpaque1_new();

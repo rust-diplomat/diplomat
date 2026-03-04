@@ -15,9 +15,10 @@ void add_MyStruct_binding(nb::module_ mod) {
         .def_rw("e", &somelib::MyStruct::e)
         .def_rw("f", &somelib::MyStruct::f)
         .def_rw("g", &somelib::MyStruct::g)
+        .def("__init__",[](somelib::MyStruct* self){ *self = somelib::MyStruct::new_(); })
+        .def("__init__",[](somelib::MyStruct* self, int32_t i){ *self = somelib::MyStruct::new_overload(i); }, "i"_a)
         .def_static("fails_zst_result", &somelib::MyStruct::fails_zst_result)
         .def("into_a", &somelib::MyStruct::into_a)
-        .def("__init__",[](somelib::MyStruct* self){ *self = somelib::MyStruct::new_(); })
         .def_static("returns_zst_result", &somelib::MyStruct::returns_zst_result)
         .def("takes_const", &somelib::MyStruct::takes_const, "o"_a)
         .def("takes_mut", &somelib::MyStruct::takes_mut, "o"_a);

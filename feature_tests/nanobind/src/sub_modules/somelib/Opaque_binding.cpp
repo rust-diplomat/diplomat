@@ -13,11 +13,11 @@ void add_Opaque_binding(nb::module_ mod) {
     
     nb::class_<somelib::Opaque> opaque(mod, "Opaque", nb::type_slots(somelib_Opaque_slots));
     opaque
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::Opaque::new_))))
         .def("assert_struct", &somelib::Opaque::assert_struct, "s"_a)
         .def_static("cmp", &somelib::Opaque::cmp)
         .def_static("from_str", std::move(maybe_op_unwrap(&somelib::Opaque::from_str)), "input"_a)
         .def("get_debug_str", &somelib::Opaque::get_debug_str)
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::Opaque::new_))))
         .def_static("returns_imported", &somelib::Opaque::returns_imported)
         .def_static("returns_usize", &somelib::Opaque::returns_usize)
         .def_static("try_from_utf8", std::move(maybe_op_unwrap(&somelib::Opaque::try_from_utf8)), "input"_a);

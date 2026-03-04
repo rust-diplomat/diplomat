@@ -17,6 +17,15 @@ pub(super) struct ParamInfo<'a> {
     pub(super) params: Vec<NamedType<'a, hir::InputOnly>>,
 }
 
+/// Information about how a specific overload in Nanobind is parsed.
+pub(super) struct OverloadInfo<'a> {
+    pub(super) parameters: ParamInfo<'a>,
+    /// The name of the method we're calling to overload.
+    /// By default, inherits the name of the method that is being overloaded.
+    /// Currently used for constructor overloading (since not all constructors necessarily need to have the same function name)
+    pub(super) method_name: Option<String>,
+}
+
 /// Everything needed for rendering a method.
 pub(super) struct MethodInfo<'a> {
     /// HIR of the method being rendered
@@ -37,7 +46,7 @@ pub(super) struct MethodInfo<'a> {
     // The lifetime annotation required for the method, if any. May be keep_alive<...> or reference_internal
     // Everything else is handled by the automatic behavior depending on return type.
     pub(super) lifetime_args: Option<Cow<'a, str>>,
-    pub(super) overloads: Vec<ParamInfo<'a>>,
+    pub(super) overloads: Vec<OverloadInfo<'a>>,
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
@@ -288,9 +297,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
 
         for method in methods {
             if let Some(info) = self.gen_method_info(id.into(), method) {
+                let key = info
+                    .prop_name
+                    .clone()
+                    .unwrap_or(match method.attrs.special_method {
+                        Some(hir::SpecialMethod::Constructor) => "__new__".into(),
+                        _ => info.method_name.clone(),
+                    });
                 method_infos
                     // Use the property name as the key if present so we can collapse getters & setters
-                    .entry(info.prop_name.clone().unwrap_or(info.method_name.clone()).to_string())
+                    .entry(key.to_string())
                     .and_modify(|e| {
                         // If the entry already exists...
                         match method.attrs.special_method {
@@ -319,8 +335,27 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
                                 e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
-                            None => {
-                                e.overloads.push(info.param_decls.clone());
+                            None | Some(hir::SpecialMethod::Constructor) => {
+                                if matches!(e.method.attrs.special_method, Some(hir::SpecialMethod::Constructor)) ^ matches!(method.attrs.special_method, Some(hir::SpecialMethod::Constructor)) {
+                                    self.errors.push_error(format!("Methods {} and {} need to both be constructors to be overloaded properly.", e.method_name, info.method_name));
+                                }
+
+                                if matches!(e.method.attrs.special_method, Some(hir::SpecialMethod::Constructor)) {
+                                    // Nanobind requires lower param definitions to be first when overriding new_:
+                                    if info.param_decls.params.len() < e.param_decls.params.len() {
+                                        let cpy = OverloadInfo {
+                                            parameters: e.param_decls.clone(),
+                                            method_name: Some(e.cpp_method_name.to_string()),
+                                        };
+                                        e.cpp_method_name = info.cpp_method_name.clone();
+                                        e.param_decls = info.param_decls.clone();
+                                        e.overloads.push(cpy);
+                                    } else {
+                                        e.overloads.push(OverloadInfo { parameters: info.param_decls.clone(), method_name: Some(info.cpp_method_name.to_string()) });
+                                    }
+                                } else {
+                                    e.overloads.push(OverloadInfo { parameters: info.param_decls.clone(), method_name: None});
+                                }
                             }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
                         };

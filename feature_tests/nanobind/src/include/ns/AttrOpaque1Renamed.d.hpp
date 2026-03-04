@@ -39,6 +39,8 @@ namespace somelib::ns {
 class AttrOpaque1Renamed {
 public:
 
+  inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> new_overload(int32_t _i);
+
   /**
    * More example docs
    */
