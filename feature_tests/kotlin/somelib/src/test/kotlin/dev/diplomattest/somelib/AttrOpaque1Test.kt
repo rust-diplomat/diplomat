@@ -8,8 +8,8 @@ class AttrOpaque1Test() {
 
     @Test
     fun testMethod() {
-        var mockAttrOpaque1Interface: AttrOpaque1Interface = mockk()
-        var attrOpaque1 = AttrOpaque1.new_()
+        var mockAttrOpaque1Interface: AttrOpaque1RenamedInterface = mockk()
+        var attrOpaque1 = AttrOpaque1Renamed.new_()
 
         var expectedUByte = 77.toUByte()
         every {mockAttrOpaque1Interface.method() } returns expectedUByte
@@ -22,8 +22,8 @@ class AttrOpaque1Test() {
 
     @Test
     fun testAbirenamed() {
-        var mockAttrOpaque1Interface: AttrOpaque1Interface = mockk()
-        var attrOpaque1 = AttrOpaque1.new_()
+        var mockAttrOpaque1Interface: AttrOpaque1RenamedInterface = mockk()
+        var attrOpaque1 = AttrOpaque1Renamed.new_()
 
         var expectedUByte = 123.toUByte()
         every {mockAttrOpaque1Interface.abirenamed() } returns expectedUByte
