@@ -1955,38 +1955,41 @@ returnVal.option() ?: return null
         }
 
         impl<'d> EnumVariants<'d> {
-            fn new(ty: &'d hir::EnumDef) -> Self {
+            fn new(fmt: &'d KotlinFormatter, ty: &'d hir::EnumDef) -> Self {
                 let n_variants = ty.variants.len();
                 ty.variants.iter().enumerate().fold(
                     EnumVariants::Contiguous(Vec::with_capacity(n_variants)),
-                    |variants, (i, v)| match variants {
-                        EnumVariants::Contiguous(mut vec) if i as isize == v.discriminant => {
-                            vec.push(v.name.as_str().into());
-                            EnumVariants::Contiguous(vec)
-                        }
+                    |variants, (i, v)| {
+                        let name = fmt.fmt_variant_name(&v);
+                        match variants {
+                            EnumVariants::Contiguous(mut vec) if i as isize == v.discriminant => {
+                                vec.push(name);
+                                EnumVariants::Contiguous(vec)
+                            }
 
-                        EnumVariants::Contiguous(vec) => {
-                            let new_vec = vec
-                                .into_iter()
-                                .enumerate()
-                                .map(|(index, name)| NonContiguousEnumVariant {
-                                    name,
-                                    index: index as i32,
-                                })
-                                .chain(once(NonContiguousEnumVariant {
-                                    name: v.name.as_str().into(),
+                            EnumVariants::Contiguous(vec) => {
+                                let new_vec = vec
+                                    .into_iter()
+                                    .enumerate()
+                                    .map(|(index, name)| NonContiguousEnumVariant {
+                                        name,
+                                        index: index as i32,
+                                    })
+                                    .chain(once(NonContiguousEnumVariant {
+                                        name: name,
+                                        index: v.discriminant as i32,
+                                    }))
+                                    .collect();
+
+                                EnumVariants::NonContiguous(new_vec)
+                            }
+                            EnumVariants::NonContiguous(mut vec) => {
+                                vec.push(NonContiguousEnumVariant {
                                     index: v.discriminant as i32,
-                                }))
-                                .collect();
-
-                            EnumVariants::NonContiguous(new_vec)
-                        }
-                        EnumVariants::NonContiguous(mut vec) => {
-                            vec.push(NonContiguousEnumVariant {
-                                index: v.discriminant as i32,
-                                name: v.name.as_str().into(),
-                            });
-                            EnumVariants::NonContiguous(vec)
+                                    name: name,
+                                });
+                                EnumVariants::NonContiguous(vec)
+                            }
                         }
                     },
                 )
@@ -2009,7 +2012,7 @@ returnVal.option() ?: return null
             docs: String,
         }
 
-        let variants = EnumVariants::new(ty);
+        let variants = EnumVariants::new(self.formatter, ty);
 
         let enum_def = EnumDef {
             lib_name: self.lib_name,

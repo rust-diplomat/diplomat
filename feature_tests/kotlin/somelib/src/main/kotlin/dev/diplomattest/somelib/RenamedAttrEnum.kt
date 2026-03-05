@@ -11,7 +11,7 @@ internal interface RenamedAttrEnumLib: Library {
 enum class RenamedAttrEnum {
     A,
     B,
-    C;
+    Renamed;
 
     fun toNative(): Int {
         return this.ordinal
