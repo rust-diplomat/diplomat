@@ -25,6 +25,10 @@ pub struct SharedConfig {
     pub custom_extra_code_location: PathBuf,
     /// List of features to enable/disable generation for.
     pub features_enabled: HashSet<String>,
+    /// Where the manifest for this library is located.
+    /// Used to detect relative include locations for `#[diplomat::include()]`.
+    /// By default, is set to the parent of the parent of the given entry file.
+    pub manifest_dir: Option<String>,
 }
 
 impl SharedConfig {

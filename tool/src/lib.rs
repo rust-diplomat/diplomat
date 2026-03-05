@@ -85,7 +85,22 @@ pub fn gen(
         attr_validator.other_backend_names = vec!["js".to_string()];
     }
 
-    let module = syn_inline_mod::parse_and_inline_modules(entry);
+    let manifest_path = config
+        .shared_config
+        .manifest_dir
+        .as_ref()
+        .map(Path::new)
+        .unwrap_or(
+            entry
+                .parent()
+                .expect("Could not get parent for entry file.")
+                .parent()
+                .expect("Could not get parent folder of entry file."),
+        );
+
+    let syn_module = syn_inline_mod::parse_and_inline_modules(entry);
+    let module = diplomat_core::ast::parse_file_with_includes(syn_module, manifest_path)
+        .expect("Could not append includes.");
 
     // Config:
     // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
