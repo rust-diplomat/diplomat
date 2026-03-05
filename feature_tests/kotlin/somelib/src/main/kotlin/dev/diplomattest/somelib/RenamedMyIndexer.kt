@@ -5,38 +5,38 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface MyIndexerLib: Library {
+internal interface RenamedMyIndexerLib: Library {
     fun namespace_MyIndexer_destroy(handle: Pointer)
     fun namespace_MyIndexer_new(v: Slice): Pointer
     fun namespace_MyIndexer_get(handle: Pointer, i: FFISizet): OptionSlice
 }
 
-class MyIndexer internal constructor (
+class RenamedMyIndexer internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
 )  {
 
-    internal class MyIndexerCleaner(val handle: Pointer, val lib: MyIndexerLib) : Runnable {
+    internal class RenamedMyIndexerCleaner(val handle: Pointer, val lib: RenamedMyIndexerLib) : Runnable {
         override fun run() {
             lib.namespace_MyIndexer_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<MyIndexerLib> = MyIndexerLib::class.java
-        internal val lib: MyIndexerLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedMyIndexerLib> = RenamedMyIndexerLib::class.java
+        internal val lib: RenamedMyIndexerLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
-        fun new_(v: Array<String>): MyIndexer {
+        fun new_(v: Array<String>): RenamedMyIndexer {
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.namespace_MyIndexer_new(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyIndexer(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyIndexer.MyIndexerCleaner(handle, MyIndexer.lib));
+            val returnOpaque = RenamedMyIndexer(handle, selfEdges)
+            CLEANER.register(returnOpaque, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
             vSliceMemory.close()
             return returnOpaque
         }

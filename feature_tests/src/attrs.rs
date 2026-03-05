@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
-#[diplomat::attr(not(any(c, kotlin)), rename = "Renamed{0}")]
+#[diplomat::attr(not(c), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 pub mod ffi {
     #[diplomat::macro_rules]
@@ -53,7 +53,7 @@ pub mod ffi {
     #[diplomat::opaque]
     // Attr for generating mocking interface in kotlin backend to enable JVM test fakes.
     #[diplomat::attr(kotlin, generate_mocking_interface)]
-    #[diplomat::attr(not(kotlin), rename = "AttrOpaque1Renamed")]
+    #[diplomat::attr(*, rename = "AttrOpaque1Renamed")]
     /// Some example docs
     #[diplomat::docs(any(nanobind, cpp))]
     /// Some Nanobind/C++ example docs
@@ -120,7 +120,7 @@ pub mod ffi {
 
     #[diplomat::opaque]
     #[diplomat::attr(auto, namespace = "")]
-    #[diplomat::attr(not(kotlin), rename = "Unnamespaced")]
+    #[diplomat::attr(*, rename = "Unnamespaced")]
     pub struct Unnamespaced;
 
     impl Unnamespaced {

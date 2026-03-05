@@ -771,14 +771,14 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
         return listOf("union", "isOk")
     }
 }
-internal class ResultStructWithAttrsNativeUnitUnion: Union() {
+internal class ResultRenamedStructWithAttrsNativeUnitUnion: Union() {
     @JvmField
-    internal var ok: StructWithAttrsNative = StructWithAttrsNative()
+    internal var ok: RenamedStructWithAttrsNative = RenamedStructWithAttrsNative()
 }
 
-class ResultStructWithAttrsNativeUnit: Structure(), Structure.ByValue  {
+class ResultRenamedStructWithAttrsNativeUnit: Structure(), Structure.ByValue  {
     @JvmField
-    internal var union: ResultStructWithAttrsNativeUnitUnion = ResultStructWithAttrsNativeUnitUnion()
+    internal var union: ResultRenamedStructWithAttrsNativeUnitUnion = ResultRenamedStructWithAttrsNativeUnitUnion()
 
     @JvmField
     internal var isOk: Byte = 0

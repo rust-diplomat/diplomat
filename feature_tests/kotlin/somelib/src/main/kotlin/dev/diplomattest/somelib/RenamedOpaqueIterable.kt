@@ -5,50 +5,50 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface OpaqueIterableLib: Library {
+internal interface RenamedOpaqueIterableLib: Library {
     fun namespace_OpaqueIterable_destroy(handle: Pointer)
     fun namespace_OpaqueIterable_new(size: FFISizet): Pointer
     fun namespace_OpaqueIterable_iter(handle: Pointer): Pointer
 }
 
-class OpaqueIterable internal constructor (
+class RenamedOpaqueIterable internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-): Iterable<OpaqueIteratorIteratorItem> {
+): Iterable<RenamedOpaqueIteratorIteratorItem> {
 
-    internal class OpaqueIterableCleaner(val handle: Pointer, val lib: OpaqueIterableLib) : Runnable {
+    internal class RenamedOpaqueIterableCleaner(val handle: Pointer, val lib: RenamedOpaqueIterableLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterable_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<OpaqueIterableLib> = OpaqueIterableLib::class.java
-        internal val lib: OpaqueIterableLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedOpaqueIterableLib> = RenamedOpaqueIterableLib::class.java
+        internal val lib: RenamedOpaqueIterableLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
-        fun new_(size: ULong): OpaqueIterable {
+        fun new_(size: ULong): RenamedOpaqueIterable {
             
             val returnVal = lib.namespace_OpaqueIterable_new(FFISizet(size));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = OpaqueIterable(handle, selfEdges)
-            CLEANER.register(returnOpaque, OpaqueIterable.OpaqueIterableCleaner(handle, OpaqueIterable.lib));
+            val returnOpaque = RenamedOpaqueIterable(handle, selfEdges)
+            CLEANER.register(returnOpaque, RenamedOpaqueIterable.RenamedOpaqueIterableCleaner(handle, RenamedOpaqueIterable.lib));
             return returnOpaque
         }
     }
     
-    override fun iterator(): OpaqueIterator {
+    override fun iterator(): RenamedOpaqueIterator {
         // This lifetime edge depends on lifetimes: 'a
         val aEdges: MutableList<Any> = mutableListOf(this);
         
         val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = OpaqueIterator(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, OpaqueIterator.OpaqueIteratorCleaner(handle, OpaqueIterator.lib));
+        val returnOpaque = RenamedOpaqueIterator(handle, selfEdges, aEdges)
+        CLEANER.register(returnOpaque, RenamedOpaqueIterator.RenamedOpaqueIteratorCleaner(handle, RenamedOpaqueIterator.lib));
         return returnOpaque
     }
 

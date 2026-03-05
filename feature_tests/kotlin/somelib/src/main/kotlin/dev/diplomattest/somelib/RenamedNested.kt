@@ -5,26 +5,26 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface NestedLib: Library {
+internal interface RenamedNestedLib: Library {
     fun namespace_Nested_destroy(handle: Pointer)
 }
 
-class Nested internal constructor (
+class RenamedNested internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
 )  {
 
-    internal class NestedCleaner(val handle: Pointer, val lib: NestedLib) : Runnable {
+    internal class RenamedNestedCleaner(val handle: Pointer, val lib: RenamedNestedLib) : Runnable {
         override fun run() {
             lib.namespace_Nested_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<NestedLib> = NestedLib::class.java
-        internal val lib: NestedLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedNestedLib> = RenamedNestedLib::class.java
+        internal val lib: RenamedNestedLib = Native.load("diplomat_feature_tests", libClass)
     }
 
 }
