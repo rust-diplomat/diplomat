@@ -54,7 +54,7 @@ class Opaque internal constructor (
             val handle = returnVal ?: return null
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            inputSliceMemory?.close()
+            inputSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -67,7 +67,7 @@ class Opaque internal constructor (
             val handle = returnVal 
             val returnOpaque = Opaque(handle, selfEdges)
             CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            inputSliceMemory?.close()
+            inputSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic

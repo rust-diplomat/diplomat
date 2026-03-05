@@ -48,7 +48,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -61,7 +61,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -74,7 +74,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -87,7 +87,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -100,7 +100,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -113,7 +113,7 @@ class Float64Vec internal constructor (
             val handle = returnVal 
             val returnOpaque = Float64Vec(handle, selfEdges)
             CLEANER.register(returnOpaque, Float64Vec.Float64VecCleaner(handle, Float64Vec.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic

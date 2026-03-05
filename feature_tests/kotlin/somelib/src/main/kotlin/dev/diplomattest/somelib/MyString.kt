@@ -44,7 +44,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -57,7 +57,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
@@ -82,7 +82,7 @@ class MyString internal constructor (
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
             CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic

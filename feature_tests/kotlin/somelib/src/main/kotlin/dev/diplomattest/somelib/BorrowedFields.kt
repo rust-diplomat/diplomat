@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface BorrowedFieldsLib: Library {
+    fun BorrowedFields_from_bar_and_strings(bar: Pointer, dstr16: Slice, utf8Str: Slice): BorrowedFieldsNative
 }
 
 internal class BorrowedFieldsNative: Structure(), Structure.ByValue {
@@ -79,12 +80,24 @@ class BorrowedFields (var a: String, var b: String, var c: String) {
             return BorrowedFields(a, b, c)
         }
 
+        @JvmStatic
+        
+        fun fromBarAndStrings(bar: Bar, dstr16: String, utf8Str: String): BorrowedFields {
+            // This lifetime edge depends on lifetimes: 'x
+            val xEdges: MutableList<Any> = mutableListOf(bar);
+            val dstr16SliceMemory = PrimitiveArrayTools.borrowUtf16(dstr16).into(listOf(xEdges))
+            val utf8StrSliceMemory = PrimitiveArrayTools.borrowUtf8(utf8Str).into(listOf(xEdges))
+            
+            val returnVal = lib.BorrowedFields_from_bar_and_strings(bar.handle, dstr16SliceMemory.slice, utf8StrSliceMemory.slice);
+            val returnStruct = BorrowedFields.fromNative(returnVal, xEdges)
+            return returnStruct
+        }
     }
     internal fun toNative(aAppendArray: Array<MutableList<Any>>): BorrowedFieldsNative {
         var native = BorrowedFieldsNative()
-        native.a = PrimitiveArrayTools.borrowUtf16(this.a).slice
-        native.b = PrimitiveArrayTools.borrowUtf8(this.b).slice
-        native.c = PrimitiveArrayTools.borrowUtf8(this.c).slice
+        native.a = PrimitiveArrayTools.borrowUtf16(this.a).into(listOf(*aAppendArray)).slice
+        native.b = PrimitiveArrayTools.borrowUtf8(this.b).into(listOf(*aAppendArray)).slice
+        native.c = PrimitiveArrayTools.borrowUtf8(this.c).into(listOf(*aAppendArray)).slice
         return native
     }
 

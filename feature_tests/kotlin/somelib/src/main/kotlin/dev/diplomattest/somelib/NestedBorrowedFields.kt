@@ -7,6 +7,7 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface NestedBorrowedFieldsLib: Library {
+    fun NestedBorrowedFields_from_bar_and_foo_and_strings(bar: Pointer, foo: Pointer, dstr16X: Slice, dstr16Z: Slice, utf8StrY: Slice, utf8StrZ: Slice): NestedBorrowedFieldsNative
 }
 
 internal class NestedBorrowedFieldsNative: Structure(), Structure.ByValue {
@@ -79,6 +80,24 @@ class NestedBorrowedFields (var fields: BorrowedFields, var bounds: BorrowedFiel
             return NestedBorrowedFields(fields, bounds, bounds2)
         }
 
+        @JvmStatic
+        
+        fun fromBarAndFooAndStrings(bar: Bar, foo: Foo, dstr16X: String, dstr16Z: String, utf8StrY: String, utf8StrZ: String): NestedBorrowedFields {
+            // This lifetime edge depends on lifetimes: 'x, 'y
+            val xEdges: MutableList<Any> = mutableListOf(bar);
+            // This lifetime edge depends on lifetimes: 'y
+            val yEdges: MutableList<Any> = mutableListOf(bar);
+            // This lifetime edge depends on lifetimes: 'z
+            val zEdges: MutableList<Any> = mutableListOf(foo);
+            val dstr16XSliceMemory = PrimitiveArrayTools.borrowUtf16(dstr16X).into(listOf(xEdges))
+            val dstr16ZSliceMemory = PrimitiveArrayTools.borrowUtf16(dstr16Z).into(listOf(zEdges))
+            val utf8StrYSliceMemory = PrimitiveArrayTools.borrowUtf8(utf8StrY).into(listOf(yEdges))
+            val utf8StrZSliceMemory = PrimitiveArrayTools.borrowUtf8(utf8StrZ).into(listOf(zEdges))
+            
+            val returnVal = lib.NestedBorrowedFields_from_bar_and_foo_and_strings(bar.handle, foo.handle, dstr16XSliceMemory.slice, dstr16ZSliceMemory.slice, utf8StrYSliceMemory.slice, utf8StrZSliceMemory.slice);
+            val returnStruct = NestedBorrowedFields.fromNative(returnVal, xEdges, yEdges, zEdges)
+            return returnStruct
+        }
     }
     internal fun toNative(xAppendArray: Array<MutableList<Any>>, yAppendArray: Array<MutableList<Any>>, zAppendArray: Array<MutableList<Any>>): NestedBorrowedFieldsNative {
         var native = NestedBorrowedFieldsNative()

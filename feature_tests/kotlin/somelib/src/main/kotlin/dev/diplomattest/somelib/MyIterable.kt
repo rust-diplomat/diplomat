@@ -37,7 +37,7 @@ class MyIterable internal constructor (
             val handle = returnVal 
             val returnOpaque = MyIterable(handle, selfEdges)
             CLEANER.register(returnOpaque, MyIterable.MyIterableCleaner(handle, MyIterable.lib));
-            xSliceMemory?.close()
+            xSliceMemory.close()
             return returnOpaque
         }
     }

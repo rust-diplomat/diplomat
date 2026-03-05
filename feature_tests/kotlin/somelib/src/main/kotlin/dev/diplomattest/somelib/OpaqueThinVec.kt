@@ -42,9 +42,9 @@ class OpaqueThinVec internal constructor (
             val handle = returnVal 
             val returnOpaque = OpaqueThinVec(handle, selfEdges)
             CLEANER.register(returnOpaque, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
-            aSliceMemory?.close()
-            bSliceMemory?.close()
-            cSliceMemory?.close()
+            aSliceMemory.close()
+            bSliceMemory.close()
+            cSliceMemory.close()
             return returnOpaque
         }
     }

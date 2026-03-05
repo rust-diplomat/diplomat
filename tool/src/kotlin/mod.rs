@@ -301,8 +301,8 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
     match edge.kind {
         // Opaque parameters are just retained as edges
         LifetimeEdgeKind::OpaqueParam => Some(param_name.into()),
-        // Slice parameters make an arena which is retained as an edge
-        LifetimeEdgeKind::SliceParam => Some(format!("{param_name}TODO").into()),
+        // Slice parameters make an arena which is handled in slice_conversions
+        LifetimeEdgeKind::SliceParam => None,
         // This is handled via append arrays
         LifetimeEdgeKind::StructLifetime(..) => None,
         _ => unreachable!("Unknown lifetime edge kind {:?}", edge.kind),
@@ -313,6 +313,12 @@ fn display_lifetime_edge<'a>(edge: &'a LifetimeEdge) -> Option<Cow<'a, str>> {
 struct StructBorrowContext<'tcx> {
     use_env: &'tcx LifetimeEnv,
     param_info: StructBorrowInfo<'tcx>,
+}
+
+enum KtToCContext<'a> {
+    Param { needs_temporary: &'a mut bool },
+
+    Struct { lifetime_env: &'a LifetimeEnv },
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
@@ -343,7 +349,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         s: &StructPath,
         name: Cow<str>,
         struct_borrow_info: Option<StructBorrowContext<'cx>>,
-        mut needs_temporary: Option<&mut bool>,
+        mut context: KtToCContext,
     ) -> String {
         use std::fmt::Write;
         let struct_def = s.resolve(self.tcx);
@@ -365,7 +371,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 {
                     // Optimization: don't generate arrayOf(*fooAppendArray) when you can just
                     // directly use fooAppendArray
-                    if needs_temporary.is_none() && use_lts.len() == 1 {
+                    if matches!(context, KtToCContext::Struct { .. }) && use_lts.len() == 1 {
                         let lt = struct_borrow_info
                             .unwrap()
                             .use_env
@@ -378,7 +384,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                             // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
                             let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
                             // Params use edges, structs use append arrays
-                            if needs_temporary.is_some() {
+                            if let KtToCContext::Param { .. } = context {
                                 write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
                             } else {
                                 write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
@@ -388,7 +394,10 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                         write!(&mut params, ")").unwrap();
                     }
                 } else {
-                    if let Some(ref mut needs_temporary) = needs_temporary {
+                    if let KtToCContext::Param {
+                        ref mut needs_temporary,
+                    } = context
+                    {
                         **needs_temporary = true;
                     } else {
                         panic!("Struct borrow info MUST reference all lifetimes");
@@ -412,9 +421,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         ty: &Type<P>,
         name: Cow<str>,
         struct_borrow_info: Option<StructBorrowContext<'cx>>,
-        needs_temporary: Option<&mut bool>,
+        context: KtToCContext,
     ) -> Cow<'cx, str> {
-        let is_param = needs_temporary.is_some();
+        let is_param = matches!(context, KtToCContext::Param { .. });
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
@@ -428,7 +437,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 }
             }
             Type::Struct(ref s) => self
-                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, needs_temporary)
+                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, context)
                 .into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
@@ -439,12 +448,20 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(ref s) => {
-                if is_param {
-                    format!("{name}SliceMemory.slice").into()
+                if let KtToCContext::Struct { lifetime_env } = context {
+                    // Unlike params, structs need to do their own longer-lifetimes computation
+                    let borrowed_lts = if let Some(MaybeStatic::NonStatic(l)) = s.lifetime() {
+                        Some(lifetime_env.all_longer_lifetimes(l).collect::<Vec<_>>())
+                    } else {
+                        None
+                    };
+
+                    let conv =
+                        self.gen_slice_conversion(false, &name, lifetime_env, s, borrowed_lts);
+                    format!("{conv}.slice").into()
                 } else {
-                    // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
-                    let slice_method = self.slice_method_for(s);
-                    format!("PrimitiveArrayTools.{slice_method}({name}).slice").into()
+                    // Params premake a memory type.
+                    format!("{name}SliceMemory.slice").into()
                 }
             }
             Type::Callback(_) => {
@@ -453,12 +470,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::DiplomatOption(ref inner) => {
                 // We pass false for is_params here the type is a struct field
-                let inner_expr = self.gen_kt_to_c_for_type(
-                    inner,
-                    "it".into(),
-                    struct_borrow_info,
-                    needs_temporary,
-                );
+                let inner_expr =
+                    self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, context);
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -1041,42 +1054,36 @@ returnVal.option() ?: return null
 
     fn gen_slice_conversion<P: TyPosition>(
         &self,
-        kt_param_name: Cow<'cx, str>,
-        slice_type: Slice<P>,
+        is_param: bool,
+        kt_param_name: &str,
+        lifetimes: &LifetimeEnv,
+        slice_type: &Slice<P>,
+        borrowed_lts: Option<Vec<Lifetime>>,
     ) -> Cow<'cx, str> {
+        let slice_method = self.slice_method_for(slice_type);
+
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
+            is_param: bool,
+            kt_param_name: &'d str,
             slice_method: Cow<'d, str>,
-            kt_param_name: Cow<'d, str>,
+            borrowed_lts: Option<Vec<Lifetime>>,
+            slice_lt_is_static: bool,
+            lifetimes: &'d LifetimeEnv,
         }
-        let slice_method = self.slice_method_for(&slice_type).into();
 
         SliceConv {
+            is_param,
             kt_param_name,
-            slice_method,
+            slice_method: slice_method.into(),
+            borrowed_lts,
+            slice_lt_is_static: matches!(slice_type.lifetime(), Some(&MaybeStatic::Static)),
+            lifetimes,
         }
         .render()
         .expect("Failed to render slice method")
         .into()
-    }
-
-    fn gen_cleanup<P: TyPosition>(
-        &self,
-        param_name: Cow<'cx, str>,
-        slice: Slice<P>,
-    ) -> Option<Cow<'cx, str>> {
-        // TODO(#1003) Is this actually needed?
-        match slice {
-            Slice::Str(Some(_), _) => Some(format!("{param_name}SliceMemory?.close()").into()),
-            Slice::Str(_, _) => None,
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => {
-                Some(format!("{param_name}SliceMemory?.close()").into())
-            }
-            Slice::Primitive(_, _) => None,
-            Slice::Strs(_) => Some(format!("{param_name}SliceMemory?.close()").into()),
-            _ => todo!(),
-        }
     }
 
     fn gen_method(
@@ -1130,7 +1137,9 @@ returnVal.option() ?: return null
                         s,
                         "this".into(),
                         struct_borrow_info,
-                        Some(&mut needs_temporary),
+                        KtToCContext::Param {
+                            needs_temporary: &mut needs_temporary,
+                        },
                     )
                     .into(),
                 );
@@ -1152,23 +1161,39 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions
-                        .push(self.gen_slice_conversion(param_name.clone(), slice.clone()));
-
-                    match param_borrow_kind {
-                        ParamBorrowInfo::Struct(_) => (),
+                    let borrowed_lt = match param_borrow_kind {
+                        ParamBorrowInfo::Struct(_) => None,
                         ParamBorrowInfo::TemporarySlice => {
-                            if let Some(cleanup) =
-                                self.gen_cleanup(param_name.clone(), slice.clone())
-                            {
-                                cleanups.push(cleanup)
+                            if let Some(MaybeStatic::NonStatic(_)) = slice.lifetime() {
+                                // The GC should handle this, but explicit closing helps
+                                // This also ensures that fooSliceMemory is not prematurely cleaned up
+                                // (though the JVM never cleans up things before their stack frame is over)
+                                cleanups.push(format!("{param_name}SliceMemory.close()").into());
                             }
+                            None
                         }
-                        ParamBorrowInfo::BorrowedSlice => self.errors.push_error("Kotlin backend does not support borrowing slices across functions (#1003)".into()),
-                        ParamBorrowInfo::BorrowedOpaque => (),
-                        ParamBorrowInfo::NotBorrowed => (),
+                        ParamBorrowInfo::BorrowedSlice => {
+                            let MaybeStatic::NonStatic(lt) = slice.lifetime().unwrap() else {
+                                unreachable!("BorrowedSlice won't occur with static lifetimes");
+                            };
+                            // We only need the current lifetime, not all longer lifetimes.
+                            // Longer-lifetime relationships are handled in the return type.
+                            Some(vec![*lt])
+                        }
+                        ParamBorrowInfo::BorrowedOpaque => None,
+                        ParamBorrowInfo::NotBorrowed => None,
                         _ => todo!(),
                     };
+                    slice_conversions.push((
+                        param_name.clone(),
+                        self.gen_slice_conversion(
+                            true,
+                            &param_name,
+                            &method.lifetime_env,
+                            slice,
+                            borrowed_lt,
+                        ),
+                    ));
                 }
                 Type::Callback(Callback {
                     param_self: _,
@@ -1294,7 +1319,9 @@ returnVal.option() ?: return null
                 &param.ty,
                 param_name_to_pass,
                 struct_borrow_info,
-                Some(&mut needs_temporary),
+                KtToCContext::Param {
+                    needs_temporary: &mut needs_temporary,
+                },
             ));
         }
         let write_return = matches!(
@@ -1688,7 +1715,9 @@ returnVal.option() ?: return null
                         &nonout.fields[i].ty,
                         format!("this.{field_name}").into(),
                         struct_borrow_info,
-                        None,
+                        KtToCContext::Struct {
+                            lifetime_env: &ty.lifetimes,
+                        },
                     )
                 });
 
@@ -2228,7 +2257,8 @@ struct MethodTpl<'a> {
     param_conversions: Vec<Cow<'a, str>>,
     return_expression: Cow<'a, str>,
     write_return: bool,
-    slice_conversions: Vec<Cow<'a, str>>,
+    /// A list of slice parameter names and their fooSliceMemory initializers
+    slice_conversions: Vec<(Cow<'a, str>, Cow<'a, str>)>,
     docs: String,
     add_override_specifier_for_opaque_self_methods: bool,
 

@@ -80,6 +80,16 @@ internal class GCSlice(val memory: Memory?, val slice: Slice) {
         }
         return this
     }
+
+    // Stop managing this memory
+    fun leakStatic(): GCSlice {
+        GCSlice.persistedStaticSlices.add(this)
+        return this
+    }
+
+    companion object {
+        val persistedStaticSlices: MutableList<GCSlice> = mutableListOf()
+    }
 }
 
 internal class GCSlices(val memory: Memory?, val subMemory: List<Memory?>, val slice: Slice) {
@@ -96,6 +106,16 @@ internal class GCSlices(val memory: Memory?, val subMemory: List<Memory?>, val s
             edge.add(this)
         }
         return this
+    }
+
+    // Stop managing this memory
+    fun leakStatic(): GCSlices {
+        GCSlices.persistedStaticSlices.add(this)
+        return this
+    }
+
+    companion object {
+        val persistedStaticSlices: MutableList<GCSlices> = mutableListOf()
     }
 }
 
