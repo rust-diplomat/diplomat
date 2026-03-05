@@ -450,6 +450,7 @@ impl AttributeInfo {
                         || seg == "abi_rename"
                         || seg == "demo"
                         || seg == "docs"
+                        || seg == "include"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
@@ -479,7 +480,15 @@ impl AttributeInfo {
 }
 
 fn gen_bridge(mut input: ItemMod) -> ItemMod {
-    let module = ast::Module::from_syn(&input, true);
+    // The module cloned for includes only.
+    // This avoids defining multiple items twice (like macros).
+    let mut included_mod = input.clone();
+
+    let base = std::env::var("CARGO_MANIFEST_DIR")
+        .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
+    ast::parse_module_with_includes(&mut included_mod, std::path::Path::new(&base), true)
+        .expect("Could not read module.");
+    let module = ast::Module::from_syn(&included_mod, true);
     // Clean out any diplomat attributes so Rust doesn't get mad
     let _attrs = AttributeInfo::extract(&mut input.attrs);
     let (brace, mut new_contents) = input.content.unwrap();
@@ -771,7 +780,7 @@ macro_rules! expose_attrs {
     }
 }
 
-expose_attrs! {opaque, opaque_mut, attr, demo, docs, config, skip_private_items}
+expose_attrs! {opaque, opaque_mut, attr, demo, docs, config, include, skip_private_items}
 
 #[cfg(test)]
 mod tests {
