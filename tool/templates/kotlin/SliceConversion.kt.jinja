@@ -1,5 +1,4 @@
-
-val {{kt_param_name}}SliceMemory = PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})
-{%- if let Some(borrowed_lt) = borrowed_lt -%}
-    .into(listOf({{ lifetimes.fmt_lifetime(*borrowed_lt) }}Edges))
-{%- endif %}
+PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})
+{%- if let Some(borrowed_lts) = borrowed_lts -%}
+    .into(listOf({% for lt in borrowed_lts %}{{ lifetimes.fmt_lifetime(*lt) }}Edges{% if !loop.last %}, {% endif %}{% endfor %}))
+{%- endif -%}

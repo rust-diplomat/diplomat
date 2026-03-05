@@ -1,7 +1,6 @@
 use askama::Template;
 use diplomat_core::hir::borrowing_param::{
-    BorrowedLifetimeInfo, BorrowingParamVisitor, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo,
-    StructBorrowInfo,
+    BorrowedLifetimeInfo, LifetimeEdge, LifetimeEdgeKind, ParamBorrowInfo, StructBorrowInfo,
 };
 use diplomat_core::hir::{
     self, BackendAttrSupport, Borrow, Callback, DocsUrlGenerator, InputOnly, Lifetime, LifetimeEnv,
@@ -444,7 +443,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     format!("{name}SliceMemory.slice").into()
                 } else {
                     // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
-                    let (slice_method, is_moving) = self.slice_method_for(s);
+                    let slice_method = self.slice_method_for(s);
                     format!("PrimitiveArrayTools.{slice_method}({name}).slice").into()
                 }
             }
@@ -1022,70 +1021,46 @@ returnVal.option() ?: return null
         }
     }
 
-    /// Returned bool is whether or not this is moving
-    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> (&'static str, bool) {
+    fn slice_method_for<P: TyPosition>(&self, slice_type: &Slice<P>) -> &'static str {
         match slice_type {
-            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => ("borrowUtf16", false),
-            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => ("moveUtf16", true),
-            Slice::Str(Some(_), _) => ("borrowUtf8", false),
-            Slice::Str(None, _) => ("moveUtf8", true),
-            Slice::Primitive(MaybeOwn::Borrow(_), _) => ("borrow", false),
-            Slice::Primitive(_, _) => ("move", true),
-            Slice::Strs(StringEncoding::UnvalidatedUtf16) => ("borrowUtf16s", false),
-            Slice::Strs(_) => ("borrowUtf8s", false),
+            Slice::Str(Some(_), StringEncoding::UnvalidatedUtf16) => "borrowUtf16",
+            Slice::Str(None, StringEncoding::UnvalidatedUtf16) => "moveUtf16",
+            Slice::Str(Some(_), _) => "borrowUtf8",
+            Slice::Str(None, _) => "moveUtf8",
+            Slice::Primitive(MaybeOwn::Borrow(_), _) => "borrow",
+            Slice::Primitive(_, _) => "move",
+            Slice::Strs(StringEncoding::UnvalidatedUtf16) => "borrowUtf16s",
+            Slice::Strs(_) => "borrowUtf8s",
             _ => {
                 self.errors
                     .push_error("Found unsupported slice type".into());
-                ("", false)
+                ""
             }
         }
     }
 
     fn gen_slice_conversion<P: TyPosition>(
         &self,
+        kt_param_name: &str,
         lifetimes: &LifetimeEnv,
-        kt_param_name: Cow<'cx, str>,
         slice_type: Slice<P>,
-        param_borrow_kind: &ParamBorrowInfo,
-        cleanups: &mut Vec<Cow<str>>,
+        borrowed_lts: Option<Vec<Lifetime>>,
     ) -> Cow<'cx, str> {
-        let (slice_method, is_moving) = self.slice_method_for(&slice_type);
-        let borrowed_lt = match param_borrow_kind {
-            ParamBorrowInfo::Struct(_) => None,
-            ParamBorrowInfo::TemporarySlice => {
-                if !is_moving {
-                    // The GC should handle this, but explicit closing helps
-                    // This also ensures that fooSliceMemory is not prematurely cleaned up
-                    // (though the JVM never cleans up things before their stack frame is over)
-                    cleanups.push(format!("{kt_param_name}SliceMemory.close()").into());
-                }
-                None
-            }
-            ParamBorrowInfo::BorrowedSlice => {
-                let MaybeStatic::NonStatic(lt) = slice_type.lifetime().unwrap() else {
-                    unreachable!("BorrowedSlice won't occur with static lifetimes");
-                };
-                // We only need the current lifetime, not all longer lifetimes.
-                // Longer-lifetime relationships are handled in the return type.
-                Some(*lt)
-            }
-            ParamBorrowInfo::BorrowedOpaque => None,
-            ParamBorrowInfo::NotBorrowed => None,
-            _ => todo!(),
-        };
+        let slice_method = self.slice_method_for(&slice_type);
+
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
+            kt_param_name: &'d str,
             slice_method: Cow<'d, str>,
-            kt_param_name: Cow<'d, str>,
-            borrowed_lt: Option<Lifetime>,
+            borrowed_lts: Option<Vec<Lifetime>>,
             lifetimes: &'d LifetimeEnv,
         }
 
         SliceConv {
             kt_param_name,
             slice_method: slice_method.into(),
-            borrowed_lt,
+            borrowed_lts,
             lifetimes,
         }
         .render()
@@ -1166,12 +1141,37 @@ returnVal.option() ?: return null
 
             match &param.ty {
                 Type::Slice(slice) => {
-                    slice_conversions.push(self.gen_slice_conversion(
-                        &method.lifetime_env,
+                    let borrowed_lt = match param_borrow_kind {
+                        ParamBorrowInfo::Struct(_) => None,
+                        ParamBorrowInfo::TemporarySlice => {
+                            if let Some(MaybeStatic::NonStatic(_)) = slice.lifetime() {
+                                // The GC should handle this, but explicit closing helps
+                                // This also ensures that fooSliceMemory is not prematurely cleaned up
+                                // (though the JVM never cleans up things before their stack frame is over)
+                                cleanups.push(format!("{param_name}SliceMemory.close()").into());
+                            }
+                            None
+                        }
+                        ParamBorrowInfo::BorrowedSlice => {
+                            let MaybeStatic::NonStatic(lt) = slice.lifetime().unwrap() else {
+                                unreachable!("BorrowedSlice won't occur with static lifetimes");
+                            };
+                            // We only need the current lifetime, not all longer lifetimes.
+                            // Longer-lifetime relationships are handled in the return type.
+                            Some(vec![*lt])
+                        }
+                        ParamBorrowInfo::BorrowedOpaque => None,
+                        ParamBorrowInfo::NotBorrowed => None,
+                        _ => todo!(),
+                    };
+                    slice_conversions.push((
                         param_name.clone(),
-                        slice.clone(),
-                        &param_borrow_kind,
-                        &mut cleanups,
+                        self.gen_slice_conversion(
+                            &param_name,
+                            &method.lifetime_env,
+                            slice.clone(),
+                            borrowed_lt,
+                        ),
                     ));
                 }
                 Type::Callback(Callback {
@@ -2232,7 +2232,8 @@ struct MethodTpl<'a> {
     param_conversions: Vec<Cow<'a, str>>,
     return_expression: Cow<'a, str>,
     write_return: bool,
-    slice_conversions: Vec<Cow<'a, str>>,
+    /// A list of slice parameter names and their fooSliceMemory initializers
+    slice_conversions: Vec<(Cow<'a, str>, Cow<'a, str>)>,
     docs: String,
     add_override_specifier_for_opaque_self_methods: bool,
 

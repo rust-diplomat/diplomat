@@ -58,7 +58,6 @@ class Foo internal constructor (
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
             CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
-            xSliceMemory.close()
             return returnOpaque
         }
         @JvmStatic
