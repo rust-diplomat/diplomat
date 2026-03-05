@@ -95,9 +95,9 @@ class BorrowedFields (var a: String, var b: String, var c: String) {
     }
     internal fun toNative(aAppendArray: Array<MutableList<Any>>): BorrowedFieldsNative {
         var native = BorrowedFieldsNative()
-        native.a = PrimitiveArrayTools.borrowUtf16(this.a).slice
-        native.b = PrimitiveArrayTools.borrowUtf8(this.b).slice
-        native.c = PrimitiveArrayTools.borrowUtf8(this.c).slice
+        native.a = PrimitiveArrayTools.borrowUtf16(this.a).into(listOf(*aAppendArray)).slice
+        native.b = PrimitiveArrayTools.borrowUtf8(this.b).into(listOf(*aAppendArray)).slice
+        native.c = PrimitiveArrayTools.borrowUtf8(this.c).into(listOf(*aAppendArray)).slice
         return native
     }
 

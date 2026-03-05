@@ -448,12 +448,19 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(ref s) => {
-                if is_param {
-                    format!("{name}SliceMemory.slice").into()
+                if let KtToCContext::Struct { ref lifetime_env } = context {
+                    // Unlike params, structs need to do their own longer-lifetimes computation
+                    let borrowed_lts = if let Some(MaybeStatic::NonStatic(l)) = s.lifetime() {
+                        Some(lifetime_env.all_longer_lifetimes(l).collect::<Vec<_>>())
+                    } else {
+                        None
+                    };
+
+                    let conv = self.gen_slice_conversion(false, &name, lifetime_env, s, borrowed_lts);
+                    format!("{conv}.slice").into()
                 } else {
-                    // TODO(#1003) this is incorrect, since it won't handle the borrow (the Memory object is discarded)
-                    let slice_method = self.slice_method_for(s);
-                    format!("PrimitiveArrayTools.{slice_method}({name}).slice").into()
+                    // Params premake a memory type.
+                    format!("{name}SliceMemory.slice").into()
                 }
             }
             Type::Callback(_) => {
@@ -1046,16 +1053,20 @@ returnVal.option() ?: return null
 
     fn gen_slice_conversion<P: TyPosition>(
         &self,
+        is_param: bool,
         kt_param_name: &str,
         lifetimes: &LifetimeEnv,
-        slice_type: Slice<P>,
+        slice_type: &Slice<P>,
         borrowed_lts: Option<Vec<Lifetime>>,
     ) -> Cow<'cx, str> {
-        let slice_method = self.slice_method_for(&slice_type);
+        let slice_method = self.slice_method_for(slice_type);
+
+        // TODO(#1003): handle "forgetting" static-borrowed slices
 
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
+            is_param: bool,
             kt_param_name: &'d str,
             slice_method: Cow<'d, str>,
             borrowed_lts: Option<Vec<Lifetime>>,
@@ -1063,6 +1074,7 @@ returnVal.option() ?: return null
         }
 
         SliceConv {
+            is_param,
             kt_param_name,
             slice_method: slice_method.into(),
             borrowed_lts,
@@ -1174,9 +1186,10 @@ returnVal.option() ?: return null
                     slice_conversions.push((
                         param_name.clone(),
                         self.gen_slice_conversion(
+                            true,
                             &param_name,
                             &method.lifetime_env,
-                            slice.clone(),
+                            slice,
                             borrowed_lt,
                         ),
                     ));

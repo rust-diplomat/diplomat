@@ -1,4 +1,6 @@
 PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})
 {%- if let Some(borrowed_lts) = borrowed_lts -%}
-    .into(listOf({% for lt in borrowed_lts %}{{ lifetimes.fmt_lifetime(*lt) }}Edges{% if !loop.last %}, {% endif %}{% endfor %}))
+    .into(listOf({% for lt in borrowed_lts -%}
+        {% if is_param %}{{ lifetimes.fmt_lifetime(*lt) }}Edges{% else %}*{{ lifetimes.fmt_lifetime(*lt) }}AppendArray{% endif %}
+    {%- if !loop.last %}, {% endif %}{% endfor %}))
 {%- endif -%}
