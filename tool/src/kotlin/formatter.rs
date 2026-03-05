@@ -545,7 +545,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn fmt_variant_name(&self, variant: &'tcx EnumVariant) -> Cow<'tcx, str> {
         let name = variant.name.as_str();
 
-        if KEYWORDS.contains(&&*name) {
+        if KEYWORDS.contains(&name) {
             panic!("{name:?} is not a valid Kotlin trait name. Please rename.");
         }
 

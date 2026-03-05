@@ -804,7 +804,7 @@ return string{return_type_modifier}"#
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
                 self.gen_struct_return_conversion(
-                    &strct,
+                    strct,
                     lifetimes,
                     &method.lifetime_env,
                     cleanups,
@@ -855,7 +855,7 @@ val intermediateOption = {val_name}.option() ?: return null
 {}
                         "#,
                     self.gen_struct_return_conversion(
-                        &strct,
+                        strct,
                         lifetimes,
                         &method.lifetime_env,
                         cleanups,
@@ -1960,7 +1960,7 @@ returnVal.option() ?: return null
                 ty.variants.iter().enumerate().fold(
                     EnumVariants::Contiguous(Vec::with_capacity(n_variants)),
                     |variants, (i, v)| {
-                        let name = fmt.fmt_variant_name(&v);
+                        let name = fmt.fmt_variant_name(v);
                         match variants {
                             EnumVariants::Contiguous(mut vec) if i as isize == v.discriminant => {
                                 vec.push(name);
@@ -1976,7 +1976,7 @@ returnVal.option() ?: return null
                                         index: index as i32,
                                     })
                                     .chain(once(NonContiguousEnumVariant {
-                                        name: name,
+                                        name,
                                         index: v.discriminant as i32,
                                     }))
                                     .collect();
@@ -1986,7 +1986,7 @@ returnVal.option() ?: return null
                             EnumVariants::NonContiguous(mut vec) => {
                                 vec.push(NonContiguousEnumVariant {
                                     index: v.discriminant as i32,
-                                    name: name,
+                                    name,
                                 });
                                 EnumVariants::NonContiguous(vec)
                             }
