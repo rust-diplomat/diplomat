@@ -1,4 +1,5 @@
 PrimitiveArrayTools.{{slice_method}}({{kt_param_name}})
+{%- if slice_lt_is_static %}.leakStatic(){% endif -%}
 {%- if let Some(borrowed_lts) = borrowed_lts -%}
     .into(listOf({% for lt in borrowed_lts -%}
         {% if is_param %}{{ lifetimes.fmt_lifetime(*lt) }}Edges{% else %}*{{ lifetimes.fmt_lifetime(*lt) }}AppendArray{% endif %}

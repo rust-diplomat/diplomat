@@ -448,7 +448,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::Enum(_) => format!("{name}.toNative()").into(),
             Type::Slice(ref s) => {
-                if let KtToCContext::Struct { ref lifetime_env } = context {
+                if let KtToCContext::Struct { lifetime_env } = context {
                     // Unlike params, structs need to do their own longer-lifetimes computation
                     let borrowed_lts = if let Some(MaybeStatic::NonStatic(l)) = s.lifetime() {
                         Some(lifetime_env.all_longer_lifetimes(l).collect::<Vec<_>>())
@@ -456,7 +456,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                         None
                     };
 
-                    let conv = self.gen_slice_conversion(false, &name, lifetime_env, s, borrowed_lts);
+                    let conv =
+                        self.gen_slice_conversion(false, &name, lifetime_env, s, borrowed_lts);
                     format!("{conv}.slice").into()
                 } else {
                     // Params premake a memory type.
@@ -1061,8 +1062,6 @@ returnVal.option() ?: return null
     ) -> Cow<'cx, str> {
         let slice_method = self.slice_method_for(slice_type);
 
-        // TODO(#1003): handle "forgetting" static-borrowed slices
-
         #[derive(Template)]
         #[template(path = "kotlin/SliceConversion.kt.jinja", escape = "none")]
         struct SliceConv<'d> {
@@ -1070,6 +1069,7 @@ returnVal.option() ?: return null
             kt_param_name: &'d str,
             slice_method: Cow<'d, str>,
             borrowed_lts: Option<Vec<Lifetime>>,
+            slice_lt_is_static: bool,
             lifetimes: &'d LifetimeEnv,
         }
 
@@ -1078,6 +1078,7 @@ returnVal.option() ?: return null
             kt_param_name,
             slice_method: slice_method.into(),
             borrowed_lts,
+            slice_lt_is_static: matches!(slice_type.lifetime(), Some(&MaybeStatic::Static)),
             lifetimes,
         }
         .render()

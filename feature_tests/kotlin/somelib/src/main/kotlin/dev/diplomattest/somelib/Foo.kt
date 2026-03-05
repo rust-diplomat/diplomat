@@ -51,7 +51,7 @@ class Foo internal constructor (
         fun newStatic(x: String): Foo {
             // This lifetime edge depends on lifetimes: 'a
             val aEdges: MutableList<Any> = mutableListOf();
-            val xSliceMemory = PrimitiveArrayTools.borrowUtf8(x)
+            val xSliceMemory = PrimitiveArrayTools.borrowUtf8(x).leakStatic()
             
             val returnVal = lib.Foo_new_static(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()

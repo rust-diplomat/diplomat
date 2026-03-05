@@ -37,7 +37,7 @@ class MyIndexer internal constructor (
             val handle = returnVal 
             val returnOpaque = MyIndexer(handle, selfEdges)
             CLEANER.register(returnOpaque, MyIndexer.MyIndexerCleaner(handle, MyIndexer.lib));
-            vSliceMemory?.close()
+            vSliceMemory.close()
             return returnOpaque
         }
     }
