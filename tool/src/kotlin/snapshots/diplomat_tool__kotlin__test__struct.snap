@@ -238,7 +238,7 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
         native.j = this.j
         native.k = this.k
         native.l = this.l
-        native.m = PrimitiveArrayTools.borrow(this.m).slice
+        native.m = PrimitiveArrayTools.borrow(this.m).into(listOf(*bAppendArray)).slice
         native.n = this.n.handle
         return native
     }
