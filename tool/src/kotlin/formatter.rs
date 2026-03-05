@@ -275,11 +275,11 @@ impl<'tcx> KotlinFormatter<'tcx> {
             }
             .into(),
             Type::Struct(s) => {
-                let field_type_name: &str = self.tcx.resolve_type(s.id()).name().as_ref();
+                let field_type_name = self.fmt_type_name(s.id());
                 format!("{field_type_name}Native()").into()
             }
             Type::Enum(enum_def) => {
-                let field_type_name: &str = self.tcx.resolve_enum(enum_def.tcx_id).name.as_ref();
+                let field_type_name = self.fmt_type_name(enum_def.id());
                 if for_results {
                     "0".into()
                 } else {

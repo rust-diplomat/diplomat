@@ -5,7 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface AttrOpaque1Lib: Library {
+internal interface AttrOpaque1RenamedLib: Library {
     fun namespace_AttrOpaque1_destroy(handle: Pointer)
     fun namespace_AttrOpaque1_new_overload(i: Int): Pointer
     fun namespace_AttrOpaque1_new(): Pointer
@@ -16,53 +16,53 @@ internal interface AttrOpaque1Lib: Library {
     fun namespace_AttrOpaque1_use_unnamespaced(handle: Pointer, un: Pointer): Unit
     fun namespace_AttrOpaque1_use_namespaced(handle: Pointer, n: Int): Unit
 }
-internal interface AttrOpaque1Interface {
+internal interface AttrOpaque1RenamedInterface {
     fun method(): UByte
     fun abirenamed(): UByte
     fun useUnnamespaced(un: Unnamespaced): Unit
-    fun useNamespaced(n: AttrEnum): Unit
+    fun useNamespaced(n: RenamedAttrEnum): Unit
 }
 /** Some example docs
 *Back to all docs
 */
-class AttrOpaque1 internal constructor (
+class AttrOpaque1Renamed internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
-): AttrOpaque1Interface  {
+): AttrOpaque1RenamedInterface  {
 
-    internal class AttrOpaque1Cleaner(val handle: Pointer, val lib: AttrOpaque1Lib) : Runnable {
+    internal class AttrOpaque1RenamedCleaner(val handle: Pointer, val lib: AttrOpaque1RenamedLib) : Runnable {
         override fun run() {
             lib.namespace_AttrOpaque1_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<AttrOpaque1Lib> = AttrOpaque1Lib::class.java
-        internal val lib: AttrOpaque1Lib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<AttrOpaque1RenamedLib> = AttrOpaque1RenamedLib::class.java
+        internal val lib: AttrOpaque1RenamedLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
-        fun newOverload(i: Int): AttrOpaque1 {
+        fun newOverload(i: Int): AttrOpaque1Renamed {
             
             val returnVal = lib.namespace_AttrOpaque1_new_overload(i);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = AttrOpaque1(handle, selfEdges)
-            CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
+            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
+            CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
             return returnOpaque
         }
         @JvmStatic
         
         /** More example docs
         */
-        fun new_(): AttrOpaque1 {
+        fun new_(): AttrOpaque1Renamed {
             
             val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = AttrOpaque1(handle, selfEdges)
-            CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
+            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
+            CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
             return returnOpaque
         }
         @JvmStatic
@@ -99,7 +99,7 @@ class AttrOpaque1 internal constructor (
         
     }
     
-    override fun useNamespaced(n: AttrEnum): Unit {
+    override fun useNamespaced(n: RenamedAttrEnum): Unit {
         
         val returnVal = lib.namespace_AttrOpaque1_use_namespaced(handle, n.toNative());
         

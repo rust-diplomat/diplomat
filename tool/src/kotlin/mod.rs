@@ -127,40 +127,35 @@ pub(crate) fn run<'tcx>(
         use_finalizers_not_cleaners,
     };
 
-    for (_id, ty) in tcx.all_types() {
+    for (id, ty) in tcx.all_types() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx.errors.set_context_ty(ty.name().as_str().into());
         if ty.attrs().disable {
             continue;
         }
+
+        let type_name = formatter.fmt_type_name(id);
+
         match ty {
             TypeDef::Opaque(o) => {
-                let type_name = o.name.to_string();
-
                 let (file_name, body) = ty_gen_cx.gen_opaque_def(o, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
 
             TypeDef::OutStruct(o) => {
-                let type_name = o.name.to_string();
-
                 let (file_name, body) = ty_gen_cx.gen_struct_def(o, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
 
             TypeDef::Struct(struct_def) => {
-                let type_name = struct_def.name.to_string();
-
                 let (file_name, body) = ty_gen_cx.gen_struct_def(struct_def, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
             }
 
             TypeDef::Enum(enum_def) => {
-                let type_name = enum_def.name.to_string();
-
                 let (file_name, body) = ty_gen_cx.gen_enum_def(enum_def, &type_name);
 
                 files.add_file(format!("src/main/kotlin/{file_name}"), body);
@@ -169,7 +164,7 @@ pub(crate) fn run<'tcx>(
         }
     }
 
-    for (_id, trt_def) in tcx.all_traits() {
+    for (id, trt_def) in tcx.all_traits() {
         ty_gen_cx.callback_params.clear(); // specific to each type in a file
         let _guard = ty_gen_cx
             .errors
@@ -177,7 +172,7 @@ pub(crate) fn run<'tcx>(
         if trt_def.attrs.disable {
             continue;
         }
-        let trait_name = trt_def.name.to_string();
+        let trait_name = formatter.fmt_trait_name(id);
 
         let (file_name, body) = ty_gen_cx.gen_trait_def(trt_def, &trait_name);
 
@@ -441,8 +436,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 .into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
-                let resolved = self.tcx.resolve_trait(trait_id);
-                let trait_name = resolved.name.to_string();
+                let trait_name = self.formatter.fmt_trait_name(trait_id);
                 format!("DiplomatTrait_{trait_name}_Wrapper.fromTraitObj({name}).nativeStruct")
                     .into()
             }
@@ -574,8 +568,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
             Type::Struct(ref strct) => {
                 let type_id = strct.id();
-                let resolved = self.tcx.resolve_type(type_id);
-                format!("{}Native", resolved.name()).into()
+                format!("{}Native", self.formatter.fmt_type_name(type_id)).into()
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
@@ -584,8 +577,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
-                let resolved = self.tcx.resolve_trait(trait_id);
-                format!("DiplomatTrait_{}_Wrapper_Native", resolved.name).into()
+                format!(
+                    "DiplomatTrait_{}_Wrapper_Native",
+                    self.formatter.fmt_trait_name(trait_id)
+                )
+                .into()
             }
 
             Type::DiplomatOption(ref inner) => {
@@ -606,8 +602,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
-        let opaque_def = opaque_path.resolve(self.tcx);
-
         let ownership = opaque_path.owner;
         let lifetimes = &opaque_path.lifetimes;
         let optional = opaque_path.is_optional();
@@ -625,7 +619,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             use_finalizers_not_cleaners: bool,
         }
 
-        let return_type_name = opaque_def.name.to_string().into();
+        let return_type_name = self.formatter.fmt_type_name(opaque_path.id());
         let self_edges = || match ownership {
             MaybeOwn::Borrow(Borrow {
                 lifetime: MaybeStatic::NonStatic(lt),
@@ -733,24 +727,21 @@ return string{return_type_modifier}"#
     #[allow(clippy::too_many_arguments)]
     fn gen_struct_return_conversion<'d>(
         &'d self,
-        struct_def: &'d ReturnableStructDef,
+        path: &ReturnableStructPath,
         lifetimes: &'d Lifetimes,
         lifetime_env: &'d LifetimeEnv,
         cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
+        let struct_def = path.resolve(self.tcx);
         let is_zst = match struct_def {
             ReturnableStructDef::Struct(s) => s.fields.is_empty(),
             ReturnableStructDef::OutStruct(s) => s.fields.is_empty(),
             _ => false,
         };
 
-        let return_type_name = match struct_def {
-            ReturnableStructDef::Struct(strct) => strct.name.to_string().into(),
-            ReturnableStructDef::OutStruct(out_strct) => out_strct.name.to_string().into(),
-            _ => todo!(),
-        };
+        let return_type_name = self.formatter.fmt_type_name(path.id());
 
         if is_zst {
             return format!("return {return_type_name}(){return_type_modifier}");
@@ -813,7 +804,7 @@ return string{return_type_modifier}"#
             Type::Struct(strct) => {
                 let lifetimes = strct.lifetimes();
                 self.gen_struct_return_conversion(
-                    &strct.resolve(self.tcx),
+                    &strct,
                     lifetimes,
                     &method.lifetime_env,
                     cleanups,
@@ -822,10 +813,9 @@ return string{return_type_modifier}"#
                 )
             }
             Type::Enum(enm) => {
-                let return_type = enm.resolve(self.tcx);
                 format!(
                     "return {err_cast}({}.fromNative({val_name})){return_type_modifier}",
-                    return_type.name
+                    self.formatter.fmt_type_name(enm.id())
                 )
             }
             Type::Slice(slc) => {
@@ -865,7 +855,7 @@ val intermediateOption = {val_name}.option() ?: return null
 {}
                         "#,
                     self.gen_struct_return_conversion(
-                        &strct.resolve(self.tcx),
+                        &strct,
                         lifetimes,
                         &method.lifetime_env,
                         cleanups,
@@ -875,12 +865,11 @@ val intermediateOption = {val_name}.option() ?: return null
                 )
             }
             Type::Enum(enm) => {
-                let return_type = enm.resolve(self.tcx);
                 format!(
                     r#"
 val intermediateOption = {val_name}.option() ?: return null
 return {}.fromNative(intermediateOption)"#,
-                    return_type.name
+                    self.formatter.fmt_type_name(enm.id())
                 )
             }
             Type::Slice(slc) => {
@@ -951,39 +940,17 @@ val intermediateOption = {val_name}.option() ?: return null
                 let err_path = err
                     .as_ref()
                     .map(|err| {
-                        match err {
-                            OutType::Opaque(OpaquePath{tcx_id: id, ..}) => {
-                                let resolved = self.tcx.resolve_opaque(*id);
-                                if !resolved.attrs.custom_errors {
-                                    panic!("Opaque type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                }
-                            },
-                            OutType::Struct(ReturnableStructPath::Struct(path)) => {
-                                let resolved = self.tcx.resolve_struct(path.tcx_id);
-                                if !resolved.attrs.custom_errors {
-                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                }
-                            },
-                            OutType::Struct(ReturnableStructPath::OutStruct(path)) => {
-                                let resolved = self.tcx.resolve_out_struct(path.tcx_id);
-                                if !resolved.attrs.custom_errors {
-                                    panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                }
+                        if let Some(type_id) = err.id() {
+                            let resolved = self.tcx.resolve_type(type_id);
+                            if !resolved.attrs().custom_errors {
+                                panic!("Type {:?} must have the `error` attribute to be used as an error result", self.formatter.fmt_type_name(type_id));
                             }
-                            Type::Enum(enm) => {
-                                let resolved = enm.resolve(self.tcx);
-                                    if !resolved.attrs.custom_errors {
-                                        panic!("Struct type {:?} must have the `error` attribute to be used as an error result", resolved.name);
-                                    }
-                            }
-                            _ => {}
                         }
                         let err_converter = ".err()";
                         let err_cast = if let Type::Primitive(prim) = err {
                             self.formatter.fmt_primitive_error_type(*prim)
                         } else if let Type::Enum(enm) = err {
-                            let return_type = enm.resolve(self.tcx);
-                            (return_type.name.to_string() + "Error").into()
+                            format!("{}Error", self.formatter.fmt_type_name(enm.id())).into()
                         } else {
                             "".into()
                         };
@@ -1119,8 +1086,7 @@ returnVal.option() ?: return null
                 param_conversions.push(param_name.clone());
             }
             Some(st @ SelfType::Struct(s)) => {
-                let param_type =
-                    format!("{}Native", self.tcx.resolve_struct(s.tcx_id).name.as_str()).into();
+                let param_type = format!("{}Native", self.formatter.fmt_type_name(s.id())).into();
                 let param_borrow_kind = visitor.visit_param(&st.clone().into(), "this");
                 let struct_borrow_info =
                     if let ParamBorrowInfo::Struct(param_info) = param_borrow_kind {
@@ -1449,7 +1415,7 @@ returnVal.option() ?: return null
                 SelfType::Opaque(_) => param_decls.push("handle: Pointer".into()),
                 SelfType::Struct(s) => param_decls.push(format!(
                     "nativeStruct: {}Native",
-                    self.tcx.resolve_struct(s.tcx_id).name.as_str()
+                    self.formatter.fmt_type_name(s.id())
                 )),
                 SelfType::Enum(_) => param_decls.push("inner: Int".into()),
                 _ => todo!(),
@@ -1781,7 +1747,7 @@ returnVal.option() ?: return null
             .enumerate()
             .map(|(index, param)| {
                 if let Some(param_name) = &param.name {
-                    param_name.to_string()
+                    self.formatter.fmt_param_name(param_name.as_str()).into()
                 } else {
                     format!("arg{index}")
                 }
@@ -2189,8 +2155,7 @@ returnVal.option() ?: return null
             }
             Type::ImplTrait(trt) => {
                 let trait_id = trt.id();
-                let resolved = self.tcx.resolve_trait(trait_id);
-                resolved.name.to_string().into()
+                self.formatter.fmt_trait_name(trait_id)
             }
             _ => self.gen_type_name(ty, additional_name),
         }
@@ -2354,7 +2319,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Enum(enum_def)) = all_types
+        if let (id, TypeDef::Enum(enum_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2375,7 +2340,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: false,
             };
-            let type_name = enum_def.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, enum_code) = ty_gen_cx.gen_enum_def(enum_def, &type_name);
             insta::assert_snapshot!(enum_code)
@@ -2444,7 +2409,7 @@ mod test {
 
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Struct(strct)) = all_types
+        if let (id, TypeDef::Struct(strct)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2465,7 +2430,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: false,
             };
-            let type_name = strct.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, struct_code) = ty_gen_cx.gen_struct_def(strct, &type_name);
             insta::assert_snapshot!(struct_code)
@@ -2498,7 +2463,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2519,7 +2484,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: false,
             };
-            let type_name = opaque_def.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
@@ -2609,7 +2574,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2630,7 +2595,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: false,
             };
-            let type_name = opaque_def.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
@@ -2662,7 +2627,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2683,7 +2648,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: true,
             };
-            let type_name = opaque_def.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)
@@ -2732,7 +2697,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_traits = tcx.all_traits();
-        let (_id, trait_def) = all_traits.next().expect("Failed to generate trait");
+        let (id, trait_def) = all_traits.next().expect("Failed to generate trait");
         let error_store = ErrorStore::default();
         let docs_urls = HashMap::new();
         let docs_generator = diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
@@ -2749,7 +2714,7 @@ mod test {
             domain: "dev.diplomattest",
             use_finalizers_not_cleaners: false,
         };
-        let trait_name = trait_def.name.to_string();
+        let trait_name = formatter.fmt_trait_name(id);
         // test that we can render and that it doesn't panic
         let (_, result) = ty_gen_cx.gen_trait_def(trait_def, &trait_name);
         insta::assert_snapshot!(result)
@@ -2781,7 +2746,7 @@ mod test {
         };
         let tcx = new_tcx(tk_stream);
         let mut all_types = tcx.all_types();
-        if let (_id, TypeDef::Opaque(opaque_def)) = all_types
+        if let (id, TypeDef::Opaque(opaque_def)) = all_types
             .next()
             .expect("Failed to generate first opaque def")
         {
@@ -2802,7 +2767,7 @@ mod test {
                 domain: "dev.diplomattest",
                 use_finalizers_not_cleaners: true,
             };
-            let type_name = opaque_def.name.to_string();
+            let type_name = formatter.fmt_type_name(id);
             // test that we can render and that it doesn't panic
             let (_, result) = ty_gen_cx.gen_opaque_def(opaque_def, &type_name);
             insta::assert_snapshot!(result)

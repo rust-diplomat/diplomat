@@ -6,7 +6,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-class DeprecatedStruct () {
+class RenamedDeprecatedStruct () {
     companion object {
 
     }

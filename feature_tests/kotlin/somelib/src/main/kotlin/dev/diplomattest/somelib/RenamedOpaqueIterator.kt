@@ -5,38 +5,38 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface OpaqueIteratorLib: Library {
+internal interface RenamedOpaqueIteratorLib: Library {
     fun namespace_OpaqueIterator_destroy(handle: Pointer)
     fun namespace_OpaqueIterator_next(handle: Pointer): Pointer?
 }
-typealias OpaqueIteratorIteratorItem = AttrOpaque1?
+typealias RenamedOpaqueIteratorIteratorItem = AttrOpaque1Renamed?
 
-class OpaqueIterator internal constructor (
+class RenamedOpaqueIterator internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
-): Iterator<AttrOpaque1?> {
+): Iterator<AttrOpaque1Renamed?> {
 
-    internal class OpaqueIteratorCleaner(val handle: Pointer, val lib: OpaqueIteratorLib) : Runnable {
+    internal class RenamedOpaqueIteratorCleaner(val handle: Pointer, val lib: RenamedOpaqueIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterator_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<OpaqueIteratorLib> = OpaqueIteratorLib::class.java
-        internal val lib: OpaqueIteratorLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedOpaqueIteratorLib> = RenamedOpaqueIteratorLib::class.java
+        internal val lib: RenamedOpaqueIteratorLib = Native.load("diplomat_feature_tests", libClass)
     }
     
-    internal fun nextInternal(): AttrOpaque1? {
+    internal fun nextInternal(): AttrOpaque1Renamed? {
         
         val returnVal = lib.namespace_OpaqueIterator_next(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal ?: return null
-        val returnOpaque = AttrOpaque1(handle, selfEdges)
-        CLEANER.register(returnOpaque, AttrOpaque1.AttrOpaque1Cleaner(handle, AttrOpaque1.lib));
+        val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
+        CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
         return returnOpaque
     }
 
@@ -46,7 +46,7 @@ class OpaqueIterator internal constructor (
        return iterVal != null
     }
 
-    override fun next(): AttrOpaque1?{
+    override fun next(): AttrOpaque1Renamed?{
         val returnVal = iterVal
         if (returnVal == null) {
             throw NoSuchElementException()

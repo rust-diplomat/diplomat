@@ -5,13 +5,13 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface MyIteratorLib: Library {
+internal interface RenamedMyIteratorLib: Library {
     fun namespace_MyIterator_destroy(handle: Pointer)
     fun namespace_MyIterator_next(handle: Pointer): OptionFFIUint8
 }
-typealias MyIteratorIteratorItem = UByte
+typealias RenamedMyIteratorIteratorItem = UByte
 
-class MyIterator internal constructor (
+class RenamedMyIterator internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
@@ -19,15 +19,15 @@ class MyIterator internal constructor (
     internal val aEdges: List<Any?>,
 ): Iterator<UByte> {
 
-    internal class MyIteratorCleaner(val handle: Pointer, val lib: MyIteratorLib) : Runnable {
+    internal class RenamedMyIteratorCleaner(val handle: Pointer, val lib: RenamedMyIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterator_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<MyIteratorLib> = MyIteratorLib::class.java
-        internal val lib: MyIteratorLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedMyIteratorLib> = RenamedMyIteratorLib::class.java
+        internal val lib: RenamedMyIteratorLib = Native.load("diplomat_feature_tests", libClass)
     }
     
     internal fun nextInternal(): UByte? {

@@ -5,7 +5,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
-internal interface VectorTestLib: Library {
+internal interface RenamedVectorTestLib: Library {
     fun namespace_VectorTest_destroy(handle: Pointer)
     fun namespace_VectorTest_new(): Pointer
     fun namespace_VectorTest_len(handle: Pointer): FFISizet
@@ -13,31 +13,31 @@ internal interface VectorTestLib: Library {
     fun namespace_VectorTest_push(handle: Pointer, value: Double): Unit
 }
 
-class VectorTest internal constructor (
+class RenamedVectorTest internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
 )  {
 
-    internal class VectorTestCleaner(val handle: Pointer, val lib: VectorTestLib) : Runnable {
+    internal class RenamedVectorTestCleaner(val handle: Pointer, val lib: RenamedVectorTestLib) : Runnable {
         override fun run() {
             lib.namespace_VectorTest_destroy(handle)
         }
     }
 
     companion object {
-        internal val libClass: Class<VectorTestLib> = VectorTestLib::class.java
-        internal val lib: VectorTestLib = Native.load("diplomat_feature_tests", libClass)
+        internal val libClass: Class<RenamedVectorTestLib> = RenamedVectorTestLib::class.java
+        internal val lib: RenamedVectorTestLib = Native.load("diplomat_feature_tests", libClass)
         @JvmStatic
         
-        fun new_(): VectorTest {
+        fun new_(): RenamedVectorTest {
             
             val returnVal = lib.namespace_VectorTest_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = VectorTest(handle, selfEdges)
-            CLEANER.register(returnOpaque, VectorTest.VectorTestCleaner(handle, VectorTest.lib));
+            val returnOpaque = RenamedVectorTest(handle, selfEdges)
+            CLEANER.register(returnOpaque, RenamedVectorTest.RenamedVectorTestCleaner(handle, RenamedVectorTest.lib));
             return returnOpaque
         }
     }
