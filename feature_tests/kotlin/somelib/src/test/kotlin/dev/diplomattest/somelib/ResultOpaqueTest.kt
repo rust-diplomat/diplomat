@@ -40,6 +40,15 @@ class ResultOpaqueTest {
         } catch(ie: IntError) {
             assertEquals(ie.getValue(), 5)
         }
-    }
 
+        val resultOpaque6 = ResultOpaque.newFailingStruct(5)
+        assert(resultOpaque6.isFailure)
+        try {
+            resultOpaque6.getOrThrow()
+            assert(false == true) // should not reach here
+        } catch(ie: ErrorStruct) {
+            assertEquals(ie.i, 5)
+            assertEquals(ie.j, 12)
+        }
+    }
 }

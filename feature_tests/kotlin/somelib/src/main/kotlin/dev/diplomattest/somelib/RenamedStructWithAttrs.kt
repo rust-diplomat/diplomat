@@ -84,8 +84,9 @@ class RenamedStructWithAttrs (var a: Boolean, var b: UInt) {
         fun newFallible(a: Boolean, b: UInt): Result<RenamedStructWithAttrs> {
             
             val returnVal = lib.namespace_StructWithAttrs_new_fallible(a, FFIUint32(b));
-            if (returnVal.isOk == 1.toByte()) {
-                val returnStruct = RenamedStructWithAttrs.fromNative(returnVal.union.ok)
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                val returnStruct = RenamedStructWithAttrs.fromNative(nativeOkVal)
                 return returnStruct.ok()
             } else {
                 return UnitError().err()

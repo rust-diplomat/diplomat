@@ -46,7 +46,8 @@ class OptionString internal constructor (
     fun write(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.OptionString_write(handle, write);
-        if (returnVal.isOk == 1.toByte()) {
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
             
             val returnString = DW.writeToString(write)
             return returnString.ok()

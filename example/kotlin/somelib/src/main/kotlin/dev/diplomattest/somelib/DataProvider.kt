@@ -50,7 +50,8 @@ class DataProvider internal constructor (
         fun returnsResult(): Result<Unit> {
             
             val returnVal = lib.icu4x_DataProvider_returns_result_mv1();
-            if (returnVal.isOk == 1.toByte()) {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
                 return Unit.ok()
             } else {
                 return UnitError().err()

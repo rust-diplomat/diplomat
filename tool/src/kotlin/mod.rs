@@ -933,7 +933,7 @@ val intermediateOption = {val_name}.option() ?: return null
                     method,
                     method_lifetimes_map,
                     cleanups,
-                    "returnVal.union.ok",
+                    "nativeOkVal",
                     ".ok()",
                 );
 
@@ -959,7 +959,7 @@ val intermediateOption = {val_name}.option() ?: return null
                             method,
                             method_lifetimes_map,
                             cleanups,
-                            "returnVal.union.err",
+                            "returnVal.getNativeErr()!!",
                             err_converter,
                             &err_cast,
                             err,
