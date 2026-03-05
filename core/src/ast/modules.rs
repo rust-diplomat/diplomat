@@ -495,6 +495,56 @@ impl File {
     }
 }
 
+// TODO: Caching
+pub fn parse_module_with_includes(
+    module: &mut syn::ItemMod,
+    base_path: &std::path::Path,
+    force_analyze: bool,
+) -> Result<(), std::io::Error> {
+    let contains_bridge = module
+        .attrs
+        .iter()
+        .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge")
+        || force_analyze;
+
+    if contains_bridge {
+        let attrs: Attrs = (*module.attrs).into();
+        let (_, items) = module
+            .content
+            .as_mut()
+            .expect("Expected mod content in diplomat::bridge.");
+        for i in attrs.includes {
+            let file_contents = std::fs::read_to_string(base_path.join(i.path))?;
+            let syn_file = syn::parse_file(&file_contents)
+                .map_err(|e| std::io::Error::other(e.to_string()))?;
+            // Prepend the items:
+            items.splice(0..0, syn_file.items);
+        }
+        return Ok(());
+    }
+    if let Some((_, items)) = module.content.as_mut() {
+        for i in items {
+            if let Item::Mod(m) = i {
+                parse_module_with_includes(m, base_path, force_analyze)?
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Parse a given syn::File and inline #[diplomat::include] statements.
+pub fn parse_file_with_includes(
+    mut file: syn::File,
+    base_path: &std::path::Path,
+) -> Result<syn::File, std::io::Error> {
+    for i in file.items.iter_mut() {
+        if let syn::Item::Mod(m) = i {
+            parse_module_with_includes(m, base_path, false)?;
+        }
+    }
+    Ok(file)
+}
+
 impl From<&syn::File> for File {
     /// Get all custom types across all modules defined in a given file.
     fn from(file: &syn::File) -> File {

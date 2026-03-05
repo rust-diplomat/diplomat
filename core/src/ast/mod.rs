@@ -10,7 +10,7 @@ mod methods;
 pub use methods::{BorrowedParams, Method, Param, SelfParam, TraitSelfParam};
 
 mod modules;
-pub use modules::{File, Module};
+pub use modules::{parse_file_with_includes, parse_module_with_includes, File, Module};
 
 mod structs;
 pub use structs::Struct;
