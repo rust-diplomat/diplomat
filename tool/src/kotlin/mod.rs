@@ -315,6 +315,12 @@ struct StructBorrowContext<'tcx> {
     param_info: StructBorrowInfo<'tcx>,
 }
 
+enum KtToCContext<'a> {
+    Param { needs_temporary: &'a mut bool },
+
+    Struct { lifetime_env: &'a LifetimeEnv },
+}
+
 impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
@@ -343,7 +349,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         s: &StructPath,
         name: Cow<str>,
         struct_borrow_info: Option<StructBorrowContext<'cx>>,
-        mut needs_temporary: Option<&mut bool>,
+        mut context: KtToCContext,
     ) -> String {
         use std::fmt::Write;
         let struct_def = s.resolve(self.tcx);
@@ -365,7 +371,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 {
                     // Optimization: don't generate arrayOf(*fooAppendArray) when you can just
                     // directly use fooAppendArray
-                    if needs_temporary.is_none() && use_lts.len() == 1 {
+                    if matches!(context, KtToCContext::Struct { .. }) && use_lts.len() == 1 {
                         let lt = struct_borrow_info
                             .unwrap()
                             .use_env
@@ -378,7 +384,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                             // Generate stuff like `, aEdges` or for struct fields, `, *aAppendArray`
                             let lt = struct_borrow_info.unwrap().use_env.fmt_lifetime(use_lt);
                             // Params use edges, structs use append arrays
-                            if needs_temporary.is_some() {
+                            if let KtToCContext::Param { .. } = context {
                                 write!(&mut params, "{maybe_comma}{lt}Edges").unwrap();
                             } else {
                                 write!(&mut params, "{maybe_comma}*{lt}AppendArray").unwrap();
@@ -388,7 +394,10 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                         write!(&mut params, ")").unwrap();
                     }
                 } else {
-                    if let Some(ref mut needs_temporary) = needs_temporary {
+                    if let KtToCContext::Param {
+                        ref mut needs_temporary,
+                    } = context
+                    {
                         **needs_temporary = true;
                     } else {
                         panic!("Struct borrow info MUST reference all lifetimes");
@@ -412,9 +421,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         ty: &Type<P>,
         name: Cow<str>,
         struct_borrow_info: Option<StructBorrowContext<'cx>>,
-        needs_temporary: Option<&mut bool>,
+        context: KtToCContext,
     ) -> Cow<'cx, str> {
-        let is_param = needs_temporary.is_some();
+        let is_param = matches!(context, KtToCContext::Param { .. });
         match *ty {
             Type::Primitive(prim) => self
                 .formatter
@@ -428,7 +437,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 }
             }
             Type::Struct(ref s) => self
-                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, needs_temporary)
+                .gen_kt_to_c_for_struct(s, name, struct_borrow_info, context)
                 .into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
@@ -453,12 +462,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::DiplomatOption(ref inner) => {
                 // We pass false for is_params here the type is a struct field
-                let inner_expr = self.gen_kt_to_c_for_type(
-                    inner,
-                    "it".into(),
-                    struct_borrow_info,
-                    needs_temporary,
-                );
+                let inner_expr =
+                    self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, context);
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
@@ -1119,7 +1124,9 @@ returnVal.option() ?: return null
                         s,
                         "this".into(),
                         struct_borrow_info,
-                        Some(&mut needs_temporary),
+                        KtToCContext::Param {
+                            needs_temporary: &mut needs_temporary,
+                        },
                     )
                     .into(),
                 );
@@ -1298,7 +1305,9 @@ returnVal.option() ?: return null
                 &param.ty,
                 param_name_to_pass,
                 struct_borrow_info,
-                Some(&mut needs_temporary),
+                KtToCContext::Param {
+                    needs_temporary: &mut needs_temporary,
+                },
             ));
         }
         let write_return = matches!(
@@ -1692,7 +1701,9 @@ returnVal.option() ?: return null
                         &nonout.fields[i].ty,
                         format!("this.{field_name}").into(),
                         struct_borrow_info,
-                        None,
+                        KtToCContext::Struct {
+                            lifetime_env: &ty.lifetimes,
+                        },
                     )
                 });
 
