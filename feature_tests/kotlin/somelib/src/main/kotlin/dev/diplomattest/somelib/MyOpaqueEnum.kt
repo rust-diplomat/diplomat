@@ -16,14 +16,21 @@ class MyOpaqueEnum internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class MyOpaqueEnumCleaner(val handle: Pointer, val lib: MyOpaqueEnumLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class MyOpaqueEnumCleaner(val handle: Pointer, val lib: MyOpaqueEnumLib) : Runnable {
         override fun run() {
             lib.MyOpaqueEnum_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, MyOpaqueEnum.MyOpaqueEnumCleaner(handle, MyOpaqueEnum.lib));
     }
 
@@ -37,8 +44,7 @@ class MyOpaqueEnum internal constructor (
             val returnVal = lib.MyOpaqueEnum_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyOpaqueEnum(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = MyOpaqueEnum(handle, selfEdges, true)
             return returnOpaque
         }
     }

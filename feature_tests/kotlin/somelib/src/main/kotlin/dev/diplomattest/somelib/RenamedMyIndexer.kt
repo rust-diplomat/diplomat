@@ -16,14 +16,21 @@ class RenamedMyIndexer internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedMyIndexerCleaner(val handle: Pointer, val lib: RenamedMyIndexerLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedMyIndexerCleaner(val handle: Pointer, val lib: RenamedMyIndexerLib) : Runnable {
         override fun run() {
             lib.namespace_MyIndexer_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
     }
 
@@ -38,8 +45,7 @@ class RenamedMyIndexer internal constructor (
             val returnVal = lib.namespace_MyIndexer_new(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RenamedMyIndexer(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = RenamedMyIndexer(handle, selfEdges, true)
             vSliceMemory.close()
             return returnOpaque
         }

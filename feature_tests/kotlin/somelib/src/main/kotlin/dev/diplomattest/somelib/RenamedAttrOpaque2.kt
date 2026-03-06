@@ -14,14 +14,21 @@ class RenamedAttrOpaque2 internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedAttrOpaque2Cleaner(val handle: Pointer, val lib: RenamedAttrOpaque2Lib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedAttrOpaque2Cleaner(val handle: Pointer, val lib: RenamedAttrOpaque2Lib) : Runnable {
         override fun run() {
             lib.namespace_AttrOpaque2_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedAttrOpaque2.RenamedAttrOpaque2Cleaner(handle, RenamedAttrOpaque2.lib));
     }
 

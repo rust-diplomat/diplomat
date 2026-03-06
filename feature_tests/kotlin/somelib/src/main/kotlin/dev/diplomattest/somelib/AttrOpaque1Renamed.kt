@@ -30,14 +30,21 @@ class AttrOpaque1Renamed internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): AttrOpaque1RenamedInterface  {
 
-    internal class AttrOpaque1RenamedCleaner(val handle: Pointer, val lib: AttrOpaque1RenamedLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class AttrOpaque1RenamedCleaner(val handle: Pointer, val lib: AttrOpaque1RenamedLib) : Runnable {
         override fun run() {
             lib.namespace_AttrOpaque1_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
     }
 
@@ -51,8 +58,7 @@ class AttrOpaque1Renamed internal constructor (
             val returnVal = lib.namespace_AttrOpaque1_new_overload(i);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -64,8 +70,7 @@ class AttrOpaque1Renamed internal constructor (
             val returnVal = lib.namespace_AttrOpaque1_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = AttrOpaque1Renamed(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic

@@ -14,14 +14,21 @@ class RenamedDeprecatedOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedDeprecatedOpaqueCleaner(val handle: Pointer, val lib: RenamedDeprecatedOpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedDeprecatedOpaqueCleaner(val handle: Pointer, val lib: RenamedDeprecatedOpaqueLib) : Runnable {
         override fun run() {
             lib.namespace_DeprecatedOpaque_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedDeprecatedOpaque.RenamedDeprecatedOpaqueCleaner(handle, RenamedDeprecatedOpaque.lib));
     }
 

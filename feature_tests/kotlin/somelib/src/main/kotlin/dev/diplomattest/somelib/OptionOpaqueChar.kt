@@ -15,14 +15,21 @@ class OptionOpaqueChar internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OptionOpaqueCharCleaner(val handle: Pointer, val lib: OptionOpaqueCharLib) : Runnable {
         override fun run() {
             lib.OptionOpaqueChar_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, OptionOpaqueChar.OptionOpaqueCharCleaner(handle, OptionOpaqueChar.lib));
     }
 

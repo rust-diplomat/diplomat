@@ -17,14 +17,21 @@ class RenamedOpaqueIterator internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 ): Iterator<AttrOpaque1Renamed?> {
 
-    internal class RenamedOpaqueIteratorCleaner(val handle: Pointer, val lib: RenamedOpaqueIteratorLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedOpaqueIteratorCleaner(val handle: Pointer, val lib: RenamedOpaqueIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterator_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedOpaqueIterator.RenamedOpaqueIteratorCleaner(handle, RenamedOpaqueIterator.lib));
     }
 
@@ -38,8 +45,7 @@ class RenamedOpaqueIterator internal constructor (
         val returnVal = lib.namespace_OpaqueIterator_next(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal ?: return null
-        val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-        returnOpaque.registerCleaner()
+        val returnOpaque = AttrOpaque1Renamed(handle, selfEdges, true)
         return returnOpaque
     }
 

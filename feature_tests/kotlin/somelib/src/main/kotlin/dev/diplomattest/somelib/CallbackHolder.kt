@@ -66,14 +66,21 @@ class CallbackHolder internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class CallbackHolderCleaner(val handle: Pointer, val lib: CallbackHolderLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class CallbackHolderCleaner(val handle: Pointer, val lib: CallbackHolderLib) : Runnable {
         override fun run() {
             lib.CallbackHolder_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, CallbackHolder.CallbackHolderCleaner(handle, CallbackHolder.lib));
     }
 
@@ -87,8 +94,7 @@ class CallbackHolder internal constructor (
             val returnVal = lib.CallbackHolder_new(DiplomatCallback_CallbackHolder_new_diplomatCallback_func.fromCallback(func).nativeStruct);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = CallbackHolder(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = CallbackHolder(handle, selfEdges, true)
             return returnOpaque
         }
     }

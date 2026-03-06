@@ -18,14 +18,21 @@ class Locale internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class LocaleCleaner(val handle: Pointer, val lib: LocaleLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class LocaleCleaner(val handle: Pointer, val lib: LocaleLib) : Runnable {
         override fun run() {
             lib.icu4x_Locale_destroy_mv1(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, Locale.LocaleCleaner(handle, Locale.lib));
     }
 
@@ -42,8 +49,7 @@ class Locale internal constructor (
             val returnVal = lib.icu4x_Locale_new_mv1(nameSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Locale(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Locale(handle, selfEdges, true)
             nameSliceMemory.close()
             return returnOpaque
         }

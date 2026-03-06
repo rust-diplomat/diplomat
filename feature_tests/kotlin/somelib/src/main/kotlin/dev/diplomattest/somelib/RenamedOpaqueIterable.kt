@@ -16,14 +16,21 @@ class RenamedOpaqueIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): Iterable<RenamedOpaqueIteratorIteratorItem> {
 
-    internal class RenamedOpaqueIterableCleaner(val handle: Pointer, val lib: RenamedOpaqueIterableLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedOpaqueIterableCleaner(val handle: Pointer, val lib: RenamedOpaqueIterableLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueIterable_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedOpaqueIterable.RenamedOpaqueIterableCleaner(handle, RenamedOpaqueIterable.lib));
     }
 
@@ -37,8 +44,7 @@ class RenamedOpaqueIterable internal constructor (
             val returnVal = lib.namespace_OpaqueIterable_new(FFISizet(size));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RenamedOpaqueIterable(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = RenamedOpaqueIterable(handle, selfEdges, true)
             return returnOpaque
         }
     }
@@ -50,8 +56,7 @@ class RenamedOpaqueIterable internal constructor (
         val returnVal = lib.namespace_OpaqueIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = RenamedOpaqueIterator(handle, selfEdges, aEdges)
-        returnOpaque.registerCleaner()
+        val returnOpaque = RenamedOpaqueIterator(handle, selfEdges, aEdges, true)
         return returnOpaque
     }
 

@@ -77,15 +77,15 @@ class OptionStruct (var a: OptionOpaque?, var b: OptionOpaqueChar?, var c: UInt,
             val a: OptionOpaque? = if (nativeStruct.a == null) {
         null
     } else {
-        OptionOpaque(nativeStruct.a!!, listOf())
+        OptionOpaque(nativeStruct.a!!, listOf(), true)
     }
             val b: OptionOpaqueChar? = if (nativeStruct.b == null) {
         null
     } else {
-        OptionOpaqueChar(nativeStruct.b!!, listOf())
+        OptionOpaqueChar(nativeStruct.b!!, listOf(), true)
     }
             val c: UInt = nativeStruct.c.toUInt()
-            val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf())
+            val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf(), true)
 
             return OptionStruct(a, b, c, d)
         }

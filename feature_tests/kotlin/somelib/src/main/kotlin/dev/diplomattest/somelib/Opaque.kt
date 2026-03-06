@@ -22,14 +22,21 @@ class Opaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
         override fun run() {
             lib.Opaque_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, Opaque.OpaqueCleaner(handle, Opaque.lib));
     }
 
@@ -43,8 +50,7 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Opaque(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Opaque(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -55,8 +61,7 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_try_from_utf8(inputSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
-            val returnOpaque = Opaque(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Opaque(handle, selfEdges, true)
             inputSliceMemory.close()
             return returnOpaque
         }
@@ -68,8 +73,7 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_from_str(inputSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Opaque(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Opaque(handle, selfEdges, true)
             inputSliceMemory.close()
             return returnOpaque
         }

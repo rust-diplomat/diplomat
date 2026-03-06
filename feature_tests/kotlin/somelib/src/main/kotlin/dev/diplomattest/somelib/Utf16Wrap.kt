@@ -17,14 +17,21 @@ class Utf16Wrap internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {
             lib.Utf16Wrap_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
     }
 
@@ -39,8 +46,7 @@ class Utf16Wrap internal constructor (
             val returnVal = lib.Utf16Wrap_from_utf16(inputSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Utf16Wrap(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Utf16Wrap(handle, selfEdges, true)
             inputSliceMemory.close()
             return returnOpaque
         }

@@ -19,14 +19,21 @@ class DataProvider internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class DataProviderCleaner(val handle: Pointer, val lib: DataProviderLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class DataProviderCleaner(val handle: Pointer, val lib: DataProviderLib) : Runnable {
         override fun run() {
             lib.icu4x_DataProvider_destroy_mv1(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
     }
 
@@ -42,8 +49,7 @@ class DataProvider internal constructor (
             val returnVal = lib.icu4x_DataProvider_new_static_mv1();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = DataProvider(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = DataProvider(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic

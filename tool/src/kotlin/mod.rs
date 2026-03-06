@@ -616,7 +616,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             optional: bool,
             val_name: &'a str,
             return_type_modifier: &'a str,
-            use_finalizers_not_cleaners: bool,
         }
 
         let return_type_name = self.formatter.fmt_type_name(opaque_path.id());
@@ -656,7 +655,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             optional,
             val_name,
             return_type_modifier,
-            use_finalizers_not_cleaners: self.use_finalizers_not_cleaners,
         };
         opaque_return
             .render()

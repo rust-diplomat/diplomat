@@ -18,14 +18,21 @@ class RenamedVectorTest internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedVectorTestCleaner(val handle: Pointer, val lib: RenamedVectorTestLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedVectorTestCleaner(val handle: Pointer, val lib: RenamedVectorTestLib) : Runnable {
         override fun run() {
             lib.namespace_VectorTest_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedVectorTest.RenamedVectorTestCleaner(handle, RenamedVectorTest.lib));
     }
 
@@ -39,8 +46,7 @@ class RenamedVectorTest internal constructor (
             val returnVal = lib.namespace_VectorTest_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RenamedVectorTest(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = RenamedVectorTest(handle, selfEdges, true)
             return returnOpaque
         }
     }

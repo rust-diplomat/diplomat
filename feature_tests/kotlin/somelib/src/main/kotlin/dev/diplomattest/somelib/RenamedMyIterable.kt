@@ -16,14 +16,21 @@ class RenamedMyIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): Iterable<RenamedMyIteratorIteratorItem> {
 
-    internal class RenamedMyIterableCleaner(val handle: Pointer, val lib: RenamedMyIterableLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedMyIterableCleaner(val handle: Pointer, val lib: RenamedMyIterableLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterable_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, RenamedMyIterable.RenamedMyIterableCleaner(handle, RenamedMyIterable.lib));
     }
 
@@ -38,8 +45,7 @@ class RenamedMyIterable internal constructor (
             val returnVal = lib.namespace_MyIterable_new(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RenamedMyIterable(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = RenamedMyIterable(handle, selfEdges, true)
             xSliceMemory.close()
             return returnOpaque
         }
@@ -52,8 +58,7 @@ class RenamedMyIterable internal constructor (
         val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = RenamedMyIterator(handle, selfEdges, aEdges)
-        returnOpaque.registerCleaner()
+        val returnOpaque = RenamedMyIterator(handle, selfEdges, aEdges, true)
         return returnOpaque
     }
 

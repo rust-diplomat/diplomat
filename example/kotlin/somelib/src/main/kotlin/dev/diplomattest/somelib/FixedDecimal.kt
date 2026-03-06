@@ -22,14 +22,21 @@ class FixedDecimal internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): FixedDecimalInterface  {
 
-    internal class FixedDecimalCleaner(val handle: Pointer, val lib: FixedDecimalLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class FixedDecimalCleaner(val handle: Pointer, val lib: FixedDecimalLib) : Runnable {
         override fun run() {
             lib.icu4x_FixedDecimal_destroy_mv1(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, FixedDecimal.FixedDecimalCleaner(handle, FixedDecimal.lib));
     }
 
@@ -45,8 +52,7 @@ class FixedDecimal internal constructor (
             val returnVal = lib.icu4x_FixedDecimal_new_mv1(v);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = FixedDecimal(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = FixedDecimal(handle, selfEdges, true)
             return returnOpaque
         }
     }

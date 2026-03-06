@@ -23,14 +23,21 @@ class MyString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
         override fun run() {
             lib.MyString_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, MyString.MyStringCleaner(handle, MyString.lib));
     }
 
@@ -45,8 +52,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = MyString(handle, selfEdges, true)
             vSliceMemory.close()
             return returnOpaque
         }
@@ -58,8 +64,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_unsafe(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = MyString(handle, selfEdges, true)
             vSliceMemory.close()
             return returnOpaque
         }
@@ -71,8 +76,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_owned(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = MyString(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -83,8 +87,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_from_first(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = MyString(handle, selfEdges, true)
             vSliceMemory.close()
             return returnOpaque
         }

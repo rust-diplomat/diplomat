@@ -4,15 +4,7 @@ listOf()
 {%- for self_edge in self_edges %}{%- if !loop.first %} + {% endif -%}{{self_edge}}{%- endfor %}
 {%- endif %}
 val handle = {{val_name}} {% if optional %}?: return null{% endif %}
-val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !named_lifetimes.is_empty() %}{%- for lt in named_lifetimes %}, {{lt}}Edges{%- endfor %}{% endif -%})
-{%- if is_owned %}
-{%- if !use_finalizers_not_cleaners %}
-returnOpaque.registerCleaner()
-{%- else %}
-returnOpaque.registerFinalizer()
-{%- endif %}
-{%- else -%}
-{%- endif %}
+val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !named_lifetimes.is_empty() %}{%- for lt in named_lifetimes %}, {{lt}}Edges{%- endfor %}{% endif -%}, {{is_owned}})
 {%- for cleanup in cleanups %}
 {{cleanup|indent(4)}}
 {%- endfor %}

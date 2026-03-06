@@ -16,14 +16,21 @@ class Unnamespaced internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class UnnamespacedCleaner(val handle: Pointer, val lib: UnnamespacedLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class UnnamespacedCleaner(val handle: Pointer, val lib: UnnamespacedLib) : Runnable {
         override fun run() {
             lib.namespace_Unnamespaced_destroy(handle)
         }
     }
-    fun registerCleaner() {
+    private fun registerCleaner() {
         CLEANER.register(this, Unnamespaced.UnnamespacedCleaner(handle, Unnamespaced.lib));
     }
 
@@ -37,8 +44,7 @@ class Unnamespaced internal constructor (
             val returnVal = lib.namespace_Unnamespaced_make(e.toNative());
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Unnamespaced(handle, selfEdges)
-            returnOpaque.registerCleaner()
+            val returnOpaque = Unnamespaced(handle, selfEdges, true)
             return returnOpaque
         }
     }
