@@ -41,5 +41,6 @@
   - [Making Your Own Renderer](demo_gen/custom_renderer.md)
   - [Making Custom Functions](demo_gen/custom_functions.md)
 - [Backend specific documentation](backends/intro.md)
+  - [C](backends/c.md)
   - [Kotlin](backends/kotlin.md)
   - [Nanobind](backends/nanobind.md)
