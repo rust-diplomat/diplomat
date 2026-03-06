@@ -86,7 +86,8 @@ impl DiplomatPreprocessor {
         } = diplomat_tool::get_supported(language);
         chapter.content.push_str(
             format!(
-                r#"## Supports
+                r#"
+## Supports
 - [{namespacing}] Namespaces
 
 - [{memory_sharing}] Memory Sharing
