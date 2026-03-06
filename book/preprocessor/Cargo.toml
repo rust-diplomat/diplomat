@@ -1,0 +1,20 @@
+[package]
+name = "mdbook-diplomat"
+description = "Preprocessor for Diplomat book"
+publish = false
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+readme = "../README.md"
+
+[dependencies]
+clap = {features = ["color", "derive", "std", "suggestions"], version = "4.2" }
+mdbook-preprocessor = "0.5.2"
+serde_json = "1.0.149"
+diplomat-tool = {workspace = true}
+diplomat_core = {workspace = true}
