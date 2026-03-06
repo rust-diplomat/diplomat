@@ -3,3 +3,6 @@ authors = ["Manish Goregaokar"]
 language = "en"
 src = "src"
 title = "The Diplomat Book"
+
+[preprocessor.diplomat]
+command = "cargo run -p mdbook-diplomat"

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["core", "macro", "runtime", "tool", "example", "feature_tests"]
+members = ["core", "macro", "runtime", "tool", "example", "feature_tests", "book/preprocessor"]
 
 [workspace.package]
 
