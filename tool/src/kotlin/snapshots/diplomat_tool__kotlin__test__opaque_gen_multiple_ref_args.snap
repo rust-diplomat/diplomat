@@ -19,12 +19,22 @@ class AnotherOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class AnotherOpaqueCleaner(val handle: Pointer, val lib: AnotherOpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class AnotherOpaqueCleaner(val handle: Pointer, val lib: AnotherOpaqueLib) : Runnable {
         override fun run() {
             lib.AnotherOpaque_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, AnotherOpaque.AnotherOpaqueCleaner(handle, AnotherOpaque.lib));
     }
 
     companion object {
@@ -37,13 +47,15 @@ class AnotherOpaque internal constructor (
         val bSliceMemory = PrimitiveArrayTools.borrow(b)
         
         val returnVal = lib.AnotherOpaque_get_rust_owned_bytes(handle, aSliceMemory.slice, bSliceMemory.slice);
-        val selfEdges: List<Any> = listOf()
-        val handle = returnVal 
-        val returnOpaque = RustOwnedBytes(handle, selfEdges)
-        CLEANER.register(returnOpaque, RustOwnedBytes.RustOwnedBytesCleaner(handle, RustOwnedBytes.lib));
-        aSliceMemory.close()
-        bSliceMemory.close()
-        return returnOpaque
+        try {
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal 
+            val returnOpaque = RustOwnedBytes(handle, selfEdges, true)
+            return returnOpaque
+        } finally {
+            aSliceMemory.close()
+            bSliceMemory.close()
+        }
     }
 
 }

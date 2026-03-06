@@ -170,7 +170,7 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
             val k: Float = nativeStruct.k
             val l: Double = nativeStruct.l
             val m: DoubleArray = PrimitiveArrayTools.getDoubleArray(nativeStruct.m)
-            val n: Opaque = Opaque(nativeStruct.n, listOf())
+            val n: Opaque = Opaque(nativeStruct.n, listOf(), false)
 
             return MyNativeStruct(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
         }

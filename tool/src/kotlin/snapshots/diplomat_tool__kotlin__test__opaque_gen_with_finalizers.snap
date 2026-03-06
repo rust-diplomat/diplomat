@@ -21,16 +21,22 @@ class MyOpaqueStruct internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any?>,
-    internal var finalizer_registered: Boolean = false,
+    internal var owned: Boolean,
 )  {
-    fun registerFinalizer() {
-        this.finalizer_registered = true
+
+    init {
+        if (this.owned) {
+            this.registerFinalizer()
+        }
+    }
+    private fun registerFinalizer() {
+        this.owned = true
     }
 
     @Override
     @SuppressWarnings("Finalize")
     fun finalize() {
-        if (finalizer_registered)
+        if (owned)
             lib.MyOpaqueStruct_destroy(handle)
     }
 

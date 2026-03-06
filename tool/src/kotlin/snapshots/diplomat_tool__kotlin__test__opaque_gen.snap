@@ -20,12 +20,22 @@ class BorrowWrapper internal constructor (
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
     internal val bEdges: List<Any?>,
+    internal var owned: Boolean,
 )  {
 
-    internal class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class BorrowWrapperCleaner(val handle: Pointer, val lib: BorrowWrapperLib) : Runnable {
         override fun run() {
             lib.BorrowWrapper_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, BorrowWrapper.BorrowWrapperCleaner(handle, BorrowWrapper.lib));
     }
 
     companion object {
