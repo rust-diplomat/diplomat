@@ -206,8 +206,9 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
         fun booleanResult(): Result<Boolean> {
             
             val returnVal = lib.MyNativeStruct_boolean_result();
-            if (returnVal.isOk == 1.toByte()) {
-                return (returnVal.union.ok > 0).ok()
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return (nativeOkVal > 0).ok()
             } else {
                 return UnitError().err()
             }
@@ -217,8 +218,9 @@ class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, v
         fun ubyteResult(): Result<UByte> {
             
             val returnVal = lib.MyNativeStruct_ubyte_result();
-            if (returnVal.isOk == 1.toByte()) {
-                return (returnVal.union.ok.toUByte()).ok()
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
+                return (nativeOkVal.toUByte()).ok()
             } else {
                 return UnitError().err()
             }

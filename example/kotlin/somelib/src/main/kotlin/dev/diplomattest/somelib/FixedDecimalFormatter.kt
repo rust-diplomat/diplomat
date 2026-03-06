@@ -39,9 +39,10 @@ class FixedDecimalFormatter internal constructor (
         fun tryNew(locale: Locale, provider: DataProvider, options: FixedDecimalFormatterOptions): Result<FixedDecimalFormatter> {
             
             val returnVal = lib.icu4x_FixedDecimalFormatter_try_new_mv1(locale.handle, provider.handle, options.toNative());
-            if (returnVal.isOk == 1.toByte()) {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
                 val selfEdges: List<Any> = listOf()
-                val handle = returnVal.union.ok 
+                val handle = nativeOkVal 
                 val returnOpaque = FixedDecimalFormatter(handle, selfEdges)
                 CLEANER.register(returnOpaque, FixedDecimalFormatter.FixedDecimalFormatterCleaner(handle, FixedDecimalFormatter.lib));
                 return returnOpaque.ok()

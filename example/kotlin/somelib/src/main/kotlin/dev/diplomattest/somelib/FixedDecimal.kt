@@ -65,7 +65,8 @@ class FixedDecimal internal constructor (
     override fun toString_(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.icu4x_FixedDecimal_to_string_mv1(handle, write);
-        if (returnVal.isOk == 1.toByte()) {
+        val nativeOkVal = returnVal.getNativeOk();
+        if (nativeOkVal != null) {
             
             val returnString = DW.writeToString(write)
             return returnString.ok()

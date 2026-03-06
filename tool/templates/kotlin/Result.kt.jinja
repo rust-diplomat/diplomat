@@ -25,4 +25,37 @@ class Result{{ok.type_name}}{{err.type_name}}: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
+
+{%- if ok.default.is_some() %}
+    internal fun getNativeOk(): {{ok.type_name}}? {
+        if (isOk == 1.toByte()) {
+            return union.getTypedValue({{ok.type_name}}::class.java) as {{ok.type_name}}
+        }
+        return null
+    }
+{%- else %}
+    internal fun getNativeOk(): Unit? {
+        if (isOk == 1.toByte()) {
+            return Unit
+        }
+        return null
+    }
+{%- endif %}
+
+{%- if err.default.is_some() %}
+    internal fun getNativeErr(): {{err.type_name}}? {
+        if (isOk == 0.toByte()) {
+            return union.getTypedValue({{err.type_name}}::class.java) as {{err.type_name}}
+        }
+        return null
+    }
+{%- else %}
+    internal fun getNativeErr(): Unit? {
+        if (isOk == 0.toByte()) {
+            return Unit
+        }
+        return null
+    }
+{%- endif %}
+
 }

@@ -696,6 +696,19 @@ class ResultPointerUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
+    internal fun getNativeOk(): Pointer? {
+        if (isOk == 1.toByte()) {
+            return union.getTypedValue(Pointer::class.java) as Pointer
+        }
+        return null
+    }
+    internal fun getNativeErr(): Unit? {
+        if (isOk == 0.toByte()) {
+            return Unit
+        }
+        return null
+    }
+
 }
 internal class ResultUnitUnitUnion: Union() {
 }
@@ -711,6 +724,19 @@ class ResultUnitUnit: Structure(), Structure.ByValue  {
     override fun getFieldOrder(): List<String> {
         return listOf("union", "isOk")
     }
+    internal fun getNativeOk(): Unit? {
+        if (isOk == 1.toByte()) {
+            return Unit
+        }
+        return null
+    }
+    internal fun getNativeErr(): Unit? {
+        if (isOk == 0.toByte()) {
+            return Unit
+        }
+        return null
+    }
+
 }
 
 

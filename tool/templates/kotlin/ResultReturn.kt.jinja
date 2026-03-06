@@ -1,4 +1,5 @@
-if (returnVal.isOk == 1.toByte()) {
+val nativeOkVal = returnVal.getNativeOk();
+if (nativeOkVal != null) {
     {{ok_path|indent(4)}}
 } else {
     {{err_path|indent(4)}}

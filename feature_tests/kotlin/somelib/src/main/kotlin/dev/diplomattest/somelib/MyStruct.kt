@@ -117,7 +117,8 @@ class MyStruct (var a: UByte, var b: Boolean, var c: UByte, var d: ULong, var e:
         fun returnsZstResult(): Result<Unit> {
             
             val returnVal = lib.MyStruct_returns_zst_result();
-            if (returnVal.isOk == 1.toByte()) {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
                 return Unit.ok()
             } else {
                 return MyZst().err()
@@ -128,7 +129,8 @@ class MyStruct (var a: UByte, var b: Boolean, var c: UByte, var d: ULong, var e:
         fun failsZstResult(): Result<Unit> {
             
             val returnVal = lib.MyStruct_fails_zst_result();
-            if (returnVal.isOk == 1.toByte()) {
+            val nativeOkVal = returnVal.getNativeOk();
+            if (nativeOkVal != null) {
                 return Unit.ok()
             } else {
                 return MyZst().err()
