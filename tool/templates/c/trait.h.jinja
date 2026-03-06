@@ -13,7 +13,7 @@ struct {{trt_name}}_VTable {
 
 {% if !is_for_cpp -%} typedef {% endif -%}
 struct DiplomatTraitStruct_{{trt_name}} {
-    void (*destructor)(const void*);
+    void* data;
     {{trt_name}}_VTable vtable;
 } {%- if !is_for_cpp %} DiplomatTraitStruct_{{trt_name}} {%- endif %};
 

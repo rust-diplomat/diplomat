@@ -24,7 +24,7 @@ typedef struct TesterTrait_VTable {
 } TesterTrait_VTable;
 
 typedef struct DiplomatTraitStruct_TesterTrait {
-    void (*destructor)(const void*);
+    void* data;
     TesterTrait_VTable vtable;
 } DiplomatTraitStruct_TesterTrait;
 
