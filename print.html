@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-40ca4673.js";
+            window.path_to_searchindex_js = "searchindex-95574907.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9a7f2e75.js"></script>
@@ -2003,7 +2003,8 @@ typedef struct TraitName_VTable {
     void (*destructor)(const void*);
 } DiplomatCallback_FunctionName_ParameterName;
 </code></pre>
-<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).## Supports</p>
+<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).</p>
+<h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> Namespaces</p>
@@ -2172,7 +2173,7 @@ so here some specific examples</p>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/main/kotlin/dev/diplomattest/somelib/CallbackWrapper.kt">generated kotlin code</a></li>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib/CallbackWrapperTest.kt">example usage</a></li>
 </ul>
-<h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
+<h2 id="supports-1"><a class="header" href="#supports-1">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> Namespaces</p>
@@ -2325,7 +2326,8 @@ print([foo.x for foo in f])
 </code></pre>
 <h4 id="explanation"><a class="header" href="#explanation">Explanation</a></h4>
 <p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
-<p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.## Supports</p>
+<p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
+<h2 id="supports-2"><a class="header" href="#supports-2">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Namespaces</p>
@@ -2425,7 +2427,8 @@ print([foo.x for foo in f])
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="cpp-supports"><a class="header" href="#cpp-supports">cpp## Supports</a></h1>
+<h1 id="cpp"><a class="header" href="#cpp">cpp</a></h1>
+<h2 id="supports-3"><a class="header" href="#supports-3">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Namespaces</p>
@@ -2525,7 +2528,8 @@ print([foo.x for foo in f])
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="dart-supports"><a class="header" href="#dart-supports">dart## Supports</a></h1>
+<h1 id="dart"><a class="header" href="#dart">dart</a></h1>
+<h2 id="supports-4"><a class="header" href="#supports-4">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> Namespaces</p>
@@ -2625,7 +2629,8 @@ print([foo.x for foo in f])
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="demo_gen-supports"><a class="header" href="#demo_gen-supports">demo_gen## Supports</a></h1>
+<h1 id="demo_gen-1"><a class="header" href="#demo_gen-1">demo_gen</a></h1>
+<h2 id="supports-5"><a class="header" href="#supports-5">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> Namespaces</p>
@@ -2725,7 +2730,8 @@ print([foo.x for foo in f])
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="js-supports"><a class="header" href="#js-supports">js## Supports</a></h1>
+<h1 id="js"><a class="header" href="#js">js</a></h1>
+<h2 id="supports-6"><a class="header" href="#supports-6">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> Namespaces</p>
