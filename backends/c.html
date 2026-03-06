@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Backend specific documentation - The Diplomat Book</title>
+        <title>C - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -174,22 +174,155 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <p>The different backends have specific considerations or configurations. Check below
-to see what is necessary. Documentation for more backends will be added in the future.</p>
-<ul>
-<li><a href="kotlin.html">Kotlin</a></li>
-<li><a href="nanobind.html">Nanobind</a></li>
-</ul>
+                        <h1 id="c-backend"><a class="header" href="#c-backend">C Backend</a></h1>
+<h2 id="type-conversion"><a class="header" href="#type-conversion">Type Conversion</a></h2>
+<p>The C ABI is the backend by most backends access Diplomat’s bindings (with the current exception of JS, which uses WebAssembly’s ABI). So most backends will use the following types underlying most of their generation:</p>
+<h3 id="primitives"><a class="header" href="#primitives">Primitives</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust Type</th><th>C Type</th></tr>
+</thead>
+<tbody>
+<tr><td>u8</td><td>uint8_t</td></tr>
+<tr><td>u16</td><td>uint16_t</td></tr>
+<tr><td>u32</td><td>uint32_t</td></tr>
+<tr><td>u64</td><td>uint64_t</td></tr>
+<tr><td>u128</td><td>unsupported</td></tr>
+<tr><td>i8</td><td>int8_t</td></tr>
+<tr><td>i16</td><td>int16_t</td></tr>
+<tr><td>i32</td><td>int32_t</td></tr>
+<tr><td>i64</td><td>int64_t</td></tr>
+<tr><td>i128</td><td>unsupported</td></tr>
+<tr><td>bool</td><td>bool</td></tr>
+<tr><td>char</td><td>char32_t</td></tr>
+<tr><td>isize</td><td>intptr_t</td></tr>
+<tr><td>usize</td><td>size_t</td></tr>
+<tr><td>f32</td><td>float</td></tr>
+<tr><td>f64</td><td>double</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="struct-types"><a class="header" href="#struct-types">Struct Types</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>C Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>#[diplomat::opaque] pub struct Type</code></td><td><code>struct Type*</code></td></tr>
+<tr><td><code>pub struct Type</code></td><td><code>struct Type{...}</code></td></tr>
+<tr><td><code>pub enum Type</code></td><td><code>enum Type</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="opaques"><a class="header" href="#opaques">Opaques</a></h4>
+<p>Opaques are represented as pointers to zero-sized structs.</p>
+<h4 id="structs"><a class="header" href="#structs">Structs</a></h4>
+<p>Structs are represented as simple C structs; each member is converted into the relevant C type as detailed here.</p>
+<h4 id="enums"><a class="header" href="#enums">Enums</a></h4>
+<p>Diplomat does not support tagged enums, so all Rust enums are simply C enums.</p>
+<h3 id="options"><a class="header" href="#options">Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>C Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>Option&lt;PrimitiveName&gt;</code> or <code>DiplomatOption&lt;PrimitiveName&gt;</code></td><td><code>OptionPrimitiveName</code></td></tr>
+<tr><td><code>Option&lt;StructName&gt;</code> or <code>Option&lt;EnumName&gt;</code></td><td><code>TypeName_option</code></td></tr>
+<tr><td><code>Option&lt;Box&lt;OpaqueName&gt;&gt;</code> or <code>Option&lt;&amp;OpaqueName&gt;</code></td><td><code>struct Type*</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="primitive-options"><a class="header" href="#primitive-options">Primitive Options</a></h4>
+<p>Diplomat’s C backend has custom structs included in <code>diplomat_runtime.h</code> which are named <code>Diplomat{PrimitiveName}View</code>.</p>
+<p><code>PrimitiveName</code> is the Rust primitive’s name (but in UpperCamelCase). These have the following format:</p>
+<pre><code class="language-c">typedef struct OptionPrimitiveName {
+    union { CPrimitiveType* ok;};
+    bool is_ok;
+} OptionPrimitiveName;
+</code></pre>
+<p>Options of Primitive slices have the same name as <a href="#slices">Diplomat’s slice types</a>, but with <code>Option</code> prepended.</p>
+<h4 id="struct-and-enum-options"><a class="header" href="#struct-and-enum-options">Struct and Enum Options</a></h4>
+<p>Structs and enums will generate a <code>TypeName_option</code> struct, with a similar layout as the primitive option above:</p>
+<pre><code class="language-c">typedef struct TypeName_option {
+    union { TypeName ok; };
+    bool is_ok;
+} TypeName_option;
+</code></pre>
+<h4 id="opaque-options"><a class="header" href="#opaque-options">Opaque Options</a></h4>
+<p>Options of opaques are treated as nullable pointers in the C ABI.</p>
+<h3 id="results"><a class="header" href="#results">Results</a></h3>
+<p>For each function that returns a result, the C backend will generate the following struct:</p>
+<pre><code class="language-c">typedef struct FunctionName_result {
+    union {
+        SuccessType ok;
+        ErrorType err;
+    };
+    bool is_ok;
+} FunctionName_result;
+</code></pre>
+<p>Where <code>SuccessType</code> and <code>ErrorType</code> are converted from the given rust type into a C ABI friendly type, as described here.</p>
+<h3 id="slices"><a class="header" href="#slices">Slices</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>C Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>&amp;[Primitive]</code></td><td><code>DiplomatPrimitiveView</code></td></tr>
+<tr><td><code>&amp;mut[Primitive]</code></td><td><code>DiplomatPrimitiveViewMut</code></td></tr>
+<tr><td><code>&amp;str</code> or <code>&amp;DiplomatStr</code> or <code>DiplomatStrSlice</code> or <code>DiplomatUtf8StrSlice</code></td><td><code>DiplomatStringView</code></td></tr>
+<tr><td><code>&amp;DiplomatStr16</code> or <code>DiplomatStr16Slice</code></td><td><code>DiplomatString16View</code></td></tr>
+<tr><td><code>&amp;[&amp;str] or &amp;[DiplomatStrSlice]</code> or <code>&amp;[DiplomatUtf8StrSlice]</code></td><td><code>DiplomatStringsView</code></td></tr>
+<tr><td><code>&amp;[DiplomatStr16Slice]</code></td><td><code>DiplomatStrings16View</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="primitive-slices"><a class="header" href="#primitive-slices">Primitive Slices</a></h4>
+<p>Diplomat’s C backend has custom structs included in <code>diplomat_runtime.h</code> which are named <code>Diplomat{PrimitiveName}View</code>.</p>
+<p><code>PrimitiveName</code> is the Rust primitive’s name (but in UpperCamelCase). These have the following format:</p>
+<pre><code class="language-c">typedef struct DiplomatPrimitiveNameView {
+    const CPrimitiveType* data;
+    size_t len;
+};
+</code></pre>
+<p>There is also a <code>DiplomatPrimitiveViewMut</code> struct for slices with mutable pointers.</p>
+<h3 id="traits"><a class="header" href="#traits">Traits</a></h3>
+<p>For each trait, the C backend will generate a <code>Trait</code> struct and a <code>VTable</code> struct:</p>
+<pre><code class="language-c">typedef struct DiplomatTraitStruct_TraitName {
+    void *data;
+    TraitName_VTable vtable;
+} DiplomatTraitStruct_TraitName;
+
+typedef struct TraitName_VTable {
+    void (*destructor)(const void*);
+    size_t SIZE; size_t ALIGNMENT;
+    /* ... */
+} TraitName_VTable;
+</code></pre>
+<p>Where <code>data</code> is a pointer to the type that implements the VTable.</p>
+<p>The VTable contains all of the pointers to the functions which implement the trait. <code>destructor</code> should be the destructor for <code>void* data</code>. <code>SIZE</code> and <code>ALIGNMENT</code> represent the size and the alignment of the <code>void* data</code> pointer.</p>
+<h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
+<p>Callback arguments generate a struct:</p>
+<pre><code class="language-c">typedef struct DiplomatCallback_FunctionName_ParameterName {
+    const void* data;
+    void (*run_callback)(const void*, /*...*/);
+    void (*destructor)(const void*);
+} DiplomatCallback_FunctionName_ParameterName;
+</code></pre>
+<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../demo_gen/custom_functions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../backends/intro.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../backends/c.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../backends/kotlin.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -199,11 +332,11 @@ to see what is necessary. Documentation for more backends will be added in the f
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../demo_gen/custom_functions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../backends/intro.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../backends/c.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../backends/kotlin.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
