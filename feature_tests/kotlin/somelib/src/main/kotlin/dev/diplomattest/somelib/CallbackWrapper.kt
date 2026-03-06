@@ -407,7 +407,11 @@ class CallbackWrapper (var cantBeEmpty: Boolean) {
             val argSliceMemory = PrimitiveArrayTools.borrow(arg)
             
             val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSliceMemory.slice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
-            
+            try {
+                
+            } finally {
+                argSliceMemory.close()
+            }
         }
     }
     internal fun toNative(): CallbackWrapperNative {

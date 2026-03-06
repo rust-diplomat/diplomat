@@ -44,11 +44,14 @@ class OptionString internal constructor (
             val diplomatStrSliceMemory = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
             val returnVal = lib.OptionString_new(diplomatStrSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal ?: return null
-            val returnOpaque = OptionString(handle, selfEdges, true)
-            diplomatStrSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal ?: return null
+                val returnOpaque = OptionString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                diplomatStrSliceMemory.close()
+            }
         }
     }
     

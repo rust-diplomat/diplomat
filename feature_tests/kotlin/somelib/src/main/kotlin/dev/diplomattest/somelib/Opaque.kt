@@ -59,11 +59,14 @@ class Opaque internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_try_from_utf8(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal ?: return null
-            val returnOpaque = Opaque(handle, selfEdges, true)
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal ?: return null
+                val returnOpaque = Opaque(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
         @JvmStatic
         
@@ -71,11 +74,14 @@ class Opaque internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_from_str(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Opaque(handle, selfEdges, true)
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = Opaque(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
         @JvmStatic
         

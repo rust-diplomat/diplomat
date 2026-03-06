@@ -43,11 +43,14 @@ class RenamedMyIndexer internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.namespace_MyIndexer_new(vSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = RenamedMyIndexer(handle, selfEdges, true)
-            vSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = RenamedMyIndexer(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
         }
     }
     

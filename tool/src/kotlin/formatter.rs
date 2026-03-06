@@ -376,9 +376,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
                 if opaque.is_optional() {
-                    format!(
-                        "{field_val}?.let {{ {ty_name}(it, {lt_list}, {is_owned}) }}"
-                    )
+                    format!("{field_val}?.let {{ {ty_name}(it, {lt_list}, {is_owned}) }}")
                 } else {
                     format!("{ty_name}({field_val}, {lt_list}, {is_owned})")
                 }

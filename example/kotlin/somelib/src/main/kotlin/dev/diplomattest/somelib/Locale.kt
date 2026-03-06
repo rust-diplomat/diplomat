@@ -47,11 +47,14 @@ class Locale internal constructor (
             val nameSliceMemory = PrimitiveArrayTools.borrowUtf8(name)
             
             val returnVal = lib.icu4x_Locale_new_mv1(nameSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Locale(handle, selfEdges, true)
-            nameSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = Locale(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                nameSliceMemory.close()
+            }
         }
     }
 

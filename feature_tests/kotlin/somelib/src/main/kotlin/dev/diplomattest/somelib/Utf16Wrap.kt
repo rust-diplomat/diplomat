@@ -44,11 +44,14 @@ class Utf16Wrap internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf16(input)
             
             val returnVal = lib.Utf16Wrap_from_utf16(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Utf16Wrap(handle, selfEdges, true)
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = Utf16Wrap(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
     }
     

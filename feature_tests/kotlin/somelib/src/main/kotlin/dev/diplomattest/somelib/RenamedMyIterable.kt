@@ -43,11 +43,14 @@ class RenamedMyIterable internal constructor (
             val xSliceMemory = PrimitiveArrayTools.borrow(x)
             
             val returnVal = lib.namespace_MyIterable_new(xSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = RenamedMyIterable(handle, selfEdges, true)
-            xSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = RenamedMyIterable(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                xSliceMemory.close()
+            }
         }
     }
     

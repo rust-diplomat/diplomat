@@ -48,13 +48,16 @@ class OpaqueThinVec internal constructor (
             val cSliceMemory = PrimitiveArrayTools.borrowUtf8(c)
             
             val returnVal = lib.OpaqueThinVec_create(aSliceMemory.slice, bSliceMemory.slice, cSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = OpaqueThinVec(handle, selfEdges, true)
-            aSliceMemory.close()
-            bSliceMemory.close()
-            cSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = OpaqueThinVec(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                aSliceMemory.close()
+                bSliceMemory.close()
+                cSliceMemory.close()
+            }
         }
     }
     

@@ -204,11 +204,14 @@ class ResultOpaque internal constructor (
         val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
         
         val returnVal = lib.ResultOpaque_takes_str(handle, vSliceMemory.slice);
-        val selfEdges: List<Any> = listOf(this)
-        val handle = returnVal 
-        val returnOpaque = ResultOpaque(handle, selfEdges, false)
-        vSliceMemory.close()
-        return returnOpaque
+        try {
+            val selfEdges: List<Any> = listOf(this)
+            val handle = returnVal 
+            val returnOpaque = ResultOpaque(handle, selfEdges, false)
+            return returnOpaque
+        } finally {
+            vSliceMemory.close()
+        }
     }
     
     fun assertInteger(i: Int): Unit {

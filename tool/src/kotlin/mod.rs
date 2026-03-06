@@ -598,7 +598,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         opaque_path: &'d OpaquePath<Optional, MaybeOwn>,
         method_lifetimes_map: &'d MethodLtMap<'d>,
         lifetime_env: &'d LifetimeEnv,
-        cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
@@ -612,7 +611,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             named_lifetimes: Vec<Cow<'b, str>>,
             is_owned: bool,
             self_edges: Vec<Cow<'b, str>>,
-            cleanups: &'a [Cow<'b, str>],
             optional: bool,
             val_name: &'a str,
             return_type_modifier: &'a str,
@@ -651,7 +649,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             named_lifetimes,
             is_owned,
             self_edges,
-            cleanups,
             optional,
             val_name,
             return_type_modifier,
@@ -728,7 +725,6 @@ return string{return_type_modifier}"#
         path: &ReturnableStructPath,
         lifetimes: &'d Lifetimes,
         lifetime_env: &'d LifetimeEnv,
-        cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &str,
     ) -> String {
@@ -758,14 +754,12 @@ return string{return_type_modifier}"#
         struct StructReturn<'a, 'b> {
             return_type_name: Cow<'b, str>,
             named_lifetimes: Vec<Cow<'b, str>>,
-            cleanups: &'a [Cow<'b, str>],
             val_name: &'a str,
             return_type_modifier: &'a str,
         }
         StructReturn {
             return_type_name,
             named_lifetimes,
-            cleanups,
             val_name,
             return_type_modifier,
         }
@@ -778,7 +772,6 @@ return string{return_type_modifier}"#
         &'d self,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
-        cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_modifier: &'d str,
         err_cast: &'d str,
@@ -795,7 +788,6 @@ return string{return_type_modifier}"#
                 opaque_path,
                 method_lifetimes_map,
                 &method.lifetime_env,
-                cleanups,
                 val_name,
                 return_type_modifier,
             ),
@@ -805,7 +797,6 @@ return string{return_type_modifier}"#
                     strct,
                     lifetimes,
                     &method.lifetime_env,
-                    cleanups,
                     val_name,
                     return_type_modifier,
                 )
@@ -828,7 +819,6 @@ return string{return_type_modifier}"#
         &'d self,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
-        cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         o: &'d OutType,
     ) -> String {
@@ -841,7 +831,6 @@ return string{return_type_modifier}"#
                 opaque_path,
                 method_lifetimes_map,
                 &method.lifetime_env,
-                cleanups,
                 val_name,
                 ".?",
             ),
@@ -856,7 +845,6 @@ val intermediateOption = {val_name}.option() ?: return null
                         strct,
                         lifetimes,
                         &method.lifetime_env,
-                        cleanups,
                         "intermediateOption",
                         "",
                     )
@@ -889,7 +877,6 @@ val intermediateOption = {val_name}.option() ?: return null
         res: &'d SuccessType,
         method: &'d Method,
         method_lifetimes_map: &'d MethodLtMap<'d>,
-        cleanups: &[Cow<'d, str>],
         val_name: &'d str,
         return_type_postfix: &str,
     ) -> String {
@@ -898,7 +885,6 @@ val intermediateOption = {val_name}.option() ?: return null
             SuccessType::OutType(ref o) => self.gen_out_type_return_conversion(
                 method,
                 method_lifetimes_map,
-                cleanups,
                 val_name,
                 return_type_postfix,
                 "", // error cast
@@ -914,14 +900,12 @@ val intermediateOption = {val_name}.option() ?: return null
         &'d self,
         method: &'d Method,
         method_lifetimes_map: &MethodLtMap<'d>,
-        cleanups: &[Cow<'d, str>],
     ) -> String {
         match &method.output {
             ReturnType::Infallible(res) => self.gen_success_return_conversion(
                 res,
                 method,
                 method_lifetimes_map,
-                cleanups,
                 "returnVal",
                 "",
             ),
@@ -930,7 +914,6 @@ val intermediateOption = {val_name}.option() ?: return null
                     ok,
                     method,
                     method_lifetimes_map,
-                    cleanups,
                     "nativeOkVal",
                     ".ok()",
                 );
@@ -956,7 +939,6 @@ val intermediateOption = {val_name}.option() ?: return null
                         self.gen_out_type_return_conversion(
                             method,
                             method_lifetimes_map,
-                            cleanups,
                             "returnVal.getNativeErr()!!",
                             err_converter,
                             &err_cast,
@@ -978,14 +960,9 @@ val intermediateOption = {val_name}.option() ?: return null
                 .render()
                 .expect("Failed to render result return")
             }
-            ReturnType::Nullable(SuccessType::OutType(ref res)) => self
-                .gen_nullable_return_conversion(
-                    method,
-                    method_lifetimes_map,
-                    cleanups,
-                    "returnVal",
-                    res,
-                ),
+            ReturnType::Nullable(SuccessType::OutType(ref res)) => {
+                self.gen_nullable_return_conversion(method, method_lifetimes_map, "returnVal", res)
+            }
 
             ReturnType::Nullable(SuccessType::Write) => format!(
                 r#"
@@ -1303,7 +1280,7 @@ returnVal.option() ?: return null
 
         let method_lifetimes_map = visitor.borrow_map();
         let return_expression = self
-            .gen_return_conversion(method, &method_lifetimes_map, cleanups.as_ref())
+            .gen_return_conversion(method, &method_lifetimes_map)
             .into();
 
         // this should only be called in the special method generation below
@@ -1384,6 +1361,7 @@ returnVal.option() ?: return null
             return_expression,
             write_return,
             slice_conversions,
+            cleanups: &cleanups,
             docs: self.formatter.fmt_docs(&method.docs),
             add_override_specifier_for_opaque_self_methods,
             lifetimes: &method.lifetime_env,
@@ -2222,6 +2200,7 @@ struct MethodTpl<'a> {
     /// Conversion code for each parameter
     param_conversions: Vec<Cow<'a, str>>,
     return_expression: Cow<'a, str>,
+    cleanups: &'a [Cow<'a, str>],
     write_return: bool,
     /// A list of slice parameter names and their fooSliceMemory initializers
     slice_conversions: Vec<(Cow<'a, str>, Cow<'a, str>)>,
