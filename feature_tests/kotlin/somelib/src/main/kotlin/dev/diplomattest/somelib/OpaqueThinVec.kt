@@ -19,12 +19,22 @@ class OpaqueThinVec internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): Iterable<OpaqueThinIterIteratorItem> {
 
-    internal class OpaqueThinVecCleaner(val handle: Pointer, val lib: OpaqueThinVecLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OpaqueThinVecCleaner(val handle: Pointer, val lib: OpaqueThinVecLib) : Runnable {
         override fun run() {
             lib.OpaqueThinVec_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
     }
 
     companion object {
@@ -38,14 +48,16 @@ class OpaqueThinVec internal constructor (
             val cSliceMemory = PrimitiveArrayTools.borrowUtf8(c)
             
             val returnVal = lib.OpaqueThinVec_create(aSliceMemory.slice, bSliceMemory.slice, cSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = OpaqueThinVec(handle, selfEdges)
-            CLEANER.register(returnOpaque, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
-            aSliceMemory.close()
-            bSliceMemory.close()
-            cSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = OpaqueThinVec(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                aSliceMemory.close()
+                bSliceMemory.close()
+                cSliceMemory.close()
+            }
         }
     }
     
@@ -56,8 +68,7 @@ class OpaqueThinVec internal constructor (
         val returnVal = lib.OpaqueThinVec_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = OpaqueThinIter(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
+        val returnOpaque = OpaqueThinIter(handle, selfEdges, aEdges, true)
         return returnOpaque
     }
     
@@ -74,7 +85,7 @@ class OpaqueThinVec internal constructor (
         val returnVal = lib.OpaqueThinVec_get(handle, FFISizet(idx));
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
-        val returnOpaque = OpaqueThin(handle, selfEdges)
+        val returnOpaque = OpaqueThin(handle, selfEdges, false)
         return returnOpaque
     }
     
@@ -85,7 +96,7 @@ class OpaqueThinVec internal constructor (
         val returnVal = lib.OpaqueThinVec_first(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
-        val returnOpaque = OpaqueThin(handle, selfEdges)
+        val returnOpaque = OpaqueThin(handle, selfEdges, false)
         return returnOpaque
     }
 

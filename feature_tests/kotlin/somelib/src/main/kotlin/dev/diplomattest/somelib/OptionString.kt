@@ -17,12 +17,22 @@ class OptionString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OptionStringCleaner(val handle: Pointer, val lib: OptionStringLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OptionStringCleaner(val handle: Pointer, val lib: OptionStringLib) : Runnable {
         override fun run() {
             lib.OptionString_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, OptionString.OptionStringCleaner(handle, OptionString.lib));
     }
 
     companion object {
@@ -34,12 +44,14 @@ class OptionString internal constructor (
             val diplomatStrSliceMemory = PrimitiveArrayTools.borrowUtf8(diplomatStr)
             
             val returnVal = lib.OptionString_new(diplomatStrSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal ?: return null
-            val returnOpaque = OptionString(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
-            diplomatStrSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal ?: return null
+                val returnOpaque = OptionString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                diplomatStrSliceMemory.close()
+            }
         }
     }
     

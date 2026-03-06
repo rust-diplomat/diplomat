@@ -16,12 +16,22 @@ class RenamedMyIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): Iterable<RenamedMyIteratorIteratorItem> {
 
-    internal class RenamedMyIterableCleaner(val handle: Pointer, val lib: RenamedMyIterableLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedMyIterableCleaner(val handle: Pointer, val lib: RenamedMyIterableLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterable_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIterable.RenamedMyIterableCleaner(handle, RenamedMyIterable.lib));
     }
 
     companion object {
@@ -33,12 +43,14 @@ class RenamedMyIterable internal constructor (
             val xSliceMemory = PrimitiveArrayTools.borrow(x)
             
             val returnVal = lib.namespace_MyIterable_new(xSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = RenamedMyIterable(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedMyIterable.RenamedMyIterableCleaner(handle, RenamedMyIterable.lib));
-            xSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = RenamedMyIterable(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                xSliceMemory.close()
+            }
         }
     }
     
@@ -49,8 +61,7 @@ class RenamedMyIterable internal constructor (
         val returnVal = lib.namespace_MyIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = RenamedMyIterator(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, RenamedMyIterator.RenamedMyIteratorCleaner(handle, RenamedMyIterator.lib));
+        val returnOpaque = RenamedMyIterator(handle, selfEdges, aEdges, true)
         return returnOpaque
     }
 

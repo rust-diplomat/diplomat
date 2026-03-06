@@ -17,12 +17,22 @@ class RenamedMyIterator internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 ): Iterator<UByte> {
 
-    internal class RenamedMyIteratorCleaner(val handle: Pointer, val lib: RenamedMyIteratorLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedMyIteratorCleaner(val handle: Pointer, val lib: RenamedMyIteratorLib) : Runnable {
         override fun run() {
             lib.namespace_MyIterator_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIterator.RenamedMyIteratorCleaner(handle, RenamedMyIterator.lib));
     }
 
     companion object {

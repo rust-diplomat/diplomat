@@ -74,18 +74,10 @@ class OptionStruct (var a: OptionOpaque?, var b: OptionOpaqueChar?, var c: UInt,
         val NATIVESIZE: Long = Native.getNativeSize(OptionStructNative::class.java).toLong()
 
         internal fun fromNative(nativeStruct: OptionStructNative): OptionStruct {
-            val a: OptionOpaque? = if (nativeStruct.a == null) {
-        null
-    } else {
-        OptionOpaque(nativeStruct.a!!, listOf())
-    }
-            val b: OptionOpaqueChar? = if (nativeStruct.b == null) {
-        null
-    } else {
-        OptionOpaqueChar(nativeStruct.b!!, listOf())
-    }
+            val a: OptionOpaque? = nativeStruct.a?.let { OptionOpaque(it, listOf(), true) }
+            val b: OptionOpaqueChar? = nativeStruct.b?.let { OptionOpaqueChar(it, listOf(), true) }
             val c: UInt = nativeStruct.c.toUInt()
-            val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf())
+            val d: OptionOpaque = OptionOpaque(nativeStruct.d, listOf(), true)
 
             return OptionStruct(a, b, c, d)
         }

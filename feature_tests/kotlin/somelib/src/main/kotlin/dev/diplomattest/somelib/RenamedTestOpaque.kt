@@ -14,12 +14,22 @@ class RenamedTestOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedTestOpaqueCleaner(val handle: Pointer, val lib: RenamedTestOpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedTestOpaqueCleaner(val handle: Pointer, val lib: RenamedTestOpaqueLib) : Runnable {
         override fun run() {
             lib.namespace_TestOpaque_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedTestOpaque.RenamedTestOpaqueCleaner(handle, RenamedTestOpaque.lib));
     }
 
     companion object {

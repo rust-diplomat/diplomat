@@ -23,12 +23,22 @@ class OpaqueMutexedString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OpaqueMutexedStringCleaner(val handle: Pointer, val lib: OpaqueMutexedStringLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OpaqueMutexedStringCleaner(val handle: Pointer, val lib: OpaqueMutexedStringLib) : Runnable {
         override fun run() {
             lib.OpaqueMutexedString_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
     }
 
     companion object {
@@ -41,8 +51,7 @@ class OpaqueMutexedString internal constructor (
             val returnVal = lib.OpaqueMutexedString_from_usize(FFISizet(number));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = OpaqueMutexedString(handle, selfEdges)
-            CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
+            val returnOpaque = OpaqueMutexedString(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -54,7 +63,7 @@ class OpaqueMutexedString internal constructor (
             val returnVal = lib.OpaqueMutexedString_borrow_other(other.handle);
             val selfEdges: List<Any> = listOf(other)
             val handle = returnVal 
-            val returnOpaque = OpaqueMutexedString(handle, selfEdges)
+            val returnOpaque = OpaqueMutexedString(handle, selfEdges, false)
             return returnOpaque
         }
     }
@@ -72,7 +81,7 @@ class OpaqueMutexedString internal constructor (
         val returnVal = lib.OpaqueMutexedString_borrow(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
-        val returnOpaque = OpaqueMutexedString(handle, selfEdges)
+        val returnOpaque = OpaqueMutexedString(handle, selfEdges, false)
         return returnOpaque
     }
     
@@ -83,7 +92,7 @@ class OpaqueMutexedString internal constructor (
         val returnVal = lib.OpaqueMutexedString_borrow_self_or_other(handle, other.handle);
         val selfEdges: List<Any> = listOf(this) + listOf(other)
         val handle = returnVal 
-        val returnOpaque = OpaqueMutexedString(handle, selfEdges)
+        val returnOpaque = OpaqueMutexedString(handle, selfEdges, false)
         return returnOpaque
     }
     
@@ -106,8 +115,7 @@ class OpaqueMutexedString internal constructor (
         val returnVal = lib.OpaqueMutexedString_wrapper(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = Utf16Wrap(handle, selfEdges)
-        CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
+        val returnOpaque = Utf16Wrap(handle, selfEdges, true)
         return returnOpaque
     }
     

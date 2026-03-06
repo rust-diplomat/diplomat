@@ -16,12 +16,22 @@ class RefList internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RefListCleaner(val handle: Pointer, val lib: RefListLib) : Runnable {
         override fun run() {
             lib.RefList_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RefList.RefListCleaner(handle, RefList.lib));
     }
 
     companion object {
@@ -36,8 +46,7 @@ class RefList internal constructor (
             val returnVal = lib.RefList_node(data.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RefList(handle, selfEdges, bEdges)
-            CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));
+            val returnOpaque = RefList(handle, selfEdges, bEdges, true)
             return returnOpaque
         }
     }

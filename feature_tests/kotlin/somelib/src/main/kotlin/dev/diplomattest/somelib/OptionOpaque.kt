@@ -33,12 +33,22 @@ class OptionOpaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OptionOpaqueCleaner(val handle: Pointer, val lib: OptionOpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OptionOpaqueCleaner(val handle: Pointer, val lib: OptionOpaqueLib) : Runnable {
         override fun run() {
             lib.OptionOpaque_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
     }
 
     companion object {
@@ -51,8 +61,7 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new(i);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
-            val returnOpaque = OptionOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
+            val returnOpaque = OptionOpaque(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -62,8 +71,7 @@ class OptionOpaque internal constructor (
             val returnVal = lib.OptionOpaque_new_none();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
-            val returnOpaque = OptionOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
+            val returnOpaque = OptionOpaque(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -185,7 +193,7 @@ class OptionOpaque internal constructor (
         val returnVal = lib.OptionOpaque_returns_none_self(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
-        val returnOpaque = OptionOpaque(handle, selfEdges)
+        val returnOpaque = OptionOpaque(handle, selfEdges, false)
         return returnOpaque
     }
     
@@ -196,7 +204,7 @@ class OptionOpaque internal constructor (
         val returnVal = lib.OptionOpaque_returns_some_self(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
-        val returnOpaque = OptionOpaque(handle, selfEdges)
+        val returnOpaque = OptionOpaque(handle, selfEdges, false)
         return returnOpaque
     }
     

@@ -16,12 +16,22 @@ class RenamedMyIndexer internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedMyIndexerCleaner(val handle: Pointer, val lib: RenamedMyIndexerLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedMyIndexerCleaner(val handle: Pointer, val lib: RenamedMyIndexerLib) : Runnable {
         override fun run() {
             lib.namespace_MyIndexer_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
     }
 
     companion object {
@@ -33,12 +43,14 @@ class RenamedMyIndexer internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.namespace_MyIndexer_new(vSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = RenamedMyIndexer(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
-            vSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = RenamedMyIndexer(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
         }
     }
     

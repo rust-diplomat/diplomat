@@ -16,12 +16,22 @@ class RenamedOpaqueRefIterable internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 ): Iterable<RenamedOpaqueRefIteratorIteratorItem> {
 
-    internal class RenamedOpaqueRefIterableCleaner(val handle: Pointer, val lib: RenamedOpaqueRefIterableLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedOpaqueRefIterableCleaner(val handle: Pointer, val lib: RenamedOpaqueRefIterableLib) : Runnable {
         override fun run() {
             lib.namespace_OpaqueRefIterable_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedOpaqueRefIterable.RenamedOpaqueRefIterableCleaner(handle, RenamedOpaqueRefIterable.lib));
     }
 
     companion object {
@@ -34,8 +44,7 @@ class RenamedOpaqueRefIterable internal constructor (
             val returnVal = lib.namespace_OpaqueRefIterable_new(FFISizet(size));
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = RenamedOpaqueRefIterable(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedOpaqueRefIterable.RenamedOpaqueRefIterableCleaner(handle, RenamedOpaqueRefIterable.lib));
+            val returnOpaque = RenamedOpaqueRefIterable(handle, selfEdges, true)
             return returnOpaque
         }
     }
@@ -47,8 +56,7 @@ class RenamedOpaqueRefIterable internal constructor (
         val returnVal = lib.namespace_OpaqueRefIterable_iter(handle);
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
-        val returnOpaque = RenamedOpaqueRefIterator(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, RenamedOpaqueRefIterator.RenamedOpaqueRefIteratorCleaner(handle, RenamedOpaqueRefIterator.lib));
+        val returnOpaque = RenamedOpaqueRefIterator(handle, selfEdges, aEdges, true)
         return returnOpaque
     }
 

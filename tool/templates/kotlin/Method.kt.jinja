@@ -32,5 +32,15 @@
         {{ param }}
         {%- endfor -%}
     );
+    {%- if cleanups.is_empty() %}
     {{return_expression|indent(4)}}
+    {%- else %}
+    try {
+        {{return_expression|indent(8)}}
+    } finally {
+        {%- for cleanup in cleanups %}
+        {{cleanup|indent(8)}}
+        {%- endfor %}
+    }
+    {%- endif %}
 }

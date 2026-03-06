@@ -26,12 +26,22 @@ class One internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OneCleaner(val handle: Pointer, val lib: OneLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OneCleaner(val handle: Pointer, val lib: OneLib) : Runnable {
         override fun run() {
             lib.One_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, One.OneCleaner(handle, One.lib));
     }
 
     companion object {
@@ -46,8 +56,7 @@ class One internal constructor (
             val returnVal = lib.One_transitivity(hold.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -59,8 +68,7 @@ class One internal constructor (
             val returnVal = lib.One_cycle(hold.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -72,8 +80,7 @@ class One internal constructor (
             val returnVal = lib.One_many_dependents(a.handle, b.handle, c.handle, d.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -85,8 +92,7 @@ class One internal constructor (
             val returnVal = lib.One_return_outlives_param(hold.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, longEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, longEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -98,8 +104,7 @@ class One internal constructor (
             val returnVal = lib.One_diamond_top(top.handle, left.handle, right.handle, bottom.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, topEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, topEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -111,8 +116,7 @@ class One internal constructor (
             val returnVal = lib.One_diamond_left(top.handle, left.handle, right.handle, bottom.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, leftEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, leftEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -124,8 +128,7 @@ class One internal constructor (
             val returnVal = lib.One_diamond_right(top.handle, left.handle, right.handle, bottom.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, rightEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, rightEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -137,8 +140,7 @@ class One internal constructor (
             val returnVal = lib.One_diamond_bottom(top.handle, left.handle, right.handle, bottom.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, bottomEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, bottomEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -150,8 +152,7 @@ class One internal constructor (
             val returnVal = lib.One_diamond_and_nested_types(a.handle, b.handle, c.handle, d.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -163,8 +164,7 @@ class One internal constructor (
             val returnVal = lib.One_implicit_bounds(explicitHold.handle, implicitHold.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -176,8 +176,7 @@ class One internal constructor (
             val returnVal = lib.One_implicit_bounds_deep(explicit.handle, implicit1.handle, implicit2.handle, nohold.handle);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            val returnOpaque = One(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
     }

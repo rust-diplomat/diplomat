@@ -17,12 +17,22 @@ class Bar internal constructor (
     internal val selfEdges: List<Any>,
     internal val bEdges: List<Any?>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 )  {
 
-    internal class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class BarCleaner(val handle: Pointer, val lib: BarLib) : Runnable {
         override fun run() {
             lib.Bar_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, Bar.BarCleaner(handle, Bar.lib));
     }
 
     companion object {
@@ -39,7 +49,7 @@ class Bar internal constructor (
         val returnVal = lib.Bar_foo(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal 
-        val returnOpaque = Foo(handle, selfEdges, aEdges)
+        val returnOpaque = Foo(handle, selfEdges, aEdges, false)
         return returnOpaque
     }
 

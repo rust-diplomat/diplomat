@@ -17,12 +17,22 @@ class Utf16Wrap internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class Utf16WrapCleaner(val handle: Pointer, val lib: Utf16WrapLib) : Runnable {
         override fun run() {
             lib.Utf16Wrap_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
     }
 
     companion object {
@@ -34,12 +44,14 @@ class Utf16Wrap internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf16(input)
             
             val returnVal = lib.Utf16Wrap_from_utf16(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Utf16Wrap(handle, selfEdges)
-            CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = Utf16Wrap(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
     }
     

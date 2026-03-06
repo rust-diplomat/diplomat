@@ -17,12 +17,22 @@ class OpaqueThinIter internal constructor (
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
     internal val aEdges: List<Any?>,
+    internal var owned: Boolean,
 ): Iterator<OpaqueThin?> {
 
-    internal class OpaqueThinIterCleaner(val handle: Pointer, val lib: OpaqueThinIterLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OpaqueThinIterCleaner(val handle: Pointer, val lib: OpaqueThinIterLib) : Runnable {
         override fun run() {
             lib.OpaqueThinIter_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
     }
 
     companion object {
@@ -37,7 +47,7 @@ class OpaqueThinIter internal constructor (
         val returnVal = lib.OpaqueThinIter_next(handle);
         val selfEdges: List<Any> = listOf(this)
         val handle = returnVal ?: return null
-        val returnOpaque = OpaqueThin(handle, selfEdges)
+        val returnOpaque = OpaqueThin(handle, selfEdges, false)
         return returnOpaque
     }
 

@@ -46,9 +46,7 @@ class {{type_name}} internal constructor (
     internal val {{lt}}Edges: List<Any?>,
     {%- endfor %}
     {%- endif %}
-    {%- if use_finalizers_not_cleaners %}
-    internal var finalizer_registered: Boolean = false,
-    {%- endif %}
+    internal var owned: Boolean,
 {%- if generate_mocking_interface %}
 ): {{type_name}}Interface {%- if is_custom_error %}: Exception("Rust error result for {{type_name}}") {%- endif %}
 {%- else %}
@@ -59,22 +57,31 @@ class {{type_name}} internal constructor (
 {%- endfor %}
 {%- endif %} {
 
+    init {
+        if (this.owned) {
+            this.register{% if use_finalizers_not_cleaners %}Finalizer{% else %}Cleaner{% endif %}()
+        }
+    }
+
     {%- if !use_finalizers_not_cleaners %}
 
-    internal class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
+    private class {{type_name}}Cleaner(val handle: Pointer, val lib: {{type_name}}Lib) : Runnable {
         override fun run() {
             lib.{{dtor_abi_name}}(handle)
         }
     }
+    private fun registerCleaner() {
+        CLEANER.register(this, {{type_name}}.{{type_name}}Cleaner(handle, {{type_name}}.lib));
+    }
     {%- else %}
-    fun registerFinalizer() {
-        this.finalizer_registered = true
+    private fun registerFinalizer() {
+        this.owned = true
     }
 
     @Override
     @SuppressWarnings("Finalize")
     fun finalize() {
-        if (finalizer_registered)
+        if (owned)
             lib.{{dtor_abi_name}}(handle)
     }
     {%- endif %}

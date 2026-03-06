@@ -23,12 +23,22 @@ class MyString internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class MyStringCleaner(val handle: Pointer, val lib: MyStringLib) : Runnable {
         override fun run() {
             lib.MyString_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, MyString.MyStringCleaner(handle, MyString.lib));
     }
 
     companion object {
@@ -40,12 +50,14 @@ class MyString internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new(vSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = MyString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
         }
         @JvmStatic
         
@@ -53,12 +65,14 @@ class MyString internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8(v)
             
             val returnVal = lib.MyString_new_unsafe(vSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = MyString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
         }
         @JvmStatic
         
@@ -68,8 +82,7 @@ class MyString internal constructor (
             val returnVal = lib.MyString_new_owned(vSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            val returnOpaque = MyString(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -78,12 +91,14 @@ class MyString internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.MyString_new_from_first(vSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
-            vSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = MyString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
         }
         @JvmStatic
         
@@ -98,9 +113,13 @@ class MyString internal constructor (
             val fooSliceMemory = PrimitiveArrayTools.borrowUtf8(foo)
             val write = DW.lib.diplomat_buffer_write_create(0)
             val returnVal = lib.MyString_string_transform(fooSliceMemory.slice, write);
-            
-            val returnString = DW.writeToString(write)
-            return returnString
+            try {
+                
+                val returnString = DW.writeToString(write)
+                return returnString
+            } finally {
+                fooSliceMemory.close()
+            }
         }
     }
     
@@ -108,7 +127,11 @@ class MyString internal constructor (
         val newStrSliceMemory = PrimitiveArrayTools.borrowUtf8(newStr)
         
         val returnVal = lib.MyString_set_str(handle, newStrSliceMemory.slice);
-        
+        try {
+            
+        } finally {
+            newStrSliceMemory.close()
+        }
     }
     
     fun getStr(): String {

@@ -66,12 +66,22 @@ class MutableCallbackHolder internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class MutableCallbackHolderCleaner(val handle: Pointer, val lib: MutableCallbackHolderLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class MutableCallbackHolderCleaner(val handle: Pointer, val lib: MutableCallbackHolderLib) : Runnable {
         override fun run() {
             lib.MutableCallbackHolder_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, MutableCallbackHolder.MutableCallbackHolderCleaner(handle, MutableCallbackHolder.lib));
     }
 
     companion object {
@@ -84,8 +94,7 @@ class MutableCallbackHolder internal constructor (
             val returnVal = lib.MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func.fromCallback(func).nativeStruct);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = MutableCallbackHolder(handle, selfEdges)
-            CLEANER.register(returnOpaque, MutableCallbackHolder.MutableCallbackHolderCleaner(handle, MutableCallbackHolder.lib));
+            val returnOpaque = MutableCallbackHolder(handle, selfEdges, true)
             return returnOpaque
         }
     }

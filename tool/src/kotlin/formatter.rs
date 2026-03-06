@@ -350,6 +350,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 format!("{field_val}{maybe_unsized_conversion}").into()
             }
             Type::Opaque(opaque) => {
+                let is_owned = opaque.is_owned();
                 let lt_list: String =
                     once("listOf()".to_string()) // we only support owned opaque types, so the self edges
                                      // should be empty
@@ -375,15 +376,9 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 let ty_name =
                     self.fmt_type_name(ty.id().expect("Failed to get type id for opaque"));
                 if opaque.is_optional() {
-                    format!(
-                        r#"if ({field_val} == null) {{
-        null
-    }} else {{
-        {ty_name}({field_val}!!, {lt_list})
-    }}"#
-                    )
+                    format!("{field_val}?.let {{ {ty_name}(it, {lt_list}, {is_owned}) }}")
                 } else {
-                    format!("{ty_name}({field_val}, {lt_list})")
+                    format!("{ty_name}({field_val}, {lt_list}, {is_owned})")
                 }
                 .into()
             }

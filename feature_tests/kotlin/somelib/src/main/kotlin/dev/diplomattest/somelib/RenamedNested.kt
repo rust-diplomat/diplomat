@@ -14,12 +14,22 @@ class RenamedNested internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class RenamedNestedCleaner(val handle: Pointer, val lib: RenamedNestedLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class RenamedNestedCleaner(val handle: Pointer, val lib: RenamedNestedLib) : Runnable {
         override fun run() {
             lib.namespace_Nested_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, RenamedNested.RenamedNestedCleaner(handle, RenamedNested.lib));
     }
 
     companion object {

@@ -22,12 +22,22 @@ class Opaque internal constructor (
     // These ensure that anything that is borrowed is kept alive and not cleaned
     // up by the garbage collector.
     internal val selfEdges: List<Any>,
+    internal var owned: Boolean,
 )  {
 
-    internal class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
+    init {
+        if (this.owned) {
+            this.registerCleaner()
+        }
+    }
+
+    private class OpaqueCleaner(val handle: Pointer, val lib: OpaqueLib) : Runnable {
         override fun run() {
             lib.Opaque_destroy(handle)
         }
+    }
+    private fun registerCleaner() {
+        CLEANER.register(this, Opaque.OpaqueCleaner(handle, Opaque.lib));
     }
 
     companion object {
@@ -40,8 +50,7 @@ class Opaque internal constructor (
             val returnVal = lib.Opaque_new();
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
-            val returnOpaque = Opaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
+            val returnOpaque = Opaque(handle, selfEdges, true)
             return returnOpaque
         }
         @JvmStatic
@@ -50,12 +59,14 @@ class Opaque internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_try_from_utf8(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal ?: return null
-            val returnOpaque = Opaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal ?: return null
+                val returnOpaque = Opaque(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
         @JvmStatic
         
@@ -63,12 +74,14 @@ class Opaque internal constructor (
             val inputSliceMemory = PrimitiveArrayTools.borrowUtf8(input)
             
             val returnVal = lib.Opaque_from_str(inputSliceMemory.slice);
-            val selfEdges: List<Any> = listOf()
-            val handle = returnVal 
-            val returnOpaque = Opaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, Opaque.OpaqueCleaner(handle, Opaque.lib));
-            inputSliceMemory.close()
-            return returnOpaque
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = Opaque(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                inputSliceMemory.close()
+            }
         }
         @JvmStatic
         
