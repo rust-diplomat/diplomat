@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-64ab400b.js";
+            window.path_to_searchindex_js = "searchindex-40ca4673.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-740fe7c0.js"></script>
+        <script src="toc-9a7f2e75.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -2003,7 +2003,105 @@ typedef struct TraitName_VTable {
     void (*destructor)(const void*);
 } DiplomatCallback_FunctionName_ParameterName;
 </code></pre>
-<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).</p>
+<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).## Supports</p>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="kotlin-backend"><a class="header" href="#kotlin-backend">Kotlin Backend</a></h1>
 <p>The kotlin backend uses JNA to wrap the ABI types from diplomat into an ergonomic library for use in the JVM.
@@ -2074,6 +2172,105 @@ so here some specific examples</p>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/main/kotlin/dev/diplomattest/somelib/CallbackWrapper.kt">generated kotlin code</a></li>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib/CallbackWrapperTest.kt">example usage</a></li>
 </ul>
+<h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="nanobind-backend"><a class="header" href="#nanobind-backend">Nanobind Backend</a></h1>
 <h2 id="debugging"><a class="header" href="#debugging">Debugging</a></h2>
@@ -2128,7 +2325,505 @@ print([foo.x for foo in f])
 </code></pre>
 <h4 id="explanation"><a class="header" href="#explanation">Explanation</a></h4>
 <p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
-<p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
+<p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.## Supports</p>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cpp-supports"><a class="header" href="#cpp-supports">cpp## Supports</a></h1>
+<ul>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Default Arguments</p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="dart-supports"><a class="header" href="#dart-supports">dart## Supports</a></h1>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="demo_gen-supports"><a class="header" href="#demo_gen-supports">demo_gen## Supports</a></h1>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="js-supports"><a class="header" href="#js-supports">js## Supports</a></h1>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> Namespaces</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Defaults</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Stringifiers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Comparators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Indexers</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Arithmetic</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Options</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Callbacks</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Struct Refs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Bindings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+</ul>
 
                     </main>
 
