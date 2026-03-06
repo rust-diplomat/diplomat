@@ -22,6 +22,9 @@ class OptionOpaqueChar internal constructor (
             lib.OptionOpaqueChar_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OptionOpaqueChar.OptionOpaqueCharCleaner(handle, OptionOpaqueChar.lib));
+    }
 
     companion object {
         internal val libClass: Class<OptionOpaqueCharLib> = OptionOpaqueCharLib::class.java

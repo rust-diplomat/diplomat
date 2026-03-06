@@ -25,6 +25,9 @@ class RenamedVectorTest internal constructor (
             lib.namespace_VectorTest_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedVectorTest.RenamedVectorTestCleaner(handle, RenamedVectorTest.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedVectorTestLib> = RenamedVectorTestLib::class.java
@@ -37,7 +40,7 @@ class RenamedVectorTest internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = RenamedVectorTest(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedVectorTest.RenamedVectorTestCleaner(handle, RenamedVectorTest.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

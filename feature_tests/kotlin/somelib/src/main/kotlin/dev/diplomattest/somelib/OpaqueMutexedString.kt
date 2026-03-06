@@ -30,6 +30,9 @@ class OpaqueMutexedString internal constructor (
             lib.OpaqueMutexedString_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
+    }
 
     companion object {
         internal val libClass: Class<OpaqueMutexedStringLib> = OpaqueMutexedStringLib::class.java
@@ -42,7 +45,7 @@ class OpaqueMutexedString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = OpaqueMutexedString(handle, selfEdges)
-            CLEANER.register(returnOpaque, OpaqueMutexedString.OpaqueMutexedStringCleaner(handle, OpaqueMutexedString.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -107,7 +110,7 @@ class OpaqueMutexedString internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = Utf16Wrap(handle, selfEdges)
-        CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
     

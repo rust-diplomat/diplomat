@@ -40,6 +40,9 @@ class OptionOpaque internal constructor (
             lib.OptionOpaque_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
+    }
 
     companion object {
         internal val libClass: Class<OptionOpaqueLib> = OptionOpaqueLib::class.java
@@ -52,7 +55,7 @@ class OptionOpaque internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -63,7 +66,7 @@ class OptionOpaque internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionOpaque(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionOpaque.OptionOpaqueCleaner(handle, OptionOpaque.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic

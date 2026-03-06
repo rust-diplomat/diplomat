@@ -73,6 +73,9 @@ class MutableCallbackHolder internal constructor (
             lib.MutableCallbackHolder_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, MutableCallbackHolder.MutableCallbackHolderCleaner(handle, MutableCallbackHolder.lib));
+    }
 
     companion object {
         internal val libClass: Class<MutableCallbackHolderLib> = MutableCallbackHolderLib::class.java
@@ -85,7 +88,7 @@ class MutableCallbackHolder internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MutableCallbackHolder(handle, selfEdges)
-            CLEANER.register(returnOpaque, MutableCallbackHolder.MutableCallbackHolderCleaner(handle, MutableCallbackHolder.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

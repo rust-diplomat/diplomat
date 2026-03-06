@@ -24,6 +24,9 @@ class OpaqueThinIter internal constructor (
             lib.OpaqueThinIter_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
+    }
 
     companion object {
         internal val libClass: Class<OpaqueThinIterLib> = OpaqueThinIterLib::class.java

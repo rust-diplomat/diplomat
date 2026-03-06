@@ -21,6 +21,9 @@ class RenamedAttrOpaque2 internal constructor (
             lib.namespace_AttrOpaque2_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedAttrOpaque2.RenamedAttrOpaque2Cleaner(handle, RenamedAttrOpaque2.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedAttrOpaque2Lib> = RenamedAttrOpaque2Lib::class.java

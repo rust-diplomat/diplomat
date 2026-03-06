@@ -23,6 +23,9 @@ class RenamedMyIterable internal constructor (
             lib.namespace_MyIterable_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIterable.RenamedMyIterableCleaner(handle, RenamedMyIterable.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedMyIterableLib> = RenamedMyIterableLib::class.java
@@ -36,7 +39,7 @@ class RenamedMyIterable internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = RenamedMyIterable(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedMyIterable.RenamedMyIterableCleaner(handle, RenamedMyIterable.lib));
+            returnOpaque.registerCleaner()
             xSliceMemory.close()
             return returnOpaque
         }
@@ -50,7 +53,7 @@ class RenamedMyIterable internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = RenamedMyIterator(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, RenamedMyIterator.RenamedMyIteratorCleaner(handle, RenamedMyIterator.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
 

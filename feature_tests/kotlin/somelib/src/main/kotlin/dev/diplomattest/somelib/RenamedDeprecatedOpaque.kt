@@ -21,6 +21,9 @@ class RenamedDeprecatedOpaque internal constructor (
             lib.namespace_DeprecatedOpaque_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedDeprecatedOpaque.RenamedDeprecatedOpaqueCleaner(handle, RenamedDeprecatedOpaque.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedDeprecatedOpaqueLib> = RenamedDeprecatedOpaqueLib::class.java

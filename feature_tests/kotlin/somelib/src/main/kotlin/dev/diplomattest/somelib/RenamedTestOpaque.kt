@@ -21,6 +21,9 @@ class RenamedTestOpaque internal constructor (
             lib.namespace_TestOpaque_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedTestOpaque.RenamedTestOpaqueCleaner(handle, RenamedTestOpaque.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedTestOpaqueLib> = RenamedTestOpaqueLib::class.java

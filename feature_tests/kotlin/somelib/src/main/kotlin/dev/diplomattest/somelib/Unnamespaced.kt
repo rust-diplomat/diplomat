@@ -23,6 +23,9 @@ class Unnamespaced internal constructor (
             lib.namespace_Unnamespaced_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Unnamespaced.UnnamespacedCleaner(handle, Unnamespaced.lib));
+    }
 
     companion object {
         internal val libClass: Class<UnnamespacedLib> = UnnamespacedLib::class.java
@@ -35,7 +38,7 @@ class Unnamespaced internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Unnamespaced(handle, selfEdges)
-            CLEANER.register(returnOpaque, Unnamespaced.UnnamespacedCleaner(handle, Unnamespaced.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

@@ -23,6 +23,9 @@ class RenamedOpaqueRefIterable internal constructor (
             lib.namespace_OpaqueRefIterable_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedOpaqueRefIterable.RenamedOpaqueRefIterableCleaner(handle, RenamedOpaqueRefIterable.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedOpaqueRefIterableLib> = RenamedOpaqueRefIterableLib::class.java
@@ -35,7 +38,7 @@ class RenamedOpaqueRefIterable internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = RenamedOpaqueRefIterable(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedOpaqueRefIterable.RenamedOpaqueRefIterableCleaner(handle, RenamedOpaqueRefIterable.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }
@@ -48,7 +51,7 @@ class RenamedOpaqueRefIterable internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = RenamedOpaqueRefIterator(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, RenamedOpaqueRefIterator.RenamedOpaqueRefIteratorCleaner(handle, RenamedOpaqueRefIterator.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
 

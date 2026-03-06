@@ -37,6 +37,9 @@ class AttrOpaque1Renamed internal constructor (
             lib.namespace_AttrOpaque1_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
+    }
 
     companion object {
         internal val libClass: Class<AttrOpaque1RenamedLib> = AttrOpaque1RenamedLib::class.java
@@ -49,7 +52,7 @@ class AttrOpaque1Renamed internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-            CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -62,7 +65,7 @@ class AttrOpaque1Renamed internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-            CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic

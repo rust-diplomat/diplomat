@@ -24,6 +24,9 @@ class Bar internal constructor (
             lib.Bar_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Bar.BarCleaner(handle, Bar.lib));
+    }
 
     companion object {
         internal val libClass: Class<BarLib> = BarLib::class.java

@@ -24,6 +24,9 @@ class OptionString internal constructor (
             lib.OptionString_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OptionString.OptionStringCleaner(handle, OptionString.lib));
+    }
 
     companion object {
         internal val libClass: Class<OptionStringLib> = OptionStringLib::class.java
@@ -37,7 +40,7 @@ class OptionString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal ?: return null
             val returnOpaque = OptionString(handle, selfEdges)
-            CLEANER.register(returnOpaque, OptionString.OptionStringCleaner(handle, OptionString.lib));
+            returnOpaque.registerCleaner()
             diplomatStrSliceMemory.close()
             return returnOpaque
         }

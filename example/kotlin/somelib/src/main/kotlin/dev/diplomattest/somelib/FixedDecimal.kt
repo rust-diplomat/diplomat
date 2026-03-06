@@ -29,6 +29,9 @@ class FixedDecimal internal constructor (
             lib.icu4x_FixedDecimal_destroy_mv1(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, FixedDecimal.FixedDecimalCleaner(handle, FixedDecimal.lib));
+    }
 
     companion object {
         internal val libClass: Class<FixedDecimalLib> = FixedDecimalLib::class.java
@@ -43,7 +46,7 @@ class FixedDecimal internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = FixedDecimal(handle, selfEdges)
-            CLEANER.register(returnOpaque, FixedDecimal.FixedDecimalCleaner(handle, FixedDecimal.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

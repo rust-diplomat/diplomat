@@ -23,6 +23,9 @@ class Two internal constructor (
             lib.Two_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Two.TwoCleaner(handle, Two.lib));
+    }
 
     companion object {
         internal val libClass: Class<TwoLib> = TwoLib::class.java

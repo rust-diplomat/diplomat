@@ -21,6 +21,9 @@ class RenamedNested internal constructor (
             lib.namespace_Nested_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedNested.RenamedNestedCleaner(handle, RenamedNested.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedNestedLib> = RenamedNestedLib::class.java

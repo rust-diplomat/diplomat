@@ -24,6 +24,9 @@ class RenamedMyIterator internal constructor (
             lib.namespace_MyIterator_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIterator.RenamedMyIteratorCleaner(handle, RenamedMyIterator.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedMyIteratorLib> = RenamedMyIteratorLib::class.java

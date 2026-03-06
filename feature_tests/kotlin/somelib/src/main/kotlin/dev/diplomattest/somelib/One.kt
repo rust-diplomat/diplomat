@@ -33,6 +33,9 @@ class One internal constructor (
             lib.One_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, One.OneCleaner(handle, One.lib));
+    }
 
     companion object {
         internal val libClass: Class<OneLib> = OneLib::class.java
@@ -47,7 +50,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -60,7 +63,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -73,7 +76,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -86,7 +89,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, longEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -99,7 +102,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, topEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -112,7 +115,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, leftEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -125,7 +128,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, rightEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -138,7 +141,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, bottomEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -151,7 +154,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -164,7 +167,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -177,7 +180,7 @@ class One internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = One(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, One.OneCleaner(handle, One.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

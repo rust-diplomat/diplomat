@@ -24,6 +24,9 @@ class RenamedOpaqueRefIterator internal constructor (
             lib.namespace_OpaqueRefIterator_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedOpaqueRefIterator.RenamedOpaqueRefIteratorCleaner(handle, RenamedOpaqueRefIterator.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedOpaqueRefIteratorLib> = RenamedOpaqueRefIteratorLib::class.java

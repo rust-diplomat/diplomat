@@ -28,6 +28,9 @@ class Foo internal constructor (
             lib.Foo_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Foo.FooCleaner(handle, Foo.lib));
+    }
 
     companion object {
         internal val libClass: Class<FooLib> = FooLib::class.java
@@ -43,7 +46,7 @@ class Foo internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -57,7 +60,7 @@ class Foo internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -70,7 +73,7 @@ class Foo internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -87,7 +90,7 @@ class Foo internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Foo(handle, selfEdges, aEdges)
-            CLEANER.register(returnOpaque, Foo.FooCleaner(handle, Foo.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }
@@ -102,7 +105,7 @@ class Foo internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = Bar(handle, selfEdges, bEdges, aEdges)
-        CLEANER.register(returnOpaque, Bar.BarCleaner(handle, Bar.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
     

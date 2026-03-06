@@ -26,6 +26,9 @@ class DataProvider internal constructor (
             lib.icu4x_DataProvider_destroy_mv1(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
+    }
 
     companion object {
         internal val libClass: Class<DataProviderLib> = DataProviderLib::class.java
@@ -40,7 +43,7 @@ class DataProvider internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = DataProvider(handle, selfEdges)
-            CLEANER.register(returnOpaque, DataProvider.DataProviderCleaner(handle, DataProvider.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic

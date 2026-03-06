@@ -24,6 +24,9 @@ class Utf16Wrap internal constructor (
             lib.Utf16Wrap_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
+    }
 
     companion object {
         internal val libClass: Class<Utf16WrapLib> = Utf16WrapLib::class.java
@@ -37,7 +40,7 @@ class Utf16Wrap internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Utf16Wrap(handle, selfEdges)
-            CLEANER.register(returnOpaque, Utf16Wrap.Utf16WrapCleaner(handle, Utf16Wrap.lib));
+            returnOpaque.registerCleaner()
             inputSliceMemory.close()
             return returnOpaque
         }

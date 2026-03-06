@@ -26,6 +26,9 @@ class OpaqueThinVec internal constructor (
             lib.OpaqueThinVec_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
+    }
 
     companion object {
         internal val libClass: Class<OpaqueThinVecLib> = OpaqueThinVecLib::class.java
@@ -41,7 +44,7 @@ class OpaqueThinVec internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = OpaqueThinVec(handle, selfEdges)
-            CLEANER.register(returnOpaque, OpaqueThinVec.OpaqueThinVecCleaner(handle, OpaqueThinVec.lib));
+            returnOpaque.registerCleaner()
             aSliceMemory.close()
             bSliceMemory.close()
             cSliceMemory.close()
@@ -57,7 +60,7 @@ class OpaqueThinVec internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal 
         val returnOpaque = OpaqueThinIter(handle, selfEdges, aEdges)
-        CLEANER.register(returnOpaque, OpaqueThinIter.OpaqueThinIterCleaner(handle, OpaqueThinIter.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
     

@@ -25,6 +25,9 @@ class Locale internal constructor (
             lib.icu4x_Locale_destroy_mv1(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, Locale.LocaleCleaner(handle, Locale.lib));
+    }
 
     companion object {
         internal val libClass: Class<LocaleLib> = LocaleLib::class.java
@@ -40,7 +43,7 @@ class Locale internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = Locale(handle, selfEdges)
-            CLEANER.register(returnOpaque, Locale.LocaleCleaner(handle, Locale.lib));
+            returnOpaque.registerCleaner()
             nameSliceMemory.close()
             return returnOpaque
         }

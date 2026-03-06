@@ -24,6 +24,9 @@ class OpaqueThin internal constructor (
             lib.OpaqueThin_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, OpaqueThin.OpaqueThinCleaner(handle, OpaqueThin.lib));
+    }
 
     companion object {
         internal val libClass: Class<OpaqueThinLib> = OpaqueThinLib::class.java

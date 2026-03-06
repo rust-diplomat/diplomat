@@ -21,6 +21,9 @@ class RefListParameter internal constructor (
             lib.RefListParameter_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RefListParameter.RefListParameterCleaner(handle, RefListParameter.lib));
+    }
 
     companion object {
         internal val libClass: Class<RefListParameterLib> = RefListParameterLib::class.java

@@ -30,6 +30,9 @@ class MyString internal constructor (
             lib.MyString_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, MyString.MyStringCleaner(handle, MyString.lib));
+    }
 
     companion object {
         internal val libClass: Class<MyStringLib> = MyStringLib::class.java
@@ -43,7 +46,7 @@ class MyString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            returnOpaque.registerCleaner()
             vSliceMemory.close()
             return returnOpaque
         }
@@ -56,7 +59,7 @@ class MyString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            returnOpaque.registerCleaner()
             vSliceMemory.close()
             return returnOpaque
         }
@@ -69,7 +72,7 @@ class MyString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
         @JvmStatic
@@ -81,7 +84,7 @@ class MyString internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyString(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyString.MyStringCleaner(handle, MyString.lib));
+            returnOpaque.registerCleaner()
             vSliceMemory.close()
             return returnOpaque
         }

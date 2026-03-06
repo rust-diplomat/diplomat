@@ -23,6 +23,9 @@ class RefList internal constructor (
             lib.RefList_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RefList.RefListCleaner(handle, RefList.lib));
+    }
 
     companion object {
         internal val libClass: Class<RefListLib> = RefListLib::class.java
@@ -37,7 +40,7 @@ class RefList internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = RefList(handle, selfEdges, bEdges)
-            CLEANER.register(returnOpaque, RefList.RefListCleaner(handle, RefList.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

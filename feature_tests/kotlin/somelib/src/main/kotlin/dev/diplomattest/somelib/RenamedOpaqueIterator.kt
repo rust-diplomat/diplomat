@@ -24,6 +24,9 @@ class RenamedOpaqueIterator internal constructor (
             lib.namespace_OpaqueIterator_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedOpaqueIterator.RenamedOpaqueIteratorCleaner(handle, RenamedOpaqueIterator.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedOpaqueIteratorLib> = RenamedOpaqueIteratorLib::class.java
@@ -36,7 +39,7 @@ class RenamedOpaqueIterator internal constructor (
         val selfEdges: List<Any> = listOf()
         val handle = returnVal ?: return null
         val returnOpaque = AttrOpaque1Renamed(handle, selfEdges)
-        CLEANER.register(returnOpaque, AttrOpaque1Renamed.AttrOpaque1RenamedCleaner(handle, AttrOpaque1Renamed.lib));
+        returnOpaque.registerCleaner()
         return returnOpaque
     }
 

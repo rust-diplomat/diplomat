@@ -73,6 +73,9 @@ class CallbackHolder internal constructor (
             lib.CallbackHolder_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, CallbackHolder.CallbackHolderCleaner(handle, CallbackHolder.lib));
+    }
 
     companion object {
         internal val libClass: Class<CallbackHolderLib> = CallbackHolderLib::class.java
@@ -85,7 +88,7 @@ class CallbackHolder internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = CallbackHolder(handle, selfEdges)
-            CLEANER.register(returnOpaque, CallbackHolder.CallbackHolderCleaner(handle, CallbackHolder.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

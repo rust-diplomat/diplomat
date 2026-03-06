@@ -23,6 +23,9 @@ class MyOpaqueEnum internal constructor (
             lib.MyOpaqueEnum_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, MyOpaqueEnum.MyOpaqueEnumCleaner(handle, MyOpaqueEnum.lib));
+    }
 
     companion object {
         internal val libClass: Class<MyOpaqueEnumLib> = MyOpaqueEnumLib::class.java
@@ -35,7 +38,7 @@ class MyOpaqueEnum internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = MyOpaqueEnum(handle, selfEdges)
-            CLEANER.register(returnOpaque, MyOpaqueEnum.MyOpaqueEnumCleaner(handle, MyOpaqueEnum.lib));
+            returnOpaque.registerCleaner()
             return returnOpaque
         }
     }

@@ -33,6 +33,9 @@ class ResultOpaque internal constructor (
             lib.ResultOpaque_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+    }
 
     companion object {
         internal val libClass: Class<ResultOpaqueLib> = ResultOpaqueLib::class.java
@@ -47,7 +50,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.getNativeErr()!!)).err()
@@ -63,7 +66,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.getNativeErr()!!)).err()
@@ -79,7 +82,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.ok()
             } else {
                 return ErrorEnumError(ErrorEnum.fromNative(returnVal.getNativeErr()!!)).err()
@@ -95,7 +98,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.ok()
             } else {
                 return UnitError().err()
@@ -111,7 +114,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = nativeOkVal 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.ok()
             } else {
                 val returnStruct = ErrorStruct.fromNative(returnVal.getNativeErr()!!)
@@ -130,7 +133,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.getNativeErr()!! 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.err()
             }
         }
@@ -170,7 +173,7 @@ class ResultOpaque internal constructor (
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal.getNativeErr()!! 
                 val returnOpaque = ResultOpaque(handle, selfEdges)
-                CLEANER.register(returnOpaque, ResultOpaque.ResultOpaqueCleaner(handle, ResultOpaque.lib));
+                returnOpaque.registerCleaner()
                 return returnOpaque.err()
             }
         }

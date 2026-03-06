@@ -23,6 +23,9 @@ class RenamedMyIndexer internal constructor (
             lib.namespace_MyIndexer_destroy(handle)
         }
     }
+    fun registerCleaner() {
+        CLEANER.register(this, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
+    }
 
     companion object {
         internal val libClass: Class<RenamedMyIndexerLib> = RenamedMyIndexerLib::class.java
@@ -36,7 +39,7 @@ class RenamedMyIndexer internal constructor (
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = RenamedMyIndexer(handle, selfEdges)
-            CLEANER.register(returnOpaque, RenamedMyIndexer.RenamedMyIndexerCleaner(handle, RenamedMyIndexer.lib));
+            returnOpaque.registerCleaner()
             vSliceMemory.close()
             return returnOpaque
         }

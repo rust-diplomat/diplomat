@@ -7,7 +7,7 @@ val handle = {{val_name}} {% if optional %}?: return null{% endif %}
 val returnOpaque = {{return_type_name}}(handle, selfEdges{%- if !named_lifetimes.is_empty() %}{%- for lt in named_lifetimes %}, {{lt}}Edges{%- endfor %}{% endif -%})
 {%- if is_owned %}
 {%- if !use_finalizers_not_cleaners %}
-CLEANER.register(returnOpaque, {{return_type_name}}.{{return_type_name}}Cleaner(handle, {{return_type_name}}.lib));
+returnOpaque.registerCleaner()
 {%- else %}
 returnOpaque.registerFinalizer()
 {%- endif %}
