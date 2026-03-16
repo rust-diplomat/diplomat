@@ -261,6 +261,16 @@ let termini = Object.assign({
         ]
     },
 
+    "RenamedMixinTest.hello": {
+        func: () => somelib.RenamedMixinTest.hello(),
+        // For avoiding webpacking minifying issues:
+        funcName: "RenamedMixinTest.hello",
+        expr: () => "somelib.RenamedMixinTest.hello()",
+        parameters: [
+            
+        ]
+    },
+
     "RenamedVectorTest.len": {
         func: () => new somelib.RenamedVectorTest().len,
         // For avoiding webpacking minifying issues:

@@ -6,6 +6,8 @@ export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct"
 
 export { RenamedFeatureTest } from "./RenamedFeatureTest"
 
+export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin"
+
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
 export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"
@@ -53,6 +55,8 @@ export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2"
 
 export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque"
+
+export { RenamedMixinTest } from "./RenamedMixinTest"
 
 export { RenamedMyIterable } from "./RenamedMyIterable"
 

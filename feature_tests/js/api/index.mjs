@@ -4,6 +4,8 @@ export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
 
 export { RenamedFeatureTest } from "./RenamedFeatureTest.mjs"
 
+export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin.mjs"
+
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
 export { RenamedTestMacroStruct } from "./RenamedTestMacroStruct.mjs"
@@ -51,6 +53,8 @@ export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
 
 export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque.mjs"
+
+export { RenamedMixinTest } from "./RenamedMixinTest.mjs"
 
 export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
 

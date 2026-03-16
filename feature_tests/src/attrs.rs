@@ -1,8 +1,16 @@
+mod mixins;
+
+// For mixins macro imports:
+use super::*;
+
 #[diplomat::bridge]
 #[diplomat::abi_rename = "namespace_{0}"]
 #[diplomat::attr(not(c), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
+#[diplomat::include("src/attrs/mixins.rs")]
 pub mod ffi {
+    super::mixin_macro! {}
+
     #[diplomat::macro_rules]
     macro_rules! impl_mac {
         ($arg1:ident, $arg2:ident, $arg3:block) => {
