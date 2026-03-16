@@ -1,8 +1,8 @@
 #[askama::filter_fn]
-pub(crate) fn checked(value : &bool, _env : &dyn askama::Values) -> askama::Result<String> {
+pub(crate) fn checked(value: &bool, _env: &dyn askama::Values) -> askama::Result<String> {
     if *value {
-        Ok(format!("X"))
+        Ok("X".to_string())
     } else {
-        Ok(format!(" "))
+        Ok(" ".to_string())
     }
 }

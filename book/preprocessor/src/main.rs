@@ -7,7 +7,7 @@ use clap::{Parser, Subcommand};
 use diplomat_core::hir::BackendAttrSupport;
 use mdbook_preprocessor::errors::Result;
 use mdbook_preprocessor::Preprocessor;
-use minijinja::{Environment, context};
+use minijinja::{context, Environment};
 
 #[derive(Debug, Subcommand)]
 enum Supports {
@@ -36,19 +36,23 @@ fn main() {
 
 struct DiplomatPreprocessor;
 
-const LANGUAGES : [&'static str; 7] = ["c", "cpp", "dart", "demo_gen", "js", "kotlin", "nanobind"];
+const LANGUAGES: [&str; 7] = ["c", "cpp", "dart", "demo_gen", "js", "kotlin", "nanobind"];
 
 impl DiplomatPreprocessor {
     fn generate_language_supports(language: &str) -> String {
         #[derive(Template)]
-        #[template(path="supports.md.jinja")]
+        #[template(path = "supports.md.jinja")]
         struct SupportsBlock {
-            attr_support : BackendAttrSupport,
+            attr_support: BackendAttrSupport,
         }
-        SupportsBlock { attr_support: diplomat_tool::get_supported(language) }.render().expect("Could not render supports block.")
+        SupportsBlock {
+            attr_support: diplomat_tool::get_supported(language),
+        }
+        .render()
+        .expect("Could not render supports block.")
     }
 
-    fn get_which_languages_supports(attr : &str) -> String {
+    fn get_which_languages_supports(attr: &str) -> String {
         let mut language_list = Vec::new();
         for l in LANGUAGES {
             let supports = diplomat_tool::get_supported(l);
@@ -56,18 +60,20 @@ impl DiplomatPreprocessor {
                 language_list.push(l);
             }
         }
-        
+
         #[derive(Template)]
-        #[template(path="supported_by.md.jinja")]
+        #[template(path = "supported_by.md.jinja")]
         struct LanguagesSupported<'a> {
-            languages : Vec<&'a str>,
-            supports_query : &'a str,
+            languages: Vec<&'a str>,
+            supports_query: &'a str,
         }
 
         LanguagesSupported {
             languages: language_list,
             supports_query: attr,
-        }.render().expect("Could not render languages that this is supported by.")
+        }
+        .render()
+        .expect("Could not render languages that this is supported by.")
     }
 }
 
@@ -86,8 +92,12 @@ impl Preprocessor for DiplomatPreprocessor {
         env.add_function("get_supports", Self::get_which_languages_supports);
         // Evaluate each page as an askama template:
         book.for_each_chapter_mut(|ch| {
-            let expr = env.template_from_named_str(&ch.name, &ch.content).expect("Could not compile book expression.");
-            ch.content = expr.render(context! {}).expect("Could not render template.");
+            let expr = env
+                .template_from_named_str(&ch.name, &ch.content)
+                .expect("Could not compile book expression.");
+            ch.content = expr
+                .render(context! {})
+                .expect("Could not render template.");
         });
         Ok(book)
     }
