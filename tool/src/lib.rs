@@ -99,7 +99,7 @@ pub fn gen(
         );
 
     let syn_module = syn_inline_mod::parse_and_inline_modules(entry);
-    let module = diplomat_core::ast::parse_file_with_includes(syn_module, manifest_path)
+    let module = diplomat_core::ast::parse_file_with_includes(syn_module, manifest_path, true)
         .expect("Could not append includes.");
 
     // Config:

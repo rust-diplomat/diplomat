@@ -1,4 +1,5 @@
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt::Write as _;
 
 use quote::ToTokens;
@@ -495,17 +496,25 @@ impl File {
     }
 }
 
-// TODO: Caching
+/// Cache should be set to `true` outside of `proc_macro` contexts.
+/// `proc_macro` does not like storing any token information outside of the lifetime of the `bridge`
+/// macro execution.
 pub fn parse_module_with_includes(
     module: &mut syn::ItemMod,
     base_path: &std::path::Path,
     force_analyze: bool,
+    cache: bool,
 ) -> Result<(), std::io::Error> {
     let contains_bridge = module
         .attrs
         .iter()
         .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge")
         || force_analyze;
+
+    // This cache works as long as Diplomat AST is called from a single thread.
+    thread_local! {
+        static MODULE_CACHE: RefCell<HashMap<String, Vec<syn::Item>>> = RefCell::new(HashMap::new());
+    }
 
     if contains_bridge {
         let attrs: Attrs = (*module.attrs).into();
@@ -514,18 +523,30 @@ pub fn parse_module_with_includes(
             .as_mut()
             .expect("Expected mod content in diplomat::bridge.");
         for i in attrs.includes {
-            let file_contents = std::fs::read_to_string(base_path.join(i.path))?;
-            let syn_file = syn::parse_file(&file_contents)
-                .map_err(|e| std::io::Error::other(e.to_string()))?;
+            let cached_items =
+                MODULE_CACHE.with_borrow_mut(|c| -> Result<Vec<Item>, std::io::Error> {
+                    if let Some(k) = c.get(&i.path) {
+                        Ok(k.clone())
+                    } else {
+                        let file_contents =
+                            std::fs::read_to_string(base_path.join(i.path.clone()))?;
+                        let syn_file = syn::parse_file(&file_contents)
+                            .map_err(|e| std::io::Error::other(e.to_string()))?;
+                        if cache {
+                            c.insert(i.path, syn_file.items.clone());
+                        }
+                        Ok(syn_file.items)
+                    }
+                })?;
             // Prepend the items:
-            items.splice(0..0, syn_file.items);
+            items.splice(0..0, cached_items);
         }
         return Ok(());
     }
     if let Some((_, items)) = module.content.as_mut() {
         for i in items {
             if let Item::Mod(m) = i {
-                parse_module_with_includes(m, base_path, force_analyze)?
+                parse_module_with_includes(m, base_path, force_analyze, cache)?
             }
         }
     }
@@ -536,10 +557,11 @@ pub fn parse_module_with_includes(
 pub fn parse_file_with_includes(
     mut file: syn::File,
     base_path: &std::path::Path,
+    cache: bool,
 ) -> Result<syn::File, std::io::Error> {
     for i in file.items.iter_mut() {
         if let syn::Item::Mod(m) = i {
-            parse_module_with_includes(m, base_path, false)?;
+            parse_module_with_includes(m, base_path, false, cache)?;
         }
     }
     Ok(file)

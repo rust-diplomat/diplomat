@@ -486,7 +486,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
 
     let base = std::env::var("CARGO_MANIFEST_DIR")
         .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
-    ast::parse_module_with_includes(&mut included_mod, std::path::Path::new(&base), true)
+    ast::parse_module_with_includes(&mut included_mod, std::path::Path::new(&base), true, false)
         .expect("Could not read module.");
     let module = ast::Module::from_syn(&included_mod, true);
     // Clean out any diplomat attributes so Rust doesn't get mad
