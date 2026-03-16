@@ -1,0 +1,4 @@
+Supported by {#+ -#}
+{%- for l in languages %}
+{%- if loop.last %}and {% endif -%}`{{l}}`, {#+ -#} 
+{%- endfor -%} queried with `#[diplomat::cfg(supports={{supports_query}})]`

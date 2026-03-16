@@ -1332,7 +1332,7 @@ impl BackendAttrSupport {
         }
     }
 
-    fn check_string(&self, v: &str) -> Option<bool> {
+    pub fn check_string(&self, v: &str) -> Option<bool> {
         match v {
             "namespacing" => Some(self.namespacing),
             "memory_sharing" => Some(self.memory_sharing),
