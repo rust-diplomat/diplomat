@@ -1154,6 +1154,7 @@ dependencies = [
  "diplomat-tool",
  "diplomat_core",
  "mdbook-preprocessor",
+ "minijinja",
  "serde_json",
 ]
 
@@ -1174,6 +1175,22 @@ name = "memchr"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
+
+[[package]]
+name = "memo-map"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "38d1115007560874e373613744c6fba374c17688327a71c1476d1a5954cc857b"
+
+[[package]]
+name = "minijinja"
+version = "2.18.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "328251e58ad8e415be6198888fc207502727dc77945806421ab34f35bf012e7d"
+dependencies = [
+ "memo-map",
+ "serde",
+]
 
 [[package]]
 name = "num-traits"
