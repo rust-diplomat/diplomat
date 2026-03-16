@@ -1149,6 +1149,7 @@ dependencies = [
 name = "mdbook-diplomat"
 version = "0.14.0"
 dependencies = [
+ "askama",
  "clap",
  "diplomat-tool",
  "diplomat_core",

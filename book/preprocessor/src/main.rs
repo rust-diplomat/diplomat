@@ -1,5 +1,8 @@
+mod filters;
+
 use std::io;
 
+use askama::Template;
 use clap::{Parser, Subcommand};
 use diplomat_core::hir::BackendAttrSupport;
 use mdbook_preprocessor::book::{BookItem, Chapter};
@@ -48,115 +51,13 @@ impl DiplomatPreprocessor {
     }
 
     fn generate_language_supports(language: &str, chapter: &mut Chapter) {
-        let BackendAttrSupport {
-            namespacing,
-            memory_sharing,
-            non_exhaustive_structs,
-            method_overloading,
-            utf8_strings,
-            utf16_strings,
-            static_slices,
-            defaults,
-
-            constructors,
-            named_constructors,
-            fallible_constructors,
-            accessors,
-            static_accessors,
-            stringifiers,
-            comparators,
-            iterators,
-            iterables,
-            indexing,
-            arithmetic,
-            option,
-            callbacks,
-            traits,
-            custom_errors,
-            traits_are_send,
-            traits_are_sync,
-            generate_mocking_interface,
-            abi_compatibles,
-            struct_refs,
-            free_functions,
-            custom_bindings,
-            owned_slices,
-            default_args,
-            ..
-        } = diplomat_tool::get_supported(language);
-        chapter.content.push_str(
-            format!(
-                r#"
-## Supports
-- [{namespacing}] Namespaces
-
-- [{memory_sharing}] Memory Sharing
-
-- [{non_exhaustive_structs}] Non Exhaustive Structs
-
-- [{method_overloading}] Method Overloading
-
-- [{utf8_strings}] UTF8 Strings
-
-- [{utf16_strings}] UTF16 Strings
-
-- [{static_slices}] Static Slices
-
-- [{defaults}] Defaults
-
-- [{constructors}] Constructors
-
-- [{named_constructors}] Named Constructors
-
-- [{fallible_constructors}] Fallible Constructors
-
-- [{accessors}] Getters/Setters
-
-- [{static_accessors}] Static Getters/Setters
-
-- [{stringifiers}] Stringifiers
-
-- [{comparators}] Comparators
-
-- [{iterators}] Iterators
-
-- [{iterables}] Iterables
-
-- [{indexing}] Indexers
-
-- [{arithmetic}] Arithmetic
-
-- [{option}] Options
-
-- [{callbacks}] Callbacks
-
-- [{traits}] Traits
-
-- [{custom_errors}] Custom Errors
-
-- [{traits_are_send}] Traits are Send
-
-- [{traits_are_sync}] Traits are Sync
-
-- [{generate_mocking_interface}] Generate Mocking Interface
-
-- [{abi_compatibles}] ABI Compatible Structs
-
-- [{struct_refs}] Struct Refs
-
-- [{free_functions}] Free Functions
-
-- [{custom_bindings}] Custom Bindings
-
-- [{owned_slices}] Owned Slices
-
-- [{default_args}] Default Arguments
-"#
-            )
-            .replace("true", "X")
-            .replace("false", " ")
-            .as_str(),
-        );
+        #[derive(Template)]
+        #[template(path="supports.md.jinja")]
+        struct SupportsBlock {
+            attr_support : BackendAttrSupport,
+        }
+        chapter.content.push('\n');
+        chapter.content.push_str(&SupportsBlock { attr_support: diplomat_tool::get_supported(language) }.render().expect("Could not render supports block."));
     }
 }
 
