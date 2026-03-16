@@ -8,6 +8,8 @@ export { RenamedFeatureTest } from "./RenamedFeatureTest"
 
 export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin"
 
+export { RenamedRenamedCachedIncludeZST } from "./RenamedRenamedCachedIncludeZST"
+
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
 
 export { RenamedTestMacroStruct, RenamedTestMacroStruct_obj } from "./RenamedTestMacroStruct"
@@ -25,6 +27,8 @@ export { NestedBorrowedFields, NestedBorrowedFields_obj } from "./NestedBorrowed
 export { BorrowingOptionStruct, BorrowingOptionStruct_obj } from "./BorrowingOptionStruct"
 
 export { OptionInputStruct, OptionInputStruct_obj } from "./OptionInputStruct"
+
+export { CachedIncludeZST } from "./CachedIncludeZST"
 
 export { ErrorStruct, ErrorStruct_obj } from "./ErrorStruct"
 

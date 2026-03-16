@@ -1,3 +1,4 @@
+mod cache_test;
 mod mixins;
 
 // For mixins macro imports:
@@ -8,8 +9,10 @@ use super::*;
 #[diplomat::attr(not(c), rename = "Renamed{0}")]
 #[diplomat::attr(auto, namespace = "ns")]
 #[diplomat::include("src/attrs/mixins.rs")]
+#[diplomat::include("src/attrs/cache_test.rs")]
 pub mod ffi {
     super::mixin_macro! {}
+    super::cache_test_macro! {RenamedCachedIncludeZST}
 
     #[diplomat::macro_rules]
     macro_rules! impl_mac {

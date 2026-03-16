@@ -1,5 +1,9 @@
+use super::*;
+
 #[diplomat::bridge]
+#[diplomat::include("src/attrs/cache_test.rs")]
 pub mod ffi {
+    super::cache_test_macro! {CachedIncludeZST}
 
     #[diplomat::opaque_mut]
     #[diplomat::attr(auto, error)]

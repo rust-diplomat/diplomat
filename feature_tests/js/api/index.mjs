@@ -6,6 +6,8 @@ export { RenamedFeatureTest } from "./RenamedFeatureTest.mjs"
 
 export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin.mjs"
 
+export { RenamedRenamedCachedIncludeZST } from "./RenamedRenamedCachedIncludeZST.mjs"
+
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
 export { RenamedTestMacroStruct } from "./RenamedTestMacroStruct.mjs"
@@ -23,6 +25,8 @@ export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
 export { BorrowingOptionStruct } from "./BorrowingOptionStruct.mjs"
 
 export { OptionInputStruct } from "./OptionInputStruct.mjs"
+
+export { CachedIncludeZST } from "./CachedIncludeZST.mjs"
 
 export { ErrorStruct } from "./ErrorStruct.mjs"
 

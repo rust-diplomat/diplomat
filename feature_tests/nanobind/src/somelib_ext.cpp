@@ -13,6 +13,7 @@ void add_BorrowedFieldsWithBounds_binding(nb::module_);
 void add_NestedBorrowedFields_binding(nb::module_);
 void add_BorrowingOptionStruct_binding(nb::module_);
 void add_OptionInputStruct_binding(nb::module_);
+void add_CachedIncludeZST_binding(nb::module_);
 void add_ErrorStruct_binding(nb::module_);
 void add_BigStructWithStuff_binding(nb::module_);
 void add_CyclicStructA_binding(nb::module_);
@@ -68,6 +69,7 @@ void add_Nested_binding(nb::module_);
   
 void add_RenamedDeprecatedStruct_binding(nb::module_);
 void add_RenamedNonMacroMixin_binding(nb::module_);
+void add_RenamedRenamedCachedIncludeZST_binding(nb::module_);
 void add_RenamedStructWithAttrs_binding(nb::module_);
 void add_RenamedTestMacroStruct_binding(nb::module_);
 void add_AttrOpaque1Renamed_binding(nb::module_);
@@ -160,6 +162,7 @@ NB_MODULE(somelib, mod)
     add_NestedBorrowedFields_binding(mod);
     add_BorrowingOptionStruct_binding(mod);
     add_OptionInputStruct_binding(mod);
+    add_CachedIncludeZST_binding(mod);
     add_ErrorStruct_binding(mod);
     add_BigStructWithStuff_binding(mod);
     add_CyclicStructA_binding(mod);
@@ -212,6 +215,7 @@ NB_MODULE(somelib, mod)
     
     ns::add_RenamedDeprecatedStruct_binding(ns_mod);
     ns::add_RenamedNonMacroMixin_binding(ns_mod);
+    ns::add_RenamedRenamedCachedIncludeZST_binding(ns_mod);
     ns::add_RenamedStructWithAttrs_binding(ns_mod);
     ns::add_RenamedTestMacroStruct_binding(ns_mod);
     ns::add_AttrOpaque1Renamed_binding(ns_mod);
