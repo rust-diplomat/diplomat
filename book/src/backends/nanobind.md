@@ -71,3 +71,5 @@ Which prints the correct result:
 Converting Rust types to and from Python is not straightforward. Every `list` object in Python is a [sequence of `PyObject` types](https://docs.python.org/3/c-api/list.html) in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.
 
 This is why we the `somelib.FooSlice` type exists. In nanobind terminology, this is a [bound object](https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings), or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any `list` you pass into a parameter that takes `&[Foo]` as an input type will copy the contents of the `list` upon conversion into C/C++ into `somelib.FooSlice`.
+
+{{supports("nanobind")}}

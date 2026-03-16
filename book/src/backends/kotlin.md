@@ -57,3 +57,5 @@ so here some specific examples
 * [rust code](https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/src/callbacks.rs)
 * [generated kotlin code](https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/main/kotlin/dev/diplomattest/somelib/CallbackWrapper.kt)
 * [example usage](https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib/CallbackWrapperTest.kt)
+
+{{supports("kotlin")}}

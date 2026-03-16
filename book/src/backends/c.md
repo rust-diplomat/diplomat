@@ -149,3 +149,5 @@ typedef struct DiplomatCallback_FunctionName_ParameterName {
 ```
 
 `data` represents the pointer to the `DiplomatCallback_FunctionName_ParameterName` struct in C. `run_callback` is a pointer to the C function that implements the callback, and `destructor` is a pointer to the destructor for `data`. `destructor` and `data` can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).
+
+{{supports("c")}}
