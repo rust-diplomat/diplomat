@@ -1,6 +1,6 @@
 # Stringifiers
 
-(Supported by `dart`, `kotlin`, and `nanobind`, queried with `supports = stringifiers`. Intended to be supported in `js` and `kotlin`)
+({{get_supports("stringifiers")}}. Intended to be supported in `js`.)
 
 Some languages have a designated way to provide a method for converting a type to a string.
 

@@ -2,13 +2,13 @@
 
 ## Static Slices
 
-(Supported by `c`, `cpp`, `kotlin`, `nanobind`, queried with `supports=static_slices`)
+({{get_supports("static_slices")}})
 
 Support for `&'static` slices.
 
 ## Primitive Structs
 
-(Supported by `c`, `cpp`, `nanobind`, queried with `supports=abi_compatibles`)
+({{get_supports("abi_compatibles")}})
 
 Some Diplomat backends support providing slices of structs as function parameters:
 
