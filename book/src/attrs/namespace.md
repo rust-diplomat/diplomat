@@ -1,6 +1,6 @@
 # Namespacing
 
-(Supported by `cpp` and `nanobind`, queried with `supports = namespacing`)
+({{get_supports("namespacing")}})
 
 This attribute can be applied on types and on bridge modules (applying to all types in the module). 
 It allows code to be organized under one or more namespaces.

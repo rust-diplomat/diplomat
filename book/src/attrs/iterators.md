@@ -1,6 +1,8 @@
 # Iterators and iterables
 
-(Supported by `js`, `dart`, `kotlin`, `cpp`, and `nanobind`, queried with `supports = iterators` and `supports = iterables`)
+(Iterators {{get_supports("iterators")}})
+
+(Iterables {{get_supports("iterables")}})
 
 Some languages support a first-class notion of "iterator", a type that can be looped over in a `for` loop, stepping through its values typically until they are exhausted.
 

@@ -16,5 +16,7 @@ readme = "../README.md"
 clap = {features = ["color", "derive", "std", "suggestions"], version = "4.2" }
 mdbook-preprocessor = "0.5.2"
 serde_json = "1.0.149"
+askama = "0.15.4"
+minijinja = "2.18.0"
 diplomat-tool = {workspace = true}
 diplomat_core = {workspace = true}
