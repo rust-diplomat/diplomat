@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-95574907.js";
+            window.path_to_searchindex_js = "../searchindex-38f1a218.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9a7f2e75.js"></script>
+        <script src="../toc-0d10c04e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -175,7 +175,8 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="iterators-and-iterables"><a class="header" href="#iterators-and-iterables">Iterators and iterables</a></h1>
-<p>(Supported by <code>js</code>, <code>dart</code>, <code>kotlin</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>supports = iterators</code> and <code>supports = iterables</code>)</p>
+<p>(Iterators Supported by <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=iterators)]</code>)</p>
+<p>(Iterables Supported by <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=iterables)]</code>)</p>
 <p>Some languages support a first-class notion of “iterator”, a type that can be looped over in a <code>for</code> loop, stepping through its values typically until they are exhausted.</p>
 <p>Furthermore, some languages support a first-class notion of an “iterable”: types like collections that can be asked to <em>produce</em> an iterator over their values which can be stepped through. Typically <code>for</code> loops will also accept iterables, and looping through an iterable involves producing and then looping through the associated iterator.</p>
 <p>The distinction here is: iterators are mutated by iteration and often one-time use, iterables are not mutated and can be iterated over multiple times. Put in Rust terms, <code>Iterator</code> types are iterators, and <code>IntoIterator</code> types are iterables.</p>

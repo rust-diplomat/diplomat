@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-95574907.js";
+            window.path_to_searchindex_js = "../searchindex-38f1a218.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9a7f2e75.js"></script>
+        <script src="../toc-0d10c04e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -175,7 +175,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="indexing"><a class="header" href="#indexing">Indexing</a></h1>
-<p>(Supported by <code>dart</code>, <code>cpp</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>supports = indexing</code>)</p>
+<p>(Supported by <code>cpp</code>, <code>dart</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=indexing)]</code>)</p>
 <p><code>[]</code> can be overloaded in languages that support it by applying an <code>indexer</code> attribute to a method that takes an integer argument and returns an <code>Option&lt;u8&gt;</code>.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
