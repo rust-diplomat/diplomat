@@ -621,4 +621,25 @@ mod tests {
             }));
         });
     }
+
+    #[test]
+    fn struct_visibility() {
+        let mut settings = Settings::new();
+        settings.set_sort_maps(true);
+
+        settings.bind(|| {
+            insta::assert_yaml_snapshot!(File::from(&syn::parse_quote! {
+                #[diplomat::bridge]
+                #[diplomat::skip_private_items]
+                mod ffi {
+                    struct Foo {}
+
+                    #[diplomat::opaque]
+                    pub struct Opaque{
+                        foo: Foo,
+                    }
+                }
+            }));
+        });
+    }
 }
