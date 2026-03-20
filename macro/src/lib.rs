@@ -788,7 +788,7 @@ macro_rules! expose_attrs {
     }
 }
 
-expose_attrs! {opaque, opaque_mut, attr, demo}
+expose_attrs! {opaque, opaque_mut, attr, demo, skip_private_items}
 
 #[cfg(test)]
 mod tests {
