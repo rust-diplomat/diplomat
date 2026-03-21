@@ -20,3 +20,5 @@ askama = "0.15.4"
 minijinja = "2.18.0"
 diplomat-tool = {workspace = true}
 diplomat_core = {workspace = true}
+tempfile = "3.27.0"
+pathdiff = "0.2.3"
