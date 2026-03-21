@@ -3,6 +3,7 @@
 When using Diplomat, you'll need to define Rust modules that contain the Rust APIs you want to expose. You can do this by using the `diplomat::bridge` macro:
 
 ```rust
+{%- call generate_module("cpp", "basics") -%}
 #[diplomat::bridge]
 mod ffi {
     pub struct MyFFIStruct {
@@ -23,6 +24,7 @@ mod ffi {
         }
     }
 }
+{%- endcall %}
 ```
 
 This is a simple struct with public fields; which is easier to reason about in an introductory example. _Most_ APIs exposed via Diplomat will be via "opaque types", to be covered in the [chapter on opaque types](./opaque.md).
@@ -54,16 +56,10 @@ For example, if we want to generate C++ bindings, we can create a folder `cpp/``
 $ diplomat-tool cpp cpp/
 ```
 
-This will generate the following struct in `MyFFIStruct.hpp`, along with some boilerplate:
+This will generate the following struct in `MyFFIStruct.d.hpp`, along with some boilerplate:
 
 ```cpp
-struct MyFFIStruct {
- public:
-  int32_t a;
-  bool b;
-  static MyFFIStruct create();
-  void do_a_thing();
-};
+{{ get_module_file("basics", "MyFFIStruct.d.hpp") }}
 ```
 
 ## WASM
