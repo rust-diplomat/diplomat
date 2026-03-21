@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Backend developer guide - The Diplomat Book</title>
+        <title>Visibility and pub - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -12,33 +12,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-38787e29.js";
+            window.path_to_searchindex_js = "../searchindex-38787e29.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-77e73944.js"></script>
+        <script src="../toc-77e73944.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -105,7 +105,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -140,7 +140,7 @@
                     <h1 class="menu-title">The Diplomat Book</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
@@ -174,236 +174,31 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="how-to-set-up-a-minimal-backend"><a class="header" href="#how-to-set-up-a-minimal-backend">How to Set up a Minimal Backend</a></h1>
-<p>How to create a backend is quite language dependent, and what is easier in one
-may be harder in another. Below we will start setting up a simple backend. We’ll
-show you how to set up a test in diplomat so you can start generating code quickly.
-Then we give you a template for a simple dynamic library that you can then link
-to your host language. Finally we provide a suggested checklist for your backend.
-It is not automatically generated so when in doubt look at diplomat’s <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/index.html">HIR</a></p>
-<ul>
-<li><input disabled="" type="checkbox"> <strong>project structure</strong>: You will need need to test your generated code so you should
-first set up a host language project. It should have all dependencies to be able to interface
-with native code (or WASM).</li>
-</ul>
-<h2 id="setting-up-basic-code-generation-in-a-test"><a class="header" href="#setting-up-basic-code-generation-in-a-test">Setting up Basic Code Generation in a Test</a></h2>
-<p>Your backend should iterate over all <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.TypeDef.html"><code>TypeDefs</code></a>
-and generate the required code for these. To do that we start with an
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html"><code>ast::File</code></a>, which can
-then be parsed into a <a href="https://docs.rs/diplomat_core/latest/diplomat_core/struct.Env.html"><code>Env</code></a>
-using the
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/ast/struct.File.html#method.all_types"><code>all_types</code></a>
-method. Then we can create the
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html"><code>TypeContext</code></a>
-which is generated using the
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.TypeContext.html#method.from_ast"><code>from_ast</code></a>
-method. You will also need an
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/trait.AttributeValidator.html"><code>AttributeValidator</code></a>,
-but should probably start with the simple
-<a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/struct.BasicAttributeValidator.html"><code>BasicAttributeValidator</code></a>.</p>
-<p>We will now build an example by way of a test. A good starting point is to create a test for
-generating a simple opaque struct without any methods. Your backend should go in the tool crate:
-create a module <code>tool/src/{backend}/mod.rs</code>  (make sure you add a line <code>pub mod backend;</code> to
-<code>tool/src/lib.rs</code>). Add the following to it</p>
-<pre><code class="language-rs">use diplomat_core::hir::{OpaqueDef, TypeContext, TypeId};
-
-fn gen_opaque_def(ctx: &amp;TypeContext, type_id: TypeId, opaque_path: &amp;OpaqueDef) -&gt; String {
-    "We'll get to it".into()
-}
-
-#[cfg(test)]
-mod test {
-    use diplomat_core::{
-        ast::{self},
-        hir::{self, TypeDef},
-    };
-    use quote::quote;
-
-    #[test]
-    fn test_opaque_gen() {
-        let tokens = quote! {
-            #[diplomat::bridge]
-            mod ffi {
-
-                #[diplomat::opaque]
-                struct OpaqueStruct;
-
-            }
-        };
-        let item = syn::parse2::&lt;syn::File&gt;(tokens).expect("failed to parse item ");
-
-        let diplomat_file = ast::File::from(&amp;item);
-        let env = diplomat_file.all_types();
-        let attr_validator = hir::BasicAttributeValidator::new("my_backend_test");
-
-        let context = match hir::TypeContext::from_ast(&amp;env, attr_validator) {
-            Ok(context) =&gt; context,
-            Err(e) =&gt; {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {}", err);
-                }
-                panic!("Failed to create context")
-            }
-        };
-
-        let (type_id, opaque_def) = match context
-            .all_types()
-            .next()
-            .expect("Failed to generate first opaque def")
-        {
-            (type_id, TypeDef::Opaque(opaque_def)) =&gt; (type_id, opaque_def),
-            _ =&gt; panic!("Failed to find opaque type from AST"),
-        };
-
-        let generated = super::gen_opaque_def(&amp;context, type_id, opaque_def);
-
-        insta::assert_snapshot!(generated)
-    }
-}
-</code></pre>
-<p>You can now run</p>
-<pre><code class="language-sh">cargo test -p diplomat-tool -- backend::test --nocapture
-</code></pre>
-<p>You should also have a generated snapshot <code>diplomat_tool__backend__test__opaque_gen.snap.new</code>
-which you can use to pick up your generated code.</p>
-<h2 id="how-to-generate-the-library"><a class="header" href="#how-to-generate-the-library">How to Generate the Library</a></h2>
-<p>Now to actually test native methods you will need to create some kind of library, be it static, dynamic, or
-even WASM. In the following we will be creating a dynamically linked library.</p>
-<p>You should set up a separate rust project next to your diplomat fork e.g. <code>mybackendtest</code></p>
-<pre><code class="language-sh">cargo new --lib mybackendtest
-</code></pre>
-<p>with the following Cargo.toml</p>
-<pre><code class="language-toml">[package]
-name = "mybackendtest"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-crate_type = ["cdylib"]
-name = "mybackendtest"
-
-[dependencies]
-diplomat = {path = "../diplomat/macro"}
-diplomat-runtime = {path = "../diplomat/runtime"}
-</code></pre>
-<p>Because you are using path dependencies, it is important that your library project be in
-the same directory as your fork of diplomat</p>
-<p>Copy the following into your lib.rs</p>
+                        <h1 id="visibility-and-pub"><a class="header" href="#visibility-and-pub">Visibility and <code>pub</code></a></h1>
+<h2 id="structs-and-enums"><a class="header" href="#structs-and-enums">Structs and enums</a></h2>
+<p>By default, ALL structs and enums in <code>#[diplomat::bridge]</code> have bindings generated. If you wish to hide non-<code>pub</code> bindings, you must add the <code>#[diplomat::skip_private_items]</code> attribute to your module:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
+#[diplomat::skip_private_items]
 mod ffi {
+    /// Will be hidden on bindings generation.
+    struct Hidden;
 
-    #[diplomat::opaque]
-    struct OpaqueStruct;
-
-    impl OpaqueStruct {
-        pub fn add_two(i: i32) -&gt; i32 {
-            i + 2
-        }
-    }
+    /// Bindings will generate for this struct. 
+    pub struct Visible;
 }
-
 </code></pre>
-<p>Note it is very important that the method be marked <code>pub</code> otherwise diplomat will ignore it.
-Now you can run</p>
-<pre><code class="language-sh">cargo build
-</code></pre>
-<p>to create a debug artifact in <code>target/debug/libmybackendtest.dylib</code></p>
-<h2 id="getting-access-to-your-native-method"><a class="header" href="#getting-access-to-your-native-method">Getting Access to your Native Method</a></h2>
-<p>Now we can add code that will iterate over all of the methods of the opaque struct.
-First, copy the impl block for <code>OpaqueStruct</code> into the test code underneath the <code>OpaqueStruct</code>.
-Next, update your the code for <code>gen_opaque_def</code> to the following which will generate the native
-symbol for your new impl method:</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>use crate::c2::CFormatter;
-
-fn gen_opaque_def(ctx: &amp;TypeContext, type_id: TypeId, opaque_path: &amp;OpaqueDef) -&gt; String {
-    let c_formatter = CFormatter::new(ctx);
-
-    opaque_def
-        .methods
-        .iter()
-        .map(|method| c_formatter.fmt_method_name(type_id, method))
-        .collect::&lt;Vec&lt;_&gt;&gt;()
-        .join("\n")
-}
-<span class="boring">}</span></code></pre>
-<p>Now your snapshot should have the following contents</p>
-<pre><code>---
-source: tool/src/backend/mod.rs
-assertion_line: 67
-expression: generated
----
-OpaqueStruct_add_two
-</code></pre>
-<p>where <code>OpaqueStruct_add_two</code> is the native symbol for your method. It has a simple signature <code>i32 -&gt; i32</code>,
-so now you have a dynamic library and a symbol to load from it that you can start building. Now it is up
-to you to figure how to integrate these into your host language project skeleton.</p>
-<h2 id="minimal-backend"><a class="header" href="#minimal-backend">Minimal Backend</a></h2>
-<p>You should now work on building a minimal backend that can generate opaque type definitions
-with methods that only accept and return <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html"><strong>primitive types</strong></a>.</p>
-<p>You will need to update <code>tool/src/lib.rs</code> to add handling for your backend.</p>
-<p>Once you have the basics of a backend you can add attribute handling. The best way to do this is to check the existing backends
-e.g. <a href="https://github.com/rust-diplomat/diplomat/blob/b3a8702f6736dbd6e667638ca0025b8f8cd1509f/tool/src/lib.rs#L95">dart</a>(Note: git permalink may be out of date).
-The most important is to ignore disabled types and methods, as then you can take advantage of diplomat’s feature tests
-and start building progressively.</p>
-<h2 id="feature-tests"><a class="header" href="#feature-tests">Feature Tests</a></h2>
-<p>Diplomat already includes feature tests that you can disable with <code>#[diplomat::attrs(disable, {backend})]</code>.
-where <code>{backend}</code> refers to your new backend. As you add functionality to your backend you
-can progressively enable the types and methods for your backend. This way you can iterate with
-working examples. These are called via <a href="https://sagiegurari.github.io/cargo-make/">cargo-make</a>
-e.g</p>
-<pre><code class="language-sh">cargo make gen-dart-feature
-</code></pre>
-<p>You can look at <code>Makefile.toml</code> to see how tasks are defined. Most of the generative tasks make use of this
-<a href="https://github.com/rust-diplomat/diplomat/blob/b3a8702f6736dbd6e667638ca0025b8f8cd1509f/support/functions.ds#L1">duckscript function</a>
-(<a href="https://sagiegurari.github.io/duckscript/">Duckscript</a> is a simple scripting language)</p>
-<h2 id="backend-checklist"><a class="header" href="#backend-checklist">Backend Checklist</a></h2>
-<ul>
-<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/latest/diplomat_core/hir/enum.PrimitiveType.html"><strong>primitive types</strong></a>: This will be the most basic piece of the backend, and you will want
-to implement them early in order to test your ability to correctly call methods.</li>
-<li><input disabled="" type="checkbox"> <a href=""><strong>opaque types</strong></a>:
-<ul>
-<li><input disabled="" type="checkbox"> basic definiton</li>
-<li><input disabled="" type="checkbox"> return a boxed opaque. This needs to be cleaned in managed languages.
-You can use the autogenerated <code>{OpaqueName}_destroy({OpaqueName}*)</code> native method to clean up
-the memory of the associated opaque.</li>
-<li><input disabled="" type="checkbox"> as self parameter</li>
-<li><input disabled="" type="checkbox"> as another parameter</li>
-</ul>
-</li>
-<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.StructDef.html"><strong>structs</strong></a></li>
-<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/struct.EnumDef.html"><strong>enums</strong></a></li>
-<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.SuccessType.html#variant.Writeable"><strong>writeable</strong></a></li>
-<li><input disabled="" type="checkbox"> <a href="https://docs.rs/diplomat_core/0.7.0/diplomat_core/hir/enum.Slice.html"><strong>slices</strong></a>
-<ul>
-<li><input disabled="" type="checkbox"> primitive slices</li>
-<li><input disabled="" type="checkbox"> str slices</li>
-<li><input disabled="" type="checkbox"> owned slices</li>
-<li><input disabled="" type="checkbox"> slices of strings</li>
-<li><input disabled="" type="checkbox"> strings</li>
-</ul>
-</li>
-<li><input disabled="" type="checkbox"> borrows. This is probably one of the trickiest things, as you need to ensure that managed objects don’t get
-cleaned up if something depends on them.
-<ul>
-<li><input disabled="" type="checkbox"> borrows of parameters</li>
-<li><input disabled="" type="checkbox"> in struct fields</li>
-</ul>
-</li>
-<li><input disabled="" type="checkbox"> nullables, i.e. returning option types.</li>
-<li><input disabled="" type="checkbox"> fallibles, i.e. returning result types. The resulting native type will be a discriminated union.</li>
-</ul>
+<h2 id="methods"><a class="header" href="#methods">Methods</a></h2>
+<p>Any function that does not have <code>pub</code> is not generated by default.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="safety.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/disable.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="demo_gen/intro.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../attrs/features.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -413,11 +208,11 @@ cleaned up if something depends on them.
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="safety.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/disable.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="demo_gen/intro.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../attrs/features.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -437,13 +232,13 @@ cleaned up if something depends on them.
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
 
