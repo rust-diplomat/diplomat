@@ -19,5 +19,5 @@ jvm-callback-support = ["dep:jni"]
 log = ["dep:log"]
 
 [dependencies]
-jni = { version  = "0.21", optional = true }
+jni = { version  = "0.22", optional = true }
 log = { version = "0.4", optional = true }
