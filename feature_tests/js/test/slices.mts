@@ -26,3 +26,13 @@ test("String Owned", async (t) => {
   let s = MyString.newOwned("This is a test.");
   t.is(s.borrow(), "This is a test.");
 });
+
+test("MyString List", (t) => {
+  let arr = [new MyString("A"), new MyString(" B "), new MyString("C")];
+  t.is(MyString.sliceOfOpaques(arr), "A B C");
+});
+
+test("Sliceable Opaque Optional", (t) => {
+  let arr = [new MyString("A"), null, new MyString("C")];
+  t.is(MyString.optionalSliceOfOpaques(arr), `Some(MyString("A")) None Some(MyString("C")) `)
+});

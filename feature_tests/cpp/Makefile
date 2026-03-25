@@ -34,7 +34,10 @@ $(ALL_HEADERS):
 ./tests/functions.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/functions.cpp
 	$(CXX) -std=c++17 ./tests/functions.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/functions.out
 
-test: ./tests/structs.out ./tests/result.out ./tests/option.out ./tests/attrs.out ./tests/callback.out ./tests/strings.out ./tests/functions.out
+./tests/slices.out: ../../target/debug/libdiplomat_feature_tests.a $(ALL_HEADERS) ./tests/slices.cpp
+	$(CXX) -std=c++17 ./tests/slices.cpp ../../target/debug/libdiplomat_feature_tests.a -ldl -lpthread -lm -g -o ./tests/slices.out
+
+test: ./tests/structs.out ./tests/result.out ./tests/option.out ./tests/attrs.out ./tests/callback.out ./tests/strings.out ./tests/functions.out ./tests/slices.out
 	./tests/structs.out
 	./tests/result.out
 	./tests/option.out
@@ -42,3 +45,4 @@ test: ./tests/structs.out ./tests/result.out ./tests/option.out ./tests/attrs.ou
 	./tests/callback.out
 	./tests/strings.out
 	./tests/functions.out
+	./tests/slices.out
