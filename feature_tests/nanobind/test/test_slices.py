@@ -21,3 +21,9 @@ def test_slices():
     with pytest.raises(IndexError):
         c[4]
         d[4]
+    
+    l = [somelib.MyString("A"), somelib.MyString(" B "), somelib.MyString("C")]
+    assert somelib.MyString.slice_of_opaques(l) == "A B C"
+
+    optional_l = [somelib.MyString("A"), None, somelib.MyString("C")]
+    assert somelib.MyString.optional_slice_of_opaques(optional_l) == 'Some(MyString("A")) None Some(MyString("C")) '
