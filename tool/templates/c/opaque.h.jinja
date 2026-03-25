@@ -3,3 +3,8 @@ struct {{ ty_name }};
 {% else -%}
 typedef struct {{ ty_name }} {{ ty_name }};
 {% endif %}
+
+typedef struct Diplomat{{ty_name}}View {
+  const {{ty_name}}** data;
+  size_t len;
+} Diplomat{{ty_name}}View;
