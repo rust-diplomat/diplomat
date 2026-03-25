@@ -94,6 +94,18 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 self.formatter.fmt_primitive_list_type(p).into()
             }
             Type::Slice(hir::Slice::Strs(..)) => "Array<string>".into(),
+            Type::Slice(hir::Slice::Opaque(_, ref pth)) => {
+                let type_name = self.formatter.fmt_type_name(pth.id());
+                format!(
+                    "Array<{}>",
+                    if pth.is_optional() {
+                        self.formatter.fmt_nullable(&type_name)
+                    } else {
+                        type_name.into()
+                    }
+                )
+                .into()
+            }
             Type::DiplomatOption(ref inner) => {
                 let inner = self.gen_js_type_str(inner);
                 // This is suboptimal for struct fields; we should instead be using optional fields,
@@ -616,7 +628,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         match *ty {
             Type::Primitive(p) => self.maybe_wrap_in_write(js_name, gen_context, p),
             Type::Opaque(ref op) if op.is_optional() => self.maybe_wrap_in_write(
-                format!("{js_name}.ffiValue ?? 0").into(),
+                format!("{js_name}?.ffiValue ?? 0").into(),
                 gen_context,
                 PrimitiveType::Int(IntType::U32),
             ),
@@ -677,13 +689,13 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 if let Some(hir::MaybeStatic::Static) = slice.lifetime() {
                     panic!("'static not supported for JS backend.")
                 } else {
-                    let alloc = if slice.lifetime().is_none() {
+                    let sl_alloc = if slice.lifetime().is_none() {
                         "diplomatRuntime.OwnedSliceLeaker"
                     } else {
                         alloc.expect("Must provide some allocation anchor for slice conversion generation!")
                     };
 
-                    let mut alloc_stmnt = format!("{alloc}.alloc(");
+                    let mut alloc_stmnt = format!("{sl_alloc}.alloc(");
                     let mut alloc_end = ")";
 
                     // If we're wrapping our slices for the List context (or preallocation context), we want to wrap the allocate statement around it:
@@ -695,7 +707,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     let (spread_pre, spread_post) = match gen_context {
                         // SlicePreAlloc just wants the DiplomatBufe
                         JsToCConversionContext::SlicePrealloc =>
-                            (format!("{alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed("))")),
+                            (format!("{sl_alloc}.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, "), Cow::Borrowed("))")),
                         // List mode wants a list of (ptr, len)
                         // NOTE: This is only possible in the old WASM ABI, as _intoFFI requires this splatting:
                         JsToCConversionContext::List => ("...".into(), ".splat()".into()),
@@ -726,18 +738,11 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                                 _ => "string8",
                             }
                         ),
-                        hir::Slice::Primitive(mt, p) => {
-                            match mt {
-                                hir::MaybeOwn::Borrow(b) if b.mutability.is_mutable() => {
-                                    self.errors.push_error("Diplomat JS does not support mutable slices.".to_string());
-                                }
-                                _ => {}
-                            }
-                            format!(
-                                r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
-                                self.formatter.fmt_primitive_list_view(*p)
-                            )
-                        }
+                        hir::Slice::Primitive(_, p) => format!(
+                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
+                            self.formatter.fmt_primitive_list_view(*p)
+                        ),
+                        hir::Slice::Opaque(_, op) => format!(r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}.map((op) => {}), "u32"){alloc_end}{spread_post}"#, self.gen_js_to_c_for_type::<hir::Everywhere>(&Type::Opaque(op.clone()), "op".into(), struct_borrow_info, alloc, JsToCConversionContext::List)),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }
                     .into()
