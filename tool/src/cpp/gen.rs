@@ -805,6 +805,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
+            Type::Slice(hir::Slice::Opaque(b, ref op_ty)) => {
+                let op_id = op_ty.id();
+                let type_name = self.formatter.fmt_type_name(op_id);
+                let st = format!("{}*", type_name);
+                let ret = self.formatter.fmt_borrowed_slice(&st, b.mutability());
+                ret.into_owned().into()
+            }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
@@ -1037,6 +1044,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 )
                 .into()
             }
+            Type::Slice(Slice::Opaque(b, ref op)) => format!(
+                "{{reinterpret_cast<{}{}**>({cpp_name}.data()), {cpp_name}.size()}}",
+                if b.mutability().is_mutable() {
+                    ""
+                } else {
+                    "const "
+                },
+                self.formatter.namespace_c_name(
+                    op.id().into(),
+                    &self.formatter.fmt_type_name_unnamespaced(op.id())
+                )
+            )
+            .into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_cpp_to_c_for_type(
