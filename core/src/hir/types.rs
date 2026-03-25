@@ -47,7 +47,7 @@ pub enum SelfType {
     Enum(EnumPath),
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Debug)]
 #[non_exhaustive]
 pub enum Slice<P: TyPosition> {
     /// A string slice, e.g. `&DiplomatStr` or `Box<DiplomatStr>`.
@@ -79,6 +79,11 @@ pub enum Slice<P: TyPosition> {
     /// Currently assumes that `&[Struct]` is provided as an input only for function parameters.
     /// Validated in [`super::type_context::TypeContext::validate_primitive_slice_struct`]
     Struct(MaybeOwn, P::StructPath),
+
+    /// A `&[&Opaque]` or `Box<[&Opaque]>`.
+    /// 
+    /// The opaque can also be wrapped in an option (i.e. `&[Option<&Opaque>]`)
+    Opaque(MaybeOwn, OpaquePath<Optional, Borrow>),
 }
 
 // For now, the lifetime in not optional. This is because when you have references
@@ -129,12 +134,17 @@ impl<P: TyPosition> Type<P> {
                     .chain(opaque.owner.lifetime()),
             ),
             Type::Struct(struct_) => Either::Left(struct_.lifetimes().as_slice().iter().copied()),
-            Type::Slice(slice) => Either::Left(
-                slice
-                    .lifetime()
-                    .map(|lt| std::slice::from_ref(lt).iter().copied())
-                    .unwrap_or([].iter().copied()),
-            ),
+            Type::Slice(slice) => {
+                let extra_lifetimes = if let Slice::Opaque(_, op) = slice {
+                    op.lifetimes.as_slice()
+                } else {
+                    &[]
+                };
+                let chain = extra_lifetimes.iter().copied().chain(slice.lifetime().copied());
+                Either::Right(
+                    chain
+                )
+            },
             Type::DiplomatOption(ty) => ty.lifetimes(),
             // TODO the Callback case
             _ => Either::Left([].iter().copied()),
@@ -210,16 +220,18 @@ impl SelfType {
 impl<P: TyPosition> Slice<P> {
     /// Returns the [`Lifetime`] contained in either the `Str` or `Primitive`
     /// variant.
+    /// Also returns the borrow in the Opaque slice.
     pub fn lifetime(&self) -> Option<&MaybeStatic<Lifetime>> {
         match self {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
             Slice::Primitive(MaybeOwn::Borrow(reference), ..)
-            | Slice::Struct(MaybeOwn::Borrow(reference), ..) => Some(&reference.lifetime),
+            | Slice::Struct(MaybeOwn::Borrow(reference), ..) | Slice::Opaque(MaybeOwn::Borrow(reference), ..) => Some(&reference.lifetime),
             Slice::Primitive(..) | Slice::Struct(..) => None,
             Slice::Strs(..) => Some({
                 const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));
                 &X
             }),
+            Slice::Opaque(_, op) => Some(&op.borrowed().lifetime)
         }
     }
 }
