@@ -1159,25 +1159,6 @@ impl<'ast> LoweringContext<'ast> {
                 )))
             }
             ast::TypeName::CustomTypeSlice(lm, type_name) => {
-                match type_name.as_ref() {
-                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
-                        ast::CustomType::Struct(..) => {
-                            if !self.attr_validator.attrs_supported().abi_compatibles {
-                                self.errors.push(LoweringError::Other(
-                                    "Primitive struct slices are not supported by this backend"
-                                        .into(),
-                                ));
-                            }
-                        }
-                        _ => self.errors.push(LoweringError::Other(format!(
-                            "{type_name} slices are not supported."
-                        ))),
-                    },
-                    _ => self.errors.push(LoweringError::Other(format!(
-                        "{type_name} slices are not supported."
-                    ))),
-                }
-
                 let new_lifetime = lm
                     .as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
@@ -1199,28 +1180,35 @@ impl<'ast> LoweringContext<'ast> {
                     self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
-                match type_name.as_ref() {
-                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
-                        ast::CustomType::Struct(..) => {
-                            let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
-                            match inner {
-                                Type::Struct(st) => {
-                                    Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
-                                }
-                                _ => unreachable!(),
+                let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
+                match inner {
+                    Type::Struct(st) => {
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    }
+                    Type::Opaque(op) => {
+                        if let Some(lt) = new_lifetime {
+                            if lt.mutability.is_mutable() {
+                                self.errors.push(LoweringError::Other(format!("Mutable slices of opaques (&mut [{type_name}]) are currently unsupported in Diplomat.")));
+                            }
+                            if matches!(lt.lifetime, super::MaybeStatic::Static) {
+                                self.errors.push(LoweringError::Other(format!("&'static slices of opaques (&'static [{type_name}]) are currently unsupported in Diplomat.")));
                             }
                         }
-                        _ => {
-                            self.errors.push(LoweringError::Other(
-                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
-                                ));
-                            Err(())
+
+                        if matches!(op.borrowed().mutability, Mutability::Mutable) {
+                            self.errors.push(LoweringError::Other(format!("Slices of mutable opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
                         }
-                    },
+                        if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
+                            self.errors.push(LoweringError::Other(format!("Slices of &'static opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                        }
+
+                        Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
+                    }
                     _ => {
-                        self.errors.push(LoweringError::Other(format!(
-                            "Cannot make a slice from type {type_name}"
-                        )));
+                        self.errors.push(LoweringError::Other(
+                            format!("Cannot have custom type {type_name} in a slice. Only abi_compatible structs or borrowed opaques are allowed."
+                        )
+                        ));
                         Err(())
                     }
                 }
@@ -1559,43 +1547,24 @@ impl<'ast> LoweringContext<'ast> {
                             ));
                         }
                     }
+
+                    if b.mutability.is_mutable() && !self.attr_validator.attrs_supported().mutable_slices {
+                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
+                    }
                 }
 
-                if new_lifetime
-                    .map(|mt| mt.mutability.is_mutable())
-                    .unwrap_or(false)
-                    && !self.attr_validator.attrs_supported().mutable_slices
-                {
-                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
-                }
-
-                match &type_name.as_ref() {
-                    ast::TypeName::Named(path) => match path.resolve(in_path, self.env) {
-                        ast::CustomType::Struct(..) => {
-                            let inner = self.lower_out_type(
-                                type_name,
-                                ltl,
-                                in_path,
-                                context,
-                                in_result_option,
-                            )?;
-                            match inner {
-                                Type::Struct(st) => {
-                                    Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
-                                }
-                                _ => unreachable!(),
-                            }
-                        }
-                        _ => {
-                            self.errors.push(LoweringError::Other(
-                                    format!("Cannot have custom type {type_name} in a slice. Custom slices can only contain primitive-only structs.")
-                                ));
-                            Err(())
-                        }
-                    },
+                let inner = self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
+                match inner {
+                    Type::Struct(st) => {
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    }
+                    Type::Opaque(..) => {
+                        self.errors.push(LoweringError::Other(format!("Opaque slices are currently disallowed as an output type.")));
+                        Err(())
+                    }
                     _ => {
                         self.errors.push(LoweringError::Other(format!(
-                            "Cannot make a slice from type {type_name}"
+                            "Cannot make a slice from type {type_name}. Only abi_compatible structs and borrowed opaques are allowed."
                         )));
                         Err(())
                     }

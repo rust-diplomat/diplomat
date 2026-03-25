@@ -514,6 +514,20 @@ impl TypeContext {
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
             hir::Type::Struct(p) => p.link_lifetimes(self),
+            hir::Type::Slice(hir::Slice::Opaque(..)) => {
+                let ty_lts = param_ty.lifetimes();
+                let out = method.output.used_method_lifetimes();
+                for l in ty_lts {
+                    match l {
+                        MaybeStatic::NonStatic(ns) if out.contains(&ns) => {
+                            let lt_name = method.lifetime_env.fmt_lifetime(ns);
+                            errors.push(LoweringError::Other(format!("Opaque slices ({param}) cannot be borrowed from. Suggestion: remove &'{lt_name} from method output.")));
+                        }
+                        _ => {}
+                    }
+                }
+                return;
+            }
             _ => return,
         };
 
@@ -1434,5 +1448,78 @@ mod tests {
                 }
             }
         }
+    }
+    
+    fn test_opaque_slice() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn static_opaque_slice(op : &'static [&'static Foo]) {
+                        todo!()
+                    }
+
+                    pub fn takes_mut_slice(f : &mut [&Foo], a : &[&mut Foo], b : &mut [&mut Foo]) {
+                        todo!()
+                    }
+
+                    pub fn returns_mut_slice<'a>() -> &'a mut [&'a mut Foo] {
+                        todo!()
+                    }
+
+                    pub fn takes_owned_slice(f : &[Box<Foo>]) {
+                        todo!()
+                    }
+                    
+                    pub fn returns_owned_slice<'b>() -> &'b [Box<Foo>] {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_opaque_slice_borrows() {
+        let parsed : syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo;
+                impl Foo {
+                    pub fn opaque_slice_lt_same<'a>(&'a self, op : &'a [&'a Foo]) {
+                        todo!()
+                    }
+                    
+                    pub fn borrows_opaque_slice<'a>(&'a self, op : &'a [&'a Foo]) -> &'a Self {
+                        todo!()
+                    }
+                }
+            }
+        };
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.callbacks = true;
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 }
