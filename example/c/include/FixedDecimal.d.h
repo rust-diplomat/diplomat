@@ -14,6 +14,11 @@
 typedef struct FixedDecimal FixedDecimal;
 
 
+typedef struct DiplomatFixedDecimalView {
+  const FixedDecimal** data;
+  size_t len;
+} DiplomatFixedDecimalView;
+
 
 
 #endif // FixedDecimal_D_H

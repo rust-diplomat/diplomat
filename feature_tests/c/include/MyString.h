@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "Float64Vec.d.h"
 
 #include "MyString.d.h"
 
@@ -32,6 +33,12 @@ DiplomatStringView MyString_get_static_str(void);
 void MyString_string_transform(DiplomatStringView foo, DiplomatWrite* write);
 
 DiplomatStringView MyString_borrow(const MyString* self);
+
+void MyString_slice_of_opaques(DiplomatMyStringView sl, DiplomatWrite* write);
+
+void MyString_optional_slice_of_opaques(DiplomatMyStringView sl, DiplomatWrite* write);
+
+void MyString_other_opaque_type(DiplomatFloat64VecView other, DiplomatWrite* write);
 
 void MyString_destroy(MyString* self);
 

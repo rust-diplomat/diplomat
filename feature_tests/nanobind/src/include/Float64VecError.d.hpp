@@ -20,6 +20,12 @@ class Float64VecError;
 namespace somelib {
 namespace capi {
     struct Float64VecError;
+
+
+    typedef struct DiplomatFloat64VecErrorView {
+      const Float64VecError** data;
+      size_t len;
+    } DiplomatFloat64VecErrorView;
 } // namespace capi
 } // namespace
 
