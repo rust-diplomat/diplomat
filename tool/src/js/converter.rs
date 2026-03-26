@@ -726,10 +726,18 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                                 _ => "string8",
                             }
                         ),
-                        hir::Slice::Primitive(_, p) => format!(
-                            r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
-                            self.formatter.fmt_primitive_list_view(*p)
-                        ),
+                        hir::Slice::Primitive(mt, p) => {
+                            match mt {
+                                hir::MaybeOwn::Borrow(b) if b.mutability.is_mutable() => {
+                                    self.errors.push_error("Diplomat JS does not support mutable slices.".to_string());
+                                }
+                                _ => {}
+                            }
+                            format!(
+                                r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
+                                self.formatter.fmt_primitive_list_view(*p)
+                            )
+                        }
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }
                     .into()

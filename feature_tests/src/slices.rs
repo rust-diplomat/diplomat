@@ -104,6 +104,7 @@ pub mod ffi {
             &self.0
         }
 
+        #[diplomat::attr(js, disable)]
         pub fn fill_slice(&self, v: &mut [f64]) {
             v.copy_from_slice(&self.0)
         }
