@@ -22,6 +22,12 @@ class RefListParameter;
 namespace somelib {
 namespace capi {
     struct RefList;
+
+
+    typedef struct DiplomatRefListView {
+      const RefList** data;
+      size_t len;
+    } DiplomatRefListView;
 } // namespace capi
 } // namespace
 

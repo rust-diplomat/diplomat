@@ -18,6 +18,8 @@ void add_MyString_binding(nb::module_ mod) {
         .def_static("new_from_first", std::move(maybe_op_unwrap(&somelib::MyString::new_from_first)), "v"_a)
         .def_static("new_from_utf16", std::move(maybe_op_unwrap(&somelib::MyString::new_from_utf16)), "v"_a)
         .def_static("new_unsafe", std::move(maybe_op_unwrap(&somelib::MyString::new_unsafe)), "v"_a)
+        .def_static("optional_slice_of_opaques", &somelib::MyString::optional_slice_of_opaques, "sl"_a)
+        .def_static("slice_of_opaques", &somelib::MyString::slice_of_opaques, "sl"_a)
         .def_prop_rw("str", &somelib::MyString::get_str, &somelib::MyString::set_str)
         .def_static("string_transform", &somelib::MyString::string_transform, "foo"_a);
 }

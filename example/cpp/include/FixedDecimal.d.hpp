@@ -20,6 +20,12 @@ class FixedDecimal;
 namespace icu4x {
 namespace capi {
     struct FixedDecimal;
+
+
+    typedef struct DiplomatFixedDecimalView {
+      const FixedDecimal** data;
+      size_t len;
+    } DiplomatFixedDecimalView;
 } // namespace capi
 } // namespace
 

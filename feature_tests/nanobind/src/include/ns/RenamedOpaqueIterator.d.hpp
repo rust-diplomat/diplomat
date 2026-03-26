@@ -22,6 +22,12 @@ class AttrOpaque1Renamed;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueIterator;
+
+
+    typedef struct DiplomatRenamedOpaqueIteratorView {
+      const RenamedOpaqueIterator** data;
+      size_t len;
+    } DiplomatRenamedOpaqueIteratorView;
 } // namespace capi
 } // namespace
 

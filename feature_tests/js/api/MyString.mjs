@@ -210,6 +210,46 @@ export class MyString {
         }
     }
 
+    static sliceOfOpaques(sl) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op.ffiValue), "u32")));
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.MyString_slice_of_opaques(slSlice.ptr, write.buffer);
+
+        try {
+            return write.readString8();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            write.free();
+        }
+    }
+
+    static optionalSliceOfOpaques(sl) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op?.ffiValue ?? 0), "u32")));
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.MyString_optional_slice_of_opaques(slSlice.ptr, write.buffer);
+
+        try {
+            return write.readString8();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+            write.free();
+        }
+    }
+
     constructor(v) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

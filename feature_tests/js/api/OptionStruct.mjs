@@ -98,8 +98,8 @@ export class OptionStruct {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a.ffiValue ?? 0, Uint32Array);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#b.ffiValue ?? 0, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#a?.ffiValue ?? 0, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#b?.ffiValue ?? 0, Uint32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 8, this.#c, Uint32Array);
         diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 12, this.#d.ffiValue, Uint32Array);
     }
