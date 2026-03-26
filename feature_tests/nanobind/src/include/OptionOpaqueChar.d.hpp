@@ -15,6 +15,12 @@
 namespace somelib {
 namespace capi {
     struct OptionOpaqueChar;
+
+
+    typedef struct DiplomatOptionOpaqueCharView {
+      const OptionOpaqueChar** data;
+      size_t len;
+    } DiplomatOptionOpaqueCharView;
 } // namespace capi
 } // namespace
 
