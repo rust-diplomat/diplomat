@@ -37,6 +37,9 @@ internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native:
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func_holder (
     internal val nativeStruct: DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native) {}
 

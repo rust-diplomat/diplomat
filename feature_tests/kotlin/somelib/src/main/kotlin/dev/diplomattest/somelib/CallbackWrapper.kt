@@ -93,6 +93,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {}
 
@@ -146,6 +149,9 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {}
 
@@ -199,6 +205,9 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {}
 
@@ -252,6 +261,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {}
 
@@ -305,6 +317,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {}
 
@@ -358,6 +373,9 @@ internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallba
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
 internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {}
 
