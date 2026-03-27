@@ -93,6 +93,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -110,7 +113,8 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
     }
@@ -142,6 +146,9 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -159,7 +166,8 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h 
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h(cb_wrap)
         }
     }
@@ -191,6 +199,9 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -208,7 +219,8 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f(cb_wrap)
         }
     }
@@ -240,6 +252,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -257,7 +272,8 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f(cb_wrap)
         }
     }
@@ -289,6 +305,9 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -306,7 +325,8 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g(cb_wrap)
         }
     }
@@ -338,6 +358,9 @@ internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallba
     }
 }
 
+internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder (
+    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {}
+
 internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f internal constructor (
     internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -355,7 +378,8 @@ internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallba
             }
             val cb_wrap = DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f(cb_wrap)
         }
     }

@@ -37,6 +37,9 @@ internal class DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_
     }
 }
 
+internal class DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_holder (
+    internal val nativeStruct: DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_Native) {}
+
 internal class DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func internal constructor (
     internal val nativeStruct: DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -54,7 +57,8 @@ internal class DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func 
             }
             val cb_wrap = DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return DiplomatCallback_MutableCallbackHolder_new_diplomatCallback_func(cb_wrap)
         }
     }

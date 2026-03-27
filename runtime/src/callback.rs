@@ -50,6 +50,7 @@ extern "system" fn create_rust_jvm_cookie<'local>(
     obj_to_ref: JObject<'local>,
 ) -> jlong {
     let global_ref = env.new_global_ref(obj_to_ref).unwrap();
+    assert!(!global_ref.is_null());
     Box::into_raw(Box::new(global_ref)) as jlong
 }
 

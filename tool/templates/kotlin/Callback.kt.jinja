@@ -26,6 +26,9 @@ internal class {{name}}_Native: Structure(), Structure.ByValue {
     }
 }
 
+internal class {{name}}_holder (
+    internal val nativeStruct: {{name}}_Native) {}
+
 internal class {{name}} internal constructor (
     internal val nativeStruct: {{name}}_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -43,7 +46,8 @@ internal class {{name}} internal constructor (
             }
             val cb_wrap = {{name}}_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = {{name}}_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return {{name}}(cb_wrap)
         }
     }
