@@ -26,6 +26,12 @@ internal class {{name}}_Native: Structure(), Structure.ByValue {
     }
 }
 
+// Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
+// so that the global_ref construction is run on a real object instead of the JNA Structure
+// passed by-value to native code (which results in a null global_ref as it's not an address).
+internal class {{name}}_holder (
+    internal val nativeStruct: {{name}}_Native) {}
+
 internal class {{name}} internal constructor (
     internal val nativeStruct: {{name}}_Native) {
     val data_: Pointer = nativeStruct.data_
@@ -43,7 +49,8 @@ internal class {{name}} internal constructor (
             }
             val cb_wrap = {{name}}_Native()
             cb_wrap.run_callback = callback;
-            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(cb_wrap as Object);
+            val holder = {{name}}_holder(cb_wrap)
+            cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
             return {{name}}(cb_wrap)
         }
     }
