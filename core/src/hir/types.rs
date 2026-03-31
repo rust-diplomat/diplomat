@@ -81,7 +81,7 @@ pub enum Slice<P: TyPosition> {
     Struct(MaybeOwn, P::StructPath),
 
     /// A `&[&Opaque]` or `Box<[&Opaque]>`.
-    /// 
+    ///
     /// The opaque can also be wrapped in an option (i.e. `&[Option<&Opaque>]`)
     Opaque(MaybeOwn, OpaquePath<Optional, Borrow>),
 }
@@ -140,11 +140,12 @@ impl<P: TyPosition> Type<P> {
                 } else {
                     &[]
                 };
-                let chain = extra_lifetimes.iter().copied().chain(slice.lifetime().copied());
-                Either::Right(
-                    chain
-                )
-            },
+                let chain = extra_lifetimes
+                    .iter()
+                    .copied()
+                    .chain(slice.lifetime().copied());
+                Either::Right(chain)
+            }
             Type::DiplomatOption(ty) => ty.lifetimes(),
             // TODO the Callback case
             _ => Either::Left([].iter().copied()),
@@ -225,13 +226,14 @@ impl<P: TyPosition> Slice<P> {
         match self {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
             Slice::Primitive(MaybeOwn::Borrow(reference), ..)
-            | Slice::Struct(MaybeOwn::Borrow(reference), ..) | Slice::Opaque(MaybeOwn::Borrow(reference), ..) => Some(&reference.lifetime),
+            | Slice::Struct(MaybeOwn::Borrow(reference), ..)
+            | Slice::Opaque(MaybeOwn::Borrow(reference), ..) => Some(&reference.lifetime),
             Slice::Primitive(..) | Slice::Struct(..) => None,
             Slice::Strs(..) => Some({
                 const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));
                 &X
             }),
-            Slice::Opaque(_, op) => Some(&op.borrowed().lifetime)
+            Slice::Opaque(_, op) => Some(&op.borrowed().lifetime),
         }
     }
 }
