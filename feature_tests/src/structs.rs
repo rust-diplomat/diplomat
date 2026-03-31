@@ -495,7 +495,7 @@ pub mod ffi {
     }
 
     impl PrimitiveStruct {
-        #[diplomat::cfg(supports=abi_compatibles)]
+        #[diplomat::cfg(all(supports=abi_compatibles, supports=mutable_slices))]
         pub fn mutable_slice(a: &mut [PrimitiveStruct]) {
             let mut running_sum = 0.0;
             let mut alternate = false;
