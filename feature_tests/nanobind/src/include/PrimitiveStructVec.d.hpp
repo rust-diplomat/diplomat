@@ -41,8 +41,6 @@ public:
 
   inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const;
 
-  inline somelib::diplomat::span<somelib::PrimitiveStruct> as_slice_mut();
-
   inline somelib::PrimitiveStruct __getitem__(size_t idx) const;
 
   inline static void take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl);

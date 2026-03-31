@@ -18,17 +18,11 @@ namespace somelib {
 namespace capi {
     extern "C" {
 
-    void PrimitiveStruct_mutable_slice(somelib::capi::DiplomatPrimitiveStructViewMut a);
-
     void PrimitiveStruct_mutable_ref(somelib::capi::PrimitiveStruct* self, somelib::capi::PrimitiveStruct* a);
 
     } // extern "C"
 } // namespace capi
 } // namespace
-
-inline void somelib::PrimitiveStruct::mutable_slice(somelib::diplomat::span<somelib::PrimitiveStruct> a) {
-    somelib::capi::PrimitiveStruct_mutable_slice({reinterpret_cast<somelib::capi::PrimitiveStruct*>(a.data()), a.size()});
-}
 
 inline void somelib::PrimitiveStruct::mutable_ref(somelib::PrimitiveStruct& a) {
     somelib::capi::PrimitiveStruct_mutable_ref(reinterpret_cast<somelib::capi::PrimitiveStruct*>(this),

@@ -28,8 +28,6 @@ namespace capi {
 
     somelib::capi::DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const somelib::capi::PrimitiveStructVec* self);
 
-    somelib::capi::DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(somelib::capi::PrimitiveStructVec* self);
-
     somelib::capi::PrimitiveStruct PrimitiveStructVec_get(const somelib::capi::PrimitiveStructVec* self, size_t idx);
 
     void PrimitiveStructVec_take_slice_from_other_namespace(somelib::ns::capi::DiplomatRenamedStructWithAttrsView _sl);
@@ -58,11 +56,6 @@ inline size_t somelib::PrimitiveStructVec::__len__() const {
 inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const {
     auto result = somelib::capi::PrimitiveStructVec_as_slice(this->AsFFI());
     return somelib::diplomat::span<const somelib::PrimitiveStruct>(reinterpret_cast<const somelib::PrimitiveStruct*>(result.data), result.len);
-}
-
-inline somelib::diplomat::span<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice_mut() {
-    auto result = somelib::capi::PrimitiveStructVec_as_slice_mut(this->AsFFI());
-    return somelib::diplomat::span<somelib::PrimitiveStruct>(reinterpret_cast<somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
 inline somelib::PrimitiveStruct somelib::PrimitiveStructVec::__getitem__(size_t idx) const {
