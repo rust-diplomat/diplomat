@@ -1137,10 +1137,12 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
 
-                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
-                    if !self.attr_validator.attrs_supported().mutable_slices {
-                        self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
-                    }
+                if new_lifetime
+                    .map(|mt| mt.mutability.is_mutable())
+                    .unwrap_or(false)
+                    && !self.attr_validator.attrs_supported().mutable_slices
+                {
+                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
                 }
 
                 Ok(Type::Slice(Slice::Primitive(
@@ -1181,10 +1183,12 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                 }
-                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
-                    if !self.attr_validator.attrs_supported().mutable_slices {
-                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
-                    }
+                if new_lifetime
+                    .map(|mt| mt.mutability.is_mutable())
+                    .unwrap_or(false)
+                    && !self.attr_validator.attrs_supported().mutable_slices
+                {
+                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
                 }
 
                 match type_name.as_ref() {
@@ -1549,10 +1553,12 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
 
-                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
-                    if !self.attr_validator.attrs_supported().mutable_slices {
-                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
-                    }
+                if new_lifetime
+                    .map(|mt| mt.mutability.is_mutable())
+                    .unwrap_or(false)
+                    && !self.attr_validator.attrs_supported().mutable_slices
+                {
+                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
                 }
 
                 match &type_name.as_ref() {
