@@ -1137,6 +1137,12 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
 
+                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
+                    if !self.attr_validator.attrs_supported().mutable_slices {
+                        self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                    }
+                }
+
                 Ok(Type::Slice(Slice::Primitive(
                     new_lifetime.into(),
                     PrimitiveType::from_ast(*prim),
@@ -1173,6 +1179,11 @@ impl<'ast> LoweringContext<'ast> {
                                 format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
+                    }
+                }
+                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
+                    if !self.attr_validator.attrs_supported().mutable_slices {
+                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
                     }
                 }
 
@@ -1515,6 +1526,9 @@ impl<'ast> LoweringContext<'ast> {
                 Err(())
             }
             ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
+                if m.is_mutable() && !self.attr_validator.attrs_supported().mutable_slices {
+                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                }
                 Ok(OutType::Slice(Slice::Primitive(
                     MaybeOwn::Borrow(Borrow::new(ltl.lower_lifetime(lt), *m)),
                     PrimitiveType::from_ast(*prim),
@@ -1532,6 +1546,12 @@ impl<'ast> LoweringContext<'ast> {
                                 format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
+                    }
+                }
+
+                if new_lifetime.map(|mt| mt.mutability.is_mutable()).unwrap_or(false) {
+                    if !self.attr_validator.attrs_supported().mutable_slices {
+                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
                     }
                 }
 

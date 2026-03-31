@@ -1,0 +1,8 @@
+---
+source: core/src/hir/type_context.rs
+expression: output
+---
+Lowering error in Foo::takes_slice: &mut [f32] not supported. Try #[diplomat::cfg(supports=mutable_slices)]
+Lowering error in Foo::takes_slice: &mut [Foo] not supported. Try #[diplomat::cfg(supports=mutable_slices)]
+Lowering error in Foo::takes_slice: &mut [f32] not supported. Try #[diplomat::cfg(supports=mutable_slices)]
+Lowering error in Foo::returns_abi_slice: &mut [Foo] not supported. Try #[diplomat::cfg(supports=mutable_slices)]
