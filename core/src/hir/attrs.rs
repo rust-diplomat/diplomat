@@ -1948,7 +1948,7 @@ mod tests {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(auto, abi_compatible)]
+                #[diplomat::attr(*, abi_compatible)]
                 pub struct Foo {
                     pub x: u32,
                     pub y: u32
