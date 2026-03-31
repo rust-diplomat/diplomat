@@ -1182,9 +1182,7 @@ impl<'ast> LoweringContext<'ast> {
 
                 let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
                 match inner {
-                    Type::Struct(st) => {
-                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
-                    }
+                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
@@ -1200,6 +1198,11 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
                             self.errors.push(LoweringError::Other(format!("Slices of &'static opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                        }
+                        if !self.attr_validator.attrs_supported().opaque_slices {
+                            self.errors.push(LoweringError::Other(format!(
+                                "Slice of opaque &[{type_name}] is unsupported by this backend."
+                            )));
                         }
 
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
@@ -1548,18 +1551,21 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
 
-                    if b.mutability.is_mutable() && !self.attr_validator.attrs_supported().mutable_slices {
+                    if b.mutability.is_mutable()
+                        && !self.attr_validator.attrs_supported().mutable_slices
+                    {
                         self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                     }
                 }
 
-                let inner = self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
+                let inner =
+                    self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
                 match inner {
-                    Type::Struct(st) => {
-                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
-                    }
+                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
                     Type::Opaque(..) => {
-                        self.errors.push(LoweringError::Other(format!("Opaque slices are currently disallowed as an output type.")));
+                        self.errors.push(LoweringError::Other(
+                            "Opaque slices are currently disallowed as an output type.".to_string(),
+                        ));
                         Err(())
                     }
                     _ => {
