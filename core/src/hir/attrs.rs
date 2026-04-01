@@ -1290,6 +1290,8 @@ pub struct BackendAttrSupport {
     pub owned_slices: bool,
     /// Whether the language supports default arguments.
     pub default_args: bool,
+    /// Whether the language supports mutable slices.
+    pub mutable_slices: bool,
 }
 
 impl BackendAttrSupport {
@@ -1329,6 +1331,7 @@ impl BackendAttrSupport {
             custom_bindings: true,
             owned_slices: true,
             default_args: true,
+            mutable_slices: true,
         }
     }
 
@@ -1363,6 +1366,7 @@ impl BackendAttrSupport {
             "free_functions" => Some(self.free_functions),
             "custom_bindings" => Some(self.custom_bindings),
             "owned_slices" => Some(self.owned_slices),
+            "mutable_slices" => Some(self.mutable_slices),
             _ => None,
         }
     }
@@ -1511,6 +1515,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 custom_bindings,
                 owned_slices,
                 default_args,
+                mutable_slices,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1546,6 +1551,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "custom_bindings" => custom_bindings,
                 "owned_slices" => owned_slices,
                 "default_args" => default_args,
+                "mutable_slices" => mutable_slices,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

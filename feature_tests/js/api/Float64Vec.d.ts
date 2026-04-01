@@ -22,8 +22,6 @@ export class Float64Vec {
 
     get asSlice(): Array<number>;
 
-    fillSlice(v: Array<number>): void;
-
     setValue(newSlice: Array<number>): void;
 
     toString(): string;

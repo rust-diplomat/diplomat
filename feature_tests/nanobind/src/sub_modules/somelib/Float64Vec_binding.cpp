@@ -14,7 +14,6 @@ void add_Float64Vec_binding(nb::module_ mod) {
     opaque
         .def_prop_ro("asSlice", &somelib::Float64Vec::as_slice)
         .def("borrow", &somelib::Float64Vec::borrow)
-        .def("fill_slice", &somelib::Float64Vec::fill_slice, "v"_a)
         .def("__getitem__", [](somelib::Float64Vec* self, size_t index) {
                 auto out = self->operator[] (index);
                 if (!out.has_value()) {

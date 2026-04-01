@@ -15,7 +15,6 @@ internal interface Float64VecLib: Library {
     fun Float64Vec_new_f64_be_bytes(v: Slice): Pointer
     fun Float64Vec_new_from_owned(v: Slice): Pointer
     fun Float64Vec_as_slice(handle: Pointer): Slice
-    fun Float64Vec_fill_slice(handle: Pointer, v: Slice): Unit
     fun Float64Vec_set_value(handle: Pointer, newSlice: Slice): Unit
     fun Float64Vec_to_string(handle: Pointer, write: Pointer): Unit
     fun Float64Vec_borrow(handle: Pointer): Slice
@@ -157,17 +156,6 @@ class Float64Vec internal constructor (
         
         val returnVal = lib.Float64Vec_as_slice(handle);
             return PrimitiveArrayTools.getDoubleArray(returnVal)
-    }
-    
-    fun fillSlice(v: DoubleArray): Unit {
-        val vSliceMemory = PrimitiveArrayTools.borrow(v)
-        
-        val returnVal = lib.Float64Vec_fill_slice(handle, vSliceMemory.slice);
-        try {
-            
-        } finally {
-            vSliceMemory.close()
-        }
     }
     
     fun setValue(newSlice: DoubleArray): Unit {

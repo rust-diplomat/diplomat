@@ -180,21 +180,6 @@ export class Float64Vec {
         }
     }
 
-    fillSlice(v) {
-        let functionCleanupArena = new diplomatRuntime.CleanupArena();
-
-        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, v, "f64")));
-    wasm.Float64Vec_fill_slice(this.ffiValue, vSlice.ptr);
-
-        try {}
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-            functionCleanupArena.free();
-
-        }
-    }
-
     setValue(newSlice) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

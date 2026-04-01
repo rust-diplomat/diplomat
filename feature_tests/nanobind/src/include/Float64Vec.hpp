@@ -34,8 +34,6 @@ namespace capi {
 
     somelib::diplomat::capi::DiplomatF64View Float64Vec_as_slice(const somelib::capi::Float64Vec* self);
 
-    void Float64Vec_fill_slice(const somelib::capi::Float64Vec* self, somelib::diplomat::capi::DiplomatF64ViewMut v);
-
     void Float64Vec_set_value(somelib::capi::Float64Vec* self, somelib::diplomat::capi::DiplomatF64View new_slice);
 
     void Float64Vec_to_string(const somelib::capi::Float64Vec* self, somelib::diplomat::capi::DiplomatWrite* write);
@@ -89,11 +87,6 @@ inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_f64_be_byte
 inline somelib::diplomat::span<const double> somelib::Float64Vec::as_slice() const {
     auto result = somelib::capi::Float64Vec_as_slice(this->AsFFI());
     return somelib::diplomat::span<const double>(result.data, result.len);
-}
-
-inline void somelib::Float64Vec::fill_slice(somelib::diplomat::span<double> v) const {
-    somelib::capi::Float64Vec_fill_slice(this->AsFFI(),
-        {v.data(), v.size()});
 }
 
 inline void somelib::Float64Vec::set_value(somelib::diplomat::span<const double> new_slice) {

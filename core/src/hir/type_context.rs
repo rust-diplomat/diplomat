@@ -1382,4 +1382,28 @@ mod tests {
         };
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
+
+    #[test]
+    fn test_unsupported_mut_slice() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Foo {
+                    x : f32,
+                    y : f32,
+                }
+
+                impl Foo {
+                    pub fn takes_slice<'a>(a : &'a mut [f32], b : &'a mut [Foo] ) -> &'a mut [f32] {
+                        todo!()
+                    }
+
+                    pub fn returns_abi_slice<'a>() -> &'a mut [Foo] {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
 }

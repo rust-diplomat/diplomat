@@ -43,6 +43,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.abi_compatibles = true;
     a.struct_refs = true;
     a.free_functions = true;
+    a.mutable_slices = true;
 
     a
 }

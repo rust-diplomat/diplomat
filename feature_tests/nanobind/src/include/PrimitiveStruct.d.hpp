@@ -50,8 +50,6 @@ struct PrimitiveStruct {
     intptr_t d;
     uint8_t e;
 
-  inline static void mutable_slice(somelib::diplomat::span<somelib::PrimitiveStruct> a);
-
   inline void mutable_ref(somelib::PrimitiveStruct& a);
 
     inline somelib::capi::PrimitiveStruct AsFFI() const;

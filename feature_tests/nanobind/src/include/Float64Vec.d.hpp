@@ -43,8 +43,6 @@ public:
 
   inline somelib::diplomat::span<const double> as_slice() const;
 
-  inline void fill_slice(somelib::diplomat::span<double> v) const;
-
   inline void set_value(somelib::diplomat::span<const double> new_slice);
 
   inline std::string to_string() const;
