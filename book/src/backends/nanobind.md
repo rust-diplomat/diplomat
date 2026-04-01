@@ -10,8 +10,8 @@ Nanobind `.pyd` files can be stepped through using any debugger. As long as you'
 
 ## Slices
 
-### Mutable Slices and Copying on the Boundary
-Nanobind supports taking mutable slices:
+### Slices Copying on the Boundary
+Nanobind supports taking slices:
 
 ```
 #[diplomat::bridge]
@@ -23,48 +23,22 @@ mod ffi {
     }
 
     impl Foo {
-        pub fn takes_mut_slice(sl : &mut [Foo]) {
+        pub fn takes_slice(sl : &[Foo]) {
             for s in sl.iter() {
-                s.x += 1;
+                println!("{}", s.x);
             }
         }
     }
 }
 ```
 
-However, if you attempt to mutate the slice in Python:
-
-```python
-f = [somelib.Foo(x=10,y=10)]
-print([foo.x for foo in f])
-somelib.Foo.takes_mut_slice(f)
-print([foo.x for foo in f])
-```
-
-You will get an error:
-
-```
-[10]
-TypeError: takes_mut_slice(): incompatible function arguments. The following argument types are supported:
-    1. mutable_slice(s: collections.abc.Sequence[somelib.somelib.Foo]) -> None
-Invoked with types: list
-```
-
-Diplomat's bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a `TSlice` type (i.e., `somelib.FooSlice`):
+However, note that this is a *copy* of the slice. Diplomat's bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a `TSlice` type (i.e., `somelib.FooSlice`):
 
 ```python
 f = somelib.FooSlice([somelib.Foo(x=10, y=10)])
-print([foo.x for foo in f])
-somelib.Foo.takes_mut_slice(f)
-print([foo.x for foo in f])
+somelib.Foo.takes_slice(f)
 ```
-
-Which prints the correct result:
-
-```
-[10]
-[11]
-```
+Which will copy the slice's memory.
 
 #### Explanation
 
