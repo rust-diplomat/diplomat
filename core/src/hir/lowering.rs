@@ -1142,7 +1142,7 @@ impl<'ast> LoweringContext<'ast> {
                     .unwrap_or(false)
                     && !self.attr_validator.attrs_supported().mutable_slices
                 {
-                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
                 Ok(Type::Slice(Slice::Primitive(
@@ -1188,7 +1188,7 @@ impl<'ast> LoweringContext<'ast> {
                     .unwrap_or(false)
                     && !self.attr_validator.attrs_supported().mutable_slices
                 {
-                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
                 match type_name.as_ref() {
@@ -1531,7 +1531,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
                 if m.is_mutable() && !self.attr_validator.attrs_supported().mutable_slices {
-                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
                 Ok(OutType::Slice(Slice::Primitive(
                     MaybeOwn::Borrow(Borrow::new(ltl.lower_lifetime(lt), *m)),
@@ -1558,7 +1558,7 @@ impl<'ast> LoweringContext<'ast> {
                     .unwrap_or(false)
                     && !self.attr_validator.attrs_supported().mutable_slices
                 {
-                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported. Try #[diplomat::cfg(supports=mutable_slices)]")));
+                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
                 match &type_name.as_ref() {
