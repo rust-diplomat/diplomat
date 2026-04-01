@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-38787e29.js";
+            window.path_to_searchindex_js = "../searchindex-35e069ed.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-77e73944.js"></script>
@@ -184,8 +184,8 @@
 <li>Add breakpoints as you would normally.</li>
 </ol>
 <h2 id="slices"><a class="header" href="#slices">Slices</a></h2>
-<h3 id="mutable-slices-and-copying-on-the-boundary"><a class="header" href="#mutable-slices-and-copying-on-the-boundary">Mutable Slices and Copying on the Boundary</a></h3>
-<p>Nanobind supports taking mutable slices:</p>
+<h3 id="slices-copying-on-the-boundary"><a class="header" href="#slices-copying-on-the-boundary">Slices Copying on the Boundary</a></h3>
+<p>Nanobind supports taking slices:</p>
 <pre><code>#[diplomat::bridge]
 mod ffi {
     #[diplomat::attr(auto, abi_compatible)]
@@ -195,36 +195,19 @@ mod ffi {
     }
 
     impl Foo {
-        pub fn takes_mut_slice(sl : &amp;mut [Foo]) {
+        pub fn takes_slice(sl : &amp;[Foo]) {
             for s in sl.iter() {
-                s.x += 1;
+                println!("{}", s.x);
             }
         }
     }
 }
 </code></pre>
-<p>However, if you attempt to mutate the slice in Python:</p>
-<pre><code class="language-python">f = [somelib.Foo(x=10,y=10)]
-print([foo.x for foo in f])
-somelib.Foo.takes_mut_slice(f)
-print([foo.x for foo in f])
-</code></pre>
-<p>You will get an error:</p>
-<pre><code>[10]
-TypeError: takes_mut_slice(): incompatible function arguments. The following argument types are supported:
-    1. mutable_slice(s: collections.abc.Sequence[somelib.somelib.Foo]) -&gt; None
-Invoked with types: list
-</code></pre>
-<p>Diplomat’s bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a <code>TSlice</code> type (i.e., <code>somelib.FooSlice</code>):</p>
+<p>However, note that this is a <em>copy</em> of the slice. Diplomat’s bindings will automatically do conversion for immutable slice types, by copying to a list type that Nanobind understands. However, if you wish to pass over a reference to a given list, Diplomat will automatically generate a <code>TSlice</code> type (i.e., <code>somelib.FooSlice</code>):</p>
 <pre><code class="language-python">f = somelib.FooSlice([somelib.Foo(x=10, y=10)])
-print([foo.x for foo in f])
-somelib.Foo.takes_mut_slice(f)
-print([foo.x for foo in f])
+somelib.Foo.takes_slice(f)
 </code></pre>
-<p>Which prints the correct result:</p>
-<pre><code>[10]
-[11]
-</code></pre>
+<p>Which will copy the slice’s memory.</p>
 <h4 id="explanation"><a class="header" href="#explanation">Explanation</a></h4>
 <p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
 <p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
@@ -325,6 +308,9 @@ print([foo.x for foo in f])
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Default Arguments</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 </ul>
 
