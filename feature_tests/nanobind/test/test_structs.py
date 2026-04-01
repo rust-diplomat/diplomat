@@ -26,11 +26,10 @@ def test_structs():
     sl.append(somelib.PrimitiveStruct(1, True, 'c', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(2, False, ' ', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(-1, False, ' ', 0, 0, 0))
-    sl = somelib.PrimitiveStructSlice(sl.asSliceMut)
-    somelib.PrimitiveStruct.mutable_slice(sl)
+    sl = sl.asSlice
     assert sl[0].x == 1
-    assert sl[1].x == 3
-    assert sl[2].x == 2
+    assert sl[1].x == 2
+    assert sl[2].x == -1
 
     bg = somelib.BigStructWithStuffSlice()
     bg.append(somelib.BigStructWithStuff())

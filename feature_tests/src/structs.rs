@@ -546,6 +546,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, getter = "asSliceMut")]
+        #[diplomat::cfg(supports=mutable_slices)]
         pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
             &mut self.0
         }
