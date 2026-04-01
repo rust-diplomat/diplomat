@@ -8,11 +8,11 @@ The C++ type conversions are built upon the [C ABI](./c.md#type-conversion), wit
 See [C Primitives](./c.md#primitives).
 
 ### Struct Types
-|    Diplomat Type                       |       C Type      |
+|    Diplomat Type                       |       C++ Type      |
 |----------------------------------------|-------------------|
 |  `#[diplomat::opaque] pub struct Type` | `class Type {...}` |
 |           `pub struct Type`            | `class Type{...}`|
-|           `pub enum Type`              | `enum Type`       |
+|           `pub enum Type`              | `class Type{...}`       |
 
 ### Opaques
 Opaques are treated as classes that wrap their C ABI pointer, but upon return either wrapped in a `std::unique_ptr<Type>` or a simple `Type*` pointer.
@@ -21,13 +21,13 @@ Opaques are treated as classes that wrap their C ABI pointer, but upon return ei
 Structs are represented as C++ structs with methods. Each C++ struct is converted from the C ABI into its relevant C++ type.
 
 #### Enums
-See [C Enums](./c.md#enums).
+Enum classes hold an inner `enum Type::Value` which mirrors the Rust enum. This will be converted to a [C-friendly Enum](./c.md#enums) on being passed to the ABI.
 
 ### Options
-All options (with the exception of opaques) are represented as `std::optional<InnerType>`.
+All options (with the exception of options of opaque types) are represented as `std::optional<InnerType>`.
 
 #### Opaque Options
-These are nullable pointers.
+All opaque types are behind a reference (`const Opaque*` or `Opaque *`) or a `unique_ptr`, so options of these types are correspondingly behind nullable `*` pointers and nullable `unique_ptr`s.
 
 ### Results
 All results are returned as `diplomat::result<T, E>`, which is backed by `std::variant`.
@@ -44,7 +44,7 @@ if (result.is_ok()) {
 
 ### Slices
 
-|    Diplomat Type                       |       C Type      |
+|    Diplomat Type                       |       C++ Type      |
 |----------------------------------------|-------------------|
 |           `&[Primitive]`               |`diplomat::span<const Primitive>`|
 |           `&mut[Primitive]`            |`diplomat::span<Primitive>`|
