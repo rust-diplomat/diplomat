@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-35e069ed.js";
+            window.path_to_searchindex_js = "searchindex-dbbb59af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-77e73944.js"></script>
@@ -2125,6 +2125,72 @@ typedef struct TraitName_VTable {
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="c-backend-1"><a class="header" href="#c-backend-1">C++ Backend</a></h1>
+<h2 id="type-conversion-1"><a class="header" href="#type-conversion-1">Type Conversion</a></h2>
+<p>The C++ type conversions are built upon the <a href="#type-conversion">C ABI</a>, with some additionall STL types to make working with the C ABI more intuitive from a C++ standpoint.</p>
+<h3 id="primitives-1"><a class="header" href="#primitives-1">Primitives</a></h3>
+<p>See <a href="#primitives">C Primitives</a>.</p>
+<h3 id="struct-types-1"><a class="header" href="#struct-types-1">Struct Types</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>C++ Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>#[diplomat::opaque] pub struct Type</code></td><td><code>class Type {...}</code></td></tr>
+<tr><td><code>pub struct Type</code></td><td><code>class Type{...}</code></td></tr>
+<tr><td><code>pub enum Type</code></td><td><code>class Type{...}</code></td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="opaques-1"><a class="header" href="#opaques-1">Opaques</a></h3>
+<p>Opaques are treated as classes that wrap their C ABI pointer, but upon return either wrapped in a <code>std::unique_ptr&lt;Type&gt;</code> or a simple <code>Type*</code> pointer.</p>
+<h4 id="structs-1"><a class="header" href="#structs-1">Structs</a></h4>
+<p>Structs are represented as C++ structs with methods. Each C++ struct is converted from the C ABI into its relevant C++ type.</p>
+<h4 id="enums-1"><a class="header" href="#enums-1">Enums</a></h4>
+<p>Enum classes hold an inner <code>enum Type::Value</code> which mirrors the Rust enum. This will be converted to a <a href="#enums">C-friendly Enum</a> on being passed to the ABI.</p>
+<h3 id="options-1"><a class="header" href="#options-1">Options</a></h3>
+<p>All options (with the exception of options of opaque types) are represented as <code>std::optional&lt;InnerType&gt;</code>.</p>
+<h4 id="opaque-options-1"><a class="header" href="#opaque-options-1">Opaque Options</a></h4>
+<p>All opaque types are behind a reference (<code>const Opaque*</code> or <code>Opaque *</code>) or a <code>unique_ptr</code>, so options of these types are correspondingly behind nullable <code>*</code> pointers and nullable <code>unique_ptr</code>s.</p>
+<h3 id="results-1"><a class="header" href="#results-1">Results</a></h3>
+<p>All results are returned as <code>diplomat::result&lt;T, E&gt;</code>, which is backed by <code>std::variant</code>.</p>
+<pre><code class="language-cpp">auto result = MyClass::get_result();
+// Get the ok value:
+if (result.is_ok()) {
+    auto ok = std::move(result).ok().value();
+} else if (result.is_err()) {
+    auto err = std::move(result).err().value();
+}
+</code></pre>
+<h3 id="slices-2"><a class="header" href="#slices-2">Slices</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>C++ Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>&amp;[Primitive]</code></td><td><code>diplomat::span&lt;const Primitive&gt;</code></td></tr>
+<tr><td><code>&amp;mut[Primitive]</code></td><td><code>diplomat::span&lt;Primitive&gt;</code></td></tr>
+<tr><td><code>&amp;str</code> or <code>&amp;DiplomatStr</code> or <code>DiplomatStrSlice</code> or <code>DiplomatUtf8StrSlice</code></td><td><code>std::string_view</code></td></tr>
+<tr><td><code>&amp;DiplomatStr16</code> or <code>DiplomatStr16Slice</code></td><td><code>std::u16string_view</code></td></tr>
+<tr><td><code>&amp;[&amp;str] or &amp;[DiplomatStrSlice]</code> or <code>&amp;[DiplomatUtf8StrSlice]</code></td><td><code>diplomat::span&lt;diplomat::string_view_for_slice&gt;</code></td></tr>
+<tr><td><code>&amp;[DiplomatStr16Slice]</code></td><td><code>diplomat::span&lt;diplomat::u16string_view_for_slice&gt;</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="diplomatspan"><a class="header" href="#diplomatspan"><code>diplomat::span</code></a></h4>
+<p>All slices are stored in the <code>diplomat::span</code> struct. For C++17, this is the <code>std::span</code> struct. Otherwise, it is implemented in diplomat with the following rough structure:</p>
+<pre><code class="language-cpp">constexpr size_t dynamic_extent = std::numeric_limits&lt;std::size_t&gt;::max();
+template &lt;class T, std::size_t Extent = dynamic_extent&gt;
+class span {
+    private:
+    T* data;
+    size_t size;
+};
+</code></pre>
+<p>With helper method for constructing <code>diplomat::span</code> from arrays and pointers to sized data.</p>
+<h3 id="callbacks-2"><a class="header" href="#callbacks-2">Callbacks</a></h3>
+<p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
 <h2 id="supports-1"><a class="header" href="#supports-1">Supports</a></h2>
 <ul>
 <li>
@@ -2599,7 +2665,7 @@ for how to use them</p>
 <li>Feature tests: <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
 <li>Example: <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib">kotlin usage</a></li>
 </ul>
-<h3 id="callbacks-2"><a class="header" href="#callbacks-2">Callbacks</a></h3>
+<h3 id="callbacks-3"><a class="header" href="#callbacks-3">Callbacks</a></h3>
 <p>The kotlin backend supports passing kotlin functions and closures as callbacks to native code. To do this you need to add the
 enable the <code>jvm-callback-support</code> feature when you add  the diplomat runtime to your project. For examples on how to use them
 look in the <code>feature_tests</code> directory of the diplomat project. This is a bit conceptually different to the rest of diplomat
@@ -2721,7 +2787,7 @@ so here some specific examples</p>
 <li>Attach the debugger to the process (for LLDB, this is <code>lldb -p PID</code>).</li>
 <li>Add breakpoints as you would normally.</li>
 </ol>
-<h2 id="slices-2"><a class="header" href="#slices-2">Slices</a></h2>
+<h2 id="slices-3"><a class="header" href="#slices-3">Slices</a></h2>
 <h3 id="slices-copying-on-the-boundary"><a class="header" href="#slices-copying-on-the-boundary">Slices Copying on the Boundary</a></h3>
 <p>Nanobind supports taking slices:</p>
 <pre><code>#[diplomat::bridge]
