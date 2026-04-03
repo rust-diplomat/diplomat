@@ -4,8 +4,6 @@ export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
 
 export { RenamedFeatureTest } from "./RenamedFeatureTest.mjs"
 
-export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin.mjs"
-
 export { RenamedRenamedCachedIncludeZST } from "./RenamedRenamedCachedIncludeZST.mjs"
 
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"

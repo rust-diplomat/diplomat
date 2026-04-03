@@ -68,7 +68,6 @@ void add_Nested_binding(nb::module_);
 }namespace somelib::ns{
   
 void add_RenamedDeprecatedStruct_binding(nb::module_);
-void add_RenamedNonMacroMixin_binding(nb::module_);
 void add_RenamedRenamedCachedIncludeZST_binding(nb::module_);
 void add_RenamedStructWithAttrs_binding(nb::module_);
 void add_RenamedTestMacroStruct_binding(nb::module_);
@@ -214,7 +213,6 @@ NB_MODULE(somelib, mod)
     nested::ns2::add_Nested_binding(nested_ns2_mod);
     
     ns::add_RenamedDeprecatedStruct_binding(ns_mod);
-    ns::add_RenamedNonMacroMixin_binding(ns_mod);
     ns::add_RenamedRenamedCachedIncludeZST_binding(ns_mod);
     ns::add_RenamedStructWithAttrs_binding(ns_mod);
     ns::add_RenamedTestMacroStruct_binding(ns_mod);

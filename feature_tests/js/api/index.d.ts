@@ -6,8 +6,6 @@ export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct"
 
 export { RenamedFeatureTest } from "./RenamedFeatureTest"
 
-export { RenamedNonMacroMixin } from "./RenamedNonMacroMixin"
-
 export { RenamedRenamedCachedIncludeZST } from "./RenamedRenamedCachedIncludeZST"
 
 export { RenamedStructWithAttrs, RenamedStructWithAttrs_obj } from "./RenamedStructWithAttrs"
