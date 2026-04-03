@@ -116,6 +116,35 @@ typedef struct DiplomatPrimitiveNameView {
 
 There is also a `DiplomatPrimitiveViewMut` struct for slices with mutable pointers.
 
+### DiplomatWrite
+
+In the C ABI, `DiplomatWrite` is defined in `diplomat_runtime.h`:
+
+```c
+typedef struct DiplomatWrite {
+    void* context;
+    char* buf;
+    size_t len;
+    size_t cap;
+    bool grow_failed;
+    void (*flush)(struct DiplomatWrite*);
+    bool (*grow)(struct DiplomatWrite*, size_t);
+} DiplomatWrite;
+```
+
+The C bindings expose the default implementation through the functions:
+
+```c
+DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+
+DiplomatWrite* diplomat_buffer_write_create(size_t cap);
+char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
+size_t diplomat_buffer_write_len(DiplomatWrite* t);
+void diplomat_buffer_write_destroy(DiplomatWrite* t);
+```
+
+Which you can use to easily construct a `DiplomatWrite` for use. See [the chapter on DiplomatWrite](../write.md) for more.
+
 ### Traits
 For each trait, the C backend will generate a `Trait` struct and a `VTable` struct:
 
