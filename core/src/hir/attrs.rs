@@ -1584,7 +1584,7 @@ mod tests {
 
             let mut attr_validator = hir::BasicAttributeValidator::new("tests");
             attr_validator.support = $attrs;
-            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {
