@@ -1,6 +1,7 @@
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
+use std::rc::Rc;
 
 use quote::ToTokens;
 use serde::Serialize;
@@ -97,6 +98,30 @@ impl DiplomatTypeAttribute {
     }
 }
 
+/// File name -> List of macro defs
+type ModuleCacheMap = HashMap<String, BTreeMap<syn::Ident, super::MacroDef>>;
+
+/// Information for how to parse #[diplomat::include].
+#[derive(Clone, Debug)]
+pub struct ModuleIncludeInfo {
+    /// Where to parse files from.
+    pub(crate) base_path: std::path::PathBuf,
+    /// Cache across Module::from_syn calls.
+    pub(crate) cache: Option<Rc<RefCell<ModuleCacheMap>>>,
+}
+
+impl ModuleIncludeInfo {
+    pub fn new(base_path: std::path::PathBuf, should_cache: bool) -> Self {
+        let cache = if should_cache {
+            Some(Rc::new(RefCell::new(HashMap::new())))
+        } else {
+            None
+        };
+
+        ModuleIncludeInfo { base_path, cache }
+    }
+}
+
 #[derive(Clone, Serialize, Debug)]
 #[non_exhaustive]
 pub struct Module {
@@ -129,6 +154,7 @@ struct ModuleBuilder {
     type_parent_attrs: Attrs,
     impl_parent_attrs: Attrs,
     mod_macros: Macros,
+    include_info: Option<ModuleIncludeInfo>,
 }
 
 impl ModuleBuilder {
@@ -281,7 +307,8 @@ impl ModuleBuilder {
                 }
             }
             Item::Mod(item_mod) => {
-                self.sub_modules.push(Module::from_syn(item_mod, false));
+                self.sub_modules
+                    .push(Module::from_syn(item_mod, false, self.include_info.clone()));
             }
             Item::Trait(trt) => {
                 if self.analyze_types {
@@ -397,8 +424,20 @@ impl Module {
     ///
     /// `force_analyze` is for forcibly parsing the module in the case where we know the `#[diplomat::bridge]` attribute should be present,
     /// but proc_macro (or some other analyzer) has removed the attribute in advance.
-    pub fn from_syn(input: &ItemMod, force_analyze: bool) -> Module {
+    pub fn from_syn(
+        input: &ItemMod,
+        force_analyze: bool,
+        include_info: Option<ModuleIncludeInfo>,
+    ) -> Module {
         let mod_attrs: Attrs = (&*input.attrs).into();
+
+        let mod_macros = if let Some(inc) = &include_info {
+            let defs = parse_macro_file(input, force_analyze, inc.clone())
+                .expect("Could not parse macro definitions");
+            Macros { defs }
+        } else {
+            Macros::new()
+        };
 
         let mut mst = ModuleBuilder {
             custom_types_by_name: BTreeMap::new(),
@@ -418,7 +457,8 @@ impl Module {
             impl_parent_attrs: mod_attrs
                 .attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule),
             type_parent_attrs: mod_attrs.attrs_for_inheritance(AttrInheritContext::Type),
-            mod_macros: Macros::new(),
+            mod_macros,
+            include_info,
         };
 
         input
@@ -494,93 +534,102 @@ impl File {
             .flat_map(|m| m.all_rust_links().into_iter())
             .collect()
     }
-}
 
-/// Cache should be set to `true` outside of `proc_macro` contexts.
-/// `proc_macro` does not like storing any token information outside of the lifetime of the `bridge`
-/// macro execution.
-pub fn parse_module_with_includes(
-    module: &mut syn::ItemMod,
-    base_path: &std::path::Path,
-    force_analyze: bool,
-    cache: bool,
-) -> Result<(), std::io::Error> {
-    let contains_bridge = module
-        .attrs
-        .iter()
-        .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge")
-        || force_analyze;
-
-    // This cache works as long as Diplomat AST is called from a single thread.
-    thread_local! {
-        static MODULE_CACHE: RefCell<HashMap<String, Vec<syn::Item>>> = RefCell::new(HashMap::new());
-    }
-
-    if contains_bridge {
-        let attrs: Attrs = (*module.attrs).into();
-        let (_, items) = module
-            .content
-            .as_mut()
-            .expect("Expected mod content in diplomat::bridge.");
-        for i in attrs.includes {
-            let cached_items =
-                MODULE_CACHE.with_borrow_mut(|c| -> Result<Vec<Item>, std::io::Error> {
-                    if let Some(k) = c.get(&i.path) {
-                        Ok(k.clone())
-                    } else {
-                        let file_contents =
-                            std::fs::read_to_string(base_path.join(i.path.clone()))?;
-                        let syn_file = syn::parse_file(&file_contents)
-                            .map_err(|e| std::io::Error::other(e.to_string()))?;
-                        if cache {
-                            c.insert(i.path, syn_file.items.clone());
-                        }
-                        Ok(syn_file.items)
-                    }
-                })?;
-            // Prepend the items:
-            items.splice(0..0, cached_items);
-        }
-        return Ok(());
-    }
-    if let Some((_, items)) = module.content.as_mut() {
-        for i in items {
-            if let Item::Mod(m) = i {
-                parse_module_with_includes(m, base_path, force_analyze, cache)?
-            }
-        }
-    }
-    Ok(())
-}
-
-/// Parse a given syn::File and inline #[diplomat::include] statements.
-pub fn parse_file_with_includes(
-    mut file: syn::File,
-    base_path: &std::path::Path,
-    cache: bool,
-) -> Result<syn::File, std::io::Error> {
-    for i in file.items.iter_mut() {
-        if let syn::Item::Mod(m) = i {
-            parse_module_with_includes(m, base_path, false, cache)?;
-        }
-    }
-    Ok(file)
-}
-
-impl From<&syn::File> for File {
-    /// Get all custom types across all modules defined in a given file.
-    fn from(file: &syn::File) -> File {
+    pub fn from_syn_with_include(
+        file: &syn::File,
+        include_info: Option<ModuleIncludeInfo>,
+    ) -> File {
         let mut out = BTreeMap::new();
         file.items.iter().for_each(|i| {
             if let Item::Mod(item_mod) = i {
                 out.insert(
                     item_mod.ident.to_string(),
-                    Module::from_syn(item_mod, false),
+                    Module::from_syn(item_mod, false, include_info.clone()),
                 );
             }
         });
 
         File { modules: out }
+    }
+}
+
+pub fn parse_macro_file(
+    m: &ItemMod,
+    force_analyze: bool,
+    include_info: ModuleIncludeInfo,
+) -> Result<BTreeMap<syn::Ident, super::MacroDef>, std::io::Error> {
+    let contains_bridge = m
+        .attrs
+        .iter()
+        .any(|a| a.path().to_token_stream().to_string() == "diplomat :: bridge")
+        || force_analyze;
+
+    if !contains_bridge {
+        return Ok(BTreeMap::new());
+    }
+
+    let attrs: Attrs = (*m.attrs).into();
+
+    let mut previously_hit = BTreeMap::<syn::Ident, String>::new();
+
+    let mut ret = BTreeMap::new();
+    for i in &attrs.includes {
+        let mut defs = if let Some(inner) = include_info
+            .cache
+            .as_ref()
+            .and_then(|c| c.borrow().get(&i.path).cloned())
+        {
+            inner
+        } else {
+            let file_contents =
+                std::fs::read_to_string(include_info.base_path.join(i.path.clone()))?;
+            let syn_file = syn::parse_file(&file_contents)
+                .map_err(|e| std::io::Error::other(e.to_string()))?;
+            // Parse the module (we're just interested in the macros, but this is a quick shortcut to do that)
+            let mut mst = ModuleBuilder {
+                custom_types_by_name: BTreeMap::new(),
+                custom_traits_by_name: BTreeMap::new(),
+                functions_by_name: BTreeMap::new(),
+                sub_modules: vec![],
+                imports: vec![],
+                analyze_types: true,
+                impl_parent_attrs: attrs
+                    .attrs_for_inheritance(AttrInheritContext::MethodOrImplFromModule),
+                type_parent_attrs: attrs.attrs_for_inheritance(AttrInheritContext::Type),
+                mod_macros: Macros::new(),
+                include_info: None,
+                private_types_by_name: BTreeSet::new(),
+                skip_private_items: false,
+            };
+            for i in syn_file.items {
+                mst.add(&i);
+            }
+
+            if let Some(c) = &include_info.cache {
+                c.borrow_mut()
+                    .insert(i.path.clone(), mst.mod_macros.defs.clone());
+            }
+            mst.mod_macros.defs
+        };
+
+        // ModuleBuilder catches redefinitions within a given module, but we want to make sure
+        // there are no collisions between multiple #[diplomat::include()] files:
+        for id in defs.keys() {
+            if let Some(pth) = previously_hit.get(id) {
+                return Err(std::io::Error::other(format!("Duplicate macro definition of {id} found in {}: original definition from {pth}", i.path)));
+            } else {
+                previously_hit.insert(id.clone(), i.path.clone());
+            }
+        }
+        ret.append(&mut defs);
+    }
+    Ok(ret)
+}
+
+impl From<&syn::File> for File {
+    /// Get all custom types across all modules defined in a given file.
+    fn from(file: &syn::File) -> File {
+        File::from_syn_with_include(file, None)
     }
 }
 
@@ -637,7 +686,8 @@ mod tests {
                         }
                     }
                 },
-                true
+                true,
+                None
             ));
         });
     }
@@ -670,7 +720,8 @@ mod tests {
                         }
                     }
                 },
-                true
+                true,
+                None
             ));
         });
     }

@@ -13,7 +13,5 @@ macro_rules! mixin_macro {
     };
 }
 
-/// Diplomat will prepend this whole block to the start of attrs.rs,
-/// but we currently cannot do the same for proc_macro (until we hit MSRV >= 1.88).
-/// So the workaround is to use the path to the module whenever referring to the imported type (as seen above).
+/// This will not appear in the include.
 pub struct NonMacroMixin;

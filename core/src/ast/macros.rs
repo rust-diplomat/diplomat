@@ -13,9 +13,9 @@ use syn::{
     token, Error, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Macros {
-    defs: BTreeMap<Ident, MacroDef>,
+    pub(crate) defs: BTreeMap<Ident, MacroDef>,
 }
 
 impl Macros {
@@ -379,7 +379,7 @@ impl MacroUse {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// A token representing part of a macro's arguments.
 /// Used for determining how to parse [`MacroUse`].
 /// First constructed with [`MacroMatcher::parse`] inside of [`MacroDef::parse`]. Then, we compare with [`MacroUse::parse_macro_matcher`].
@@ -446,7 +446,7 @@ impl Parse for MacroMatch {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 /// Represents any given macro definition's arguments, and information on how to parse them for use.
 /// A MacroMatcher is a delimited list of [`MacroMatch`]es. When you call the macro `example!(...)`, the macro matcher is the parentheses delimited tokens: `(...)`.
 /// Used to compare a [`MacroDef`] against a [`MacroUse`] when parsing arguments.
@@ -485,7 +485,7 @@ impl Parse for MacroMatcher {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 #[non_exhaustive]
 /// Struct for defining a macro (i.e., `macro_rules! example`)
 pub struct MacroDef {

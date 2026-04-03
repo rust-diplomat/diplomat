@@ -482,13 +482,14 @@ impl AttributeInfo {
 fn gen_bridge(mut input: ItemMod) -> ItemMod {
     // The module cloned for includes only.
     // This avoids defining multiple items twice (like macros).
-    let mut included_mod = input.clone();
 
     let base = std::env::var("CARGO_MANIFEST_DIR")
         .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
-    ast::parse_module_with_includes(&mut included_mod, std::path::Path::new(&base), true, false)
-        .expect("Could not read module.");
-    let module = ast::Module::from_syn(&included_mod, true);
+    let module = ast::Module::from_syn(
+        &input,
+        true,
+        Some(ast::ModuleIncludeInfo::new(base.into(), false)),
+    );
     // Clean out any diplomat attributes so Rust doesn't get mad
     let _attrs = AttributeInfo::extract(&mut input.attrs);
     let (brace, mut new_contents) = input.content.unwrap();
