@@ -1,0 +1,15 @@
+---
+source: tool/src/nanobind/mod.rs
+assertion_line: 691
+expression: method_generated
+---
+PyType_Slot mylib_Decimal_slots[] = {
+    {Py_tp_free, (void *)mylib::Decimal::operator delete },
+    {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
+    {0, nullptr}};
+
+nb::class_<mylib::Decimal> opaque(mod, "Decimal", nb::type_slots(mylib_Decimal_slots));
+opaque
+    .def_static("from_",std::move(maybe_op_unwrap(nb::overload_cast<int32_t>(&mylib::Decimal::from))), "v"_a)
+    .def_static("from_", std::move(maybe_op_unwrap(nb::overload_cast<int64_t>(&mylib::Decimal::from))), "v"_a)
+    .def_static("from_", std::move(maybe_op_unwrap(nb::overload_cast<uint32_t>(&mylib::Decimal::from))), "v"_a);
