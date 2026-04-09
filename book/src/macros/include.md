@@ -26,4 +26,6 @@ mod ffi {
 ```
 
 ## Usage
+`#[diplomat::bridge]` is evaluated by proc_macro individually, so every module that uses `#[diplomat::bridge]` that wants to use the same macros must each have a separate `#[diplomat::include]` declaration.
+
 `#[diplomat::include(...)]` evaluates a path always relative to `Cargo.toml`. This is detected automatically when building your library, but may need to be set when using `diplomat_tool` through the `manifest_dir` [config](../config.md).
