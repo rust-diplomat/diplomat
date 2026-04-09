@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7802b5a4.js";
+            window.path_to_searchindex_js = "searchindex-131f8d4b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-ac29378c.js"></script>
@@ -2020,6 +2020,27 @@ to see what is necessary. Documentation for more backends will be added in the f
 };
 </code></pre>
 <p>There is also a <code>DiplomatPrimitiveViewMut</code> struct for slices with mutable pointers.</p>
+<h3 id="diplomatwrite"><a class="header" href="#diplomatwrite">DiplomatWrite</a></h3>
+<p>In the C ABI, <code>DiplomatWrite</code> is defined in <code>diplomat_runtime.h</code>:</p>
+<pre><code class="language-c">typedef struct DiplomatWrite {
+    void* context;
+    char* buf;
+    size_t len;
+    size_t cap;
+    bool grow_failed;
+    void (*flush)(struct DiplomatWrite*);
+    bool (*grow)(struct DiplomatWrite*, size_t);
+} DiplomatWrite;
+</code></pre>
+<p>The C bindings expose the default implementation through the functions:</p>
+<pre><code class="language-c">DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+
+DiplomatWrite* diplomat_buffer_write_create(size_t cap);
+char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
+size_t diplomat_buffer_write_len(DiplomatWrite* t);
+void diplomat_buffer_write_destroy(DiplomatWrite* t);
+</code></pre>
+<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. See <a href="#returning-strings-write">the chapter on DiplomatWrite</a> for more.</p>
 <h3 id="traits-1"><a class="header" href="#traits-1">Traits</a></h3>
 <p>For each trait, the C backend will generate a <code>Trait</code> struct and a <code>VTable</code> struct:</p>
 <pre><code class="language-c">typedef struct DiplomatTraitStruct_TraitName {
@@ -2212,6 +2233,28 @@ class span {
 };
 </code></pre>
 <p>With helper method for constructing <code>diplomat::span</code> from arrays and pointers to sized data.</p>
+<h3 id="diplomatwrite-1"><a class="header" href="#diplomatwrite-1">DiplomatWrite</a></h3>
+<p>C++ will return <code>std::string</code> for <code>DiplomatWrite</code> functions. The function</p>
+<pre><code class="language-rs">pub fn to_string(w : &amp;mut DiplomatWrite);
+</code></pre>
+<p>Becomes</p>
+<pre><code class="language-c++">inline std::string to_string() const;
+// and
+template&lt;typename W&gt;
+inline void somelib::Float64Vec::to_string_write(W&amp; writeable) const;
+</code></pre>
+<p>Where <code>W</code> implements <code>WriteTrait</code>:</p>
+<pre><code class="language-c++">// This "trait" allows one to use _write() methods to efficiently
+// write to a custom string type. To do this you need to write a specialized
+// `WriteTrait&lt;YourType&gt;` (see WriteTrait&lt;std::string&gt; below)
+// that is capable of constructing a DiplomatWrite, which can wrap
+// your string type with appropriate resize/flush functionality.
+template&lt;typename T&gt; struct WriteTrait {
+  // Fill in this method on a specialization to implement this trait
+  // static inline capi::DiplomatWrite Construct(T&amp; t);
+};
+</code></pre>
+<p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
 <h3 id="callbacks-2"><a class="header" href="#callbacks-2">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
 <h2 id="supports-1"><a class="header" href="#supports-1">Supports</a></h2>
@@ -2802,6 +2845,84 @@ so here some specific examples</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="nanobind-backend"><a class="header" href="#nanobind-backend">Nanobind Backend</a></h1>
+<h2 id="type-conversion-2"><a class="header" href="#type-conversion-2">Type Conversion</a></h2>
+<p>The Nanobind backend is backed by the <a href="#type-conversion-1">C++ backend</a> (through <a href="https://nanobind.readthedocs.io/en/latest/">Nanobind</a>), so a lot of type conversions are handled through Nanobind’s discretion, with some exceptions.</p>
+<h3 id="primitives-2"><a class="header" href="#primitives-2">Primitives</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Rust Type</th><th>Python Type</th></tr>
+</thead>
+<tbody>
+<tr><td>u8</td><td>int</td></tr>
+<tr><td>u16</td><td>int</td></tr>
+<tr><td>u32</td><td>int</td></tr>
+<tr><td>u64</td><td>int</td></tr>
+<tr><td>u128</td><td>unsupported</td></tr>
+<tr><td>i8</td><td>int</td></tr>
+<tr><td>i16</td><td>int</td></tr>
+<tr><td>i32</td><td>int</td></tr>
+<tr><td>i64</td><td>int</td></tr>
+<tr><td>i128</td><td>unsupported</td></tr>
+<tr><td>bool</td><td>bool</td></tr>
+<tr><td>char</td><td>str</td></tr>
+<tr><td>isize</td><td>int</td></tr>
+<tr><td>usize</td><td>int</td></tr>
+<tr><td>f32</td><td>float</td></tr>
+<tr><td>f64</td><td>float</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="struct-types-2"><a class="header" href="#struct-types-2">Struct Types</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>Python Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>#[diplomat::opaque] pub struct Type</code></td><td><code>class Type</code></td></tr>
+<tr><td><code>pub struct Type</code></td><td><code>class Type</code></td></tr>
+<tr><td><code>pub enum Type</code></td><td><code>class Type</code></td></tr>
+</tbody>
+</table>
+</div>
+<h4 id="opaques-2"><a class="header" href="#opaques-2">Opaques</a></h4>
+<p>These are Python classes bound to C++ through Nanobind.</p>
+<h4 id="structs-2"><a class="header" href="#structs-2">Structs</a></h4>
+<p>These are Python classes, bound similarly to opaques; however, each field is defined as properties on the class.</p>
+<h4 id="enums-2"><a class="header" href="#enums-2">Enums</a></h4>
+<p>These are also bound as classes, but with an inner bound <code>enum.Enum</code> class. The variants can be accessed through the parent <code>Type.*</code>, but the inner enum type can be accessed through <code>Type.Type</code>.</p>
+<h3 id="options-2"><a class="header" href="#options-2">Options</a></h3>
+<p>Any <code>Option&lt;T&gt;</code> type in Python is represented as a <code>T | None</code> value.</p>
+<h3 id="results-2"><a class="header" href="#results-2">Results</a></h3>
+<p>All <code>Result&lt;T, E&gt;</code> functions return <code>T</code>, and throw an <code>Exception</code> with <code>Exception.args</code> set to contain <code>E</code> converted into Python:</p>
+<pre><code class="language-py">try:
+    somelib.FailingFunction()
+except Exception as e:
+    error_type = e.args[0]
+</code></pre>
+<h3 id="slices-3"><a class="header" href="#slices-3">Slices</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Diplomat Type</th><th>Python Type</th></tr>
+</thead>
+<tbody>
+<tr><td><code>&amp;[Primitive]</code></td><td><code>List[Primitive]</code> or <code>ndarray((N,), dtype=Primitive)</code></td></tr>
+<tr><td><code>&amp;str</code> or <code>&amp;DiplomatStr</code> or <code>DiplomatStrSlice</code> or <code>DiplomatUtf8StrSlice</code></td><td><code>str</code></td></tr>
+<tr><td><code>&amp;DiplomatStr16</code> or <code>DiplomatStr16Slice</code></td><td>Unsupported</td></tr>
+<tr><td><code>&amp;[&amp;str] or &amp;[DiplomatStrSlice]</code> or <code>&amp;[DiplomatUtf8StrSlice]</code></td><td><code>str</code></td></tr>
+<tr><td><code>&amp;[DiplomatStr16Slice]</code></td><td>Unsupported</td></tr>
+</tbody>
+</table>
+</div>
+<p>Slices in the Nanobind backend are <code>List</code> types. Generally, lists are copied on the C++-&gt;Python boundary, except for <a href="#numpy">numpy types</a> and <a href="#slices-copying-on-the-boundary">specialized slice types</a>.</p>
+<h4 id="numpy"><a class="header" href="#numpy">NumPy</a></h4>
+<p>If you have <code>ndarray</code> support through <code>NumPy</code>, and the inner slice type is supported by <code>dlpack</code>, Diplomat will return an <code>ndarray</code> type. These are passed by reference, and are not copied over the C++-&gt;Python boundary.</p>
+<h3 id="diplomatwrite-2"><a class="header" href="#diplomatwrite-2">DiplomatWrite</a></h3>
+<p>The Nanobind backend uses the <a href="#diplomatwrite-1">default C++ implementation for DiplomatWrite</a>, and so returns a <code>str</code> type.</p>
+<h3 id="callbacks-4"><a class="header" href="#callbacks-4">Callbacks</a></h3>
+<p>Implemented as any ordinary Python function (lambda or <code>def</code> will work).</p>
 <h2 id="debugging"><a class="header" href="#debugging">Debugging</a></h2>
 <p>Nanobind <code>.pyd</code> files can be stepped through using any debugger. As long as you’ve built the <code>.pyd</code> file with debugging symbols, you can attach to any running Python process that has the <code>.pyd</code> imported. Here are the steps:</p>
 <ol>
@@ -2810,8 +2931,8 @@ so here some specific examples</p>
 <li>Attach the debugger to the process (for LLDB, this is <code>lldb -p PID</code>).</li>
 <li>Add breakpoints as you would normally.</li>
 </ol>
-<h2 id="slices-3"><a class="header" href="#slices-3">Slices</a></h2>
-<h3 id="slices-copying-on-the-boundary"><a class="header" href="#slices-copying-on-the-boundary">Slices Copying on the Boundary</a></h3>
+<p>Alternately, you can use <a href="https://docs.python.org/3/library/functions.html#breakpoint"><code>breakpoint()</code></a> right before the code you wish to debug, and follow from step 2 above.</p>
+<h2 id="slices-copying-on-the-boundary"><a class="header" href="#slices-copying-on-the-boundary">Slices Copying on the Boundary</a></h2>
 <p>Nanobind supports taking slices:</p>
 <pre><code>#[diplomat::bridge]
 mod ffi {
@@ -2835,7 +2956,7 @@ mod ffi {
 somelib.Foo.takes_slice(f)
 </code></pre>
 <p>Which will copy the slice’s memory.</p>
-<h4 id="explanation"><a class="header" href="#explanation">Explanation</a></h4>
+<h3 id="explanation"><a class="header" href="#explanation">Explanation</a></h3>
 <p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
 <p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
 <h2 id="supports-6"><a class="header" href="#supports-6">Supports</a></h2>

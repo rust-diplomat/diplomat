@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7802b5a4.js";
+            window.path_to_searchindex_js = "../searchindex-131f8d4b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ac29378c.js"></script>
@@ -239,6 +239,28 @@ class span {
 };
 </code></pre>
 <p>With helper method for constructing <code>diplomat::span</code> from arrays and pointers to sized data.</p>
+<h3 id="diplomatwrite"><a class="header" href="#diplomatwrite">DiplomatWrite</a></h3>
+<p>C++ will return <code>std::string</code> for <code>DiplomatWrite</code> functions. The function</p>
+<pre><code class="language-rs">pub fn to_string(w : &amp;mut DiplomatWrite);
+</code></pre>
+<p>Becomes</p>
+<pre><code class="language-c++">inline std::string to_string() const;
+// and
+template&lt;typename W&gt;
+inline void somelib::Float64Vec::to_string_write(W&amp; writeable) const;
+</code></pre>
+<p>Where <code>W</code> implements <code>WriteTrait</code>:</p>
+<pre><code class="language-c++">// This "trait" allows one to use _write() methods to efficiently
+// write to a custom string type. To do this you need to write a specialized
+// `WriteTrait&lt;YourType&gt;` (see WriteTrait&lt;std::string&gt; below)
+// that is capable of constructing a DiplomatWrite, which can wrap
+// your string type with appropriate resize/flush functionality.
+template&lt;typename T&gt; struct WriteTrait {
+  // Fill in this method on a specialization to implement this trait
+  // static inline capi::DiplomatWrite Construct(T&amp; t);
+};
+</code></pre>
+<p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="./c.html#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
 <h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>

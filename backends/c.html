@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7802b5a4.js";
+            window.path_to_searchindex_js = "../searchindex-131f8d4b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ac29378c.js"></script>
@@ -289,6 +289,27 @@
 };
 </code></pre>
 <p>There is also a <code>DiplomatPrimitiveViewMut</code> struct for slices with mutable pointers.</p>
+<h3 id="diplomatwrite"><a class="header" href="#diplomatwrite">DiplomatWrite</a></h3>
+<p>In the C ABI, <code>DiplomatWrite</code> is defined in <code>diplomat_runtime.h</code>:</p>
+<pre><code class="language-c">typedef struct DiplomatWrite {
+    void* context;
+    char* buf;
+    size_t len;
+    size_t cap;
+    bool grow_failed;
+    void (*flush)(struct DiplomatWrite*);
+    bool (*grow)(struct DiplomatWrite*, size_t);
+} DiplomatWrite;
+</code></pre>
+<p>The C bindings expose the default implementation through the functions:</p>
+<pre><code class="language-c">DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+
+DiplomatWrite* diplomat_buffer_write_create(size_t cap);
+char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
+size_t diplomat_buffer_write_len(DiplomatWrite* t);
+void diplomat_buffer_write_destroy(DiplomatWrite* t);
+</code></pre>
+<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. See <a href="../write.html">the chapter on DiplomatWrite</a> for more.</p>
 <h3 id="traits"><a class="header" href="#traits">Traits</a></h3>
 <p>For each trait, the C backend will generate a <code>Trait</code> struct and a <code>VTable</code> struct:</p>
 <pre><code class="language-c">typedef struct DiplomatTraitStruct_TraitName {
