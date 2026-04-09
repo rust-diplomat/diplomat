@@ -217,8 +217,9 @@ impl TypeContext {
         s: &'ast syn::File,
         cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
+        include_info: Option<ast::ModuleIncludeInfo<'ast>>,
     ) -> Result<Self, Vec<ErrorAndContext>> {
-        let types = ast::File::from(s).all_types();
+        let types = ast::File::from_syn(s, include_info).all_types();
         let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
         ctx.errors.set_item("(validation)");
         hir.validate(&mut ctx.errors);
@@ -804,7 +805,7 @@ mod tests {
             attr_validator.support.option = true;
             attr_validator.support.abi_compatibles = true;
             attr_validator.support.free_functions = true;
-            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
                 Ok(_context) => (),
                 Err(e) => {
                     for (ctx, err) in e {
@@ -1226,7 +1227,7 @@ mod tests {
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.struct_refs = true;
         attr_validator.support.abi_compatibles = true;
-        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {
@@ -1260,7 +1261,7 @@ mod tests {
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
-        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {
@@ -1296,7 +1297,7 @@ mod tests {
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
-        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {
@@ -1328,7 +1329,7 @@ mod tests {
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
         attr_validator.support.callbacks = true;
-        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator) {
+        match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {
@@ -1372,7 +1373,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator) {
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
                 for (ctx, err) in e {

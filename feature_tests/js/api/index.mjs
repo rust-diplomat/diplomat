@@ -4,6 +4,8 @@ export { RenamedDeprecatedStruct } from "./RenamedDeprecatedStruct.mjs"
 
 export { RenamedFeatureTest } from "./RenamedFeatureTest.mjs"
 
+export { RenamedRenamedCachedIncludeZST } from "./RenamedRenamedCachedIncludeZST.mjs"
+
 export { RenamedStructWithAttrs } from "./RenamedStructWithAttrs.mjs"
 
 export { RenamedTestMacroStruct } from "./RenamedTestMacroStruct.mjs"
@@ -21,6 +23,8 @@ export { NestedBorrowedFields } from "./NestedBorrowedFields.mjs"
 export { BorrowingOptionStruct } from "./BorrowingOptionStruct.mjs"
 
 export { OptionInputStruct } from "./OptionInputStruct.mjs"
+
+export { CachedIncludeZST } from "./CachedIncludeZST.mjs"
 
 export { ErrorStruct } from "./ErrorStruct.mjs"
 
@@ -51,6 +55,8 @@ export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed.mjs"
 export { RenamedAttrOpaque2 } from "./RenamedAttrOpaque2.mjs"
 
 export { RenamedDeprecatedOpaque } from "./RenamedDeprecatedOpaque.mjs"
+
+export { RenamedMixinTest } from "./RenamedMixinTest.mjs"
 
 export { RenamedMyIterable } from "./RenamedMyIterable.mjs"
 

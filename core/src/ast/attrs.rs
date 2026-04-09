@@ -53,6 +53,8 @@ pub struct Attrs {
 
     /// For use by [`crate::hir::Attrs::demo_attrs`]
     pub demo_attrs: Vec<DemoBackendAttr>,
+
+    pub(crate) includes: Vec<IncludeAttribute>,
 }
 
 impl Attrs {
@@ -67,6 +69,7 @@ impl Attrs {
             Attr::CRename(rename) => self.abi_rename.extend(&rename),
             Attr::DemoBackend(attr) => self.demo_attrs.push(attr),
             Attr::Deprecated(msg) => self.deprecated = Some(msg),
+            Attr::Include(inc) => self.includes.push(inc),
         }
     }
 
@@ -99,6 +102,7 @@ impl Attrs {
             attrs,
             abi_rename,
             demo_attrs,
+            includes: Vec::new(),
         }
     }
 
@@ -127,6 +131,7 @@ enum Attr {
     CRename(RenameAttr),
     DemoBackend(DemoBackendAttr),
     Deprecated(String),
+    Include(IncludeAttribute),
     // More goes here
 }
 
@@ -136,6 +141,7 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
     let diplomat_cfg_path: syn::Path = syn::parse_str("diplomat::cfg").unwrap();
     let crename_attr: syn::Path = syn::parse_str("diplomat::abi_rename").unwrap();
     let demo_path: syn::Path = syn::parse_str("diplomat::demo").unwrap();
+    let include_path: syn::Path = syn::parse_str("diplomat::include").unwrap();
     let deprecated: syn::Path = syn::parse_str("deprecated").unwrap();
     attrs.iter().filter_map(move |a| {
         if a.path() == &cfg_path {
@@ -174,6 +180,11 @@ fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ 
             } else {
                 Some(Attr::Deprecated("deprecated".into()))
             }
+        } else if a.path() == &include_path {
+            Some(Attr::Include(
+                a.parse_args()
+                    .expect("Failed to parse malformed diplomat::include"),
+            ))
         } else {
             None
         }
@@ -484,6 +495,18 @@ impl<'a> StandardAttribute<'a> {
                 }
             }
         }
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
+pub(crate) struct IncludeAttribute {
+    pub(crate) path: String,
+}
+
+impl Parse for IncludeAttribute {
+    fn parse(input: ParseStream) -> syn::Result<Self> {
+        let st = input.parse::<LitStr>()?;
+        Ok(Self { path: st.value() })
     }
 }
 

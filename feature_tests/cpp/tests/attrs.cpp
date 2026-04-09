@@ -14,6 +14,7 @@
 #include "../include/Float64Vec.hpp"
 #include "../include/ns/RenamedStringList.hpp"
 #include "../include/ns/RenamedBlockOverride.hpp"
+#include "../include/ns/RenamedMixinTest.hpp"
 
 using namespace somelib;
 
@@ -127,4 +128,6 @@ int main(int argc, char* argv[]) {
     simple_assert_eq("Default values float", make_default_f->y(), 14);
 
     simple_assert_eq("Default values bool", nested::ns::Renamednested_ns_fn(), false);
+
+    simple_assert_eq("Mixin generation", ns::RenamedMixinTest::hello(), "Hello!");
 }

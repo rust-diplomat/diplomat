@@ -15,6 +15,7 @@
   - [Documentation](docs.md)
   - [Lifetimes](lifetimes.md)
   - [Macros](macros.md)
+    - [Including Macros](macros/include.md)
   - [ABI naming/renaming](abi.md)
   - [Customizing via attributes](attrs.md)
     - [Disabling APIs](attrs/disable.md)

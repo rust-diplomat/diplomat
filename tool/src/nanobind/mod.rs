@@ -354,7 +354,8 @@ mod test {
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
 
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator) {
+        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
+        {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
@@ -433,7 +434,8 @@ mod test {
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
 
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator) {
+        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
+        {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {
@@ -511,7 +513,8 @@ mod test {
         let mut attr_validator = hir::BasicAttributeValidator::new("python");
         attr_validator.support = crate::nanobind::attr_support();
 
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator) {
+        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
+        {
             Ok(context) => context,
             Err(e) => {
                 for (_cx, err) in e {

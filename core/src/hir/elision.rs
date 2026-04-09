@@ -440,7 +440,7 @@ mod tests {
     /// Convert a syntax tree into a [`TypeContext`].
     macro_rules! tcx {
         ($($tokens:tt)*) => {{
-            let m = crate::ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true);
+            let m = crate::ast::Module::from_syn(&syn::parse_quote! { $($tokens)* }, true, None);
 
             let mut env = crate::Env::default();
             let mut top_symbols = crate::ModuleEnv::new(Default::default());

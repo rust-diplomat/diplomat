@@ -19,6 +19,7 @@ use config::toml_value_from_str;
 use config::{find_top_level_attr, Config};
 use core::mem;
 use core::panic;
+use diplomat_core::ast::ModuleIncludeInfo;
 use diplomat_core::hir;
 use std::borrow::Cow;
 use std::cell::RefCell;
@@ -102,13 +103,33 @@ pub fn gen(
 
     attr_validator.features_enabled = config.shared_config.features_enabled.clone();
 
-    let tcx =
-        hir::TypeContext::from_syn(&module, lowering_config, attr_validator).unwrap_or_else(|e| {
-            for (ctx, err) in e {
-                eprintln!("Lowering error in {ctx}: {err}");
-            }
-            std::process::exit(1);
-        });
+    let manifest_path = config
+        .shared_config
+        .manifest_dir
+        .as_ref()
+        .map(std::path::Path::new)
+        .unwrap_or(
+            entry
+                .parent()
+                .expect("Could not get parent for entry file.")
+                .parent()
+                .expect("Could not get parent folder of entry file."),
+        );
+
+    let cache = Some(&RefCell::new(HashMap::new()));
+
+    let tcx = hir::TypeContext::from_syn(
+        &module,
+        lowering_config,
+        attr_validator,
+        Some(ModuleIncludeInfo::new(manifest_path, cache)),
+    )
+    .unwrap_or_else(|e| {
+        for (ctx, err) in e {
+            eprintln!("Lowering error in {ctx}: {err}");
+        }
+        std::process::exit(1);
+    });
 
     let (files, errors) = match target_language {
         "c" => c::run(&tcx, &config, docs_url_gen),

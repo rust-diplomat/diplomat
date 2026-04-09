@@ -450,6 +450,7 @@ impl AttributeInfo {
                         || seg == "abi_rename"
                         || seg == "demo"
                         || seg == "docs"
+                        || seg == "include"
                     {
                         // diplomat-tool reads these, not diplomat::bridge.
                         // throw them away so rustc doesn't complain about unknown attributes
@@ -479,7 +480,18 @@ impl AttributeInfo {
 }
 
 fn gen_bridge(mut input: ItemMod) -> ItemMod {
-    let module = ast::Module::from_syn(&input, true);
+    // The module cloned for includes only.
+    // This avoids defining multiple items twice (like macros).
+
+    let base = std::env::var("CARGO_MANIFEST_DIR")
+        .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
+    let base_path = std::path::Path::new(&base);
+    // We do not cache:
+    let module = ast::Module::from_syn(
+        &input,
+        true,
+        Some(ast::ModuleIncludeInfo::new(base_path, None)),
+    );
     // Clean out any diplomat attributes so Rust doesn't get mad
     let _attrs = AttributeInfo::extract(&mut input.attrs);
     let (brace, mut new_contents) = input.content.unwrap();
@@ -685,23 +697,6 @@ pub fn bridge(
     proc_macro::TokenStream::from(expanded.to_token_stream())
 }
 
-// Config is done in [`diplomat_tool::gen`], so we just set things to be ignored here.
-#[proc_macro_attribute]
-pub fn config(
-    _attr: proc_macro::TokenStream,
-    _input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    "".parse().unwrap()
-}
-
-#[proc_macro_attribute]
-pub fn docs(
-    _attr: proc_macro::TokenStream,
-    _input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    "".parse().unwrap()
-}
-
 /// Generate From and Into implementations for a Diplomat enum
 ///
 /// This is invoked as `#[diplomat::enum_convert(OtherEnumName)]`
@@ -788,7 +783,7 @@ macro_rules! expose_attrs {
     }
 }
 
-expose_attrs! {opaque, opaque_mut, attr, demo, skip_private_items}
+expose_attrs! {opaque, opaque_mut, attr, demo, docs, config, include, skip_private_items}
 
 #[cfg(test)]
 mod tests {
