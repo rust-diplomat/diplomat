@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-dbbb59af.js";
+            window.path_to_searchindex_js = "searchindex-7802b5a4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-77e73944.js"></script>
+        <script src="toc-ac29378c.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -855,6 +855,29 @@ mod ffi {
 <li>Macros do not use interpolation matchers, nor do they allow recursive usage of other <code>#[diplomat::macro_rules]</code> macros.</li>
 </ol>
 <p><a href="https://github.com/rust-diplomat/diplomat/issues/935">Macro feature parity compared to Rust is currently being tracked in this issue</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="including-macros"><a class="header" href="#including-macros">Including Macros</a></h1>
+<p>Diplomat is able to prepend the contents of any file to a <code>#[diplomat::bridge]</code> module. This is useful for being able to include and use macros across different modules:</p>
+<h2 id="srcshared_macrors"><a class="header" href="#srcshared_macrors"><code>src/shared_macro.rs</code></a></h2>
+<pre><code class="language-rs">#[diplomat::macro_rules]
+#[macro_export]
+macro_rules! shared_macro {
+    /* ... */
+}
+</code></pre>
+<h2 id="srcmacro_users"><a class="header" href="#srcmacro_users"><code>src/macro_use.rs</code></a></h2>
+<pre><code class="language-rs">// Grab shared_macro definition:
+use super::*;
+
+#[diplomat::bridge]
+#[diplomat::include("src/shared_macro.rs")]
+mod ffi {
+    super::shared_macro!();
+}
+</code></pre>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<p><code>#[diplomat::bridge]</code> is evaluated by proc_macro individually, so every module that uses <code>#[diplomat::bridge]</code> that wants to use the same macros must each have a separate <code>#[diplomat::include]</code> declaration.</p>
+<p><code>#[diplomat::include(...)]</code> evaluates a path always relative to <code>Cargo.toml</code>. This is detected automatically when building your library, but may need to be set when using <code>diplomat_tool</code> through the <code>manifest_dir</code> <a href="#configuring-diplomat">config</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="abi-namingrenaming"><a class="header" href="#abi-namingrenaming">ABI naming/renaming</a></h1>
 <p>As previously mentioned, the <code>#[diplomat::bridge]</code> macro from the <code>diplomat</code> crate will generate <code>extern "C"</code> functions for all methods expected to be exposed over FFI.</p>
