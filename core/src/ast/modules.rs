@@ -535,7 +535,7 @@ impl File {
             .collect()
     }
 
-    pub fn from_syn_with_include(
+    pub fn from_syn(
         file: &syn::File,
         include_info: Option<ModuleIncludeInfo>,
     ) -> File {
@@ -629,7 +629,7 @@ pub fn parse_macro_file(
 impl From<&syn::File> for File {
     /// Get all custom types across all modules defined in a given file.
     fn from(file: &syn::File) -> File {
-        File::from_syn_with_include(file, None)
+        File::from_syn(file, None)
     }
 }
 
