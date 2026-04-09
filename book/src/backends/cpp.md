@@ -69,7 +69,7 @@ class span {
 With helper method for constructing `diplomat::span` from arrays and pointers to sized data.
 
 ### DiplomatWrite
-By default, C++ will return `std::string` instead of passing in `DiplomatWrite&`:
+C++ will return `std::string` for `DiplomatWrite` functions. The function
 
 ```rs
 pub fn to_string(w : &mut DiplomatWrite);
