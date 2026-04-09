@@ -68,6 +68,38 @@ class span {
 
 With helper method for constructing `diplomat::span` from arrays and pointers to sized data.
 
+### DiplomatWrite
+C++ will return `std::string` for `DiplomatWrite` functions. The function
+
+```rs
+pub fn to_string(w : &mut DiplomatWrite);
+```
+
+Becomes
+
+```c++
+inline std::string to_string() const;
+// and
+template<typename W>
+inline void somelib::Float64Vec::to_string_write(W& writeable) const;
+```
+
+Where `W` implements `WriteTrait`:
+
+```c++
+// This "trait" allows one to use _write() methods to efficiently
+// write to a custom string type. To do this you need to write a specialized
+// `WriteTrait<YourType>` (see WriteTrait<std::string> below)
+// that is capable of constructing a DiplomatWrite, which can wrap
+// your string type with appropriate resize/flush functionality.
+template<typename T> struct WriteTrait {
+  // Fill in this method on a specialization to implement this trait
+  // static inline capi::DiplomatWrite Construct(T& t);
+};
+```
+
+If you use `WriteTrait`, you will be interfacing with the [C ABI of DiplomatWrite](./c.md#diplomatwrite).
+
 ### Callbacks
 Callbacks are represented as `std::function<Ret(Args...)>`, where `Ret` and `Args...` are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.
 
