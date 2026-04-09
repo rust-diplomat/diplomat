@@ -107,21 +107,22 @@ pub fn gen(
         .shared_config
         .manifest_dir
         .as_ref()
-        .map(std::path::PathBuf::from)
+        .map(std::path::Path::new)
         .unwrap_or(
             entry
                 .parent()
                 .expect("Could not get parent for entry file.")
                 .parent()
-                .expect("Could not get parent folder of entry file.")
-                .into(),
+                .expect("Could not get parent folder of entry file."),
         );
+
+    let cache = Some(&RefCell::new(HashMap::new()));
 
     let tcx = hir::TypeContext::from_syn(
         &module,
         lowering_config,
         attr_validator,
-        Some(ModuleIncludeInfo::new(manifest_path, true)),
+        Some(ModuleIncludeInfo::new(manifest_path, cache)),
     )
     .unwrap_or_else(|e| {
         for (ctx, err) in e {

@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt::Write as _;
-use std::rc::Rc;
 
 use quote::ToTokens;
 use serde::Serialize;
@@ -102,23 +101,25 @@ impl DiplomatTypeAttribute {
 type ModuleCacheMap = HashMap<String, BTreeMap<syn::Ident, super::MacroDef>>;
 
 /// Information for how to parse #[diplomat::include].
+/// For proc_macro:
+/// Only needs to know the `base_path` from which to include files from.
+/// Cache should be set to `None` (proc_macro does not like caching).
+///
+/// For HIR:
+/// Holds a reference to the `base_path` from which to include files from.
+/// Also holds a reference to a persistent cache (behind a `RefCell`) to store macro information.
+/// The cache should be created by the top level HIR function.
 #[derive(Clone, Debug)]
-pub struct ModuleIncludeInfo {
+pub struct ModuleIncludeInfo<'a> {
     /// Where to parse files from.
-    pub(crate) base_path: std::path::PathBuf,
+    pub(crate) base_path: &'a std::path::Path,
     /// Cache across Module::from_syn calls.
-    pub(crate) cache: Option<Rc<RefCell<ModuleCacheMap>>>,
+    pub(crate) cache: Option<&'a RefCell<ModuleCacheMap>>,
 }
 
-impl ModuleIncludeInfo {
-    pub fn new(base_path: std::path::PathBuf, should_cache: bool) -> Self {
-        let cache = if should_cache {
-            Some(Rc::new(RefCell::new(HashMap::new())))
-        } else {
-            None
-        };
-
-        ModuleIncludeInfo { base_path, cache }
+impl<'a> ModuleIncludeInfo<'a> {
+    pub fn new(base_path: &'a std::path::Path, cache: Option<&'a RefCell<ModuleCacheMap>>) -> Self {
+        Self { base_path, cache }
     }
 }
 
@@ -136,7 +137,7 @@ pub struct Module {
 
 /// Contains all items needed to build an AST representation of a given [`Module`],
 /// as we traverse through [`syn::ItemMod`]. We build this up in [`ModuleBuilder::add`]
-struct ModuleBuilder {
+struct ModuleBuilder<'a> {
     custom_types_by_name: BTreeMap<Ident, CustomType>,
     custom_traits_by_name: BTreeMap<Ident, Trait>,
     /// Types that are private (so if we encounter their impl blocks, they can be safely ignored)
@@ -154,10 +155,10 @@ struct ModuleBuilder {
     type_parent_attrs: Attrs,
     impl_parent_attrs: Attrs,
     mod_macros: Macros,
-    include_info: Option<ModuleIncludeInfo>,
+    include_info: Option<ModuleIncludeInfo<'a>>,
 }
 
-impl ModuleBuilder {
+impl<'a> ModuleBuilder<'a> {
     fn add(&mut self, a: &Item) {
         match a {
             Item::Use(u) => {
@@ -424,10 +425,10 @@ impl Module {
     ///
     /// `force_analyze` is for forcibly parsing the module in the case where we know the `#[diplomat::bridge]` attribute should be present,
     /// but proc_macro (or some other analyzer) has removed the attribute in advance.
-    pub fn from_syn(
+    pub fn from_syn<'a>(
         input: &ItemMod,
         force_analyze: bool,
-        include_info: Option<ModuleIncludeInfo>,
+        include_info: Option<ModuleIncludeInfo<'a>>,
     ) -> Module {
         let mod_attrs: Attrs = (&*input.attrs).into();
 
@@ -535,10 +536,7 @@ impl File {
             .collect()
     }
 
-    pub fn from_syn(
-        file: &syn::File,
-        include_info: Option<ModuleIncludeInfo>,
-    ) -> File {
+    pub fn from_syn(file: &syn::File, include_info: Option<ModuleIncludeInfo>) -> File {
         let mut out = BTreeMap::new();
         file.items.iter().for_each(|i| {
             if let Item::Mod(item_mod) = i {

@@ -485,10 +485,12 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
 
     let base = std::env::var("CARGO_MANIFEST_DIR")
         .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
+    let base_path = std::path::Path::new(&base);
+    // We do not cache:
     let module = ast::Module::from_syn(
         &input,
         true,
-        Some(ast::ModuleIncludeInfo::new(base.into(), false)),
+        Some(ast::ModuleIncludeInfo::new(base_path, None)),
     );
     // Clean out any diplomat attributes so Rust doesn't get mad
     let _attrs = AttributeInfo::extract(&mut input.attrs);

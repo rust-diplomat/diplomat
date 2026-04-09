@@ -217,7 +217,7 @@ impl TypeContext {
         s: &'ast syn::File,
         cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
-        include_info: Option<ast::ModuleIncludeInfo>,
+        include_info: Option<ast::ModuleIncludeInfo<'ast>>,
     ) -> Result<Self, Vec<ErrorAndContext>> {
         let types = ast::File::from_syn(s, include_info).all_types();
         let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
