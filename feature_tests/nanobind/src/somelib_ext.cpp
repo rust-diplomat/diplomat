@@ -57,6 +57,9 @@ void add_ContiguousEnum_binding(nb::module_);
 void add_DefaultEnum_binding(nb::module_);
 void add_MyEnum_binding(nb::module_);
 void add_free_function_binding(nb::module_);
+}namespace somelib::mylib{
+  
+void add_Decimal_binding(nb::module_);
 }namespace somelib::nested::ns{
   
 void add_Nested_binding(nb::module_);
@@ -144,6 +147,7 @@ NB_MODULE(somelib, mod)
              { return ""; })
         .def("__str__", [](const std::monostate &)
              { return ""; });// Module declarations
+    nb::module_ mylib_mod = mod.def_submodule("mylib");
     nb::module_ nested_mod = mod.def_submodule("nested");
     nb::module_ nested_ns_mod = nested_mod.def_submodule("ns");
     nb::module_ nested_ns2_mod = nested_mod.def_submodule("ns2");
@@ -202,6 +206,8 @@ NB_MODULE(somelib, mod)
     add_DefaultEnum_binding(mod);
     add_MyEnum_binding(mod);
     add_free_function_binding(mod);
+    
+    mylib::add_Decimal_binding(mylib_mod);
     
     nested::ns::add_Nested_binding(nested_ns_mod);
     nested::ns::add_free_function_binding(nested_ns_mod);

@@ -335,17 +335,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                                 e.def = info.def.clone(); // when a setter exists, use it's qualifiers instead.
                                 e.param_decls = info.param_decls.clone(); // also it's params, since the getter has none by definition.
                             }
-                            None | Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::NamedConstructor(_)) => {
-                                let is_constructor = |m: &hir::Method| matches!(m.attrs.special_method, Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::NamedConstructor(_)));
+                            None | Some(hir::SpecialMethod::Constructor | hir::SpecialMethod::NamedConstructor(_)) => {
+                                let e_is_constructor = matches!(e.method.attrs.special_method, Some(hir::SpecialMethod::Constructor | hir::SpecialMethod::NamedConstructor(_)));
+                                let method_is_constructor = matches!(method.attrs.special_method, Some(hir::SpecialMethod::Constructor | hir::SpecialMethod::NamedConstructor(_)));
 
-                                if is_constructor(e.method) ^ is_constructor(method) {
+                                if e_is_constructor ^ method_is_constructor {
                                     self.errors.push_error(format!("Methods {} and {} need to both be constructors to be overloaded properly.", e.method_name, info.method_name));
                                 }
 
-                                // Method overloading is supported by nanobind backend.
-                                // Handle constructors (both regular and named) and regular method overloading.
-
-                                if is_constructor(e.method) {
+                                if e_is_constructor {
                                     // Nanobind requires lower param definitions to be first when overriding new_:
                                     if info.param_decls.params.len() < e.param_decls.params.len() {
                                         let cpy = OverloadInfo {
@@ -359,11 +357,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                                         e.overloads.push(OverloadInfo { parameters: info.param_decls.clone(), method_name: Some(info.cpp_method_name.to_string()) });
                                     }
                                 } else {
-                                    // Regular method overloading - add the C++ method name so nanobind can dispatch
-                                    e.overloads.push(OverloadInfo {
-                                        parameters: info.param_decls.clone(),
-                                        method_name: Some(info.cpp_method_name.to_string())
-                                    });
+                                    e.overloads.push(OverloadInfo { parameters: info.param_decls.clone(), method_name: Some(info.cpp_method_name.to_string()) });
                                 }
                             }
                             _ => { panic!("Method Info for {} already exists but isn't a getter or setter!", e.method_name); }
