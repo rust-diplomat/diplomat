@@ -55,14 +55,12 @@ nb::overload_cast<{% for p in overload_params -%} {{- p.type_name -}} {%- if !lo
     {%- endif -%}
 
     {%- if m.overloads.len() > 0 %}
-    {#- Constructors and named constructors have special overload behavior. -#}
-    {%- match m.method.attrs.special_method %}
-    {%- when Some(hir::SpecialMethod::Constructor) | Some(hir::SpecialMethod::NamedConstructor(_)) -%}
-    {%- when _ -%}
+    {#- Constructors have special overload behavior. -#}
+    {%- if let Some(hir::SpecialMethod::Constructor) = m.method.attrs.special_method -%}{%- else -%}
     {%- for o in m.overloads %}
     .{{m.def}}("{{m.method_name}}", {% call method_name_cpp()-%} {{-overload_method_name_cpp(o.parameters.params.clone(), o.method_name)-}}
     {%- endcall -%}
         {{- method_params::params(o.parameters.params, m.lifetime_args) -}})
         {%- endfor -%}
-    {%- endmatch -%}
+    {%- endif -%}
         {%- endif -%}

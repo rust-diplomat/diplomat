@@ -98,10 +98,6 @@
             std::move(maybe_op_unwrap(&{{- type_name }}::{{ m.cpp_method_name -}}))
         {%- endif -%}
         {{- method_params::params(m.method.params, m.lifetime_args) }})
-        {%- for o in m.overloads %}
-    .def_static("{{m.method_name}}", std::move(maybe_op_unwrap(nb::overload_cast<{%- for p in o.parameters.params -%}{%- if !loop.first -%}, {% endif -%}{{p.type_name}}{%- endfor -%}>(&{{- type_name }}::{{ o.method_name.clone().unwrap_or(m.cpp_method_name.to_string()) -}})))
-        {{- method_params::params(o.parameters.params, m.lifetime_args) }})
-        {%- endfor -%}
     {%- when crate::hir::SpecialMethod::Indexer -%}
         ("__getitem__", {% match m.method.output -%}
         {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
