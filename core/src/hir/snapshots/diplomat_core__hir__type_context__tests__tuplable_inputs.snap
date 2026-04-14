@@ -1,0 +1,11 @@
+---
+source: core/src/hir/type_context.rs
+expression: output
+---
+Lowering error in TupleStruct::takes_self: Tuplable structs cannot be passed as `self, this is currently unsupported in Diplomat.
+Lowering error in TupleStruct::takes_self_ref: Tuplable structs cannot be passed as `self, this is currently unsupported in Diplomat.
+Lowering error in TupleStruct::takes_mut_self: Found a mutable struct ref &mut self. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`
+Lowering error in TupleStruct::takes_mut_self: Tuplable structs cannot be passed as `self, this is currently unsupported in Diplomat.
+Lowering error in TupleStruct::takes_ref: Tuplable structs cannot be passed by reference, this is currently unsupported in Diplomat.
+Lowering error in TupleStruct::takes_mut_ref: Found a mutable struct ref &mut TupleStruct. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`
+Lowering error in TupleStruct::takes_mut_ref: Tuplable structs cannot be passed by reference, this is currently unsupported in Diplomat.
