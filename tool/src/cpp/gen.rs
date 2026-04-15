@@ -30,6 +30,12 @@ pub struct NamedType<'a> {
     pub(crate) default_value: Option<Cow<'a, str>>,
 }
 
+impl<'a> NamedType<'a> {
+    fn type_name(&'a self) -> Cow<'a, str> {
+        self.type_name.clone()
+    }
+}
+
 /// We generate a pair of methods for writeables, one which returns a std::string
 /// and one which operates on a WriteTrait
 struct MethodWriteableInfo<'a> {
@@ -398,6 +404,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .map(|field| self.gen_c_to_cpp_for_field("c_struct.", is_in_mut_struct, field))
             .collect::<Vec<_>>();
 
+        let tuple_to_c_fields = def
+            .fields
+            .iter()
+            .enumerate()
+            .map(|(idx, field)| self.gen_cpp_to_c_for_tuple_field(field, namespace.clone(), idx))
+            .collect::<Vec<_>>();
+
         let methods = def
             .methods
             .iter()
@@ -422,6 +435,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &'a str,
             deprecated: Option<&'a str>,
             extra_def_code: ExtraCode,
+            tuplable: bool,
         }
 
         DeclTemplate {
@@ -438,6 +452,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
             extra_def_code,
+            tuplable: def.attrs.tuplable,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -449,12 +464,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
+            fields: &'a [NamedType<'a>],
             cpp_to_c_fields: &'a [NamedExpression<'a>],
             c_to_cpp_fields: &'a [NamedExpression<'a>],
+            tuple_to_c_fields: &'a [NamedExpression<'a>],
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
             extra_impl_code: ExtraCode,
+            tuplable: bool,
         }
 
         ImplTemplate {
@@ -462,12 +480,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
+            fields: field_decls.as_slice(),
             cpp_to_c_fields: cpp_to_c_fields.as_slice(),
             c_to_cpp_fields: c_to_cpp_fields.as_slice(),
+            tuple_to_c_fields: tuple_to_c_fields.as_slice(),
             methods: methods.as_slice(),
             namespace: def.attrs.namespace.as_deref(),
             c_header: c_impl_header,
             extra_impl_code: self.impl_extra_code_from_attrs(&def.attrs.custom_extra_code),
+            tuplable: def.attrs.tuplable,
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -834,6 +855,24 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         self.impl_header
             .includes
             .insert(self.formatter.fmt_impl_header_path(id.into()));
+
+        let struct_ty = self.c.tcx.resolve_type(st.id());
+        if struct_ty.attrs().tuplable && matches!(st.owner(), MaybeOwn::Own) {
+            let field_names = match struct_ty {
+                TypeDef::Struct(st) => st
+                    .fields
+                    .iter()
+                    .map(|f| self.gen_type_name(&f.ty))
+                    .collect::<Vec<_>>(),
+                TypeDef::OutStruct(st) => st
+                    .fields
+                    .iter()
+                    .map(|f| self.gen_type_name(&f.ty))
+                    .collect::<Vec<_>>(),
+                _ => unreachable!(),
+            };
+            return self.formatter.fmt_tuple(field_names);
+        }
         if let MaybeOwn::Borrow(borrow) = st.owner() {
             let mutability = borrow.mutability;
             match (borrow.is_owned(), false) {
@@ -967,6 +1006,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
     }
 
+    fn gen_cpp_to_c_for_tuple_field<'a, P: TyPosition>(
+        &mut self,
+        field: &'a hir::StructField<P>,
+        namespace: Option<String>,
+        tuple_idx: usize,
+    ) -> NamedExpression<'a> {
+        let var_name: Cow<'_, str> = format!("std::get<{tuple_idx}>(tuple)").into();
+        let expression = self.gen_cpp_to_c_for_type(&field.ty, var_name.clone(), None, namespace);
+        NamedExpression {
+            var_name: self.formatter.fmt_param_name(field.name.as_str()),
+            expression,
+        }
+    }
+
     /// Generates one or two C++ expressions that convert from a C++ type to the corresponding C type.
     ///
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
@@ -992,6 +1045,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     TypeDef::Struct(s) => &s.attrs,
                     _ => unreachable!()
                 };
+
+                if attrs.tuplable && matches!(s.owner(), MaybeOwn::Own) {
+                    let type_name = self.formatter.fmt_type_name(s.id());
+                    return format!("{type_name}::AsTupleFFI({cpp_name})").into();
+                }
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
@@ -1179,15 +1237,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 format!("*{type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
-                let is_zst = match self.c.tcx.resolve_type(ty.id().unwrap()) {
-                    TypeDef::Struct(s) => s.fields.is_empty(),
-                    TypeDef::OutStruct(s) => s.fields.is_empty(),
-                    _ => false,
+                let (is_zst, is_tuplable) = match self.c.tcx.resolve_type(ty.id().unwrap()) {
+                    TypeDef::Struct(s) => (s.fields.is_empty(), s.attrs.tuplable),
+                    TypeDef::OutStruct(s) => (s.fields.is_empty(), s.attrs.tuplable),
+                    _ => (false, false),
                 };
 
                 let id = st.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                if is_zst {
+
+                if is_tuplable && matches!(st.owner(), MaybeOwn::Own) {
+                    format!("{type_name}::TupleFromFFI({var_name})").into()
+                } else if is_zst {
                     format!("{type_name} {{}}").into()
                 } else {
                     // Note: The impl file is imported in gen_type_name().
