@@ -149,6 +149,7 @@ int main(int argc, char* argv[]) {
     struct_ref_one.takes_mut(struct_ref_two);
     simple_assert_eq("Mutable ref cloned in", struct_ref_one.a, 0);
     simple_assert_eq("Mutable ref cloned in", struct_ref_two.c, 100);
+    simple_assert_eq("Mutable struct ref return", struct_ref_one.take_ref_ret(), 0);
 
     struct_ref_one.takes_const(struct_ref_two);
     simple_assert_eq("Mutable ref cloned in", struct_ref_two.c, 0);

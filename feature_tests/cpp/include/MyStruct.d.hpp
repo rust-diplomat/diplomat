@@ -56,6 +56,8 @@ struct MyStruct {
 
   inline uint8_t into_a() const;
 
+  inline uint8_t take_ref_ret() const;
+
   inline static somelib::diplomat::result<std::monostate, somelib::MyZst> returns_zst_result();
 
   inline static somelib::diplomat::result<std::monostate, somelib::MyZst> fails_zst_result();
