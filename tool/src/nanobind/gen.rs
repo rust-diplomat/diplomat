@@ -241,7 +241,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let field_decls = def
             .fields
             .iter()
-            .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
+            .map(|field| {
+                if let Type::Opaque(op) = &field.ty {
+                    if !op.is_owned() {
+                        self.errors.push_error(format!("Borrowed opaques ({type_name}::{}) are unsupported as struct fields in Nanobind. See https://github.com/rust-diplomat/diplomat/issues/1107 for more.", field.name));
+                    }
+                }
+                self.gen_ty_decl(&field.ty, field.name.as_str())
+            })
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
