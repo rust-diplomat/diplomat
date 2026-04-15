@@ -11,6 +11,9 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Opaque(String);
 
+    #[diplomat::opaque_mut]
+    pub struct OpaqueMut(String);
+
     #[diplomat::opaque]
     pub struct OpaqueMutexedString(Mutex<String>);
 
@@ -563,10 +566,9 @@ pub mod ffi {
     }
 
     #[diplomat::attr(nanobind, disable)]
-    #[diplomat::cfg(supports=abi_compatibles)]
     pub struct StructOfOpaque<'a> {
         i: &'a Opaque,
-        j: &'a mut PrimitiveStructVec,
+        j: &'a mut OpaqueMut,
     }
 
     impl<'a> StructOfOpaque<'a> {

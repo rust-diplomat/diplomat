@@ -48,6 +48,7 @@ void add_Float64VecError_binding(nb::module_);
 void add_MyString_binding(nb::module_);
 void add_MyOpaqueEnum_binding(nb::module_);
 void add_Opaque_binding(nb::module_);
+void add_OpaqueMut_binding(nb::module_);
 void add_OpaqueMutexedString_binding(nb::module_);
 void add_PrimitiveStructVec_binding(nb::module_);
 void add_Utf16Wrap_binding(nb::module_);
@@ -196,6 +197,7 @@ NB_MODULE(somelib, mod)
     add_MyString_binding(mod);
     add_MyOpaqueEnum_binding(mod);
     add_Opaque_binding(mod);
+    add_OpaqueMut_binding(mod);
     add_OpaqueMutexedString_binding(mod);
     add_PrimitiveStructVec_binding(mod);
     add_Utf16Wrap_binding(mod);

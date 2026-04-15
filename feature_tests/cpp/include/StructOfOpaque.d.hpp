@@ -13,8 +13,8 @@
 namespace somelib {
 namespace capi { struct Opaque; }
 class Opaque;
-namespace capi { struct PrimitiveStructVec; }
-class PrimitiveStructVec;
+namespace capi { struct OpaqueMut; }
+class OpaqueMut;
 } // namespace somelib
 
 
@@ -23,7 +23,7 @@ namespace somelib {
 namespace capi {
     struct StructOfOpaque {
       const somelib::capi::Opaque* i;
-      somelib::capi::PrimitiveStructVec* j;
+      somelib::capi::OpaqueMut* j;
     };
 
     typedef struct StructOfOpaque_option {union { StructOfOpaque ok; }; bool is_ok; } StructOfOpaque_option;
@@ -34,7 +34,7 @@ namespace capi {
 namespace somelib {
 struct StructOfOpaque {
     const somelib::Opaque& i;
-    somelib::PrimitiveStructVec& j;
+    somelib::OpaqueMut& j;
 
   inline void take_in(const somelib::Opaque& other);
 

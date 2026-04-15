@@ -8,14 +8,14 @@
 #include "diplomat_runtime.h"
 
 #include "Opaque.d.h"
-#include "PrimitiveStructVec.d.h"
+#include "OpaqueMut.d.h"
 
 
 
 
 typedef struct StructOfOpaque {
   const Opaque* i;
-  PrimitiveStructVec* j;
+  OpaqueMut* j;
 } StructOfOpaque;
 
 typedef struct StructOfOpaque_option {union { StructOfOpaque ok; }; bool is_ok; } StructOfOpaque_option;

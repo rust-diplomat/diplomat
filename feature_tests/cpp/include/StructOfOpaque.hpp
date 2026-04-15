@@ -12,7 +12,7 @@
 #include <optional>
 #include <cstdlib>
 #include "Opaque.hpp"
-#include "PrimitiveStructVec.hpp"
+#include "OpaqueMut.hpp"
 #include "diplomat_runtime.hpp"
 
 
@@ -44,7 +44,7 @@ inline somelib::capi::StructOfOpaque somelib::StructOfOpaque::AsFFI() const {
 inline somelib::StructOfOpaque somelib::StructOfOpaque::FromFFI(somelib::capi::StructOfOpaque c_struct) {
     return somelib::StructOfOpaque {
         /* .i = */ *somelib::Opaque::FromFFI(c_struct.i),
-        /* .j = */ *somelib::PrimitiveStructVec::FromFFI(c_struct.j),
+        /* .j = */ *somelib::OpaqueMut::FromFFI(c_struct.j),
     };
 }
 
