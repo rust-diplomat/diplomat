@@ -565,13 +565,13 @@ pub mod ffi {
     #[diplomat::attr(nanobind, disable)]
     #[diplomat::cfg(supports=abi_compatibles)]
     pub struct StructOfOpaque<'a> {
-        i : &'a Opaque,
-        j : &'a mut PrimitiveStructVec,
+        i: &'a Opaque,
+        j: &'a mut PrimitiveStructVec,
     }
 
     impl<'a> StructOfOpaque<'a> {
         #[diplomat::cfg(supports=struct_refs)]
-        pub fn take_in(&'a mut self, other : &'a Opaque) {
+        pub fn take_in(&'a mut self, other: &'a Opaque) {
             self.i = other;
         }
     }
