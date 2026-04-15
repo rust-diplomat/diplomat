@@ -34,6 +34,8 @@ export { FallibleOpaqueConstructor, FallibleOpaqueConstructor_obj } from "./Fall
 
 export { BigStructWithStuff, BigStructWithStuff_obj } from "./BigStructWithStuff"
 
+export { ContainingTuple, ContainingTuple_obj } from "./ContainingTuple"
+
 export { CyclicStructA, CyclicStructA_obj } from "./CyclicStructA"
 
 export { CyclicStructB, CyclicStructB_obj } from "./CyclicStructB"
@@ -54,7 +56,11 @@ export { StructOfOpaque, StructOfOpaque_obj } from "./StructOfOpaque"
 
 export { StructWithSlices, StructWithSlices_obj } from "./StructWithSlices"
 
+export { TupleStruct, TupleStruct_obj } from "./TupleStruct"
+
 export { OptionStruct } from "./OptionStruct"
+
+export { OutTupleStruct } from "./OutTupleStruct"
 
 export { AttrOpaque1Renamed } from "./AttrOpaque1Renamed"
 

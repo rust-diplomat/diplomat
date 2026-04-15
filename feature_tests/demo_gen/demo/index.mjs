@@ -221,6 +221,165 @@ let termini = Object.assign({
         ]
     },
 
+    "TupleStruct.takesStAsTuple": {
+        func: (aX, aY, aStA, aStB, aStC, aStD, aStE, aStF, aStG) => somelib.TupleStruct.takesStAsTuple(somelib.TupleStruct.fromFields({
+            x: aX,
+            y: aY,
+            st: somelib.MyStruct.fromFields({
+            a: aStA,
+            b: aStB,
+            c: aStC,
+            d: aStD,
+            e: aStE,
+            f: aStF,
+            g: aStG
+        }),
+            op: new somelib.Opaque()
+        })),
+        // For avoiding webpacking minifying issues:
+        funcName: "TupleStruct.takesStAsTuple",
+        expr: (aX, aY, aStA, aStB, aStC, aStD, aStE, aStF, aStG) => "somelib.TupleStruct.takesStAsTuple(somelib.TupleStruct.fromFields({\n    x: aX,\n    y: aY,\n    st: somelib.MyStruct.fromFields({\n    a: aStA,\n    b: aStB,\n    c: aStC,\n    d: aStD,\n    e: aStE,\n    f: aStF,\n    g: aStG\n}),\n    op: new somelib.Opaque()\n}))".replace(/([\( ])aX([,\) \n])/, '$1' + aX + '$2').replace(/([\( ])aY([,\) \n])/, '$1' + aY + '$2').replace(/([\( ])aStA([,\) \n])/, '$1' + aStA + '$2').replace(/([\( ])aStB([,\) \n])/, '$1' + aStB + '$2').replace(/([\( ])aStC([,\) \n])/, '$1' + aStC + '$2').replace(/([\( ])aStD([,\) \n])/, '$1' + aStD + '$2').replace(/([\( ])aStE([,\) \n])/, '$1' + aStE + '$2').replace(/([\( ])aStF([,\) \n])/, '$1' + aStF + '$2').replace(/([\( ])aStG([,\) \n])/, '$1' + aStG + '$2'),
+        parameters: [
+            
+            {
+                name: "a_x",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "a_y",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "a_st_a",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "a_st_b",
+                type: "boolean",
+                typeUse: "boolean"
+            },
+            
+            {
+                name: "a_st_c",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "a_st_d",
+                type: "bigint",
+                typeUse: "bigint"
+            },
+            
+            {
+                name: "a_st_e",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "a_st_f",
+                type: "codepoint",
+                typeUse: "codepoint"
+            },
+            
+            {
+                name: "a_st_g",
+                type: "MyEnum",
+                typeUse: "enumerator",
+                values: ["A", "B", "C", "D", "E", "F"]
+            }
+            
+        ]
+    },
+
+    "TupleStruct.takesContaining": {
+        func: (cInnerX, cInnerY, cInnerStA, cInnerStB, cInnerStC, cInnerStD, cInnerStE, cInnerStF, cInnerStG) => somelib.TupleStruct.takesContaining(somelib.ContainingTuple.fromFields({
+            inner: somelib.TupleStruct.fromFields({
+            x: cInnerX,
+            y: cInnerY,
+            st: somelib.MyStruct.fromFields({
+            a: cInnerStA,
+            b: cInnerStB,
+            c: cInnerStC,
+            d: cInnerStD,
+            e: cInnerStE,
+            f: cInnerStF,
+            g: cInnerStG
+        }),
+            op: new somelib.Opaque()
+        })
+        })),
+        // For avoiding webpacking minifying issues:
+        funcName: "TupleStruct.takesContaining",
+        expr: (cInnerX, cInnerY, cInnerStA, cInnerStB, cInnerStC, cInnerStD, cInnerStE, cInnerStF, cInnerStG) => "somelib.TupleStruct.takesContaining(somelib.ContainingTuple.fromFields({\n    inner: somelib.TupleStruct.fromFields({\n    x: cInnerX,\n    y: cInnerY,\n    st: somelib.MyStruct.fromFields({\n    a: cInnerStA,\n    b: cInnerStB,\n    c: cInnerStC,\n    d: cInnerStD,\n    e: cInnerStE,\n    f: cInnerStF,\n    g: cInnerStG\n}),\n    op: new somelib.Opaque()\n})\n}))".replace(/([\( ])cInnerX([,\) \n])/, '$1' + cInnerX + '$2').replace(/([\( ])cInnerY([,\) \n])/, '$1' + cInnerY + '$2').replace(/([\( ])cInnerStA([,\) \n])/, '$1' + cInnerStA + '$2').replace(/([\( ])cInnerStB([,\) \n])/, '$1' + cInnerStB + '$2').replace(/([\( ])cInnerStC([,\) \n])/, '$1' + cInnerStC + '$2').replace(/([\( ])cInnerStD([,\) \n])/, '$1' + cInnerStD + '$2').replace(/([\( ])cInnerStE([,\) \n])/, '$1' + cInnerStE + '$2').replace(/([\( ])cInnerStF([,\) \n])/, '$1' + cInnerStF + '$2').replace(/([\( ])cInnerStG([,\) \n])/, '$1' + cInnerStG + '$2'),
+        display: displayChar,
+        parameters: [
+            
+            {
+                name: "c_inner_x",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "c_inner_y",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "c_inner_st_a",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "c_inner_st_b",
+                type: "boolean",
+                typeUse: "boolean"
+            },
+            
+            {
+                name: "c_inner_st_c",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "c_inner_st_d",
+                type: "bigint",
+                typeUse: "bigint"
+            },
+            
+            {
+                name: "c_inner_st_e",
+                type: "number",
+                typeUse: "number"
+            },
+            
+            {
+                name: "c_inner_st_f",
+                type: "codepoint",
+                typeUse: "codepoint"
+            },
+            
+            {
+                name: "c_inner_st_g",
+                type: "MyEnum",
+                typeUse: "enumerator",
+                values: ["A", "B", "C", "D", "E", "F"]
+            }
+            
+        ]
+    },
+
     "AttrOpaque1Renamed.macTest": {
         func: () => somelib.AttrOpaque1Renamed.macTest(),
         // For avoiding webpacking minifying issues:
