@@ -75,8 +75,8 @@ inline uint8_t somelib::MyStruct::into_a() const {
 }
 
 inline uint8_t somelib::MyStruct::take_ref_ret() const {
-    auto result = auto thisDiplomatRefClone = this->AsFFI();
-    somelib::capi::MyStruct_take_ref_ret(&thisDiplomatRefClone);
+    auto thisDiplomatRefClone = this->AsFFI();
+    auto result = somelib::capi::MyStruct_take_ref_ret(&thisDiplomatRefClone);
     return result;
 }
 
