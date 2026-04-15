@@ -20,6 +20,7 @@ void add_MyStruct_binding(nb::module_ mod) {
         .def_static("fails_zst_result", &somelib::MyStruct::fails_zst_result)
         .def("into_a", &somelib::MyStruct::into_a)
         .def_static("returns_zst_result", &somelib::MyStruct::returns_zst_result)
+        .def("take_ref_ret", &somelib::MyStruct::take_ref_ret)
         .def("takes_const", &somelib::MyStruct::takes_const, "o"_a)
         .def("takes_mut", &somelib::MyStruct::takes_mut, "o"_a);
 }
