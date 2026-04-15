@@ -326,6 +326,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             path.into()
         }
     }
+
+    pub fn fmt_tuple<'a>(&self, field_list: Vec<Cow<'a, str>>) -> Cow<'a, str> {
+        format!("std::tuple<{}>", field_list.join(",")).into()
+    }
 }
 
 #[cfg(test)]
