@@ -161,13 +161,12 @@ struct ModuleBuilder<'a> {
 impl<'a> ModuleBuilder<'a> {
     fn add(&mut self, a: &Item) {
         match a {
-            Item::Use(u) => {
-                if self.analyze_types {
+            Item::Use(u)
+                if self.analyze_types => {
                     extract_imports(&Path::empty(), &u.tree, &mut self.imports);
                 }
-            }
-            Item::Struct(strct) => {
-                if self.analyze_types {
+            Item::Struct(strct)
+                if self.analyze_types => {
                     if self.skip_private_items && !matches!(strct.vis, syn::Visibility::Public(..))
                     {
                         self.private_types_by_name.insert((&strct.ident).into());
@@ -202,10 +201,9 @@ impl<'a> ModuleBuilder<'a> {
                     self.custom_types_by_name
                         .insert(Ident::from(&strct.ident), custom_type);
                 }
-            }
 
-            Item::Enum(enm) => {
-                if self.analyze_types {
+            Item::Enum(enm)
+                if self.analyze_types => {
                     let ident = (&enm.ident).into();
 
                     if self.skip_private_items && !matches!(enm.vis, syn::Visibility::Public(..)) {
@@ -231,10 +229,9 @@ impl<'a> ModuleBuilder<'a> {
                     };
                     self.custom_types_by_name.insert(ident, custom_enum);
                 }
-            }
 
-            Item::Impl(imp) => {
-                if self.analyze_types && imp.trait_.is_none() {
+            Item::Impl(imp)
+                if self.analyze_types && imp.trait_.is_none() => {
                     let self_path = match imp.self_ty.as_ref() {
                         syn::Type::Path(s) => PathType::from(s),
                         _ => panic!("Self type not found"),
@@ -306,20 +303,18 @@ impl<'a> ModuleBuilder<'a> {
                         }
                     }
                 }
-            }
             Item::Mod(item_mod) => {
                 self.sub_modules
                     .push(Module::from_syn(item_mod, false, self.include_info.clone()));
             }
-            Item::Trait(trt) => {
-                if self.analyze_types {
+            Item::Trait(trt)
+                if self.analyze_types => {
                     let ident = (&trt.ident).into();
                     let trt = Trait::new(trt, &self.type_parent_attrs);
                     self.custom_traits_by_name.insert(ident, trt);
                 }
-            }
-            Item::Macro(mac) => {
-                if self.analyze_types {
+            Item::Macro(mac)
+                if self.analyze_types => {
                     if let Some(i) = &mac.ident {
                         let macro_rules_attr = mac.attrs.iter().find(|a| {
                             a.path()
@@ -340,9 +335,8 @@ impl<'a> ModuleBuilder<'a> {
                         }
                     }
                 }
-            }
-            Item::Fn(f) => {
-                if self.analyze_types {
+            Item::Fn(f)
+                if self.analyze_types => {
                     let is_public = matches!(f.vis, Visibility::Public(_));
                     let has_diplomat_attrs = f
                         .attrs
@@ -361,7 +355,6 @@ impl<'a> ModuleBuilder<'a> {
                         self.functions_by_name.insert(out.name.clone(), out);
                     }
                 }
-            }
             _ => {}
         }
     }
