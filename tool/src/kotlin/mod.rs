@@ -68,10 +68,9 @@ pub struct KotlinConfig {
 impl KotlinConfig {
     pub fn set(&mut self, key: &str, value: toml::Value) {
         match key {
-            "domain"
-                if value.is_str() => {
-                    self.domain = value.as_str().map(|s| s.to_string());
-                }
+            "domain" if value.is_str() => {
+                self.domain = value.as_str().map(|s| s.to_string());
+            }
             "use_finalizers_not_cleaners" => {
                 self.use_finalizers_not_cleaners = value.as_str().map(|val| val == "true");
             }
