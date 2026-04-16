@@ -271,6 +271,11 @@ pub mod ffi {
             assert_eq!(self.g, MyEnum::B);
         }
 
+        #[diplomat::cfg(supports=struct_refs)]
+        pub fn take_ref_ret(&self) -> u8 {
+            self.a
+        }
+
         pub fn returns_zst_result() -> Result<(), MyZst> {
             Ok(())
         }
