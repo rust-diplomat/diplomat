@@ -29,7 +29,8 @@ let termini = Object.assign({
                 name: "ICU4X Fixed Decimal Grouping Strategy",
                 type: "FixedDecimalGroupingStrategy",
                 typeUse: "enumerator",
-                values: ["Auto", "Never", "Always", "Min2"]
+                values: ["Auto", "Never", "Always", "Min2"],
+                base: somelib.FixedDecimalGroupingStrategy
             },
             
             {

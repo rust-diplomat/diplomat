@@ -190,7 +190,8 @@ let termini = Object.assign({
                 name: "self_g",
                 type: "MyEnum",
                 typeUse: "enumerator",
-                values: ["A", "B", "C", "D", "E", "F"]
+                values: ["A", "B", "C", "D", "E", "F"],
+                base: somelib.MyEnum
             }
             
         ]
@@ -440,7 +441,8 @@ let termini = Object.assign({
                 name: "arg",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar", "Baz"]
+                values: ["Foo", "Bar", "Baz"],
+                base: somelib.OptionEnum
             },
             
             {
@@ -470,21 +472,24 @@ let termini = Object.assign({
                 name: "arg1",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar", "Baz"]
+                values: ["Foo", "Bar", "Baz"],
+                base: somelib.OptionEnum
             },
             
             {
                 name: "arg2",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar", "Baz"]
+                values: ["Foo", "Bar", "Baz"],
+                base: somelib.OptionEnum
             },
             
             {
                 name: "arg3",
                 type: "OptionEnum",
                 typeUse: "enumerator",
-                values: ["Foo", "Bar", "Baz"]
+                values: ["Foo", "Bar", "Baz"],
+                base: somelib.OptionEnum
             },
             
             {
@@ -754,7 +759,8 @@ let termini = Object.assign({
                 name: "self",
                 type: "MyEnum",
                 typeUse: "enumerator",
-                values: ["A", "B", "C", "D", "E", "F"]
+                values: ["A", "B", "C", "D", "E", "F"],
+                base: somelib.MyEnum
             }
             
         ]
