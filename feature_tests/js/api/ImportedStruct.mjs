@@ -31,7 +31,7 @@ export class ImportedStruct {
         }
 
         if ("foo" in structObj) {
-            this.#foo = structObj.foo;
+            this.#foo = new UnimportedEnum(structObj.foo);
         } else {
             throw new Error("Missing required field foo.");
         }

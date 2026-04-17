@@ -4,7 +4,7 @@
 {%- if typescript && !is_out && !fields.is_empty() -%}
 export type {{type_name}}_obj = {
     {%- for field in fields %}
-    {{field.field_name}} {%- if let Type::DiplomatOption(o) = field.field_type %}?{% endif %}: {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}_obj {%- else %} {{field.js_type_name}} {%- endif %};
+    {{field.field_name}} {%- if field.is_optional %}?{% endif %}: {{field.ts_type_name}}{%- if matches!(field.field_type, Type::Struct(_)) && !field.is_optional %}_obj{% endif %};
     {%- endfor %}
 };
 
@@ -21,11 +21,11 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
     {%- if !typescript %}
     #{{field.field_name}};
     {%- endif %}
-    get {{field.field_name}}() {%- if typescript %}: {{field.js_type_name}};{% else %} {
+    get {{field.field_name}}() {%- if typescript %}: {{field.ts_type_name}};{% else %} {
         return this.#{{field.field_name}};
     }{% endif -%}
     {%- if mutable %}
-    set {{field.field_name}}(value{% if typescript %}: {{field.js_type_name}});{% else %}){% endif %} {%- if !typescript -%} {
+    set {{field.field_name}}(value{% if typescript %}: {{field.ts_type_name}});{% else %}){% endif %} {%- if !typescript -%} {
         this.#{{field.field_name}} = value;
     }
     {%- endif -%}
@@ -60,7 +60,11 @@ structObj {%- if typescript -%} : {{type_name}}_obj {%- endif -%} {%- if is_out 
 
         {%- for field in fields %}
         if ("{{field.field_name}}" in structObj) {
-            this.#{{ field.field_name }} = {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.{{field.field_name}}) {%- else %} structObj.{{field.field_name}} {%- endif %};
+            this.#{{ field.field_name }} = 
+                {%- if let Type::Struct(s) = field.field_type %} {{field.js_type_name}}._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.{{field.field_name}})
+                {%- else if let Type::Enum(e) = field.field_type %} new {{ field.js_type_name }}(structObj.{{field.field_name}}) 
+                {%- else %} structObj.{{field.field_name}}
+                {%- endif %};
         } else {
             {%- if field.is_optional %}
             this.#{{ field.field_name }} = null;

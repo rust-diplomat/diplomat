@@ -31,7 +31,7 @@ export class FixedDecimalFormatterOptions {
         }
 
         if ("groupingStrategy" in structObj) {
-            this.#groupingStrategy = structObj.groupingStrategy;
+            this.#groupingStrategy = new FixedDecimalGroupingStrategy(structObj.groupingStrategy);
         } else {
             throw new Error("Missing required field groupingStrategy.");
         }
