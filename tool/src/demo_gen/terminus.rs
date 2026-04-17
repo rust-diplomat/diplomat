@@ -21,7 +21,7 @@ pub struct OutParam {
     /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
     pub type_use: String,
     /// Currently only used by Enum, stores where the enum is in the library (for converting from Strings)
-    pub base : Option<String>,
+    pub base: Option<String>,
 }
 
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
