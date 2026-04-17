@@ -45,6 +45,9 @@ let termini = Object.assign({
                 ,
                 values: {{ format!("{:?}", param.values) }}
                 {%- endif %}
+                {%- if let Some(b) = param.base %},
+                base: {{ b }}
+                {%- endif %}
             }{% if !loop.last %},{% endif %}
             {% endfor %}
         ]

@@ -173,6 +173,9 @@ customElements.define("terminus-enum-option", EnumOption);
 class EnumTemplate extends ParameterTemplate {
     static template;
 
+    #baseEnum;
+    #enumName;
+
     constructor(options) {
         super(options, EnumTemplate, "template#enum");
     }
@@ -190,14 +193,16 @@ class EnumTemplate extends ParameterTemplate {
         for (let entry of options.values) {
             values.append(...(new EnumOption(entry)).children);
         }
+        this.#baseEnum = options.base;
+        this.#enumName = options.type;
     }
 
     getEventValue(event) {
-        return event.target.value;
+        return new this.#baseEnum(event.target.value);
     }
 
     getEventExpr(event) {
-        return "'" + event.target.value + "'";
+        return `new ${enumName}('${event.target.value}')`;
     }
 }
 

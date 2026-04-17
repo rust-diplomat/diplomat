@@ -20,6 +20,8 @@ pub struct OutParam {
     pub type_name: String,
     /// Also for typescript and RenderInfo output. This is used for types where we might want to know more information, like if it's an enumerator, or a custom type to be set by the default renderer.
     pub type_use: String,
+    /// Currently only used by Enum, stores where the enum is in the library (for converting from Strings)
+    pub base : Option<String>,
 }
 
 /// Represents a function that we'll be using when constructing the ultimate output of a RenderTerminus function. See [`TerminusInfo`] for full output.
@@ -261,6 +263,12 @@ impl RenderTerminusContext<'_, '_> {
             (full_param_name.clone(), 1)
         };
 
+        let base = if let Type::Enum(..) = type_info {
+            Some(format!("{}.{type_name}", self.lib_name))
+        } else {
+            None
+        };
+
         self.name_collision.insert(full_param_name, n);
 
         let out_param = OutParam {
@@ -270,6 +278,7 @@ impl RenderTerminusContext<'_, '_> {
             type_use,
             default_value,
             values,
+            base,
         };
 
         self.terminus_info.out_params.push(out_param);
