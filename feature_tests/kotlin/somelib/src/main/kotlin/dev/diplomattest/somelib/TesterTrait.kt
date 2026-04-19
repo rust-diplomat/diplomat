@@ -120,7 +120,7 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
             vtable.run_testStructTraitFn_callback = testStructTraitFn;
             val testTakingMutableOpaque: Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque = object :  Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque {
                 override fun invoke(ignored: Pointer?, mo: Pointer ): Unit {
-                    return (trt_obj.testTakingMutableOpaque(MutableBytes(mo, listOf())));
+                    return (trt_obj.testTakingMutableOpaque(MutableBytes(mo, listOf(), false)));
                 }
             }
             vtable.run_testTakingMutableOpaque_callback = testTakingMutableOpaque;
