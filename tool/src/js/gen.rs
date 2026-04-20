@@ -237,8 +237,15 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
         let fields = struct_def.fields.iter().enumerate()
         .map(|(i, field)| {
             let field_name = self.formatter.fmt_param_name(field.name.as_str());
+            let (field_type, is_optional) = match &field.ty {
+                // If this is an option, we want to look at the inner type for determining field_type, 
+                // since that's what we're actually converting.
+                hir::Type::DiplomatOption(inner) => (inner.as_ref(), true),
+                other => (other, false),
+            };
 
-            let js_type_name = self.gen_js_type_str(&field.ty);
+            let js_type_name = self.gen_js_type_str(field_type);
+            let ts_type_name = self.gen_js_type_str(&field.ty);
 
             if let Type::Struct(..) = &field.ty {
                 let obj_ty: Cow<'tcx, str> = format!("{js_type_name}_obj").into();
@@ -253,8 +260,6 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     ImportUsage::Typescript,
                 );
             }
-
-            let is_option = matches!(&field.ty, hir::Type::DiplomatOption(..));
 
             let c_to_js_deref = self.gen_c_to_js_deref_for_type(&field.ty, "ptr".into(), struct_field_info.fields[i].offset);
 
@@ -309,13 +314,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
 
             FieldInfo {
                 field_name,
-                field_type: &field.ty,
+                field_type,
                 js_type_name,
+                ts_type_name,
                 c_to_js_deref,
                 c_to_js,
                 js_to_c_write,
                 maybe_struct_borrow_info: maybe_struct_borrow_info.map(|i| i.param_info),
-                is_optional: is_option
+                is_optional
             }
         }).collect::<Vec<_>>();
 
@@ -734,8 +740,9 @@ pub(super) struct MethodsInfo<'a> {
 pub(super) struct FieldInfo<'info, P: hir::TyPosition> {
     field_name: Cow<'info, str>,
     field_type: &'info Type<P>,
-    /// Representation of the type in `.d.ts` terms.
     js_type_name: Cow<'info, str>,
+    /// Representation of the type in `.d.ts` terms.
+    ts_type_name: Cow<'info, str>,
     c_to_js: Cow<'info, str>,
     /// Because all structs are created in WebAssembly as pointers, we need to be able to de-reference those pointers. This is an expression for taking a given pointer and returning JS.
     c_to_js_deref: Cow<'info, str>,

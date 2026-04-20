@@ -32,13 +32,13 @@ export class MyStructContainingAnOption {
         }
 
         if ("a" in structObj) {
-            this.#a = structObj.a;
+            this.#a = MyStruct._fromSuppliedValue(diplomatRuntime.internalConstructor, structObj.a);
         } else {
             this.#a = null;
         }
 
         if ("b" in structObj) {
-            this.#b = structObj.b;
+            this.#b = new DefaultEnum(structObj.b);
         } else {
             this.#b = null;
         }

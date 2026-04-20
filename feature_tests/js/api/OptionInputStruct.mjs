@@ -50,7 +50,7 @@ export class OptionInputStruct {
         }
 
         if ("c" in structObj) {
-            this.#c = structObj.c;
+            this.#c = new OptionEnum(structObj.c);
         } else {
             this.#c = null;
         }

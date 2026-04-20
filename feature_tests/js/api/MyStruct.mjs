@@ -103,7 +103,7 @@ export class MyStruct {
         }
 
         if ("g" in structObj) {
-            this.#g = structObj.g;
+            this.#g = new MyEnum(structObj.g);
         } else {
             throw new Error("Missing required field g.");
         }
