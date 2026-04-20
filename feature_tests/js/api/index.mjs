@@ -46,6 +46,8 @@ export { PrimitiveStruct } from "./PrimitiveStruct.mjs"
 
 export { ScalarPairWithPadding } from "./ScalarPairWithPadding.mjs"
 
+export { StructOfOpaque } from "./StructOfOpaque.mjs"
+
 export { StructWithSlices } from "./StructWithSlices.mjs"
 
 export { OptionStruct } from "./OptionStruct.mjs"
@@ -113,6 +115,8 @@ export { MyString } from "./MyString.mjs"
 export { MyOpaqueEnum } from "./MyOpaqueEnum.mjs"
 
 export { Opaque } from "./Opaque.mjs"
+
+export { OpaqueMut } from "./OpaqueMut.mjs"
 
 export { OpaqueMutexedString } from "./OpaqueMutexedString.mjs"
 

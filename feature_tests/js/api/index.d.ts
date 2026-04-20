@@ -48,6 +48,8 @@ export { PrimitiveStruct, PrimitiveStruct_obj } from "./PrimitiveStruct"
 
 export { ScalarPairWithPadding, ScalarPairWithPadding_obj } from "./ScalarPairWithPadding"
 
+export { StructOfOpaque, StructOfOpaque_obj } from "./StructOfOpaque"
+
 export { StructWithSlices, StructWithSlices_obj } from "./StructWithSlices"
 
 export { OptionStruct } from "./OptionStruct"
@@ -115,6 +117,8 @@ export { MyString } from "./MyString"
 export { MyOpaqueEnum } from "./MyOpaqueEnum"
 
 export { Opaque } from "./Opaque"
+
+export { OpaqueMut } from "./OpaqueMut"
 
 export { OpaqueMutexedString } from "./OpaqueMutexedString"
 

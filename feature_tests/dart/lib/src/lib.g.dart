@@ -37,6 +37,7 @@ part 'MyZst.g.dart';
 part 'NestedBorrowedFields.g.dart';
 part 'One.g.dart';
 part 'Opaque.g.dart';
+part 'OpaqueMut.g.dart';
 part 'OpaqueMutexedString.g.dart';
 part 'OpaqueThin.g.dart';
 part 'OpaqueThinIter.g.dart';
