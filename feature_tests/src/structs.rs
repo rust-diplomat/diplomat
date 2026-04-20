@@ -52,6 +52,7 @@ pub mod ffi {
         B,
     }
 
+    #[diplomat::attr(auto, mut_struct_ref)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -246,13 +247,13 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::cfg(supports=struct_refs)]
+        #[diplomat::cfg(supports=mut_struct_refs)]
         pub fn takes_mut(&mut self, o: &mut Self) {
             self.a = 0;
             o.c = 100;
         }
 
-        #[diplomat::cfg(supports=struct_refs)]
+        #[diplomat::cfg(supports=mut_struct_refs)]
         pub fn takes_const(&self, o: &mut Self) {
             o.c = self.a;
         }
@@ -484,6 +485,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(auto, abi_compatible)]
+    #[diplomat::attr(auto, mut_struct_ref)]
     #[derive(Clone)]
     pub struct PrimitiveStruct {
         x: f32,
@@ -513,7 +515,7 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::cfg(supports=struct_refs)]
+        #[diplomat::cfg(supports=mut_struct_refs)]
         pub fn mutable_ref(&mut self, a: &mut Self) {
             self.a = false;
             a.d = 1;
@@ -559,6 +561,31 @@ pub mod ffi {
         #[diplomat::cfg(supports=abi_compatibles)]
         pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
+        }
+    }
+
+    #[diplomat::opaque_mut]
+    pub struct OpaqueMut;
+
+    impl OpaqueMut {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> Box<Self> {
+            Box::new(Self)
+        }
+    }
+
+    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
+    #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(auto, mut_struct_ref)]
+    pub struct StructOfOpaque<'a> {
+        i: &'a Opaque,
+        j: &'a mut OpaqueMut,
+    }
+
+    impl<'a> StructOfOpaque<'a> {
+        #[diplomat::cfg(supports=mut_struct_refs)]
+        pub fn take_in(&'a mut self, other: &'a Opaque) {
+            self.i = other;
         }
     }
 }
