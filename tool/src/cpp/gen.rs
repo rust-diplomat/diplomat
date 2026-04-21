@@ -10,6 +10,7 @@ use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::IncludeLocation;
 use diplomat_core::hir::IncludeSource;
 use diplomat_core::hir::OpaqueId;
+use diplomat_core::hir::OpaquePath;
 use diplomat_core::hir::Slice;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
@@ -23,10 +24,10 @@ use crate::filters;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 pub struct NamedType<'a> {
-    var_name: Cow<'a, str>,
-    type_name: Cow<'a, str>,
+    pub(crate) var_name: Cow<'a, str>,
+    pub(crate) type_name: Cow<'a, str>,
     /// Default value (for method params, but could eventually be for structs).
-    default_value: Option<Cow<'a, str>>,
+    pub(crate) default_value: Option<Cow<'a, str>>,
 }
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -376,20 +377,24 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let field_decls = def
             .fields
             .iter()
-            .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
+            .map(|field| {
+                self.gen_field_ty_decl(def.attrs.mut_struct_ref, &field.ty, field.name.as_str())
+            })
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_cpp_to_c_for_field("", field, namespace.clone()))
+            .map(|field| {
+                self.gen_cpp_to_c_for_field("", def.attrs.mut_struct_ref, field, namespace.clone())
+            })
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", field))
+            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", def.attrs.mut_struct_ref, field))
             .collect::<Vec<_>>();
 
         let methods = def
@@ -708,6 +713,31 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         })
     }
 
+    /// Generates a field's type (based on [`Self::gen_ty_decl`]), with some carve outs based on the field's type.
+    ///
+    /// For some structs (i.e., mutable structs), not all types are not copy-constructible (i.e., references) across the boundary.
+    /// So this converts those references to pointers.
+    ///
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
+    pub(crate) fn gen_field_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        is_in_mutable_struct: bool,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a>
+    where
+        'ccx: 'a,
+    {
+        let mut res = self.gen_ty_decl(ty, var_name);
+        match ty {
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
+                res.type_name = self.gen_opaque_name::<P>(op, true);
+            }
+            _ => {}
+        }
+        res
+    }
+
     /// Generates C++ code for referencing a particular type with a given name.
     pub(super) fn gen_ty_decl<'a, P: TyPosition>(
         &mut self,
@@ -734,34 +764,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
-            Type::Opaque(ref op) => {
-                let op_id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(op_id);
-                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(op_id);
-                let def = self.c.tcx.resolve_type(op_id);
-
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-                let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-                let ret = match (op.owner.is_owned(), op.is_optional()) {
-                    // unique_ptr is nullable
-                    (true, _) => self.formatter.fmt_owned(&type_name),
-                    (false, true) => self.formatter.fmt_optional_borrowed(&type_name, mutability),
-                    (false, false) => self.formatter.fmt_borrowed(&type_name, mutability),
-                };
-                let ret = ret.into_owned().into();
-
-                // We don't append a header for this, since we already have a forward.
-                // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
-                self.decl_header
-                    .append_forward(def, &type_name_unnamespaced);
-                self.impl_header
-                    .includes
-                    .insert(self.formatter.fmt_impl_header_path(op_id.into()));
-                ret
-            }
+            Type::Opaque(ref op) => self.gen_opaque_name::<P>(op, false),
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
@@ -845,6 +848,43 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
     }
 
+    fn gen_opaque_name<P: TyPosition>(
+        &mut self,
+        op: &OpaquePath<hir::Optional, P::OpaqueOwnership>,
+        use_mt_ptr: bool,
+    ) -> Cow<'ccx, str> {
+        let op_id = op.tcx_id.into();
+        let type_name = self.formatter.fmt_type_name(op_id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(op_id);
+        let def = self.c.tcx.resolve_type(op_id);
+
+        if def.attrs().disable {
+            self.errors
+                .push_error(format!("Found usage of disabled type {type_name}"))
+        }
+        let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
+        let ret = match (op.owner.is_owned(), op.is_optional()) {
+            // unique_ptr is nullable
+            (true, _) => self.formatter.fmt_owned(&type_name),
+            (false, true) if !use_mt_ptr => {
+                self.formatter.fmt_optional_borrowed(&type_name, mutability)
+            }
+            (false, false) if !use_mt_ptr => self.formatter.fmt_borrowed(&type_name, mutability),
+            _ => self.c.formatter.fmt_ptr(&type_name, Mutability::Mutable),
+        };
+
+        let ret = ret.into_owned().into();
+
+        // We don't append a header for this, since we already have a forward.
+        // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
+        self.decl_header
+            .append_forward(def, &type_name_unnamespaced);
+        self.impl_header
+            .includes
+            .insert(self.formatter.fmt_impl_header_path(op_id.into()));
+        ret
+    }
+
     fn gen_fn_sig(&mut self, cb: &dyn CallbackInstantiationFunctionality) -> String {
         let t = cb.get_output_type().unwrap();
 
@@ -897,16 +937,28 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Returns `NamedExpression`s whose `var_name` corresponds to the field of the C struct.
     ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
         cpp_struct_access: &str,
+        is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression =
-            self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace);
+        let expression: Cow<'_, str> = match &field.ty {
+            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
+            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to return as a pointer from C++ to C, rather than from a reference.
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
+                if op.is_optional() {
+                    format!("{field_getter}->AsFFI() : nullptr").into()
+                } else {
+                    format!("{field_getter}->AsFFI()").into()
+                }
+            }
+            _ => self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace),
+        };
 
         NamedExpression {
             var_name,
@@ -1059,14 +1111,30 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Generates a C++ expression that converts from a C field to the corresponding C++ field.
     ///
     /// `c_struct_access` should be code for referencing a field of the C struct.
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
         &self,
         c_struct_access: &str,
+        is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{c_struct_access}{var_name}");
-        let expression = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
+        let expression: Cow<'_, str> = match &field.ty {
+            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
+            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to grab as a pointer from C to C++, rather than a reference.
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
+                let type_name = self.formatter.fmt_type_name(op.id());
+                let var_name = self.formatter.fmt_identifier(field_getter.into());
+                let convert = if op.owner.mutability().is_some_and(|i| i.is_immutable()) {
+                    format!("({type_name}*)")
+                } else {
+                    "".into()
+                };
+                format!("{convert}{type_name}::FromFFI({var_name})").into()
+            }
+            _ => self.gen_c_to_cpp_for_type(&field.ty, field_getter.into()),
+        };
         NamedExpression {
             var_name,
             expression,

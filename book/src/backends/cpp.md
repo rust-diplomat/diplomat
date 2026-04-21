@@ -103,5 +103,63 @@ If you use `WriteTrait`, you will be interfacing with the [C ABI of DiplomatWrit
 ### Callbacks
 Callbacks are represented as `std::function<Ret(Args...)>`, where `Ret` and `Args...` are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.
 
+### Struct References
+
+#### &mut Struct
+Any structure tagged with `#[diplomat::attr(auto, mut_struct_ref)]` will be codegenned with different fields than you might expect. Currently, this only holds for structures that hold references:
+
+```rs
+#[diplomat::bridge]
+mod ffi {
+    pub struct SomeStruct {
+        a : &Opaque,
+    }
+
+    impl SomeStruct {
+        pub fn takes_mut(&mut self);
+    }
+}
+```
+
+##### Immutable Behavior
+
+In normal C++ codegen, this will look like:
+
+```cpp
+struct SomeStruct {
+    const Opaque& a;
+};
+```
+
+Note that this is struct is currently [not considered ABI compatible](../attrs/slices.md#primitive-structs), so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:
+```cpp
+struct SomeStructCFriendly {
+    const Opaque* a;
+};
+```
+
+Which we then copy over after converting:
+```cpp
+SomeStructCFriendly* ffiFriendly = this->AsFFI();
+// Call the Rust function:
+SomeStruct_takes_mut(ffiFriendly);
+// ffiFriendly has now been mutated, we must clone its values:
+*this = SomeStruct::FromFFI(ffiFriendly);
+// This will not compile.
+```
+
+C++ does not support "reseating" references, or changing the underlying pointer they access.
+
+##### Mutable Behavior
+
+To ensure our structure is "mutable" on a clone, each reference to an opaque must be stored as a pointer. So any structure tagged with `#[diplomat::attr(auto, mut_struct_ref)]` will replace its references with pointers:
+
+
+```cpp
+struct SomeStruct {
+    Opaque* a;
+};
+```
+
 
 {{supports("cpp")}}

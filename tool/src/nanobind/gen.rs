@@ -241,7 +241,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let field_decls = def
             .fields
             .iter()
-            .map(|field| self.gen_ty_decl(&field.ty, field.name.as_str()))
+            .map(|field| {
+                self.gen_field_ty_decl(def.attrs.mut_struct_ref, &field.ty, field.name.as_str())
+            })
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
@@ -380,20 +382,21 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
-    fn gen_ty_decl<'a, P: TyPosition>(
+    fn gen_field_ty_decl<'a, P: TyPosition>(
         &mut self,
+        is_in_mutable_struct: bool,
         ty: &'a Type<P>,
         var_name: &'a str,
     ) -> NamedType<'a, P>
     where
         'ccx: 'a,
     {
-        let var_name = self.formatter.cxx.fmt_param_name(var_name);
-        let type_name = self.cpp.gen_type_name(ty);
-
+        let named_type_cpp = self
+            .cpp
+            .gen_field_ty_decl(is_in_mutable_struct, ty, var_name);
         NamedType {
-            name: var_name,
-            type_name,
+            name: named_type_cpp.var_name,
+            type_name: named_type_cpp.type_name,
             ty,
         }
     }

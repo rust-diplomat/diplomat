@@ -35,3 +35,11 @@ def test_structs():
     bg.append(somelib.BigStructWithStuff())
     bg.append(somelib.BigStructWithStuff(1, 2, 3, somelib.ScalarPairWithPadding(1, 2), 0))
     somelib.BigStructWithStuff.assert_slice(bg, 2)
+
+    original_op = somelib.Opaque()
+    op_st = somelib.StructOfOpaque(original_op, somelib.OpaqueMut())
+    assert op_st.i.get_debug_str() == "\"\""
+    # Keep alive so it doesn't get garbage collected:
+    k = somelib.Opaque.from_str("String")
+    op_st.i = k
+    assert op_st.i.get_debug_str() == "\"String\""
