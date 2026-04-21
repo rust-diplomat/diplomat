@@ -24,10 +24,10 @@ use crate::filters;
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
 pub struct NamedType<'a> {
-    var_name: Cow<'a, str>,
-    type_name: Cow<'a, str>,
+    pub(crate) var_name: Cow<'a, str>,
+    pub(crate) type_name: Cow<'a, str>,
     /// Default value (for method params, but could eventually be for structs).
-    default_value: Option<Cow<'a, str>>,
+    pub(crate) default_value: Option<Cow<'a, str>>,
 }
 
 /// We generate a pair of methods for writeables, one which returns a std::string
@@ -378,16 +378,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .fields
             .iter()
             .map(|field| {
-                match &field.ty {
-                    Type::Opaque(op) if def.attrs.mut_struct_ref => {
-                        NamedType {
-                            var_name: field.name.as_str().into(),
-                            type_name: self.gen_opaque_name::<P>(op, true),
-                            default_value: None,
-                        }
-                    },
-                    _ => self.gen_ty_decl(&field.ty, field.name.as_str()) 
-                }
+                self.gen_field_ty_decl(def.attrs.mut_struct_ref, &field.ty, field.name.as_str())
             })
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
@@ -395,7 +386,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_cpp_to_c_for_field("", def.attrs.mut_struct_ref, field, namespace.clone()))
+            .map(|field| {
+                self.gen_cpp_to_c_for_field("", def.attrs.mut_struct_ref, field, namespace.clone())
+            })
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
@@ -720,6 +713,25 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         })
     }
 
+    pub(crate) fn gen_field_ty_decl<'a, P: TyPosition>(
+        &mut self,
+        is_in_mutable_struct: bool,
+        ty: &Type<P>,
+        var_name: &'a str,
+    ) -> NamedType<'a>
+    where
+        'ccx: 'a,
+    {
+        let mut res = self.gen_ty_decl(ty, var_name);
+        match ty {
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
+                res.type_name = self.gen_opaque_name::<P>(op, true);
+            }
+            _ => {}
+        }
+        res
+    }
+
     /// Generates C++ code for referencing a particular type with a given name.
     pub(super) fn gen_ty_decl<'a, P: TyPosition>(
         &mut self,
@@ -830,7 +842,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
     }
 
-    fn gen_opaque_name<P: TyPosition>(&mut self, op : &OpaquePath<hir::Optional, P::OpaqueOwnership>, use_mt_ptr : bool) -> Cow<'ccx, str> {
+    fn gen_opaque_name<P: TyPosition>(
+        &mut self,
+        op: &OpaquePath<hir::Optional, P::OpaqueOwnership>,
+        use_mt_ptr: bool,
+    ) -> Cow<'ccx, str> {
         let op_id = op.tcx_id.into();
         let type_name = self.formatter.fmt_type_name(op_id);
         let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(op_id);
@@ -844,9 +860,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let ret = match (op.owner.is_owned(), op.is_optional()) {
             // unique_ptr is nullable
             (true, _) => self.formatter.fmt_owned(&type_name),
-            (false, true) if !use_mt_ptr => self.formatter.fmt_optional_borrowed(&type_name, mutability),
+            (false, true) if !use_mt_ptr => {
+                self.formatter.fmt_optional_borrowed(&type_name, mutability)
+            }
             (false, false) if !use_mt_ptr => self.formatter.fmt_borrowed(&type_name, mutability),
-            _ => self.c.formatter.fmt_ptr(&type_name, Mutability::Mutable)
+            _ => self.c.formatter.fmt_ptr(&type_name, Mutability::Mutable),
         };
 
         let ret = ret.into_owned().into();
@@ -916,14 +934,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
         cpp_struct_access: &str,
-        mutable_struct : bool,
+        is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
-        let expression : Cow<'_, str> = match &field.ty {
-            Type::Opaque(op) if mutable_struct && !op.is_owned() => {
+        let expression: Cow<'_, str> = match &field.ty {
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 if op.is_optional() {
                     format!("{field_getter}->AsFFI() : nullptr").into()
                 } else {
@@ -1087,13 +1105,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
         &self,
         c_struct_access: &str,
-        mutable_struct : bool,
+        is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{c_struct_access}{var_name}");
-        let expression : Cow<'_, str> = match &field.ty {
-            Type::Opaque(op) if mutable_struct && !op.is_owned() => {
+        let expression: Cow<'_, str> = match &field.ty {
+            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 let type_name = self.formatter.fmt_type_name(op.id());
                 let var_name = self.formatter.fmt_identifier(field_getter.into());
                 let convert = if op.owner.mutability().is_some_and(|i| i.is_immutable()) {
@@ -1102,7 +1120,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     "".into()
                 };
                 format!("{convert}{type_name}::FromFFI({var_name})").into()
-            } 
+            }
             _ => self.gen_c_to_cpp_for_type(&field.ty, field_getter.into()),
         };
         NamedExpression {
