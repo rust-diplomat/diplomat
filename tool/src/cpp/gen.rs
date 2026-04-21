@@ -713,6 +713,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         })
     }
 
+    /// Generates a field's type (based on [`Self::gen_ty_decl`]), with some carve outs based on the field's type.
+    /// 
+    /// For some structs (i.e., mutable structs), not all types are not copy-constructible (i.e., references) across the boundary.
+    /// So this converts those references to pointers.
+    /// 
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     pub(crate) fn gen_field_ty_decl<'a, P: TyPosition>(
         &mut self,
         is_in_mutable_struct: bool,
@@ -931,6 +937,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Returns `NamedExpression`s whose `var_name` corresponds to the field of the C struct.
     ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
         cpp_struct_access: &str,
@@ -941,6 +948,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{cpp_struct_access}{var_name}");
         let expression: Cow<'_, str> = match &field.ty {
+            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers, 
+            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to return as a pointer from C++ to C, rather than from a reference.
             Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 if op.is_optional() {
                     format!("{field_getter}->AsFFI() : nullptr").into()
@@ -1102,6 +1111,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Generates a C++ expression that converts from a C field to the corresponding C++ field.
     ///
     /// `c_struct_access` should be code for referencing a field of the C struct.
+    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
         &self,
         c_struct_access: &str,
@@ -1111,6 +1121,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{c_struct_access}{var_name}");
         let expression: Cow<'_, str> = match &field.ty {
+            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers, 
+            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to grab as a pointer from C to C++, rather than a reference.
             Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 let type_name = self.formatter.fmt_type_name(op.id());
                 let var_name = self.formatter.fmt_identifier(field_getter.into());
