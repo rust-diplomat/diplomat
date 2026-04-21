@@ -59,7 +59,7 @@ void add_MyEnum_binding(nb::module_);
 void add_free_function_binding(nb::module_);
 }namespace somelib::mylib{
   
-void add_Decimal_binding(nb::module_);
+void add_MethodOverloading_binding(nb::module_);
 }namespace somelib::nested::ns{
   
 void add_Nested_binding(nb::module_);
@@ -207,7 +207,7 @@ NB_MODULE(somelib, mod)
     add_MyEnum_binding(mod);
     add_free_function_binding(mod);
     
-    mylib::add_Decimal_binding(mylib_mod);
+    mylib::add_MethodOverloading_binding(mylib_mod);
     
     nested::ns::add_Nested_binding(nested_ns_mod);
     nested::ns::add_free_function_binding(nested_ns_mod);
