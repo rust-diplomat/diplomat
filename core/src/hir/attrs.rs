@@ -63,6 +63,8 @@ pub struct Attrs {
     pub generate_mocking_interface: bool,
     /// From #[diplomat::attr()]. If true, Diplomat will check that this struct has the same memory layout in backends which support it. Allows this struct to be used in slices ([`super::Slice::Struct`]) and to be borrowed in function parameters.
     pub abi_compatible: bool,
+    /// From #[diplomat::attr()], found on structs. If true, Diplomat will allow &mut T references to the struct, and the backend may change the types of fields to better support mutation.
+    pub mut_struct_ref: bool,
 
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
     pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
@@ -571,6 +573,18 @@ impl Attrs {
                             }
                             this.abi_compatible = true;
                         }
+                        "mut_struct_ref" => {
+                            if !support.mut_struct_refs {
+                                maybe_error_unsupported(
+                                    auto_found,
+                                    "mut_struct_ref",
+                                    backend,
+                                    errors,
+                                );
+                                continue;
+                            }
+                            this.mut_struct_ref = true;
+                        }
                         "custom_extra_code" => {
                             let (location, source) =
                                 IncludeLocation::pair_from_meta(&attr.meta, errors);
@@ -722,6 +736,7 @@ impl Attrs {
             demo_attrs: _,
             generate_mocking_interface,
             abi_compatible,
+            mut_struct_ref,
             custom_extra_code,
             default_value,
         } = &self;
@@ -1107,6 +1122,12 @@ impl Attrs {
             ));
         }
 
+        if *mut_struct_ref && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
+            errors.push(LoweringError::Other(
+                "`mut_struct_ref` can only be used on input structs.".into(),
+            ));
+        }
+
         if !custom_extra_code.is_empty() {
             if !validator.attrs_supported().custom_bindings {
                 // We only validate that the language supports the bindings. We don't validate
@@ -1184,6 +1205,7 @@ impl Attrs {
             // Not inherited
             generate_mocking_interface: false,
             abi_compatible: false,
+            mut_struct_ref: false,
             // Not inherited
             custom_extra_code: Default::default(),
             // Not inherited
@@ -1280,8 +1302,12 @@ pub struct BackendAttrSupport {
     /// Passing of structs that only hold (non-slice) primitive types
     /// (for use in slices and languages that support taking direct pointers to structs):
     pub abi_compatibles: bool,
-    /// Whether or not the language supports &Struct or &mut Struct
+    /// Whether or not the language supports &Struct
     pub struct_refs: bool,
+    /// Whether or not the language supports &mut Struct.
+    /// Some languages will modify their generation code based on the contents of the struct to make it acceptable to mutate.
+    /// Some languages will also copy the structure to accomplish mutation (this is not the case with abi_compatible structs).
+    pub mut_struct_refs: bool,
     /// Whether the language supports generating functions not associated with any type.
     pub free_functions: bool,
     /// Whether the language supports being able to include custom bindings.
@@ -1327,6 +1353,7 @@ impl BackendAttrSupport {
             generate_mocking_interface: true,
             abi_compatibles: true,
             struct_refs: true,
+            mut_struct_refs: true,
             free_functions: true,
             custom_bindings: true,
             owned_slices: true,
@@ -1363,6 +1390,7 @@ impl BackendAttrSupport {
             "traits_are_sync" => Some(self.traits_are_sync),
             "abi_compatibles" => Some(self.abi_compatibles),
             "struct_refs" => Some(self.struct_refs),
+            "mut_struct_refs" => Some(self.mut_struct_refs),
             "free_functions" => Some(self.free_functions),
             "custom_bindings" => Some(self.custom_bindings),
             "owned_slices" => Some(self.owned_slices),
@@ -1511,6 +1539,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 generate_mocking_interface,
                 abi_compatibles,
                 struct_refs,
+                mut_struct_refs,
                 free_functions,
                 custom_bindings,
                 owned_slices,
@@ -1547,6 +1576,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generate_mocking_interface" => generate_mocking_interface,
                 "abi_compatibles" => abi_compatibles,
                 "struct_refs" => struct_refs,
+                "mut_struct_refs" => mut_struct_refs,
                 "free_functions" => free_functions,
                 "custom_bindings" => custom_bindings,
                 "owned_slices" => owned_slices,
@@ -1930,6 +1960,26 @@ mod tests {
 
     #[test]
     fn test_struct_ref_for_unsupported_backend() {
+        uitest_lowering_attr! { hir::BackendAttrSupport::default(),
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Foo {
+                    pub x: u32,
+                    pub y: u32
+                }
+
+                impl Foo {
+                    pub fn takes_mut(&self) {
+                        todo!()
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_mut_struct_ref_for_unsupported_backend() {
         uitest_lowering_attr! { hir::BackendAttrSupport::default(),
             #[diplomat::bridge]
             mod ffi {

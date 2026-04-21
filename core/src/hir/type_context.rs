@@ -465,19 +465,37 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        if let hir::Type::Slice(hir::Slice::Struct(_, st)) = ty {
-            let st = self.resolve_type(st.id());
-            match st {
-                TypeDef::Struct(st) => {
-                    if !st.attrs.abi_compatible {
-                        errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
-                            st.name
-                        )));
-                    }
+        match &ty {
+            hir::Type::Struct(st) => {
+                let d = self.resolve_type(st.id());
+                match d {
+                    TypeDef::Struct(st_d) => match st.owner() {
+                        MaybeOwn::Borrow(b)
+                            if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
+                        {
+                            errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
+                        }
+                        _ => {}
+                    },
+                    TypeDef::OutStruct(..) => {}
+                    _ => unreachable!(),
                 }
-                _ => unreachable!(),
             }
+            hir::Type::Slice(hir::Slice::Struct(_, st)) => {
+                let st = self.resolve_type(st.id());
+                match st {
+                    TypeDef::Struct(st) => {
+                        if !st.attrs.abi_compatible {
+                            errors.push(LoweringError::Other(format!(
+                                "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                                st.name
+                            )));
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            _ => {}
         }
     }
 
@@ -1219,13 +1237,23 @@ mod tests {
                        todo!()
                    }
                }
+
+               #[diplomat::attr(auto, mut_struct_ref)]
+               pub struct ProperlyMarked {
+                pub x: u32,
+               }
+               impl ProperlyMarked {
+                  pub fn takes_mut(&mut self) {
+                    todo!()
+                  }
+               }
            }
         };
 
         let mut output = String::new();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
-        attr_validator.support.struct_refs = true;
+        attr_validator.support.mut_struct_refs = true;
         attr_validator.support.abi_compatibles = true;
         match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
@@ -1260,7 +1288,7 @@ mod tests {
 
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.abi_compatibles = true;
-        attr_validator.support.struct_refs = true;
+        attr_validator.support.mut_struct_refs = true;
         match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None) {
             Ok(_context) => (),
             Err(e) => {
