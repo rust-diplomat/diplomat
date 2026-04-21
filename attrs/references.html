@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-131f8d4b.js";
+            window.path_to_searchindex_js = "../searchindex-a1638595.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ac29378c.js"></script>
@@ -177,7 +177,16 @@
                         <h1 id="references"><a class="header" href="#references">References</a></h1>
 <h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
 <p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=struct_refs)]</code>)</p>
-<p>Structs can be borrowed mutably or immutably as parameters to functions, but nowhere else.</p>
+<p>Structs can be borrowed immutably as parameters to functions, but nowhere else.</p>
+<h2 id="mut-struct"><a class="header" href="#mut-struct">&amp;mut Struct</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=mut_struct_refs)]</code>)</p>
+<p>Structs can be borrowed mutably as parameters to functions, but nowhere else. Mutable structs must be marked with <code>#[diplomat::attr(*, mut_struct_ref)]</code>, as not every backend will represent its structure identically to how it is stored in the C ABI. Therefore, most backends will:</p>
+<ol>
+<li>Clone the structure into a C-ABI friendly struct</li>
+<li>Call the mutable method on the C-ABI friendly struct</li>
+<li>Clone the C-ABI friendly struct back into the native backend type</li>
+</ol>
+<p>To assist in making mutable structs possible, some backends will codegen different structure field types from normal behavior. See the <a href="../backends/cpp.html">C++ backend’s docs for an example of why this might be</a>.</p>
 
                     </main>
 

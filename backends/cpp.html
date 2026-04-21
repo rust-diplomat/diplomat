@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-131f8d4b.js";
+            window.path_to_searchindex_js = "../searchindex-a1638595.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ac29378c.js"></script>
@@ -263,6 +263,46 @@ template&lt;typename T&gt; struct WriteTrait {
 <p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="./c.html#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
 <h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
+<h3 id="struct-references"><a class="header" href="#struct-references">Struct References</a></h3>
+<h4 id="mut-struct"><a class="header" href="#mut-struct">&amp;mut Struct</a></h4>
+<p>Any structure tagged with <code>#[diplomat::attr(auto, mut_struct_ref)]</code> will be codegenned with different fields than you might expect. Currently, this only holds for structures that hold references:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    pub struct SomeStruct {
+        a : &amp;Opaque,
+    }
+
+    impl SomeStruct {
+        pub fn takes_mut(&amp;mut self);
+    }
+}
+</code></pre>
+<h5 id="immutable-behavior"><a class="header" href="#immutable-behavior">Immutable Behavior</a></h5>
+<p>In normal C++ codegen, this will look like:</p>
+<pre><code class="language-cpp">struct SomeStruct {
+    const Opaque&amp; a;
+};
+</code></pre>
+<p>Note that this is struct is currently <a href="../attrs/slices.html#primitive-structs">not considered ABI compatible</a>, so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:</p>
+<pre><code class="language-cpp">struct SomeStructCFriendly {
+    const Opaque* a;
+};
+</code></pre>
+<p>Which we then copy over after converting:</p>
+<pre><code class="language-cpp">SomeStructCFriendly* ffiFriendly = this-&gt;AsFFI();
+// Call the Rust function:
+SomeStruct_takes_mut(ffiFriendly);
+// ffiFriendly has now been mutated, we must clone its values:
+*this = SomeStruct::FromFFI(ffiFriendly);
+// This will not compile.
+</code></pre>
+<p>C++ does not support “reseating” references, or changing the underlying pointer they access.</p>
+<h5 id="mutable-behavior"><a class="header" href="#mutable-behavior">Mutable Behavior</a></h5>
+<p>To ensure our structure is “mutable” on a clone, each reference to an opaque must be stored as a pointer. So any structure tagged with <code>#[diplomat::attr(auto, mut_struct_ref)]</code> will replace its references with pointers:</p>
+<pre><code class="language-cpp">struct SomeStruct {
+    Opaque* a;
+};
+</code></pre>
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
@@ -347,7 +387,10 @@ template&lt;typename T&gt; struct WriteTrait {
 <p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+<p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="../attrs/references.html">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Mutable Struct References. See <a href="../attrs/references.html">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>

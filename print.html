@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-131f8d4b.js";
+            window.path_to_searchindex_js = "searchindex-a1638595.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-ac29378c.js"></script>
@@ -1308,7 +1308,16 @@ mod ffi {
 <h1 id="references"><a class="header" href="#references">References</a></h1>
 <h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
 <p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=struct_refs)]</code>)</p>
-<p>Structs can be borrowed mutably or immutably as parameters to functions, but nowhere else.</p>
+<p>Structs can be borrowed immutably as parameters to functions, but nowhere else.</p>
+<h2 id="mut-struct"><a class="header" href="#mut-struct">&amp;mut Struct</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=mut_struct_refs)]</code>)</p>
+<p>Structs can be borrowed mutably as parameters to functions, but nowhere else. Mutable structs must be marked with <code>#[diplomat::attr(*, mut_struct_ref)]</code>, as not every backend will represent its structure identically to how it is stored in the C ABI. Therefore, most backends will:</p>
+<ol>
+<li>Clone the structure into a C-ABI friendly struct</li>
+<li>Call the mutable method on the C-ABI friendly struct</li>
+<li>Clone the C-ABI friendly struct back into the native backend type</li>
+</ol>
+<p>To assist in making mutable structs possible, some backends will codegen different structure field types from normal behavior. See the <a href="#c-backend-1">C++ backend’s docs for an example of why this might be</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="custom-extra-code"><a class="header" href="#custom-extra-code">Custom Extra Code</a></h1>
 <p>Currently supported by <code>cpp</code> and <code>nanobind</code>.</p>
@@ -2149,7 +2158,10 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+<p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
@@ -2257,6 +2269,46 @@ template&lt;typename T&gt; struct WriteTrait {
 <p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
 <h3 id="callbacks-2"><a class="header" href="#callbacks-2">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
+<h3 id="struct-references"><a class="header" href="#struct-references">Struct References</a></h3>
+<h4 id="mut-struct-1"><a class="header" href="#mut-struct-1">&amp;mut Struct</a></h4>
+<p>Any structure tagged with <code>#[diplomat::attr(auto, mut_struct_ref)]</code> will be codegenned with different fields than you might expect. Currently, this only holds for structures that hold references:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    pub struct SomeStruct {
+        a : &amp;Opaque,
+    }
+
+    impl SomeStruct {
+        pub fn takes_mut(&amp;mut self);
+    }
+}
+</code></pre>
+<h5 id="immutable-behavior"><a class="header" href="#immutable-behavior">Immutable Behavior</a></h5>
+<p>In normal C++ codegen, this will look like:</p>
+<pre><code class="language-cpp">struct SomeStruct {
+    const Opaque&amp; a;
+};
+</code></pre>
+<p>Note that this is struct is currently <a href="#primitive-structs">not considered ABI compatible</a>, so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:</p>
+<pre><code class="language-cpp">struct SomeStructCFriendly {
+    const Opaque* a;
+};
+</code></pre>
+<p>Which we then copy over after converting:</p>
+<pre><code class="language-cpp">SomeStructCFriendly* ffiFriendly = this-&gt;AsFFI();
+// Call the Rust function:
+SomeStruct_takes_mut(ffiFriendly);
+// ffiFriendly has now been mutated, we must clone its values:
+*this = SomeStruct::FromFFI(ffiFriendly);
+// This will not compile.
+</code></pre>
+<p>C++ does not support “reseating” references, or changing the underlying pointer they access.</p>
+<h5 id="mutable-behavior"><a class="header" href="#mutable-behavior">Mutable Behavior</a></h5>
+<p>To ensure our structure is “mutable” on a clone, each reference to an opaque must be stored as a pointer. So any structure tagged with <code>#[diplomat::attr(auto, mut_struct_ref)]</code> will replace its references with pointers:</p>
+<pre><code class="language-cpp">struct SomeStruct {
+    Opaque* a;
+};
+</code></pre>
 <h2 id="supports-1"><a class="header" href="#supports-1">Supports</a></h2>
 <ul>
 <li>
@@ -2341,7 +2393,10 @@ template&lt;typename T&gt; struct WriteTrait {
 <p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+<p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
@@ -2445,7 +2500,10 @@ template&lt;typename T&gt; struct WriteTrait {
 <p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Struct Refs</p>
+<p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Free Functions</p>
@@ -2549,7 +2607,10 @@ template&lt;typename T&gt; struct WriteTrait {
 <p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Struct Refs</p>
+<p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Free Functions</p>
@@ -2653,7 +2714,10 @@ template&lt;typename T&gt; struct WriteTrait {
 <p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Struct Refs</p>
+<p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Free Functions</p>
@@ -2825,7 +2889,10 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Struct Refs</p>
+<p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Free Functions</p>
@@ -3043,7 +3110,10 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Struct Refs</p>
+<p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Mutable Struct References. See <a href="#references">References for more</a>.</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
