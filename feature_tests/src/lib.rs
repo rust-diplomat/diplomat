@@ -18,6 +18,7 @@ pub mod attrs;
 pub mod callbacks;
 pub mod imports;
 pub mod lifetimes;
+pub mod method_overloading;
 pub mod option;
 pub mod result;
 pub mod selftype;

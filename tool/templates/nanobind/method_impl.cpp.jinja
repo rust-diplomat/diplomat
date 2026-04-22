@@ -91,6 +91,13 @@
         {%- for o in m.overloads %}
     .def{{- gen_constructor_body(o.method_name.clone().unwrap_or(m.cpp_method_name.to_string()), o.parameters.params.clone(), true) -}}
         {%- endfor -%}
+    {%- when crate::hir::SpecialMethod::NamedConstructor(_) -%}
+        ("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
+            std::move(maybe_op_unwrap(nb::overload_cast<{%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.type_name}}{%- endfor -%}>(&{{- type_name }}::{{ m.cpp_method_name -}})))
+        {%- else -%}
+            std::move(maybe_op_unwrap(&{{- type_name }}::{{ m.cpp_method_name -}}))
+        {%- endif -%}
+        {{- method_params::params(m.method.params, m.lifetime_args) }})
     {%- when crate::hir::SpecialMethod::Indexer -%}
         ("__getitem__", {% match m.method.output -%}
         {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
