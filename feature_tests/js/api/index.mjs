@@ -28,6 +28,8 @@ export { CachedIncludeZST } from "./CachedIncludeZST.mjs"
 
 export { ErrorStruct } from "./ErrorStruct.mjs"
 
+export { FallibleOpaqueConstructor } from "./FallibleOpaqueConstructor.mjs"
+
 export { BigStructWithStuff } from "./BigStructWithStuff.mjs"
 
 export { CyclicStructA } from "./CyclicStructA.mjs"
