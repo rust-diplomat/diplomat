@@ -19,6 +19,7 @@ void add_BigStructWithStuff_binding(nb::module_);
 void add_CyclicStructA_binding(nb::module_);
 void add_CyclicStructB_binding(nb::module_);
 void add_CyclicStructC_binding(nb::module_);
+void add_ImmutableStructOfOpaque_binding(nb::module_);
 void add_MyStruct_binding(nb::module_);
 void add_MyStructContainingAnOption_binding(nb::module_);
 void add_MyZst_binding(nb::module_);
@@ -169,6 +170,7 @@ NB_MODULE(somelib, mod)
     add_CyclicStructA_binding(mod);
     add_CyclicStructB_binding(mod);
     add_CyclicStructC_binding(mod);
+    add_ImmutableStructOfOpaque_binding(mod);
     add_MyStruct_binding(mod);
     add_MyStructContainingAnOption_binding(mod);
     add_MyZst_binding(mod);
