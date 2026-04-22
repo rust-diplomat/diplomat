@@ -17,13 +17,17 @@ pub(crate) use gen::ExtraCode;
 pub struct CppConfig {
     /// Should structures always generate as if they have the `mut_struct_ref` attribute applied?
     /// Right now, this ensures that opaques will always generate as pointers instead of references.
-    pub structs_always_mut_ref : bool,
+    pub structs_always_mut_ref: bool,
 }
 
 impl CppConfig {
     pub fn set(&mut self, key: &str, value: toml::Value) {
         match key {
-            "structs_always_mut_ref" => self.structs_always_mut_ref = value.as_bool().expect("Expected boolean value for structs_always_mut_ref"),
+            "structs_always_mut_ref" => {
+                self.structs_always_mut_ref = value
+                    .as_bool()
+                    .expect("Expected boolean value for structs_always_mut_ref")
+            }
             _ => panic!("Unrecognized C++ config key: {key}"),
         }
     }

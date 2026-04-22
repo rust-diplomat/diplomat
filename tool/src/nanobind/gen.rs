@@ -241,9 +241,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let field_decls = def
             .fields
             .iter()
-            .map(|field| {
-                self.gen_field_ty_decl(&field.ty, field.name.as_str())
-            })
+            .map(|field| self.gen_field_ty_decl(&field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
@@ -390,9 +388,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     where
         'ccx: 'a,
     {
-        let named_type_cpp = self
-            .cpp
-            .gen_field_ty_decl(true, ty, var_name);
+        let named_type_cpp = self.cpp.gen_field_ty_decl(true, ty, var_name);
         NamedType {
             name: named_type_cpp.var_name,
             type_name: named_type_cpp.type_name,

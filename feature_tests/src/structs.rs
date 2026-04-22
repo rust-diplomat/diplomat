@@ -597,11 +597,11 @@ pub mod ffi {
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
     #[diplomat::cfg(all(not(dart), supports=struct_refs))]
     pub struct ImmutableStructOfOpaque<'a> {
-        i : &'a Opaque,
+        i: &'a Opaque,
     }
 
-    impl <'a> ImmutableStructOfOpaque<'a> {
-        pub fn take_in(&'a self, w : &mut DiplomatWrite) {
+    impl<'a> ImmutableStructOfOpaque<'a> {
+        pub fn take_in(&'a self, w: &mut DiplomatWrite) {
             self.i.get_debug_str(w);
         }
     }

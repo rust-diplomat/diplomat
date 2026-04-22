@@ -373,15 +373,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_header = self.c.gen_struct_def::<P>(id);
         let c_impl_header = self.c.gen_impl(id.into());
 
-        let is_in_mut_struct = def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
+        let is_in_mut_struct =
+            def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
 
         self.generating_struct_fields = true;
         let field_decls = def
             .fields
             .iter()
-            .map(|field| {
-                self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str())
-            })
+            .map(|field| self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
