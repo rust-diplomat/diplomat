@@ -30,7 +30,7 @@ namespace capi {
 
 namespace somelib {
 struct ImmutableStructOfOpaque {
-    const somelib::Opaque& i;
+    somelib::Opaque* i;
 
   inline std::string take_in() const;
   template<typename W>

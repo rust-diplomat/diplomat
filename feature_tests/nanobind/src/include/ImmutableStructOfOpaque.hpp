@@ -44,13 +44,13 @@ inline void somelib::ImmutableStructOfOpaque::take_in_write(W& writeable) const 
 
 inline somelib::capi::ImmutableStructOfOpaque somelib::ImmutableStructOfOpaque::AsFFI() const {
     return somelib::capi::ImmutableStructOfOpaque {
-        /* .i = */ i.AsFFI(),
+        /* .i = */ i->AsFFI(),
     };
 }
 
 inline somelib::ImmutableStructOfOpaque somelib::ImmutableStructOfOpaque::FromFFI(somelib::capi::ImmutableStructOfOpaque c_struct) {
     return somelib::ImmutableStructOfOpaque {
-        /* .i = */ *somelib::Opaque::FromFFI(c_struct.i),
+        /* .i = */ (somelib::Opaque*)somelib::Opaque::FromFFI(c_struct.i),
     };
 }
 
