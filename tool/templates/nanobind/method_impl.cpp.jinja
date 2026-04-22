@@ -93,9 +93,9 @@
         {%- endfor -%}
     {%- when crate::hir::SpecialMethod::NamedConstructor(_) -%}
         ("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
-            std::move(maybe_op_unwrap(nb::overload_cast<{%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.type_name}}{%- endfor -%}>(&{{- type_name }}::{{ m.cpp_method_name -}})))
+            {% call method_name_cpp() %}nb::overload_cast<{%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.type_name}}{%- endfor -%}>(&{{- type_name }}::{{ m.cpp_method_name -}}){% endcall %}
         {%- else -%}
-            std::move(maybe_op_unwrap(&{{- type_name }}::{{ m.cpp_method_name -}}))
+            {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}
         {%- endif -%}
         {{- method_params::params(m.method.params, m.lifetime_args) }})
     {%- when crate::hir::SpecialMethod::Indexer -%}
