@@ -56,3 +56,8 @@ class TestResult(unittest.TestCase):
         with self.assertRaises(Exception) as cm2:
             str(cm.exception)
         cm2.exception.args[0].assert_integer(0)
+    
+    def test_result_op_ctor(self):
+        with self.assertRaises(Exception) as cm:
+            somelib.FallibleOpaqueConstructor()
+        cm.exception.args[0].assert_integer(10)
