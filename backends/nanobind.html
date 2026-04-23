@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a1638595.js";
+            window.path_to_searchindex_js = "../searchindex-3bb33124.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-ac29378c.js"></script>
@@ -220,6 +220,8 @@
 <p>These are Python classes bound to C++ through Nanobind.</p>
 <h4 id="structs"><a class="header" href="#structs">Structs</a></h4>
 <p>These are Python classes, bound similarly to opaques; however, each field is defined as properties on the class.</p>
+<p>Note that Nanobind treats structures in Python as classes that hold mutable references to an underlying C++ type. For this reason, Nanobind treats every struct as if it is a <a href="./cpp.html#mut-struct">mutable reference when generating C++ bindings</a>.
+However, if you still wish to access these structs mutably within your own method bindings, you will still need to tag them with <a href="../attrs/references.html"><code>#[diplomat::attr(*, mut_struct_ref)]</code></a>.</p>
 <h4 id="enums"><a class="header" href="#enums">Enums</a></h4>
 <p>These are also bound as classes, but with an inner bound <code>enum.Enum</code> class. The variants can be accessed through the parent <code>Type.*</code>, but the inner enum type can be accessed through <code>Type.Type</code>.</p>
 <h3 id="options"><a class="header" href="#options">Options</a></h3>
