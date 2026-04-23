@@ -30,6 +30,8 @@ export { CachedIncludeZST } from "./CachedIncludeZST"
 
 export { ErrorStruct, ErrorStruct_obj } from "./ErrorStruct"
 
+export { FallibleOpaqueConstructor, FallibleOpaqueConstructor_obj } from "./FallibleOpaqueConstructor"
+
 export { BigStructWithStuff, BigStructWithStuff_obj } from "./BigStructWithStuff"
 
 export { CyclicStructA, CyclicStructA_obj } from "./CyclicStructA"

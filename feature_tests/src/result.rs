@@ -86,4 +86,17 @@ pub mod ffi {
             assert_eq!(i, self.0);
         }
     }
+
+    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1123
+    #[diplomat::cfg(all(supports=fallible_constructors, not(dart)))]
+    pub struct FallibleOpaqueConstructor {
+        x: i32,
+    }
+
+    impl FallibleOpaqueConstructor {
+        #[diplomat::attr(auto, constructor)]
+        pub fn ctor() -> Result<Self, Box<ResultOpaque>> {
+            Err(Box::new(ResultOpaque(10)))
+        }
+    }
 }

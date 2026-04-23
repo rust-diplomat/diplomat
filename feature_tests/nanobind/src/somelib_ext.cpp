@@ -15,6 +15,7 @@ void add_BorrowingOptionStruct_binding(nb::module_);
 void add_OptionInputStruct_binding(nb::module_);
 void add_CachedIncludeZST_binding(nb::module_);
 void add_ErrorStruct_binding(nb::module_);
+void add_FallibleOpaqueConstructor_binding(nb::module_);
 void add_BigStructWithStuff_binding(nb::module_);
 void add_CyclicStructA_binding(nb::module_);
 void add_CyclicStructB_binding(nb::module_);
@@ -169,6 +170,7 @@ NB_MODULE(somelib, mod)
     add_OptionInputStruct_binding(mod);
     add_CachedIncludeZST_binding(mod);
     add_ErrorStruct_binding(mod);
+    add_FallibleOpaqueConstructor_binding(mod);
     add_BigStructWithStuff_binding(mod);
     add_CyclicStructA_binding(mod);
     add_CyclicStructB_binding(mod);

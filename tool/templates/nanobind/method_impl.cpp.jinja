@@ -5,33 +5,7 @@
 
 
 {%- macro gen_constructor_body(method_name, params, is_overload=false) -%}
-    {%- if is_self_opaque -%}
         (nb::new_({%- call method_name_cpp() %}&{{- type_name}}::{{ method_name -}} {%- endcall -%})
-    {%- else -%} {#- nanobind's nb::init<> only works for *actual* constructors -#}
-        ("__init__", {%- call method_name_cpp() %}[]({{ type_name }}* self
-        {%- for p in params.clone() -%}
-        , {{p.type_name}} {{p.name}}
-        {%- endfor -%}
-        {%- match m.method.output -%}
-        {%- when hir::ReturnType::Infallible(_) -%}
-            ){ *self = {{type_name}}::{{ method_name -}}({% for p in params.clone() -%}
-                                            {%- if !loop.first -%}, {% endif %}{{p.name}}
-                                            {%- endfor -%}
-        ); }
-        {%- when hir::ReturnType::Fallible(_, _) -%}
-            ){ auto tmp = {{type_name}}::{{ method_name -}}({% for p in params.clone() -%}
-                                            {%- if !loop.first -%}, {% endif %}{{p.name}}
-                                            {%- endfor -%} );
-            if(tmp.is_ok()) {
-                *self = std::move(tmp).ok().value();
-            } else {
-                nb::cast(tmp); // This will raise a python error with the contents of the error type
-            }}
-        {%- when hir::ReturnType::Nullable(_) -%}
-        static_assert(false, "This is unsupported by diplomat");
-        {%- endmatch -%}
-    {%- endcall -%}
-    {%- endif -%}
     {{- method_params::params(params, m.lifetime_args) }})
 {%- endmacro -%}
 
