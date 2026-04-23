@@ -36,6 +36,9 @@ These are Python classes bound to C++ through Nanobind.
 #### Structs
 These are Python classes, bound similarly to opaques; however, each field is defined as properties on the class.
 
+Note that Nanobind treats structures in Python as classes that hold mutable references to an underlying C++ type. For this reason, Nanobind treats every struct as if it is a [mutable reference when generating C++ bindings](./cpp.md#mut-struct).
+However, if you still wish to access these structs mutably within your own method bindings, you will still need to tag them with [`#[diplomat::attr(*, mut_struct_ref)]`](../attrs/references.md).
+
 #### Enums
 These are also bound as classes, but with an inner bound `enum.Enum` class. The variants can be accessed through the parent `Type.*`, but the inner enum type can be accessed through `Type.Type`. 
 

@@ -9,6 +9,7 @@
 #include "../include/PrimitiveStruct.hpp"
 #include "../include/CyclicStructA.hpp"
 #include "../include/StructOfOpaque.hpp"
+#include "../include/ImmutableStructOfOpaque.hpp"
 #include "assert.hpp"
 
 using namespace somelib;
@@ -166,4 +167,7 @@ int main(int argc, char* argv[]) {
 
     mut_struct_opaque.take_in(*op_three);
     simple_assert_eq("Mutable Struct Opaque Ref After", mut_struct_opaque.i->get_debug_str(), "\"String\"");
+
+    ImmutableStructOfOpaque immut_struct_opaque = ImmutableStructOfOpaque { *op_three.get() };
+    simple_assert_eq("Immutable Struct Ref", immut_struct_opaque.take_in(), "\"String\"");
 }

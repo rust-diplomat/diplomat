@@ -373,13 +373,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_header = self.c.gen_struct_def::<P>(id);
         let c_impl_header = self.c.gen_impl(id.into());
 
+        let is_in_mut_struct =
+            def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
+
         self.generating_struct_fields = true;
         let field_decls = def
             .fields
             .iter()
-            .map(|field| {
-                self.gen_field_ty_decl(def.attrs.mut_struct_ref, &field.ty, field.name.as_str())
-            })
+            .map(|field| self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
@@ -387,14 +388,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .fields
             .iter()
             .map(|field| {
-                self.gen_cpp_to_c_for_field("", def.attrs.mut_struct_ref, field, namespace.clone())
+                self.gen_cpp_to_c_for_field("", is_in_mut_struct, field, namespace.clone())
             })
             .collect::<Vec<_>>();
 
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", def.attrs.mut_struct_ref, field))
+            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", is_in_mut_struct, field))
             .collect::<Vec<_>>();
 
         let methods = def

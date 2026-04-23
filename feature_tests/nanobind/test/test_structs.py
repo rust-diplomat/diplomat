@@ -36,6 +36,7 @@ def test_structs():
     bg.append(somelib.BigStructWithStuff(1, 2, 3, somelib.ScalarPairWithPadding(1, 2), 0))
     somelib.BigStructWithStuff.assert_slice(bg, 2)
 
+def test_struct_holding_opaques():
     original_op = somelib.Opaque()
     op_st = somelib.StructOfOpaque(original_op, somelib.OpaqueMut())
     assert op_st.i.get_debug_str() == "\"\""
@@ -43,3 +44,6 @@ def test_structs():
     k = somelib.Opaque.from_str("String")
     op_st.i = k
     assert op_st.i.get_debug_str() == "\"String\""
+
+    immut_st = somelib.ImmutableStructOfOpaque(k)
+    assert immut_st.take_in() == "\"String\""
