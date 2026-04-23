@@ -17,6 +17,7 @@ pub(crate) use gen::ExtraCode;
 pub struct CppConfig {
     /// Should structures always generate as if they have the `mut_struct_ref` attribute applied?
     /// Right now, this ensures that opaques will always generate as pointers instead of references.
+    /// Required by [Nanobind, as structures are always accessed mutably](https://rust-diplomat.github.io/diplomat/backends/nanobind.html#structs)
     pub structs_always_mut_ref: bool,
 }
 
