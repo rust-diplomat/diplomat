@@ -570,7 +570,7 @@ pub mod ffi {
             assert!(true)
         }
 
-        pub fn take_in_slice(a : &[PrimitiveStruct]) -> Box<Self> {
+        pub fn take_in_slice(a: &[PrimitiveStruct]) -> Box<Self> {
             Box::new(Self(a.iter().cloned().collect()))
         }
     }
