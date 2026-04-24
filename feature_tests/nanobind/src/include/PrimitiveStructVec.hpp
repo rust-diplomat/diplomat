@@ -32,6 +32,8 @@ namespace capi {
 
     void PrimitiveStructVec_take_slice_from_other_namespace(somelib::ns::capi::DiplomatRenamedStructWithAttrsView _sl);
 
+    somelib::capi::PrimitiveStructVec* PrimitiveStructVec_take_in_slice(somelib::capi::DiplomatPrimitiveStructView a);
+
     void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
     } // extern "C"
@@ -66,6 +68,11 @@ inline somelib::PrimitiveStruct somelib::PrimitiveStructVec::__getitem__(size_t 
 
 inline void somelib::PrimitiveStructVec::take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl) {
     somelib::capi::PrimitiveStructVec_take_slice_from_other_namespace({reinterpret_cast<const somelib::ns::capi::RenamedStructWithAttrs*>(_sl.data()), _sl.size()});
+}
+
+inline std::unique_ptr<somelib::PrimitiveStructVec> somelib::PrimitiveStructVec::take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a) {
+    auto result = somelib::capi::PrimitiveStructVec_take_in_slice({reinterpret_cast<const somelib::capi::PrimitiveStruct*>(a.data()), a.size()});
+    return std::unique_ptr<somelib::PrimitiveStructVec>(somelib::PrimitiveStructVec::FromFFI(result));
 }
 
 inline const somelib::capi::PrimitiveStructVec* somelib::PrimitiveStructVec::AsFFI() const {

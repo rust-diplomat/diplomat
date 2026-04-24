@@ -45,6 +45,8 @@ public:
 
   inline static void take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl);
 
+  inline static std::unique_ptr<somelib::PrimitiveStructVec> take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a);
+
     inline const somelib::capi::PrimitiveStructVec* AsFFI() const;
     inline somelib::capi::PrimitiveStructVec* AsFFI();
     inline static const somelib::PrimitiveStructVec* FromFFI(const somelib::capi::PrimitiveStructVec* ptr);
