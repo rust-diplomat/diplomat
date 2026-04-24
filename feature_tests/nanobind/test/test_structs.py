@@ -47,3 +47,22 @@ def test_struct_holding_opaques():
 
     immut_st = somelib.ImmutableStructOfOpaque(k)
     assert immut_st.take_in() == "\"String\""
+
+def test_take_in_bound_as_slice():
+    a = somelib.PrimitiveStruct(0, True, ' ', 0, 0, 0)
+    b = somelib.PrimitiveStruct(10., False, ' ', 0, 0, 0)
+    c = somelib.PrimitiveStruct(20., False, ' ', 0, 0, 0)
+    l = [a, b, c]
+    assert l[0].x == 0
+    assert l[1].x == 10
+    assert l[2].x == 20
+
+    from_slice = somelib.PrimitiveStructVec.take_in_slice(l)
+    assert from_slice[0].x == 0
+    assert from_slice[1].x == 10
+    assert from_slice[2].x == 20
+
+    from_vec = somelib.PrimitiveStructVec.take_in_slice(from_slice)
+    assert from_vec[0].x == 0
+    assert from_vec[1].x == 10
+    assert from_vec[2].x == 20
