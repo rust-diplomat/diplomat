@@ -28,7 +28,8 @@ namespace capi {
 
     somelib::capi::DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const somelib::capi::PrimitiveStructVec* self);
 
-    somelib::capi::PrimitiveStruct PrimitiveStructVec_get(const somelib::capi::PrimitiveStructVec* self, size_t idx);
+    typedef struct PrimitiveStructVec_get_result {union {somelib::capi::PrimitiveStruct ok; }; bool is_ok;} PrimitiveStructVec_get_result;
+    PrimitiveStructVec_get_result PrimitiveStructVec_get(const somelib::capi::PrimitiveStructVec* self, size_t idx);
 
     void PrimitiveStructVec_take_slice_from_other_namespace(somelib::ns::capi::DiplomatRenamedStructWithAttrsView _sl);
 
@@ -60,10 +61,10 @@ inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::Primitiv
     return somelib::diplomat::span<const somelib::PrimitiveStruct>(reinterpret_cast<const somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
-inline somelib::PrimitiveStruct somelib::PrimitiveStructVec::__getitem__(size_t idx) const {
+inline std::optional<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::operator[](size_t idx) const {
     auto result = somelib::capi::PrimitiveStructVec_get(this->AsFFI(),
         idx);
-    return somelib::PrimitiveStruct::FromFFI(result);
+    return result.is_ok ? std::optional<somelib::PrimitiveStruct>(somelib::PrimitiveStruct::FromFFI(result.ok)) : std::nullopt;
 }
 
 inline void somelib::PrimitiveStructVec::take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl) {
