@@ -43,9 +43,11 @@ public:
 
   inline somelib::diplomat::span<somelib::PrimitiveStruct> as_slice_mut();
 
-  inline somelib::PrimitiveStruct get(size_t idx) const;
+  inline std::optional<somelib::PrimitiveStruct> get(size_t idx) const;
 
   inline static void take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl);
+
+  inline static std::unique_ptr<somelib::PrimitiveStructVec> take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a);
 
     inline const somelib::capi::PrimitiveStructVec* AsFFI() const;
     inline somelib::capi::PrimitiveStructVec* AsFFI();
