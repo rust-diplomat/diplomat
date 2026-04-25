@@ -46,6 +46,12 @@ final class MyString implements ffi.Finalizable {
     return MyString._fromFfi(result, []);
   }
 
+  static MyString newFromUtf16(core.List<core.String> v) {
+    final temp = _FinalizedArena();
+    final result = _MyString_new_from_utf16(v._utf16SliceAllocIn(temp.arena));
+    return MyString._fromFfi(result, []);
+  }
+
   set str(String newStr) {
     final temp = _FinalizedArena();
     _MyString_set_str(_ffi, newStr._utf8AllocIn(temp.arena));
@@ -102,6 +108,11 @@ external ffi.Pointer<ffi.Opaque> _MyString_new_owned(_SliceUtf8 v);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'MyString_new_from_first')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(_SliceSliceUtf8 v);
+
+@_DiplomatFfiUse('MyString_new_from_utf16')
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf16)>(isLeaf: true, symbol: 'MyString_new_from_utf16')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _MyString_new_from_utf16(_SliceSliceUtf16 v);
 
 @_DiplomatFfiUse('MyString_set_str')
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'MyString_set_str')

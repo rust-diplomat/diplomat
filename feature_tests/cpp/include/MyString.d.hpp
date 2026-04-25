@@ -33,6 +33,8 @@ public:
 
   inline static std::unique_ptr<somelib::MyString> new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v);
 
+  inline static std::unique_ptr<somelib::MyString> new_from_utf16(somelib::diplomat::span<const diplomat::u16string_view_for_slice> v);
+
   inline void set_str(std::string_view new_str);
 
   inline std::string get_str() const;

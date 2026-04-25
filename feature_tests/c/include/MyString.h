@@ -21,6 +21,8 @@ MyString* MyString_new_unsafe(DiplomatStringView v);
 
 MyString* MyString_new_from_first(DiplomatStringsView v);
 
+MyString* MyString_new_from_utf16(DiplomatStrings16View v);
+
 void MyString_set_str(MyString* self, DiplomatStringView new_str);
 
 void MyString_get_str(const MyString* self, DiplomatWrite* write);
