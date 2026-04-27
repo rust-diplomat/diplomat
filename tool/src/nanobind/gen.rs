@@ -543,7 +543,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             };
 
             if !is_fallible {
-                self.errors.push_error(format!("Return type must be an Option or a Result. Python sequencing requires knowledge of when iteration has ended. See https://github.com/rust-diplomat/diplomat/issues/1128"));
+                self.errors.push_error("Return type must be an Option or a Result. Python sequencing requires knowledge of when iteration has ended. See https://github.com/rust-diplomat/diplomat/issues/1128".into());
             }
         }
 
