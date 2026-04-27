@@ -328,14 +328,15 @@ mod test {
     use diplomat_core::hir::{self, TypeDef};
     use std::collections::BTreeMap;
 
+    // TODO: Re-write this to just call `run` and check the output files and error store.
     macro_rules! test_gen {
-        ($type_inf:ident, $func:ident, [$($additional_args:expr,)*], {$($file:tt)*}) => {
+        ($type_inf:ident, $func:ident, [$($additional_args:expr,)*], $callback:ident, {$($file:tt)*}) => {
             let item : syn::File = syn::parse_quote! { $($file)* };
             let config = crate::Config::default();
-            
+
             let mut attr_validator = hir::BasicAttributeValidator::new("python");
             attr_validator.support = crate::nanobind::attr_support();
-            
+
             let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
             {
                 Ok(context) => context,
@@ -346,7 +347,7 @@ mod test {
                     panic!("Failed to create context")
                 }
             };
-            
+
 
             let (type_id, type_def) = match tcx
                 .all_types()
@@ -356,7 +357,7 @@ mod test {
                 (type_id, TypeDef::$type_inf(type_def)) => (type_id, type_def),
                 _ => panic!("Failed to find opaque type from AST"),
             };
-            
+
             let docs_gen = Default::default();
             let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
             let errors = crate::ErrorStore::default();
@@ -394,14 +395,17 @@ mod test {
             };
             let mut generated = String::default();
             context.$func(type_def, type_id, &mut generated $(,$additional_args)?);
-            insta::assert_snapshot!(generated)
+            $callback(context, generated)
         };
     }
 
     #[test]
     fn test_opaque_gen() {
+        let callback = |_, out| {
+            insta::assert_snapshot!(out);
+        };
         test_gen! {
-            Opaque, gen_opaque_def, [],
+            Opaque, gen_opaque_def, [], callback,
             {
             #[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
@@ -426,8 +430,11 @@ mod test {
 
     #[test]
     fn test_enum_gen() {
+        let callback = |_, out| {
+            insta::assert_snapshot!(out);
+        };
         test_gen! {
-            Enum, gen_enum_def, [],
+            Enum, gen_enum_def, [], callback,
             {#[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {
@@ -442,9 +449,12 @@ mod test {
 
     #[test]
     fn test_struct_gen() {
+        let callback = |_, out| {
+            insta::assert_snapshot!(out);
+        };
         let mut header = String::new();
         test_gen! {
-            Struct, gen_struct_def, [&mut header,],
+            Struct, gen_struct_def, [&mut header,], callback,
             {#[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {
@@ -459,6 +469,30 @@ mod test {
 
     #[test]
     fn test_indexing_return_ty() {
+        let callback = |ctx: crate::nanobind::ItemGenContext<'_, '_>, _| {
+            let errors = ctx.errors.take_all();
+            let error_str = errors
+                .iter()
+                .map(|e| format!("{}: {}", e.0, e.1))
+                .collect::<Vec<_>>()
+                .join("\n");
+            insta::assert_snapshot!(error_str);
+        };
+        test_gen! {
+            Opaque, gen_opaque_def, [], callback,
+            {#[diplomat::bridge]
+            #[diplomat::attr(auto, namespace = "mylib")]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct ZSTOpaque;
 
+                impl ZSTOpaque {
+                    #[diplomat::attr(auto, indexer)]
+                    pub fn invalid_indexer(&self, idx : usize) -> i32 {
+                        0
+                    }
+                }
+            }}
+        };
     }
 }

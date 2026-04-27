@@ -1,0 +1,5 @@
+---
+source: tool/src/nanobind/mod.rs
+expression: error_str
+---
+ZSTOpaque::invalid_indexer: Return type must be an Option or a Result. Python sequencing requires knowledge of when iteration has ended. See https://github.com/rust-diplomat/diplomat/issues/1128
