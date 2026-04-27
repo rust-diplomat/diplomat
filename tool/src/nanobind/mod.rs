@@ -326,12 +326,83 @@ pub(crate) fn run<'cx>(
 #[cfg(test)]
 mod test {
     use diplomat_core::hir::{self, TypeDef};
-    use quote::quote;
     use std::collections::BTreeMap;
+
+    macro_rules! test_gen {
+        ($type_inf:ident, $func:ident, [$($additional_args:expr,)*], {$($file:tt)*}) => {
+            let item : syn::File = syn::parse_quote! { $($file)* };
+            let config = crate::Config::default();
+            
+            let mut attr_validator = hir::BasicAttributeValidator::new("python");
+            attr_validator.support = crate::nanobind::attr_support();
+            
+            let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
+            {
+                Ok(context) => context,
+                Err(e) => {
+                    for (_cx, err) in e {
+                        eprintln!("Lowering error: {err}");
+                    }
+                    panic!("Failed to create context")
+                }
+            };
+            
+
+            let (type_id, type_def) = match tcx
+                .all_types()
+                .next()
+                .expect("Failed to generate first type def")
+            {
+                (type_id, TypeDef::$type_inf(type_def)) => (type_id, type_def),
+                _ => panic!("Failed to find opaque type from AST"),
+            };
+            
+            let docs_gen = Default::default();
+            let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
+            let errors = crate::ErrorStore::default();
+            let mut root_module = crate::nanobind::root_module::RootModule::new();
+            root_module.module_name = std::borrow::Cow::Borrowed("pymod");
+
+            let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
+            let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
+
+            let mut submodules = BTreeMap::new();
+
+            let mut context = crate::nanobind::ItemGenContext {
+                formatter: &formatter,
+                errors: &errors,
+                config: &config,
+                cpp: crate::cpp::ItemGenContext {
+                    c: crate::c::ItemGenContext {
+                        tcx: &tcx,
+                        formatter: &formatter.cxx.c,
+                        errors: &errors,
+                        is_for_cpp: false,
+                        decl_header_path: &decl_header_path,
+                        impl_header_path: &impl_file_path,
+                    },
+                    formatter: &formatter.cxx,
+                    errors: &errors,
+                    config: &config,
+                    impl_header: &mut crate::cpp::Header::default(),
+                    decl_header: &mut crate::cpp::Header::default(),
+                    generating_struct_fields: false,
+                },
+                root_module: &mut root_module,
+                generating_struct_fields: false,
+                submodules: &mut submodules,
+            };
+            let mut generated = String::default();
+            context.$func(type_def, type_id, &mut generated $(,$additional_args)?);
+            insta::assert_snapshot!(generated)
+        };
+    }
 
     #[test]
     fn test_opaque_gen() {
-        let tokens = quote! {
+        test_gen! {
+            Opaque, gen_opaque_def, [],
+            {
             #[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {
@@ -349,78 +420,15 @@ mod test {
                     }
                 }
             }
-        };
-        let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
-        let config = crate::Config::default();
-
-        let mut attr_validator = hir::BasicAttributeValidator::new("python");
-        attr_validator.support = crate::nanobind::attr_support();
-
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
-        {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {err}");
-                }
-                panic!("Failed to create context")
             }
         };
-
-        let (type_id, opaque_def) = match tcx
-            .all_types()
-            .next()
-            .expect("Failed to generate first opaque def")
-        {
-            (type_id, TypeDef::Opaque(opaque_def)) => (type_id, opaque_def),
-            _ => panic!("Failed to find opaque type from AST"),
-        };
-
-        let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
-        let errors = crate::ErrorStore::default();
-        let mut root_module = crate::nanobind::root_module::RootModule::new();
-        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
-
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
-
-        let mut submodules = BTreeMap::new();
-
-        let mut context = crate::nanobind::ItemGenContext {
-            formatter: &formatter,
-            errors: &errors,
-            config: &config,
-            cpp: crate::cpp::ItemGenContext {
-                c: crate::c::ItemGenContext {
-                    tcx: &tcx,
-                    formatter: &formatter.cxx.c,
-                    errors: &errors,
-                    is_for_cpp: false,
-                    decl_header_path: &decl_header_path,
-                    impl_header_path: &impl_file_path,
-                },
-                formatter: &formatter.cxx,
-                errors: &errors,
-                config: &config,
-                impl_header: &mut crate::cpp::Header::default(),
-                decl_header: &mut crate::cpp::Header::default(),
-                generating_struct_fields: false,
-            },
-            root_module: &mut root_module,
-            generating_struct_fields: false,
-            submodules: &mut submodules,
-        };
-        let mut generated = String::default();
-        context.gen_opaque_def(opaque_def, type_id, &mut generated);
-        let generated = root_module.to_string();
-        insta::assert_snapshot!(generated)
     }
 
     #[test]
     fn test_enum_gen() {
-        let tokens = quote! {
-            #[diplomat::bridge]
+        test_gen! {
+            Enum, gen_enum_def, [],
+            {#[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {
 
@@ -428,78 +436,16 @@ mod test {
                 pub enum SpeedSetting {
                     Fast, Medium, Slow
                 }
-            }
+            }}
         };
-        let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
-        let config = crate::Config::default();
-
-        let mut attr_validator = hir::BasicAttributeValidator::new("python");
-        attr_validator.support = crate::nanobind::attr_support();
-
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
-        {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {err}");
-                }
-                panic!("Failed to create context")
-            }
-        };
-
-        let (type_id, enum_def) = match tcx
-            .all_types()
-            .next()
-            .expect("Failed to generate first opaque def")
-        {
-            (type_id, TypeDef::Enum(enum_def)) => (type_id, enum_def),
-            _ => panic!("Failed to find opaque type from AST"),
-        };
-
-        let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
-        let errors = crate::ErrorStore::default();
-        let mut root_module = crate::nanobind::RootModule::new();
-        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
-
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
-
-        let mut submodules = BTreeMap::new();
-
-        let mut context = crate::nanobind::ItemGenContext {
-            formatter: &formatter,
-            errors: &errors,
-            config: &config,
-            cpp: crate::cpp::ItemGenContext {
-                c: crate::c::ItemGenContext {
-                    tcx: &tcx,
-                    formatter: &formatter.cxx.c,
-                    errors: &errors,
-                    is_for_cpp: false,
-                    decl_header_path: &decl_header_path,
-                    impl_header_path: &impl_file_path,
-                },
-                formatter: &formatter.cxx,
-                config: &config,
-                errors: &errors,
-                impl_header: &mut crate::cpp::Header::default(),
-                decl_header: &mut crate::cpp::Header::default(),
-                generating_struct_fields: false,
-            },
-            root_module: &mut root_module,
-            generating_struct_fields: false,
-            submodules: &mut submodules,
-        };
-        let mut enum_gen = String::new();
-        context.gen_enum_def(enum_def, type_id, &mut enum_gen);
-        insta::assert_snapshot!(enum_gen)
     }
 
     #[test]
     fn test_struct_gen() {
-        let tokens = quote! {
-            #[diplomat::bridge]
+        let mut header = String::new();
+        test_gen! {
+            Struct, gen_struct_def, [&mut header,],
+            {#[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {
                 pub struct Thingy {
@@ -507,73 +453,12 @@ mod test {
                     pub b: u8,
                     pub c: f64,
                 }
-            }
+            }}
         };
-        let item = syn::parse2::<syn::File>(tokens).expect("failed to parse item ");
-        let config = crate::Config::default();
+    }
 
-        let mut attr_validator = hir::BasicAttributeValidator::new("python");
-        attr_validator.support = crate::nanobind::attr_support();
+    #[test]
+    fn test_indexing_return_ty() {
 
-        let tcx = match hir::TypeContext::from_syn(&item, Default::default(), attr_validator, None)
-        {
-            Ok(context) => context,
-            Err(e) => {
-                for (_cx, err) in e {
-                    eprintln!("Lowering error: {err}");
-                }
-                panic!("Failed to create context")
-            }
-        };
-
-        let (type_id, struct_def) = match tcx
-            .all_types()
-            .next()
-            .expect("Failed to generate first opaque def")
-        {
-            (type_id, TypeDef::Struct(struct_def)) => (type_id, struct_def),
-            _ => panic!("Failed to find opaque type from AST"),
-        };
-
-        let docs_gen = Default::default();
-        let formatter = crate::nanobind::PyFormatter::new(&tcx, &config, &docs_gen);
-        let errors = crate::ErrorStore::default();
-        let mut root_module = crate::nanobind::RootModule::new();
-        root_module.module_name = std::borrow::Cow::Borrowed("pymod");
-
-        let decl_header_path = formatter.cxx.fmt_decl_header_path(type_id.into());
-        let impl_file_path = formatter.cxx.fmt_impl_header_path(type_id.into());
-
-        let mut submodules = BTreeMap::new();
-
-        let mut context = crate::nanobind::ItemGenContext {
-            formatter: &formatter,
-            errors: &errors,
-            config: &config,
-            cpp: crate::cpp::ItemGenContext {
-                c: crate::c::ItemGenContext {
-                    tcx: &tcx,
-                    formatter: &formatter.cxx.c,
-                    errors: &errors,
-                    is_for_cpp: false,
-                    decl_header_path: &decl_header_path,
-                    impl_header_path: &impl_file_path,
-                },
-                formatter: &formatter.cxx,
-                errors: &errors,
-                config: &config,
-                impl_header: &mut crate::cpp::Header::default(),
-                decl_header: &mut crate::cpp::Header::default(),
-                generating_struct_fields: false,
-            },
-            root_module: &mut root_module,
-            generating_struct_fields: false,
-            submodules: &mut submodules,
-        };
-
-        let mut struct_gen = String::new();
-        let mut header = String::new();
-        context.gen_struct_def(struct_def, type_id, &mut struct_gen, &mut header);
-        insta::assert_snapshot!(struct_gen)
     }
 }
