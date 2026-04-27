@@ -107,6 +107,24 @@ export class MyString {
         }
     }
 
+    static newFromUtf16(v) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const vSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.strs(wasm, v, "string16")));
+
+        const result = wasm.MyString_new_from_utf16(vSlice.ptr);
+
+        try {
+            return new MyString(diplomatRuntime.internalConstructor, result, []);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+        }
+    }
+
     set str(newStr) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 

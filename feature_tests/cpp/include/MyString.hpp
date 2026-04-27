@@ -24,6 +24,8 @@ namespace capi {
 
     somelib::capi::MyString* MyString_new_from_first(somelib::diplomat::capi::DiplomatStringsView v);
 
+    somelib::capi::MyString* MyString_new_from_utf16(somelib::diplomat::capi::DiplomatStrings16View v);
+
     void MyString_set_str(somelib::capi::MyString* self, somelib::diplomat::capi::DiplomatStringView new_str);
 
     void MyString_get_str(const somelib::capi::MyString* self, somelib::diplomat::capi::DiplomatWrite* write);
@@ -55,6 +57,11 @@ inline somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::di
 
 inline std::unique_ptr<somelib::MyString> somelib::MyString::new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
     auto result = somelib::capi::MyString_new_from_first({reinterpret_cast<const somelib::diplomat::capi::DiplomatStringView*>(v.data()), v.size()});
+    return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
+}
+
+inline std::unique_ptr<somelib::MyString> somelib::MyString::new_from_utf16(somelib::diplomat::span<const diplomat::u16string_view_for_slice> v) {
+    auto result = somelib::capi::MyString_new_from_utf16({reinterpret_cast<const somelib::diplomat::capi::DiplomatString16View*>(v.data()), v.size()});
     return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
 }
 

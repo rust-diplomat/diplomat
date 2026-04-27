@@ -11,6 +11,7 @@ internal interface MyStringLib: Library {
     fun MyString_new_unsafe(v: Slice): Pointer
     fun MyString_new_owned(v: Slice): Pointer
     fun MyString_new_from_first(v: Slice): Pointer
+    fun MyString_new_from_utf16(v: Slice): Pointer
     fun MyString_set_str(handle: Pointer, newStr: Slice): Unit
     fun MyString_get_str(handle: Pointer, write: Pointer): Unit
     fun MyString_get_static_str(): Slice
@@ -91,6 +92,21 @@ class MyString internal constructor (
             val vSliceMemory = PrimitiveArrayTools.borrowUtf8s(v)
             
             val returnVal = lib.MyString_new_from_first(vSliceMemory.slice);
+            try {
+                val selfEdges: List<Any> = listOf()
+                val handle = returnVal 
+                val returnOpaque = MyString(handle, selfEdges, true)
+                return returnOpaque
+            } finally {
+                vSliceMemory.close()
+            }
+        }
+        @JvmStatic
+        
+        fun newFromUtf16(v: Array<String>): MyString {
+            val vSliceMemory = PrimitiveArrayTools.borrowUtf16s(v)
+            
+            val returnVal = lib.MyString_new_from_utf16(vSliceMemory.slice);
             try {
                 val selfEdges: List<Any> = listOf()
                 val handle = returnVal 

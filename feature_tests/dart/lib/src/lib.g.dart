@@ -904,6 +904,56 @@ extension on core.List<int> {
   }
 }
 
+final class _SliceSliceUtf16 extends ffi.Struct {
+  external ffi.Pointer<_SliceUtf16> _data;
+
+  @ffi.Size()
+  external int _length;
+
+  // This is expensive
+  @override
+  bool operator ==(Object other) {
+    if (other is! _SliceSliceUtf16 || other._length != _length) {
+      return false;
+    }
+
+    for (var i = 0; i < _length; i++) {
+      if (other._data[i] != _data[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // This is cheap
+  @override
+  int get hashCode => _length.hashCode;
+
+  // ignore: unused_element
+  core.List<core.String> _toDart(core.List<Object> lifetimeEdges, {bool isStatic = false}) {
+    final r = core.Iterable.generate(_length, (i) => _data[i]._toDart(lifetimeEdges)).toList(growable: false);
+    if (lifetimeEdges.isEmpty && !isStatic) {
+      // unsupported
+    } else {
+      // Lifetime edges will be cleaned up
+    }
+    return r;
+  }
+}
+
+extension on core.List<core.String> {
+  // ignore: unused_element
+  _SliceSliceUtf16 _utf16SliceAllocIn(ffi.Allocator alloc) {
+    final slice = ffi.Struct.create<_SliceSliceUtf16>();
+    slice._data = alloc(length);
+    for (var i = 0; i < length; i++) {
+      slice._data[i] = this[i]._utf16AllocIn(alloc);
+    }
+    slice._length = length;
+    return slice;
+  }
+}
+
 final class _SliceSliceUtf8 extends ffi.Struct {
   external ffi.Pointer<_SliceUtf8> _data;
 

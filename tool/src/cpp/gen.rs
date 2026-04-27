@@ -990,37 +990,61 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let attrs = match self.c.tcx.resolve_type(s.id()) {
                     TypeDef::OutStruct(s) => &s.attrs,
                     TypeDef::Struct(s) => &s.attrs,
-                    _ => unreachable!()
+                    _ => unreachable!(),
                 };
 
                 if attrs.abi_compatible {
                     if let MaybeOwn::Borrow(borrow) = s.owner() {
-                        let c_name = self.formatter.namespace_c_name(s.id().into(), &self.formatter.fmt_type_name_unnamespaced(s.id()));
+                        let c_name = self.formatter.namespace_c_name(
+                            s.id().into(),
+                            &self.formatter.fmt_type_name_unnamespaced(s.id()),
+                        );
                         return match borrow.mutability {
                             Mutability::Immutable => {
                                 format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
-                            },
+                            }
                             Mutability::Mutable => {
                                 format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
                             }
-                        }.into();
+                        }
+                        .into();
                     }
                 }
                 format!("{cpp_name}.AsFFI()").into()
-            },
+            }
             Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
-            Type::Slice(Slice::Strs(..)) => format!(
+            Type::Slice(Slice::Strs(encoding)) => {
                 // This cast is valid as diplomat::string_view_for_slice is used to ensure correct layout
-                "{{reinterpret_cast<const {lib_name_ns_prefix}diplomat::capi::DiplomatStringView*>({cpp_name}.data()), {cpp_name}.size()}}"
-            ).into(),
-            Type::Slice(Slice::Struct(b, ref st)) => format!("{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
-                if b.mutability().is_mutable() { "" } else { "const " },
-                self.formatter.namespace_c_name(st.id().into(), &self.formatter.fmt_type_name_unnamespaced(st.id()))
-            ).into(),
+                let str_view = self.c.formatter.fmt_str_view_name(encoding);
+                format!(
+                    "{{reinterpret_cast<const {str_view}*>({cpp_name}.data()), {cpp_name}.size()}}"
+                )
+                .into()
+            }
+            Type::Slice(Slice::Struct(b, ref st)) => {
+                let mutability = if b.mutability().is_mutable() {
+                    ""
+                } else {
+                    "const "
+                };
+                let c_name = self.formatter.namespace_c_name(
+                    st.id().into(),
+                    &self.formatter.fmt_type_name_unnamespaced(st.id()),
+                );
+                format!(
+                    "{{reinterpret_cast<{mutability}{c_name}*>({cpp_name}.data()), {cpp_name}.size()}}",
+
+                )
+                .into()
+            }
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
-                let conversion =
-                    self.gen_cpp_to_c_for_type(inner, format!("{cpp_name}.value()").into(), method_abi_name, namespace);
+                let conversion = self.gen_cpp_to_c_for_type(
+                    inner,
+                    format!("{cpp_name}.value()").into(),
+                    method_abi_name,
+                    namespace,
+                );
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
@@ -1038,10 +1062,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                             None => "std::monostate".into(),
                         };
 
-                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
+                        let return_type = self.formatter.fmt_c_api_callback_ret(
+                            namespace,
+                            method_abi_name.unwrap(),
+                            &cpp_name,
+                        );
 
-                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_result", vec![&ok_type_name, &err_type_name, &return_type])
-                    },
+                        self.formatter.fmt_run_callback_converter(
+                            &cpp_name,
+                            "c_run_callback_result",
+                            vec![&ok_type_name, &err_type_name, &return_type],
+                        )
+                    }
                     ReturnType::Nullable(ref success) => {
                         let type_name = match success {
                             hir::SuccessType::Unit => "std::monostate".into(),
@@ -1049,15 +1081,32 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                             _ => unreachable!("unknown AST/HIR variant"),
                         };
 
-                        let return_type = self.formatter.fmt_c_api_callback_ret(namespace, method_abi_name.unwrap(), &cpp_name);
-                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_option", vec![&type_name, &return_type])
+                        let return_type = self.formatter.fmt_c_api_callback_ret(
+                            namespace,
+                            method_abi_name.unwrap(),
+                            &cpp_name,
+                        );
+                        self.formatter.fmt_run_callback_converter(
+                            &cpp_name,
+                            "c_run_callback_diplomat_option",
+                            vec![&type_name, &return_type],
+                        )
                     }
                     ReturnType::Infallible(SuccessType::OutType(Type::Opaque(o))) => {
-                        let opaque_type = self.c.formatter.fmt_type_name_maybe_namespaced(o.tcx_id.into());
+                        let opaque_type = self
+                            .c
+                            .formatter
+                            .fmt_type_name_maybe_namespaced(o.tcx_id.into());
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
-                        self.formatter.fmt_run_callback_converter(&cpp_name, "c_run_callback_diplomat_opaque", vec![&ptr_ty])
-                    },
-                    _ => format!("{lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_run_callback")
+                        self.formatter.fmt_run_callback_converter(
+                            &cpp_name,
+                            "c_run_callback_diplomat_opaque",
+                            vec![&ptr_ty],
+                        )
+                    }
+                    _ => format!(
+                        "{lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_run_callback"
+                    ),
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }

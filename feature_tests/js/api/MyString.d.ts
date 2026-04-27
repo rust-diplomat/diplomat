@@ -14,6 +14,8 @@ export class MyString {
 
     static newFromFirst(v: Array<string>): MyString;
 
+    static newFromUtf16(v: Array<string>): MyString;
+
     set str(newStr: string);
 
     get str(): string;

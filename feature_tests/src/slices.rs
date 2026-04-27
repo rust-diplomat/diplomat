@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
-    use diplomat_runtime::{DiplomatStr, DiplomatStrSlice, DiplomatWrite};
+    use diplomat_runtime::{DiplomatStr, DiplomatStr16Slice, DiplomatStrSlice, DiplomatWrite};
     use std::fmt::Write as _;
 
     #[diplomat::opaque_mut]
@@ -24,6 +24,11 @@ pub mod ffi {
 
         pub fn new_from_first(v: &[DiplomatStrSlice]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0].into()).unwrap().into()))
+        }
+
+        pub fn new_from_utf16(v: &[DiplomatStr16Slice]) -> Box<MyString> {
+            let first: &[u16] = v[0].into();
+            Box::new(Self(String::from_utf16(first).unwrap()))
         }
 
         #[diplomat::attr(auto, setter = "str")]
