@@ -97,12 +97,12 @@ int main(int argc, char* argv[]) {
     primitive_vec->push({.x = -1.0f});
 
     PrimitiveStruct::mutable_slice(primitive_vec->as_slice_mut());
-    simple_assert_eq("primitiveArr cumulative sum", primitive_vec->get(2).x, 2.0f);
-    simple_assert_eq("primitiveArr alternating bool", primitive_vec->get(0).a, false);
-    simple_assert_eq("primitiveArr alternating bool 2", primitive_vec->get(1).a, true);
-    simple_assert_eq("primitiveArr DiplomatChar", (int)primitive_vec->get(2).b, 2);
-    simple_assert_eq("primitiveArr isize", primitive_vec->get(0).d, 101);
-    simple_assert_eq("primitiveArr DiplomatByte", primitive_vec->get(1).e, 3);
+    simple_assert_eq("primitiveArr cumulative sum", primitive_vec->get(2).value().x, 2.0f);
+    simple_assert_eq("primitiveArr alternating bool", primitive_vec->get(0).value().a, false);
+    simple_assert_eq("primitiveArr alternating bool 2", primitive_vec->get(1).value().a, true);
+    simple_assert_eq("primitiveArr DiplomatChar", (int)primitive_vec->get(2).value().b, 2);
+    simple_assert_eq("primitiveArr isize", primitive_vec->get(0).value().d, 101);
+    simple_assert_eq("primitiveArr DiplomatByte", primitive_vec->get(1).value().e, 3);
 
     CyclicStructA cyclic_arr[] {
         {
