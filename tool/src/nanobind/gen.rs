@@ -543,7 +543,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             };
 
             if !is_fallible {
-                self.errors.push_error("Return type must be an Option or a Result. Python sequencing requires knowledge of when iteration has ended. See https://github.com/rust-diplomat/diplomat/issues/1128".into());
+                self.errors.push_error("In Nanobind, return type of indexers must be an Option or a Result. Python assumes all Diplomat indexers are sequences. See https://github.com/rust-diplomat/diplomat/issues/1128".into());
             }
         }
 
