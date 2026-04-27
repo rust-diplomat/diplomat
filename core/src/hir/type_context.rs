@@ -9,6 +9,7 @@ use super::{
 use crate::ast::attrs::AttrInheritContext;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
+use crate::hir::ParamSelf;
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -409,16 +410,15 @@ impl TypeContext {
 
                 let mut struct_ref_lifetimes = BTreeSet::new();
 
-                if let Some(super::ParamSelf {
-                    ty: super::SelfType::Struct(s),
-                    attrs: _attrs,
-                }) = &method.param_self
-                {
-                    if let MaybeOwn::Borrow(b) = s.owner {
-                        if let MaybeStatic::NonStatic(ns) = b.lifetime {
-                            struct_ref_lifetimes.insert(ns);
+                if let Some(s) = &method.param_self {
+                    if let super::SelfType::Struct(s) = &s.ty {
+                        if let MaybeOwn::Borrow(b) = s.owner {
+                            if let MaybeStatic::NonStatic(ns) = b.lifetime {
+                                struct_ref_lifetimes.insert(ns);
+                            }
                         }
                     }
+                    self.validate_self_ty_in_method(errors, s);
                 }
 
                 for param in &method.params {
@@ -465,22 +465,7 @@ impl TypeContext {
     /// Currently used to check if a given type is a slice of structs,
     /// and ensure the relevant attributes are set there.
     fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
-        match &ty {
-            hir::Type::Struct(st) => {
-                let d = self.resolve_type(st.id());
-                match d {
-                    TypeDef::Struct(st_d) => match st.owner() {
-                        MaybeOwn::Borrow(b)
-                            if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
-                        {
-                            errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
-                        }
-                        _ => {}
-                    },
-                    TypeDef::OutStruct(..) => {}
-                    _ => unreachable!(),
-                }
-            }
+        match ty {
             hir::Type::Slice(hir::Slice::Struct(_, st)) => {
                 let st = self.resolve_type(st.id());
                 match st {
@@ -495,7 +480,63 @@ impl TypeContext {
                     _ => unreachable!(),
                 }
             }
+            hir::Type::Struct(st) => {
+                let st_ty = self.resolve_type(st.id());
+
+                // Validate mutable structs:
+                match st_ty {
+                    TypeDef::Struct(st_d) => match st.owner() {
+                        MaybeOwn::Borrow(b)
+                            if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
+                        {
+                            errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
+                        }
+                        _ => {}
+                    },
+                    TypeDef::OutStruct(..) => {}
+                    _ => unreachable!(),
+                }
+
+                // Validate tuplability:
+                let can_tuple = match st_ty {
+                    TypeDef::Struct(d) => d.attrs.tuplable,
+                    TypeDef::OutStruct(d) => d.attrs.tuplable,
+                    _ => unreachable!(),
+                };
+
+                if can_tuple && !matches!(st.owner(), MaybeOwn::Own) {
+                    errors.push(LoweringError::Other("Tuplable structs cannot be passed by reference, this is currently unsupported in Diplomat.".to_string()));
+                }
+            }
             _ => {}
+        }
+    }
+
+    fn validate_self_ty_in_method(&self, errors: &mut ErrorStore, param: &ParamSelf) {
+        if let hir::SelfType::Struct(s) = &param.ty {
+            let st_ty = self.resolve_type(s.id());
+            // Validate mutable structs:
+            match st_ty {
+                TypeDef::Struct(st_d) => match s.owner() {
+                    MaybeOwn::Borrow(b)
+                        if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
+                    {
+                        errors.push(LoweringError::Other("Found a mutable struct ref &mut self. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`".into()));
+                    }
+                    _ => {}
+                },
+                TypeDef::OutStruct(..) => {}
+                _ => unreachable!(),
+            }
+
+            let can_tuple = match st_ty {
+                TypeDef::Struct(d) => d.attrs.tuplable,
+                TypeDef::OutStruct(d) => d.attrs.tuplable,
+                _ => unreachable!(),
+            };
+            if can_tuple {
+                errors.push(LoweringError::Other("Tuplable structs cannot be passed as `self, this is currently unsupported in Diplomat.".to_string()));
+            }
         }
     }
 
@@ -1434,5 +1475,82 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_tuple_support() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(*, tuplable)]
+                pub struct TupleStruct {
+                    x: f32,
+                    y: f32
+                }
+
+                #[diplomat::attr(supports=tuples, tuplable)]
+                pub struct SupportedTupleStruct {
+                    x: f32,
+                    y: f32
+                }
+                impl SupportedTupleStruct {
+                    #[diplomat::attr(supports=tuples, disable)]
+                    pub fn takes_self(self) {
+
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_tuplable_inputs() {
+        let parsed: syn::File = syn::parse_quote! {
+           #[diplomat::bridge]
+           mod ffi {
+               #[diplomat::attr(auto, tuplable)]
+                pub struct TupleStruct {
+                    x: f32,
+                    y: f32
+                }
+
+                impl TupleStruct {
+                    pub fn takes_self(self) {
+                        todo!()
+                    }
+                    pub fn takes_self_ref(&self) {
+                        todo!()
+                    }
+                    pub fn takes_mut_self(&mut self) {
+                        todo!()
+                    }
+
+                    pub fn takes_ref(s : &Self) {
+                        todo!()
+                    }
+
+                    pub fn takes_mut_ref(s: &mut Self) {
+                        todo!()
+                    }
+                }
+           }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.tuples = true;
+        attr_validator.support.struct_refs = true;
+        attr_validator.support.mut_struct_refs = true;
+        let config = super::LoweringConfig::default();
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 }

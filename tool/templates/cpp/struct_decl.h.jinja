@@ -26,6 +26,12 @@ struct {% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}"
 {%- if !fields.is_empty() %}
     inline {{ctype}} AsFFI() const;
     inline static {{type_name}} FromFFI({{ctype}} c_struct);
+    {%- if tuplable %}
+    {%- let field_names = fields.iter().map(NamedType::type_name).collect::<Vec<_>>() -%}
+    {%- let tuple_struct = fmt.fmt_tuple(field_names.clone()) %}
+    inline static {{ctype}} AsTupleFFI({{tuple_struct}} tuple);
+    inline static {{tuple_struct}} TupleFromFFI({{ctype}} c_struct);
+    {%- endif -%}
 {%- endif %}
 {% if !extra_def_code.inner.is_empty() %}
 {{ extra_def_code.inner }}

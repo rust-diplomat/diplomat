@@ -66,6 +66,9 @@ pub struct Attrs {
     /// From #[diplomat::attr()], found on structs. If true, Diplomat will allow &mut T references to the struct, and the backend may change the types of fields to better support mutation.
     pub mut_struct_ref: bool,
 
+    /// For #[diplomat::attr()]. If true, the struct should be treated as a tuple in function arguments and return values by the language.
+    pub tuplable: bool,
+
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
     pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
 
@@ -585,6 +588,13 @@ impl Attrs {
                             }
                             this.mut_struct_ref = true;
                         }
+                        "tuplable" => {
+                            if !support.tuples {
+                                maybe_error_unsupported(auto_found, "tuples", backend, errors);
+                                continue;
+                            }
+                            this.tuplable = true;
+                        }
                         "custom_extra_code" => {
                             let (location, source) =
                                 IncludeLocation::pair_from_meta(&attr.meta, errors);
@@ -737,6 +747,7 @@ impl Attrs {
             generate_mocking_interface,
             abi_compatible,
             mut_struct_ref,
+            tuplable,
             custom_extra_code,
             default_value,
         } = &self;
@@ -1128,6 +1139,17 @@ impl Attrs {
             ));
         }
 
+        if *tuplable
+            && !matches!(
+                context,
+                AttributeContext::Type(TypeDef::Struct(..) | TypeDef::OutStruct(..))
+            )
+        {
+            errors.push(LoweringError::Other(
+                "`tuplable` can only be used on structs.".into(),
+            ));
+        }
+
         if !custom_extra_code.is_empty() {
             if !validator.attrs_supported().custom_bindings {
                 // We only validate that the language supports the bindings. We don't validate
@@ -1206,6 +1228,8 @@ impl Attrs {
             generate_mocking_interface: false,
             abi_compatible: false,
             mut_struct_ref: false,
+            // Not inherited
+            tuplable: false,
             // Not inherited
             custom_extra_code: Default::default(),
             // Not inherited
@@ -1318,6 +1342,8 @@ pub struct BackendAttrSupport {
     pub default_args: bool,
     /// Whether the language supports mutable slices.
     pub mutable_slices: bool,
+    /// Whether the language supports tuples
+    pub tuples: bool,
 }
 
 impl BackendAttrSupport {
@@ -1359,6 +1385,7 @@ impl BackendAttrSupport {
             owned_slices: true,
             default_args: true,
             mutable_slices: true,
+            tuples: true,
         }
     }
 
@@ -1395,6 +1422,7 @@ impl BackendAttrSupport {
             "custom_bindings" => Some(self.custom_bindings),
             "owned_slices" => Some(self.owned_slices),
             "mutable_slices" => Some(self.mutable_slices),
+            "tuples" => Some(self.tuples),
             _ => None,
         }
     }
@@ -1545,6 +1573,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 owned_slices,
                 default_args,
                 mutable_slices,
+                tuples,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1582,6 +1611,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "owned_slices" => owned_slices,
                 "default_args" => default_args,
                 "mutable_slices" => mutable_slices,
+                "tuples" => tuples,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

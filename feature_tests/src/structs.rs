@@ -605,6 +605,56 @@ pub mod ffi {
             self.i.get_debug_str(w);
         }
     }
+
+    #[diplomat::attr(auto, tuplable)]
+    pub struct TupleStruct<'a> {
+        pub x: i32,
+        pub y: i32,
+        pub st: MyStruct,
+        pub op: &'a Opaque,
+    }
+
+    impl<'a> TupleStruct<'a> {
+        pub fn takes_st_as_tuple(a: TupleStruct<'a>) -> i32 {
+            a.x
+        }
+
+        pub fn takes_containing(c: ContainingTuple<'a>) -> DiplomatChar {
+            c.inner.st.f
+        }
+    }
+
+    #[diplomat::attr(auto, tuplable)]
+    pub struct ContainingTuple<'a> {
+        inner: TupleStruct<'a>,
+    }
+
+    #[diplomat::out]
+    #[diplomat::attr(auto, tuplable)]
+    pub struct OutTupleStruct {
+        pub x: i32,
+        pub y: i32,
+        pub primitive: PrimitiveStruct,
+        pub opaque: Box<Opaque>,
+    }
+
+    impl OutTupleStruct {
+        pub fn new() -> Self {
+            Self {
+                x: 0,
+                y: 0,
+                primitive: PrimitiveStruct {
+                    x: 0.,
+                    a: true,
+                    b: 0,
+                    c: 0,
+                    d: 0,
+                    e: 0,
+                },
+                opaque: Opaque::new(),
+            }
+        }
+    }
 }
 
 #[allow(unused)]
