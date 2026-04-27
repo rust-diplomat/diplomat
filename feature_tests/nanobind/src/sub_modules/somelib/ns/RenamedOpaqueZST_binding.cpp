@@ -17,7 +17,13 @@ void add_RenamedOpaqueZST_binding(nb::module_ mod) {
         .def("__truediv__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator/)), nb::is_operator())
         .def_static("fail_zst", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::fail_zst)), "return_success"_a)
         .def_prop_rw("getter", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::getter)), &somelib::ns::RenamedOpaqueZST::setter)
-        .def("__getitem__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator[])), "_idx"_a)
+        .def("__getitem__", [](somelib::ns::RenamedOpaqueZST* self, size_t index) {
+                auto out = map_inner(self->operator[] (index));
+                if (out.get() == nullptr) {
+                    throw nb::index_error("Could not get index.");
+                } else {
+                    return out;
+                }}, "_idx"_a)
         .def("__iter__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::iter)))
         .def_static("make", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::make)))
         .def("member", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::member)))

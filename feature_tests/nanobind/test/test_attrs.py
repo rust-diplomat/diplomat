@@ -63,3 +63,11 @@ def test_indexing():
     assert i["This"] == "This"
     with pytest.raises(IndexError):
         assert i["gibberish"]
+
+def test_sequencing():
+    i = 0
+    ind = somelib.ns.RenamedOpaqueZSTIndexer()
+    # Test that sequence iteration works properly, even for ZSTs:
+    for a in ind:
+        i = i + 1
+    assert i == 3

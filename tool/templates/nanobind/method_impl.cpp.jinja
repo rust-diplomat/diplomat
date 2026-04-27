@@ -92,8 +92,21 @@
                 return out;
             }
         }
+        {%- when crate::hir::ReturnType::Infallible(crate::hir::SuccessType::OutType(hir::Type::Opaque(op))) -%}
+        []({{type_name}}* self, {{m.param_decls.params[0].type_name}} index) {
+            auto out = {% call method_name_cpp("map_inner(", ")") %}self->operator[] (index){% endcall %};
+            {%- if op.is_optional() %}
+            if ({% if op.is_owned() -%} out.get() {%- else -%} out {%- endif %} == nullptr) {
+                throw nb::index_error("Could not get index.");
+            } else {
+                return out;
+            }
+            {%- else -%}
+            static_assert(false, "Non-optional opaques are unsupported by Nanobind backend.");
+            {%- endif -%}
+        }
         {%- when crate::hir::ReturnType::Infallible(..) -%}
-        {% call method_name_cpp() %}&{{- type_name }}::operator[]{% endcall %}
+        static_assert(false, "Non-optional types are unsupported by Nanobind backend.");
         {%- endmatch -%}
 
         {{- method_params::params(m.method.params, m.lifetime_args) }})

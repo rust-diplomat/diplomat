@@ -21,7 +21,13 @@ void add_RenamedOpaqueZSTIterator_binding(nb::module_ mod) {
                 return next_inner_extractor<decltype(next)>::get(std::move(next));
             })
             .def("__iter__", [](nb::handle self) { return self; })
-        .def("__getitem__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZSTIterator::operator[])), "_idx"_a)
+        .def("__getitem__", [](somelib::ns::RenamedOpaqueZSTIterator* self, size_t index) {
+                auto out = map_inner(self->operator[] (index));
+                if (out.get() == nullptr) {
+                    throw nb::index_error("Could not get index.");
+                } else {
+                    return out;
+                }}, "_idx"_a)
         .def("__str__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZSTIterator::stringify)));
 }
 

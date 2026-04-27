@@ -652,8 +652,8 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, indexer)]
-        pub fn indexer(&self, _idx: usize) -> Box<Self> {
-            Box::new(Self)
+        pub fn indexer(&self, _idx: usize) -> Option<Box<Self>> {
+            Some(Box::new(Self))
         }
     }
 
@@ -681,6 +681,25 @@ pub mod ffi {
         #[diplomat::attr(auto, stringifier)]
         pub fn stringify(&self, _w: &mut DiplomatWrite) -> Result<(), Box<OpaqueZST>> {
             Err(Box::new(OpaqueZST))
+        }
+    }
+
+    #[diplomat::opaque]
+    pub struct OpaqueZSTIndexer;
+
+    impl OpaqueZSTIndexer {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new() -> Box<Self> {
+            Box::new(Self)
+        }
+
+        #[diplomat::attr(auto, indexer)]
+        pub fn index(&self, idx: usize) -> Option<Box<Self>> {
+            if idx > 2 {
+                None
+            } else {
+                Some(Box::new(Self))
+            }
         }
     }
 }

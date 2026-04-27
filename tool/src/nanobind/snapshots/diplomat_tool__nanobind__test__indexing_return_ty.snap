@@ -1,0 +1,5 @@
+---
+source: tool/src/nanobind/mod.rs
+expression: error_str
+---
+ZSTOpaque::invalid_indexer: In Nanobind, return type of indexers must be an Option or a Result. Python assumes all Diplomat indexers are sequences. See https://github.com/rust-diplomat/diplomat/issues/1128
