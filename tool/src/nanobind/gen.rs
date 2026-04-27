@@ -525,6 +525,28 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let _guard = self.errors.set_context_method(method.name.as_str().into());
         let cpp_method_name = self.formatter.cxx.fmt_method_name(method);
         let method_name = self.formatter.fmt_method_name(method);
+
+        if matches!(
+            method.attrs.special_method,
+            Some(hir::SpecialMethod::Indexer)
+        ) {
+            let is_fallible = if let hir::ReturnType::Infallible(hir::SuccessType::OutType(
+                hir::Type::Opaque(op),
+            )) = &method.output
+            {
+                op.is_optional()
+            } else {
+                matches!(
+                    method.output,
+                    hir::ReturnType::Fallible(..) | hir::ReturnType::Nullable(..)
+                )
+            };
+
+            if !is_fallible {
+                self.errors.push_error(format!("Return type must be an Option or a Result. Python sequencing requires knowledge of when iteration has ended. See https://github.com/rust-diplomat/diplomat/issues/1128"));
+            }
+        }
+
         let mut setter_name = None;
 
         let mut def_qualifiers = vec!["def"];
