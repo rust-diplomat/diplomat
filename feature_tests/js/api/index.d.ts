@@ -80,6 +80,8 @@ export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable"
 
 export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator"
 
+export { RenamedOpaqueZSTIndexer } from "./RenamedOpaqueZSTIndexer"
+
 export { RenamedTestOpaque } from "./RenamedTestOpaque"
 
 export { Unnamespaced } from "./Unnamespaced"

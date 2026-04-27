@@ -66,6 +66,7 @@ part 'RenamedOpaqueIterable.g.dart';
 part 'RenamedOpaqueIterator.g.dart';
 part 'RenamedOpaqueRefIterable.g.dart';
 part 'RenamedOpaqueRefIterator.g.dart';
+part 'RenamedOpaqueZSTIndexer.g.dart';
 part 'RenamedRenamedCachedIncludeZST.g.dart';
 part 'RenamedStructWithAttrs.g.dart';
 part 'RenamedTestMacroStruct.g.dart';

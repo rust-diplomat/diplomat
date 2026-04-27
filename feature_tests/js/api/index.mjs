@@ -78,6 +78,8 @@ export { RenamedOpaqueRefIterable } from "./RenamedOpaqueRefIterable.mjs"
 
 export { RenamedOpaqueRefIterator } from "./RenamedOpaqueRefIterator.mjs"
 
+export { RenamedOpaqueZSTIndexer } from "./RenamedOpaqueZSTIndexer.mjs"
+
 export { RenamedTestOpaque } from "./RenamedTestOpaque.mjs"
 
 export { Unnamespaced } from "./Unnamespaced.mjs"
