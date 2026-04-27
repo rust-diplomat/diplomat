@@ -558,14 +558,20 @@ pub mod ffi {
             &mut self.0
         }
 
-        #[diplomat::attr(nanobind, rename = "__getitem__")]
-        pub fn get(&self, idx: usize) -> PrimitiveStruct {
-            self.0[idx].clone()
+        // Technically we could rename this to __getitem__, but this is not best practice,
+        // as there are additional considerations that the Nanobind backend has for indexers.
+        #[diplomat::attr(nanobind, indexer)]
+        pub fn get(&self, idx: usize) -> Option<PrimitiveStruct> {
+            self.0.get(idx).cloned()
         }
 
         #[diplomat::cfg(supports=abi_compatibles)]
         pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
+        }
+
+        pub fn take_in_slice(a: &[PrimitiveStruct]) -> Box<Self> {
+            Box::new(Self(a.iter().cloned().collect()))
         }
     }
 

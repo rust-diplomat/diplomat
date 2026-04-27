@@ -27,9 +27,12 @@ DiplomatPrimitiveStructView PrimitiveStructVec_as_slice(const PrimitiveStructVec
 
 DiplomatPrimitiveStructViewMut PrimitiveStructVec_as_slice_mut(PrimitiveStructVec* self);
 
-PrimitiveStruct PrimitiveStructVec_get(const PrimitiveStructVec* self, size_t idx);
+typedef struct PrimitiveStructVec_get_result {union {PrimitiveStruct ok; }; bool is_ok;} PrimitiveStructVec_get_result;
+PrimitiveStructVec_get_result PrimitiveStructVec_get(const PrimitiveStructVec* self, size_t idx);
 
 void PrimitiveStructVec_take_slice_from_other_namespace(DiplomatStructWithAttrsView _sl);
+
+PrimitiveStructVec* PrimitiveStructVec_take_in_slice(DiplomatPrimitiveStructView a);
 
 void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
 
