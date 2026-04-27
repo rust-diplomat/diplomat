@@ -1021,19 +1021,22 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 )
                 .into()
             }
-            Type::Slice(Slice::Struct(b, ref st)) => format!(
-                "{{reinterpret_cast<{}{}*>({cpp_name}.data()), {cpp_name}.size()}}",
-                if b.mutability().is_mutable() {
+            Type::Slice(Slice::Struct(b, ref st)) => {
+                let mutability = if b.mutability().is_mutable() {
                     ""
                 } else {
                     "const "
-                },
-                self.formatter.namespace_c_name(
+                };
+                let c_name = self.formatter.namespace_c_name(
                     st.id().into(),
-                    &self.formatter.fmt_type_name_unnamespaced(st.id())
+                    &self.formatter.fmt_type_name_unnamespaced(st.id()),
+                );
+                format!(
+                    "{{reinterpret_cast<{mutability}{c_name}*>({cpp_name}.data()), {cpp_name}.size()}}",
+
                 )
-            )
-            .into(),
+                .into()
+            }
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_cpp_to_c_for_type(
