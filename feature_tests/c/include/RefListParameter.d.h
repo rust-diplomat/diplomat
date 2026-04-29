@@ -14,6 +14,11 @@
 typedef struct RefListParameter RefListParameter;
 
 
+typedef struct DiplomatRefListParameterView {
+  const RefListParameter** data;
+  size_t len;
+} DiplomatRefListParameterView;
+
 
 
 #endif // RefListParameter_D_H

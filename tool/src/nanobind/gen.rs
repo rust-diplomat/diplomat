@@ -498,6 +498,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 self.formatter.cxx.fmt_borrowed_str(encoding)
             )
             .into(),
+            Type::Slice(hir::Slice::Opaque(b, ref op)) => {
+                let op_id = op.id();
+                let type_name = self.formatter.cxx.fmt_type_name(op_id);
+                let st = format!("{}*", type_name);
+                let ret = self.formatter.cxx.fmt_borrowed_slice(&st, b.mutability());
+                ret.into_owned().into()
+            }
             Type::Slice(hir::Slice::Struct(b, ref st)) => {
                 let st_name = self.gen_struct_name::<P>(st);
                 let ret = self

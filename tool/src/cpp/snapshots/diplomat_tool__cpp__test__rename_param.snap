@@ -5,6 +5,12 @@ expression: decl_header.body
 namespace diplomat {
 namespace capi {
     struct MyStruct;
+
+
+    typedef struct DiplomatMyStructView {
+      const MyStruct** data;
+      size_t len;
+    } DiplomatMyStructView;
 } // namespace capi
 } // namespace
 

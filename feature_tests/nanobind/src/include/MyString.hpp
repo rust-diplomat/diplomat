@@ -36,6 +36,10 @@ namespace capi {
 
     somelib::diplomat::capi::DiplomatStringView MyString_borrow(const somelib::capi::MyString* self);
 
+    void MyString_slice_of_opaques(somelib::capi::DiplomatMyStringView sl, somelib::diplomat::capi::DiplomatWrite* write);
+
+    void MyString_optional_slice_of_opaques(somelib::capi::DiplomatMyStringView sl, somelib::diplomat::capi::DiplomatWrite* write);
+
     void MyString_destroy(MyString* self);
 
     } // extern "C"
@@ -113,6 +117,34 @@ inline somelib::diplomat::result<std::monostate, somelib::diplomat::Utf8Error> s
 inline std::string_view somelib::MyString::borrow() const {
     auto result = somelib::capi::MyString_borrow(this->AsFFI());
     return std::string_view(result.data, result.len);
+}
+
+inline std::string somelib::MyString::slice_of_opaques(somelib::diplomat::span<const somelib::MyString*> sl) {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::MyString_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::MyString::slice_of_opaques_write(somelib::diplomat::span<const somelib::MyString*> sl, W& writeable) {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::MyString_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
+        &write);
+}
+
+inline std::string somelib::MyString::optional_slice_of_opaques(somelib::diplomat::span<const somelib::MyString*> sl) {
+    std::string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
+    somelib::capi::MyString_optional_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::MyString::optional_slice_of_opaques_write(somelib::diplomat::span<const somelib::MyString*> sl, W& writeable) {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::MyString_optional_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
+        &write);
 }
 
 inline const somelib::capi::MyString* somelib::MyString::AsFFI() const {

@@ -243,20 +243,17 @@ namespace nanobind::detail
 
             // Attempt to convert a native sequence. We must convert all elements & store
             // them in a temporary object which will be cleaned up 
-            if (std::is_const_v<T> &&
-                (!std::is_pointer_v<T> || is_base_caster_v<make_caster<T>>)) {
-                ListCaster caster;
-                if (caster.from_python(src, local_flags, cleanup)) {
-                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
-                    // Move the owning std::vector into a capsule that will live for the duration of the function call.
-                    // The address of the vector will change, the address of the region it references won't.
-                    nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
-                        delete (std::vector<vector_value_type>*)data;
-                        });
-                    cleanup->append(deleter.release().ptr());
+            ListCaster caster;
+            if (caster.from_python(src, local_flags, cleanup)) {
+                value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                // Move the owning std::vector into a capsule that will live for the duration of the function call.
+                // The address of the vector will change, the address of the region it references won't.
+                nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
+                    delete (std::vector<vector_value_type>*)data;
+                    });
+                cleanup->append(deleter.release().ptr());
 
-                    return true;
-                }
+                return true;
             }
 
             return false; // Python type cannot be loaded into a span.

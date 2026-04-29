@@ -14,6 +14,11 @@
 typedef struct MixinTest MixinTest;
 
 
+typedef struct DiplomatMixinTestView {
+  const MixinTest** data;
+  size_t len;
+} DiplomatMixinTestView;
+
 
 
 #endif // MixinTest_D_H

@@ -4,6 +4,7 @@ pub mod ffi {
     use std::fmt::Write as _;
 
     #[diplomat::opaque_mut]
+    #[derive(Debug)]
     pub struct MyString(String);
 
     impl MyString {
@@ -52,6 +53,19 @@ pub mod ffi {
 
         pub fn borrow<'a>(&'a self) -> DiplomatStrSlice<'a> {
             AsRef::<[u8]>::as_ref(&self.0).into()
+        }
+
+        #[diplomat::cfg(supports=opaque_slices)]
+        pub fn slice_of_opaques(sl: &[&MyString], w: &mut DiplomatWrite) {
+            let st: String = sl.iter().map(|o| o.0.clone()).collect();
+            write!(w, "{}", st).expect("Could not write string.");
+        }
+
+        #[diplomat::cfg(supports=opaque_slices)]
+        pub fn optional_slice_of_opaques(sl: &[Option<&MyString>], w: &mut DiplomatWrite) {
+            for op in sl {
+                write!(w, "{:?} ", op).expect("Could not write");
+            }
         }
     }
 

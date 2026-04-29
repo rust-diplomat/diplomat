@@ -27,6 +27,12 @@ class RenamedAttrEnum;
 namespace somelib::ns {
 namespace capi {
     struct AttrOpaque1Renamed;
+
+
+    typedef struct DiplomatAttrOpaque1RenamedView {
+      const AttrOpaque1Renamed** data;
+      size_t len;
+    } DiplomatAttrOpaque1RenamedView;
 } // namespace capi
 } // namespace
 

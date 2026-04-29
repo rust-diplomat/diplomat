@@ -14,6 +14,11 @@
 typedef struct Bar Bar;
 
 
+typedef struct DiplomatBarView {
+  const Bar** data;
+  size_t len;
+} DiplomatBarView;
+
 
 
 #endif // Bar_D_H
