@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-3bb33124.js";
+            window.path_to_searchindex_js = "searchindex-79822b30.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-ac29378c.js"></script>
@@ -1230,7 +1230,7 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="comparators"><a class="header" href="#comparators">Comparators</a></h1>
-<p>(Supported by <code>cpp</code>, <code>dart</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=comparators)]</code>. Intended to be supported in <code>cpp</code> and <code>kotlin</code>)</p>
+<p>(Supported by <code>cpp</code>, <code>dart</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=comparators)]</code>. Intended to be supported by <code>kotlin</code>)</p>
 <p>Some languages allow for overloading the <code>&lt;</code>/<code>&gt;</code>/<code>=</code>/etc operators, similar to Rust’s <code>PartialOrd</code>.</p>
 <p>To expose this over Diplomat, use the <code>comparison</code> attribute on a method that takes another <code>Self</code> parameter:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -1251,6 +1251,26 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <p>In Dart, this will provide an overloaded <code>==</code>, and <code>Foo</code> will implement <code>Comparable&lt;Foo&gt;</code>.</p>
 <p>We currently do not but Diplomat would like to also support the ability to <em>just</em> overload <code>==</code>.</p>
+<h2 id="partial-comparisons"><a class="header" href="#partial-comparisons">Partial Comparisons</a></h2>
+<p>(Supported by <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=partial_comparators)]</code>)</p>
+<p>Some backends support partial comparisons, which return <code>Option&lt;std::cmp::Ordering&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    #[diplomat::opaque]
+    #[derive(Ord, PartialOrd, Eq, PartialEq)]
+    struct Foo(u8);
+
+    impl Foo {
+        #[diplomat::attr(auto, comparison)]
+        pub fn compare(&amp;self, other: &amp;Foo) -&gt; Option&lt;std::cmp::Ordering&gt; {
+            self.cmp(other)
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>This is intended for comparison of types that implement <code>PartialEq</code> only, like <code>f32</code>; since <code>NaN</code> is a valid value for <code>f32</code> and cannot be compared against other values (and so returns <code>None</code>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="stringifiers"><a class="header" href="#stringifiers">Stringifiers</a></h1>
 <p>(Supported by <code>dart</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=stringifiers)]</code>. Intended to be supported in <code>js</code>.)</p>
@@ -2119,7 +2139,10 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Comparators</p>
+<p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Iterators</p>
@@ -2354,7 +2377,10 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
@@ -2461,7 +2487,10 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
@@ -2568,7 +2597,10 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Comparators</p>
+<p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
@@ -2675,7 +2707,10 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Comparators</p>
+<p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
@@ -2850,7 +2885,10 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Comparators</p>
+<p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
@@ -3073,7 +3111,10 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Comparators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Iterators</p>
