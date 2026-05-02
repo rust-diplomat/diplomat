@@ -61,3 +61,24 @@ class TestResult(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             somelib.FallibleOpaqueConstructor()
         cm.exception.args[0].assert_integer(10)
+
+    def test_result_type_signatures(self):
+        """The diplomat::result<T, E> type_caster unwraps to T on success and raises on error,
+        so the Python-visible return type should be T, not the bare word 'result'.
+
+        nanobind's __doc__ contains the signature (e.g. "new_int(i: int) -> int").
+        The .pyi stub should show:
+            def new_int(i: int) -> int: ...
+            def new_failing_foo() -> ResultOpaque: ...
+        NOT:
+            def new_int(i: int) -> result: ...
+        """
+        def get_return_type(method):
+            """Extract the return type string from a nanobind method's __doc__ signature."""
+            for line in method.__doc__.splitlines():
+                if "->" in line:
+                    return line.split("->")[-1].strip()
+            return None
+
+        assert get_return_type(somelib.ResultOpaque.new_int) == "int"
+        assert get_return_type(somelib.ResultOpaque.new_failing_foo).endswith("ResultOpaque")

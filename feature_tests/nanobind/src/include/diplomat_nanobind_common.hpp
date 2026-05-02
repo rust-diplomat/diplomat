@@ -133,7 +133,7 @@ namespace nanobind::detail
         bool is_ok;
         Py_ssize_t size;
         using Caster = make_caster<U>;
-        static constexpr auto Name = const_name("result");
+        static constexpr auto Name = Caster::Name;
 
         static handle from_cpp(somelib::diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
         {
