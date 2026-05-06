@@ -1034,7 +1034,7 @@ impl TypeName {
                 if tup.elems.is_empty() {
                     TypeName::Unit
                 } else {
-                    todo!("Tuples are not currently supported")
+                    todo!("Tuples are not currently supported: https://github.com/rust-diplomat/diplomat/issues/1142")
                 }
             }
             syn::Type::ImplTrait(tr) => {

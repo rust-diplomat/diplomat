@@ -505,7 +505,7 @@ impl TypeContext {
                 };
 
                 if can_tuple && !matches!(st.owner(), MaybeOwn::Own) {
-                    errors.push(LoweringError::Other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat.".to_string()));
+                    errors.push(LoweringError::Other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat. See https://github.com/rust-diplomat/diplomat/issues/1143".to_string()));
                 }
             }
             _ => {}
@@ -536,7 +536,7 @@ impl TypeContext {
             };
             if can_tuple {
                 errors.push(LoweringError::Other(
-                    "Tuple structs cannot currently have methods".to_string(),
+                    "Tuple structs cannot currently have methods: https://github.com/rust-diplomat/diplomat/issues/1143".to_string(),
                 ));
             }
         }
