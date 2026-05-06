@@ -31,38 +31,38 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline int32_t somelib::TupleStruct::takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> a) {
+inline int32_t somelib::TupleStruct::takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*> a) {
     auto result = somelib::capi::TupleStruct_takes_st_as_tuple(somelib::TupleStruct::AsTupleFFI(a));
     return result;
 }
 
-inline int32_t somelib::TupleStruct::takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> a, int32_t i) {
+inline int32_t somelib::TupleStruct::takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*> a, int32_t i) {
     auto result = somelib::capi::TupleStruct_takes_st_as_tuple_overload(somelib::TupleStruct::AsTupleFFI(a),
         i);
     return result;
 }
 
-inline char32_t somelib::TupleStruct::takes_containing(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>> c) {
+inline char32_t somelib::TupleStruct::takes_containing(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*>> c) {
     auto result = somelib::capi::TupleStruct_takes_containing(somelib::ContainingTuple::AsTupleFFI(c));
     return result;
 }
 
 
-inline somelib::capi::TupleStruct somelib::TupleStruct::AsTupleFFI(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> tuple) {
+inline somelib::capi::TupleStruct somelib::TupleStruct::AsTupleFFI(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*> tuple) {
     return somelib::capi::TupleStruct {
         /* .x = */ std::get<0>(tuple),
         /* .y = */ std::get<1>(tuple),
         /* .st = */ std::get<2>(tuple).AsFFI(),
-        /* .op = */ std::get<3>(tuple).AsFFI(),
+        /* .op = */ std::get<3>(tuple)->AsFFI(),
     };
 }
 
-inline std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> somelib::TupleStruct::TupleFromFFI(somelib::capi::TupleStruct c_struct) {
-    return std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>{
+inline std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*> somelib::TupleStruct::TupleFromFFI(somelib::capi::TupleStruct c_struct) {
+    return std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*>{
         /* .x = */ c_struct.x,
         /* .y = */ c_struct.y,
         /* .st = */ somelib::MyStruct::FromFFI(c_struct.st),
-        /* .op = */ *somelib::Opaque::FromFFI(c_struct.op),
+        /* .op = */ (somelib::Opaque*)somelib::Opaque::FromFFI(c_struct.op),
     };
 }
 
