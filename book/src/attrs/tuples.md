@@ -21,4 +21,6 @@ In C++, `SomeStruct` will be returned as
 std::tuple<float, float>
 ```
 
+Tuples currently do not support methods (at least, ones that take in `&self`), since past the boundary a tuple is not the struct it was generated from (although we can theoretically convert again on the boundary, see the tracking issue below).
+
 See https://github.com/rust-diplomat/diplomat/issues/1145 for the tracking issue for Tuples.
