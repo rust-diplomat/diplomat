@@ -536,7 +536,7 @@ impl TypeContext {
             };
             if can_tuple {
                 errors.push(LoweringError::Other(
-                    "Tuple structs cannot currently have methods: https://github.com/rust-diplomat/diplomat/issues/1143".to_string(),
+                    "Tuple structs cannot have non-static methods.".to_string(),
                 ));
             }
         }
