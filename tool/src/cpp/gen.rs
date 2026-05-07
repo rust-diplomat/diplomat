@@ -44,7 +44,7 @@ struct MethodWriteableInfo<'a> {
     method_name: Cow<'a, str>,
     /// The return type for the method without the std::string
     return_ty: Cow<'a, str>,
-    c_to_cpp_return_expression: Option<Cow<'a, str>>,
+    c_to_cpp_return_expression: Option<ConversionExpression<'a>>,
 }
 
 /// Everything needed for rendering a method.
@@ -74,7 +74,7 @@ pub struct MethodInfo<'a> {
     /// If the function has a return value, the C++ code for the conversion. Assumes that
     /// the C function return value is saved to a variable named `result` or that the
     /// DiplomatWrite, if present, is saved to a variable named `output`.
-    c_to_cpp_return_expression: Option<Cow<'a, str>>,
+    c_to_cpp_return_expression: Option<ConversionExpression<'a>>,
 
     /// If the method returns a writeable, the info for that
     writeable_info: Option<MethodWriteableInfo<'a>>,
@@ -83,10 +83,36 @@ pub struct MethodInfo<'a> {
     extra_impl_code: ExtraCode,
 }
 
+/// A composable expression for converting a variable to/from C.
+pub(crate) struct ConversionExpression<'a> {
+    fmt_str : Cow<'a, str>
+}
+
+impl<'a> ConversionExpression<'a> {
+    fn empty() -> Self {
+        Self {
+            fmt_str: "{0}".into()
+        }
+    }
+
+    fn fmt(&self, inner_name : &str) -> String {
+        // A little hacky, but this works:
+        self.fmt_str.replace("{0}", inner_name)
+    }
+}
+
+impl <'a, T : Into<Cow<'a, str>>> From<T> for ConversionExpression<'a> {
+    fn from(value: T) -> Self {
+        Self {
+            fmt_str: value.into()
+        }
+    }
+}
+
 /// An expression with a corresponding variable name, such as a struct field or a function parameter.
 struct NamedExpression<'a> {
     var_name: Cow<'a, str>,
-    expression: Cow<'a, str>,
+    expression: ConversionExpression<'a>,
 }
 
 #[derive(Template)]
@@ -397,7 +423,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .map(|(idx, field)| {
                 self.gen_cpp_to_c_for_field(
                     is_in_mut_struct,
-                    if def.attrs.tuple { Some(idx) } else { None },
+                    idx,
                     field,
                     namespace.clone(),
                 )
@@ -407,7 +433,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", is_in_mut_struct, field))
+            .map(|field| self.gen_c_to_cpp_for_field(is_in_mut_struct, field))
             .collect::<Vec<_>>();
 
         let methods = def
@@ -557,7 +583,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             _ => panic!("Unsupported SymbolId: {id:?}"),
         };
 
-        for param in method.params.iter() {
+        for (idx, param) in method.params.iter().enumerate() {
             let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             if let Some(d) = &param.attrs.default_value {
                 let s = match d {
@@ -583,7 +609,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
             let conversion = self.gen_cpp_to_c_for_type(
                 &param.ty,
-                param_name,
+                idx,
                 Some(method.abi_name.to_string()),
                 namespace.clone(),
             );
@@ -601,7 +627,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions.push(format!(
                         "auto {}DiplomatRefClone = {};",
-                        param.name, conversion
+                        param.name, conversion.fmt_str
                     ));
 
                     if s.owner.mutability().is_mutable() {
@@ -620,20 +646,21 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 conversion
             };
 
-            cpp_to_c_params.push(conversion);
+            cpp_to_c_params.push(conversion.fmt(&param_name).into());
         }
 
         /// The UTF8 errors are added in by the C++ backend when converting from C++
         /// types. We wrap them in another layer of diplomat::result.
         fn wrap_return_ty_and_expr_for_utf8(
             return_ty: &mut Cow<str>,
-            c_to_cpp_return_expression: &mut Option<Cow<str>>,
+            c_to_cpp_return_expression: &mut Option<ConversionExpression>,
             fmt: &Cpp2Formatter,
         ) {
             let lib_name_ns_prefix = &fmt.lib_name_ns_prefix;
             if let Some(return_expr) = c_to_cpp_return_expression {
+                let inner = &return_expr.fmt_str;
                 *c_to_cpp_return_expression = Some(
-                    format!("{lib_name_ns_prefix}diplomat::Ok<{return_ty}>({return_expr})").into(),
+                    format!("{lib_name_ns_prefix}diplomat::Ok<{return_ty}>({inner})").into(),
                 );
                 *return_ty = format!(
                         "{lib_name_ns_prefix}diplomat::result<{return_ty}, {lib_name_ns_prefix}diplomat::Utf8Error>"
@@ -652,7 +679,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let mut return_ty = self.gen_cpp_return_type_name(&method.output, false);
 
         let mut c_to_cpp_return_expression =
-            self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), false);
+            self.gen_c_to_cpp_for_return_type(&method.output, false);
 
         if returns_utf8_err {
             wrap_return_ty_and_expr_for_utf8(
@@ -664,8 +691,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         // If the return expression is a std::move, unwrap that, because the linter doesn't like it
         c_to_cpp_return_expression = c_to_cpp_return_expression.map(|expr| {
-            if expr.starts_with("std::move") {
-                expr["std::move(".len()..(expr.len() - 1)].to_owned().into()
+            if expr.fmt_str.starts_with("std::move") {
+                expr.fmt_str["std::move(".len()..(expr.fmt_str.len() - 1)].to_owned().into()
             } else {
                 expr
             }
@@ -680,7 +707,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             let mut return_ty = self.gen_cpp_return_type_name(&method.output, true);
 
             let mut c_to_cpp_return_expression =
-                self.gen_c_to_cpp_for_return_type(&method.output, "result".into(), true);
+                self.gen_c_to_cpp_for_return_type(&method.output, true);
             if returns_utf8_err {
                 wrap_return_ty_and_expr_for_utf8(
                     &mut return_ty,
@@ -978,27 +1005,22 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
         is_in_mutable_struct: bool,
-        tuple_idx: Option<usize>,
+        field_idx : usize,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
-        let field_getter = if let Some(idx) = tuple_idx {
-            format!("std::get<{idx}>(tuple)")
-        } else {
-            var_name.clone().into()
-        };
-        let expression: Cow<'_, str> = match &field.ty {
+        let expression: ConversionExpression<'_> = match &field.ty {
             // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
             // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to return as a pointer from C++ to C, rather than from a reference.
             Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 if op.is_optional() {
-                    format!("{field_getter}->AsFFI() : nullptr").into()
+                    format!("{{0}}->AsFFI() : nullptr").into()
                 } else {
-                    format!("{field_getter}->AsFFI()").into()
+                    format!("{{0}}->AsFFI()").into()
                 }
             }
-            _ => self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace),
+            _ => self.gen_cpp_to_c_for_type(&field.ty, field_idx, None, namespace),
         };
 
         NamedExpression {
@@ -1011,21 +1033,24 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     ///
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
+    /// 
+    /// param_idx is for formatters that *need* to know (i.e., callback formatters).
+    /// We hide the parameter name from them because they don't need to know it.
     pub(super) fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &mut self,
         ty: &Type<P>,
-        cpp_name: Cow<'a, str>,
+        param_idx : usize,
         method_abi_name: Option<String>,
         namespace: Option<String>,
-    ) -> Cow<'a, str> {
+    ) -> ConversionExpression<'a> {
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
-            Type::Primitive(..) => cpp_name.clone(),
+            Type::Primitive(..) => ConversionExpression::empty(),
             Type::Opaque(ref op) if op.is_optional() => {
-                format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
+                "{0} ? {0}->AsFFI() : nullptr".into()
             }
-            Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
-            Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Opaque(ref path) if path.is_owned() => "{0}->AsFFI()".into(),
+            Type::Opaque(..) => "{0}.AsFFI()".into(),
             Type::Struct(ref s) => {
                 let attrs = match self.c.tcx.resolve_type(s.id()) {
                     TypeDef::OutStruct(s) => &s.attrs,
@@ -1035,7 +1060,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
                 if attrs.tuple && matches!(s.owner(), MaybeOwn::Own) {
                     let type_name = self.formatter.fmt_type_name(s.id());
-                    return format!("{type_name}::AsTupleFFI({cpp_name})").into();
+                    return format!("{type_name}::AsTupleFFI({{0}})").into();
                 }
 
                 if attrs.abi_compatible {
@@ -1046,23 +1071,23 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         );
                         return match borrow.mutability {
                             Mutability::Immutable => {
-                                format!("reinterpret_cast<const {c_name}*>(&{cpp_name})")
+                                format!("reinterpret_cast<const {c_name}*>(&{{0}})")
                             }
                             Mutability::Mutable => {
-                                format!("reinterpret_cast<{c_name}*>(&{cpp_name})")
+                                format!("reinterpret_cast<{c_name}*>(&{{0}})")
                             }
                         }
                         .into();
                     }
                 }
-                format!("{cpp_name}.AsFFI()").into()
+                "{0}.AsFFI()".into()
             }
-            Type::Enum(..) => format!("{cpp_name}.AsFFI()").into(),
+            Type::Enum(..) => "{0}.AsFFI()".into(),
             Type::Slice(Slice::Strs(encoding)) => {
                 // This cast is valid as diplomat::string_view_for_slice is used to ensure correct layout
                 let str_view = self.c.formatter.fmt_str_view_name(encoding);
                 format!(
-                    "{{reinterpret_cast<const {str_view}*>({cpp_name}.data()), {cpp_name}.size()}}"
+                    "{{reinterpret_cast<const {str_view}*>({{0}}.data()), {{0}}.size()}}"
                 )
                 .into()
             }
@@ -1077,21 +1102,21 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     &self.formatter.fmt_type_name_unnamespaced(st.id()),
                 );
                 format!(
-                    "{{reinterpret_cast<{mutability}{c_name}*>({cpp_name}.data()), {cpp_name}.size()}}",
+                    "{{reinterpret_cast<{mutability}{c_name}*>({{0}}.data()), {{0}}.size()}}",
 
                 )
                 .into()
             }
-            Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
+            Type::Slice(..) => format!("{{{{0}}.data(), {{0}}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_cpp_to_c_for_type(
                     inner,
-                    format!("{cpp_name}.value()").into(),
+                    param_idx,
                     method_abi_name,
                     namespace,
-                );
+                ).fmt_str;
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
-                format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
+                format!("{{0}}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
             Type::Callback(ref c) => {
                 let run_callback = match c.get_output_type().unwrap() {
@@ -1110,11 +1135,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         let return_type = self.formatter.fmt_c_api_callback_ret(
                             namespace,
                             method_abi_name.unwrap(),
-                            &cpp_name,
+                            param_idx,
                         );
 
                         self.formatter.fmt_run_callback_converter(
-                            &cpp_name,
                             "c_run_callback_result",
                             vec![&ok_type_name, &err_type_name, &return_type],
                         )
@@ -1129,10 +1153,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         let return_type = self.formatter.fmt_c_api_callback_ret(
                             namespace,
                             method_abi_name.unwrap(),
-                            &cpp_name,
+                            param_idx,
                         );
                         self.formatter.fmt_run_callback_converter(
-                            &cpp_name,
                             "c_run_callback_diplomat_option",
                             vec![&type_name, &return_type],
                         )
@@ -1144,16 +1167,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                             .fmt_type_name_maybe_namespaced(o.tcx_id.into());
                         let ptr_ty = self.c.formatter.fmt_ptr(&opaque_type, o.owner.mutability);
                         self.formatter.fmt_run_callback_converter(
-                            &cpp_name,
                             "c_run_callback_diplomat_opaque",
                             vec![&ptr_ty],
                         )
                     }
                     _ => format!(
-                        "{lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_run_callback"
-                    ),
+                        "{lib_name_ns_prefix}diplomat::fn_traits({{0}}).c_run_callback"
+                    ).into(),
                 };
-                format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_delete}}",).into()
+                format!("{{new decltype({{0}})(std::move({{0}})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({{0}}).c_delete}}",).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1209,29 +1231,25 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
         &self,
-        c_struct_access: &str,
         is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
     ) -> NamedExpression<'a> {
-        let var_name = self.formatter.fmt_param_name(field.name.as_str());
-        let field_getter = format!("{c_struct_access}{var_name}");
-        let expression: Cow<'_, str> = match &field.ty {
+        let expression: ConversionExpression<'_> = match &field.ty {
             // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
             // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to grab as a pointer from C to C++, rather than a reference.
             Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
                 let type_name = self.formatter.fmt_type_name(op.id());
-                let var_name = self.formatter.fmt_identifier(field_getter.into());
                 let convert = if op.owner.mutability().is_some_and(|i| i.is_immutable()) {
                     format!("({type_name}*)")
                 } else {
                     "".into()
                 };
-                format!("{convert}{type_name}::FromFFI({var_name})").into()
+                format!("{convert}{type_name}::FromFFI({{0}})").into()
             }
-            _ => self.gen_c_to_cpp_for_type(&field.ty, field_getter.into()),
+            _ => self.gen_c_to_cpp_for_type(&field.ty),
         };
         NamedExpression {
-            var_name,
+            var_name: self.formatter.fmt_param_name(field.name.as_str()),
             expression,
         }
     }
@@ -1243,34 +1261,31 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     fn gen_c_to_cpp_for_type<'a, P: TyPosition>(
         &self,
         ty: &Type<P>,
-        var_name: Cow<'a, str>,
-    ) -> Cow<'a, str> {
-        let var_name = self.formatter.fmt_identifier(var_name);
-
+    ) -> ConversionExpression<'a> {
         match *ty {
-            Type::Primitive(..) => var_name,
+            Type::Primitive(..) => ConversionExpression::empty(),
             Type::Opaque(ref op) if op.owner.is_owned() => {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
                 // Note: The impl file is imported in gen_type_name().
-                format!("std::unique_ptr<{type_name}>({type_name}::FromFFI({var_name}))").into()
+                format!("std::unique_ptr<{type_name}>({type_name}::FromFFI({{0}}))").into()
             }
             Type::Opaque(ref op) if op.is_optional() => {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
                 if op.is_owned() {
                     // Note: The impl file is imported in gen_type_name().
-                    format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
+                    format!("{{0}} ? {{ *{type_name}::FromFFI({{0}}) }} : std::nullopt")
                         .into()
                 } else {
-                    format!("{type_name}::FromFFI({var_name})").into()
+                    format!("{type_name}::FromFFI({{0}})").into()
                 }
             }
             Type::Opaque(ref op) => {
                 let id = op.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
                 // Note: The impl file is imported in gen_type_name().
-                format!("*{type_name}::FromFFI({var_name})").into()
+                format!("*{type_name}::FromFFI({{0}})").into()
             }
             Type::Struct(ref st) => {
                 let (is_zst, is_tuple) = match self.c.tcx.resolve_type(ty.id().unwrap()) {
@@ -1283,44 +1298,44 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let type_name = self.formatter.fmt_type_name(id);
 
                 if is_tuple && matches!(st.owner(), MaybeOwn::Own) {
-                    format!("{type_name}::TupleFromFFI({var_name})").into()
+                    format!("{type_name}::TupleFromFFI({{0}})").into()
                 } else if is_zst {
                     format!("{type_name} {{}}").into()
                 } else {
                     // Note: The impl file is imported in gen_type_name().
-                    format!("{type_name}::FromFFI({var_name})").into()
+                    format!("{type_name}::FromFFI({{0}})").into()
                 }
             }
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
                 let type_name = self.formatter.fmt_type_name(id);
                 // Note: The impl file is imported in gen_type_name().
-                format!("{type_name}::FromFFI({var_name})").into()
+                format!("{type_name}::FromFFI({{0}})").into()
             }
             Type::Slice(hir::Slice::Str(_, encoding)) => {
                 let string_view = self.formatter.fmt_borrowed_str(encoding);
-                format!("{string_view}({var_name}.data, {var_name}.len)").into()
+                format!("{string_view}({{0}}.data, {{0}}.len)").into()
             }
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let prim_name = self.formatter.fmt_primitive_as_c(p);
                 let span = self
                     .formatter
                     .fmt_borrowed_slice(&prim_name, b.mutability());
-                format!("{span}({var_name}.data, {var_name}.len)").into()
+                format!("{span}({{0}}.data, {{0}}.len)").into()
             }
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let mt = b.mutability();
                 let st_name = self.formatter.fmt_type_name(st_ty.id());
                 let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
                 format!(
-                    "{span}(reinterpret_cast<{}{st_name}*>({var_name}.data), {var_name}.len)",
+                    "{span}(reinterpret_cast<{}{st_name}*>({{0}}.data), {{0}}.len)",
                     if mt.is_mutable() { "" } else { "const " }
                 )
                 .into()
             }
             Type::DiplomatOption(ref inner) => {
-                let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
-                format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt").into()
+                let conversion = self.gen_c_to_cpp_for_type(inner).fmt("{0}.ok");
+                format!("{{0}}.is_ok ? std::optional({conversion}) : std::nullopt").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1332,16 +1347,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     pub(super) fn gen_c_to_cpp_for_return_type<'a>(
         &mut self,
         result_ty: &ReturnType,
-        var_name: Cow<'a, str>,
         is_generic_write: bool,
-    ) -> Option<Cow<'a, str>> {
+    ) -> Option<ConversionExpression<'a>> {
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
             ReturnType::Infallible(SuccessType::Write) if is_generic_write => None,
             ReturnType::Infallible(SuccessType::Write) => Some("std::move(output)".into()),
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
-                Some(self.gen_c_to_cpp_for_type(out_ty, var_name))
+                Some(self.gen_c_to_cpp_for_type(out_ty))
             }
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
@@ -1361,16 +1375,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
                     SuccessType::OutType(ref o) => {
-                        self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())
+                        self.gen_c_to_cpp_for_type(o).fmt("{0}.ok")
                     }
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_conversion = match err {
-                    Some(o) => self.gen_c_to_cpp_for_type(o, format!("{var_name}.err").into()),
+                    Some(o) => self.gen_c_to_cpp_for_type(o).fmt("{0}.err"),
                     None => "".into(),
                 };
                 Some(
-                    format!("{var_name}.is_ok ? {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Ok<{ok_type_name}>({ok_conversion})) : {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Err<{err_type_name}>({err_conversion}))").into()
+                    format!("{{0}}.is_ok ? {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Ok<{ok_type_name}>({ok_conversion})) : {lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>({lib_name_ns_prefix}diplomat::Err<{err_type_name}>({err_conversion}))").into()
                 )
             }
             ReturnType::Nullable(ref ty) => {
@@ -1388,12 +1402,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     SuccessType::Write => "std::move(output)".into(),
                     SuccessType::Unit => "".into(),
                     SuccessType::OutType(ref o) => {
-                        self.gen_c_to_cpp_for_type(o, format!("{var_name}.ok").into())
+                        self.gen_c_to_cpp_for_type(o).fmt("{0}.ok")
                     }
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
-                Some(format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into())
+                Some(format!("{{0}}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into())
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

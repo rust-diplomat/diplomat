@@ -1,6 +1,6 @@
 //! This module contains functions for formatting types
 
-use crate::c::{CFormatter, CAPI_NAMESPACE};
+use crate::{c::{CAPI_NAMESPACE, CFormatter}, cpp::r#gen::ConversionExpression};
 use diplomat_core::hir::{
     self, DocsUrlGenerator, SpecialMethod, StringEncoding, SymbolId, TypeContext, TypeId,
 };
@@ -293,28 +293,27 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         &self,
         namespace: Option<String>,
         method_name: String,
-        cpp_name: &'a str,
+        idx: usize,
     ) -> Cow<'a, str> {
         let lib_prefix = &self.lib_name_ns_prefix;
         if let Some(ns) = namespace {
-            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_param_{idx}_result").into()
         } else {
             // When there is no library name, capi stuff gets stuffed under the diplomat namespace
             let prefix = self.lib_name.as_deref().unwrap_or("diplomat");
-            format!("{prefix}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result")
+            format!("{prefix}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_param_{idx}_result")
                 .into()
         }
     }
 
     pub fn fmt_run_callback_converter<'a>(
         &self,
-        cpp_name: &'a str,
         conversion_func: &'a str,
         types: Vec<&'a str>,
     ) -> String {
         let lib_prefix = &self.lib_name_ns_prefix;
         format!(
-            "{lib_prefix}diplomat::fn_traits({cpp_name}).template {conversion_func}<{}>",
+            "{lib_prefix}diplomat::fn_traits({{0}}).template {conversion_func}<{}>",
             types.join(", ")
         )
     }
