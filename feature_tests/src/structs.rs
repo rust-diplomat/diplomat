@@ -626,6 +626,11 @@ pub mod ffi {
             a.x
         }
 
+        #[diplomat::attr(supports=method_overloading, rename="takes_st_as_tuple")]
+        pub fn takes_st_as_tuple_overload(a: TupleStruct<'a>, i: i32) -> i32 {
+            a.x + i
+        }
+
         pub fn takes_containing(c: ContainingTuple<'a>) -> DiplomatChar {
             c.inner.st.f
         }

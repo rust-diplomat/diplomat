@@ -9,6 +9,7 @@
 #include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/bind_vector.h>
+#include <nanobind/stl/tuple.h>
 #include <nanobind/stl/detail/nb_list.h>
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming

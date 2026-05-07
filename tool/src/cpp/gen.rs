@@ -854,17 +854,29 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .insert(self.formatter.fmt_impl_header_path(id.into()));
 
         let struct_ty = self.c.tcx.resolve_type(st.id());
+        let is_in_mut_struct =
+            def.attrs().mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
         if struct_ty.attrs().tuple && matches!(st.owner(), MaybeOwn::Own) {
             let field_names = match struct_ty {
                 TypeDef::Struct(st) => st
                     .fields
                     .iter()
-                    .map(|f| self.gen_type_name(&f.ty))
+                    .map(|f| match &f.ty {
+                        Type::Opaque(op) if is_in_mut_struct && !op.is_owned() => {
+                            self.gen_opaque_name::<hir::Everywhere>(op, true)
+                        }
+                        _ => self.gen_type_name(&f.ty),
+                    })
                     .collect::<Vec<_>>(),
                 TypeDef::OutStruct(st) => st
                     .fields
                     .iter()
-                    .map(|f| self.gen_type_name(&f.ty))
+                    .map(|f| match &f.ty {
+                        Type::Opaque(op) if is_in_mut_struct && !op.is_owned() => {
+                            self.gen_opaque_name::<hir::OutputOnly>(op, true)
+                        }
+                        _ => self.gen_type_name(&f.ty),
+                    })
                     .collect::<Vec<_>>(),
                 _ => unreachable!(),
             };

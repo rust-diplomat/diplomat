@@ -66,3 +66,12 @@ def test_take_in_bound_as_slice():
     assert from_vec[0].x == 0
     assert from_vec[1].x == 10
     assert from_vec[2].x == 20
+
+def test_tuples():
+    (x, y, prim, op) = somelib.OutTupleStruct.new()
+
+    assert x == 0
+    assert prim.a == True
+
+    assert somelib.TupleStruct.takes_st_as_tuple((10, 0, somelib.MyStruct(), somelib.Opaque())) == 10
+    assert somelib.TupleStruct.takes_st_as_tuple((10, 0, somelib.MyStruct(), somelib.Opaque()), 20) == 30
