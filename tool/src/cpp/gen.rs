@@ -419,11 +419,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let cpp_to_c_fields = def
             .fields
             .iter()
-            .enumerate()
-            .map(|(idx, field)| {
+            .map(|field| {
                 self.gen_cpp_to_c_for_field(
                     is_in_mut_struct,
-                    idx,
                     field,
                     namespace.clone(),
                 )
@@ -583,7 +581,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             _ => panic!("Unsupported SymbolId: {id:?}"),
         };
 
-        for (idx, param) in method.params.iter().enumerate() {
+        for param in method.params.iter() {
             let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
             if let Some(d) = &param.attrs.default_value {
                 let s = match d {
@@ -609,7 +607,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
             let conversion = self.gen_cpp_to_c_for_type(
                 &param.ty,
-                idx,
+                &param_name,
                 Some(method.abi_name.to_string()),
                 namespace.clone(),
             );
@@ -627,7 +625,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 if !s.owner.is_owned() && !attrs.abi_compatible {
                     param_pre_conversions.push(format!(
                         "auto {}DiplomatRefClone = {};",
-                        param.name, conversion.fmt_str
+                        param.name, conversion.fmt(param.name.as_str())
                     ));
 
                     if s.owner.mutability().is_mutable() {
@@ -1005,7 +1003,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
         is_in_mutable_struct: bool,
-        field_idx : usize,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
     ) -> NamedExpression<'a> {
@@ -1020,7 +1017,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     format!("{{0}}->AsFFI()").into()
                 }
             }
-            _ => self.gen_cpp_to_c_for_type(&field.ty, field_idx, None, namespace),
+            _ => self.gen_cpp_to_c_for_type(&field.ty, field.name.as_str(), None, namespace),
         };
 
         NamedExpression {
@@ -1034,12 +1031,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Returns a `PartiallyNamedExpression` whose `suffix` is either empty, `_data`, or `_size` for
     /// referencing fields of the C struct.
     /// 
-    /// param_idx is for formatters that *need* to know (i.e., callback formatters).
-    /// We hide the parameter name from them because they don't need to know it.
+    /// c_param_name is *only* for callback formatters, since we need to know the right name for the C ABI.
+    /// All other strings use [`ConversionExpression`], which uses `{0}` to represent the inner variable to be converted.
     pub(super) fn gen_cpp_to_c_for_type<'a, P: TyPosition>(
         &mut self,
         ty: &Type<P>,
-        param_idx : usize,
+        c_param_name : &'a str,
         method_abi_name: Option<String>,
         namespace: Option<String>,
     ) -> ConversionExpression<'a> {
@@ -1111,10 +1108,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_cpp_to_c_for_type(
                     inner,
-                    param_idx,
+                    c_param_name,
                     method_abi_name,
                     namespace,
-                ).fmt_str;
+                ).fmt("{0}.value()");
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{{0}}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
@@ -1135,7 +1132,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         let return_type = self.formatter.fmt_c_api_callback_ret(
                             namespace,
                             method_abi_name.unwrap(),
-                            param_idx,
+                            c_param_name,
                         );
 
                         self.formatter.fmt_run_callback_converter(
@@ -1153,7 +1150,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                         let return_type = self.formatter.fmt_c_api_callback_ret(
                             namespace,
                             method_abi_name.unwrap(),
-                            param_idx,
+                            c_param_name,
                         );
                         self.formatter.fmt_run_callback_converter(
                             "c_run_callback_diplomat_option",

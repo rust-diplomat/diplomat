@@ -17,7 +17,8 @@
 inline {{ctype}} {{type_name}}::AsTupleFFI({{tuple_struct}} tuple) {
     return {{ctype}} {
 {%- for field in cpp_to_c_fields %}
-        /* .{{field.var_name}} = */ {{field.expression}},
+    {%- let index = loop.index0 %}
+        /* .{{field.var_name}} = */ {{field.expression.fmt(&format!("std::get<{index}>(tuple)"))}},
 {%- endfor %}
     };
 }
@@ -25,7 +26,7 @@ inline {{ctype}} {{type_name}}::AsTupleFFI({{tuple_struct}} tuple) {
 inline {{tuple_struct}} {{type_name}}::TupleFromFFI({{ctype}} c_struct) {
     return {{tuple_struct}}{
 {%- for field in c_to_cpp_fields %}
-        /* .{{field.var_name}} = */ {{field.expression}},
+        /* .{{field.var_name}} = */ {{field.expression.fmt(&format!("c_struct.{}", field.var_name))}},
 {%- endfor %}
     };
 }
@@ -33,7 +34,7 @@ inline {{tuple_struct}} {{type_name}}::TupleFromFFI({{ctype}} c_struct) {
 inline {{ctype}} {{type_name}}::AsFFI() const {
     return {{ctype}} {
 {%- for field in cpp_to_c_fields %}
-        /* .{{field.var_name}} = */ {{field.expression}},
+        /* .{{field.var_name}} = */ {{field.expression.fmt(&format!("{}", field.var_name))}},
 {%- endfor %}
     };
 }
@@ -41,7 +42,7 @@ inline {{ctype}} {{type_name}}::AsFFI() const {
 inline {{type_name}} {{type_name}}::FromFFI({{ctype}} c_struct) {
     return {{type_name}} {
 {%- for field in c_to_cpp_fields %}
-        /* .{{field.var_name}} = */ {{field.expression}},
+        /* .{{field.var_name}} = */ {{field.expression.fmt(&format!("c_struct.{}", field.var_name))}},
 {%- endfor %}
     };
 }

@@ -52,7 +52,7 @@ inline {##}
     {%- endfor -%}
 
     {%- if let Some(statement) = c_to_cpp_return_expression %}
-    return {{ statement }};
+    return {{ statement.fmt("result") }};
     {%- endif %}
 }
 {%- if !m.extra_impl_code.inner.is_empty() %}
