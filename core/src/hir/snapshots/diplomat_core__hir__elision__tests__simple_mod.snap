@@ -232,6 +232,7 @@ TypeContext {
             },
             special_method_presence: SpecialMethodPresence {
                 comparator: false,
+                optional_comparator: false,
                 iterator: None,
                 iterable: None,
             },
@@ -501,6 +502,7 @@ TypeContext {
             },
             special_method_presence: SpecialMethodPresence {
                 comparator: false,
+                optional_comparator: false,
                 iterator: None,
                 iterable: None,
             },
@@ -556,6 +558,7 @@ TypeContext {
             },
             special_method_presence: SpecialMethodPresence {
                 comparator: false,
+                optional_comparator: false,
                 iterator: None,
                 iterable: None,
             },
