@@ -351,6 +351,7 @@ impl SpecialMethod {
 #[non_exhaustive]
 pub struct SpecialMethodPresence {
     pub comparator: bool,
+    pub optional_comparator: bool,
     /// If it is an iterator, the type it iterates over
     pub iterator: Option<SuccessType>,
     /// If it is an iterable, the iterator type it returns (*not* the type it iterates over,
@@ -851,7 +852,7 @@ impl Attrs {
                             ));
                         }
                     }
-                    SpecialMethod::Comparison(_) => {
+                    SpecialMethod::Comparison(optional) => {
                         check_param_count("Comparator", 1, errors);
                         if special_method_presence.comparator {
                             errors.push(LoweringError::Other(
@@ -859,6 +860,7 @@ impl Attrs {
                             ));
                         }
                         special_method_presence.comparator = true;
+                        special_method_presence.optional_comparator = *optional;
                         // In the long run we can actually support heterogeneous comparators. Not a priority right now.
                         const COMPARATOR_ERROR: &str =
                             "Comparator's parameter must be identical to self";
