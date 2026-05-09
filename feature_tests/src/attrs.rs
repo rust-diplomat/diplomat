@@ -189,6 +189,19 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(auto, abi_compatible)]
+    #[diplomat::cfg(supports = partial_comparators)]
+    pub struct PartialComparableSlice {
+        f: f32,
+    }
+
+    impl PartialComparableSlice {
+        #[diplomat::attr(auto, comparison)]
+        pub fn partial_cmp(&self, other: &PartialComparableSlice) -> Option<core::cmp::Ordering> {
+            self.f.partial_cmp(&other.f)
+        }
+    }
+
     #[diplomat::opaque]
     #[diplomat::cfg(supports = indexing)]
     pub struct MyIndexer(Vec<String>);

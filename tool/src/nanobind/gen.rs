@@ -264,6 +264,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         if def.attrs.abi_compatible {
             write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
                 .expect("Could not write to header.");
+            if def.special_method_presence.comparator {
+                // Bound vectors of types that return `std::optional<bool>` doesn't work for GCC. See https://github.com/rust-diplomat/diplomat/issues/1148
+                // TODO: At some point we should just re-write the vector binding ourselves instead of having to sidestep this.
+                write!(binding_prefix, "\nnamespace nanobind::detail {{ template<> struct is_equality_comparable<{type_name}>{{static constexpr bool value = false;}}; }}").expect("Could not write to header");
+            }
         }
 
         ImplTemplate {
