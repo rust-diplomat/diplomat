@@ -1,5 +1,5 @@
 import somelib
-import typing
+import pytest
 
 def test_option():
 
@@ -56,3 +56,14 @@ def test_option():
     int_array = [1, 2, 3, 4]
     assert somelib.OptionOpaque.accepts_option_primitive(int_array, 123) == 10, "Optional primitive param (Some)"
     assert somelib.OptionOpaque.accepts_option_primitive(None, 123) == -1, "Optional primitive param (None)"
+
+def test_out_struct():
+    with pytest.raises(TypeError):
+        out = somelib.OptionStruct()
+    # Check that our constructors and setters fail
+    out = somelib.OptionOpaque.new_struct()
+    with pytest.raises(AttributeError):
+        out.c = 10
+    assert out.c == 904
+    with pytest.raises(AttributeError):
+        out.d = somelib.OptionOpaque.new(14)
