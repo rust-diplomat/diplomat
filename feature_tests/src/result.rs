@@ -22,6 +22,17 @@ pub mod ffi {
         i: i32,
         j: i32,
     }
+    impl ErrorStruct {
+        #[diplomat::attr(kotlin, disable)]
+        pub fn returns_result_option(is_some: bool) -> Result<DiplomatOption<ErrorStruct>, ()> {
+            if is_some {
+                Ok(Some(ErrorStruct { i: 0, j: 125 }).into())
+            } else {
+                Ok(None.into())
+            }
+        }
+    }
+
     impl ResultOpaque {
         #[diplomat::attr(all(*, supports = fallible_constructors), constructor)]
         pub fn new(i: i32) -> Result<Box<ResultOpaque>, ErrorEnum> {

@@ -1,6 +1,6 @@
 #[diplomat::bridge]
 mod ffi {
-    use crate::slices::ffi::MyString;
+    use crate::{slices::ffi::MyString, structs::ffi::MyStruct};
 
     #[diplomat::cfg(supports = "callbacks")]
     pub struct CallbackWrapper {
@@ -118,6 +118,19 @@ mod ffi {
         pub fn test_slice_conversion<'a>(t: impl Fn() -> Result<&'a [f64], ()>) {
             let sl = t().expect("Could not get f64 slice.");
             assert_eq!(sl[1], 2.0);
+        }
+
+        // FIXME: https://github.com/rust-diplomat/diplomat/issues/1154
+        #[diplomat::attr(any(cpp, nanobind, kotlin), disable)]
+        pub fn test_result_option_struct_conversion(
+            t: impl Fn() -> Result<DiplomatOption<MyStruct>, ()>,
+        ) {
+            let st = t();
+            assert!(st.is_ok());
+            let st_opt = st.unwrap().into_option();
+            assert!(st_opt.is_some());
+            let st = st_opt.unwrap();
+            assert_eq!(st.into_a(), 5);
         }
 
         #[diplomat::attr(kotlin, disable)]
