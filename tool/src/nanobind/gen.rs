@@ -256,7 +256,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             fields: &'a [NamedType<'a, P>],
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
-            is_out : bool,
+            is_out: bool,
             has_constructor: bool,
             is_sliceable: bool,
             extra_init_code: ExtraCode,
