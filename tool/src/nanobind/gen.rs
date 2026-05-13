@@ -256,6 +256,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             fields: &'a [NamedType<'a, P>],
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
+            is_out : bool,
             has_constructor: bool,
             is_sliceable: bool,
             extra_init_code: ExtraCode,
@@ -282,6 +283,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     Some(hir::SpecialMethod::Constructor)
                 )
             }),
+            is_out: matches!(id, TypeId::OutStruct(..)),
             is_sliceable: def.attrs.abi_compatible,
             extra_init_code,
         }

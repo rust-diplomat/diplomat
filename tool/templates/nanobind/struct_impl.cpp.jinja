@@ -13,10 +13,10 @@ nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slic
 
 nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}");
 st
-    {%- if !has_constructor %}
+    {%- if !has_constructor && !is_out %}
     .def(nb::init<>())
 
-    {%- if fields.len() > 0 %}
+    {%- if fields.len() > 0 && !is_out %}
     .def(nb::init<
     {%- for f in fields -%}
     {% if !loop.first %}, {% endif %}{{f.type_name}}
@@ -32,14 +32,18 @@ st
     {%- endif -%}
 
     {%- endif -%}
+    {%- decl prop_type -%}
+    {%- if is_out -%} {% let prop_type = "ro" %} {%- else -%} {%- let prop_type = "rw" -%}{%- endif -%}
 
     {%- for f in fields %}
     {%- if !f.type_name.starts_with("std::unique_ptr") %}
-    .def_rw("{{f.name}}", &{{type_name}}::{{f.name}})
+    .def_{{prop_type}}("{{f.name}}", &{{type_name}}::{{f.name}})
     {%- else %}
-    .def_prop_rw("{{f.name}}", 
-        [](const {{type_name}}& self) { return self.{{f.name}}.get(); },
+    .def_prop_{{prop_type}}("{{f.name}}",
+        [](const {{type_name}}& self) { return self.{{f.name}}.get(); }
+    {%- if !is_out %},
         []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.name}} = std::move(v); }
+    {%- endif %}
     )
     {%- endif -%}
     {%- endfor %}
