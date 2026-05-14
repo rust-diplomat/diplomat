@@ -1932,6 +1932,41 @@ impl<'ast> LoweringContext<'ast> {
         params
     }
 
+    fn maybe_error_on_option_result(&mut self, result_type: &ast::TypeName) -> Result<(), ()> {
+        match result_type {
+            ast::TypeName::Result(ok_ty, err_ty, _) => {
+                match ok_ty.as_ref() {
+                    ast::TypeName::Option(inner, ast::StdlibOrDiplomat::Stdlib)
+                        if !matches!(
+                            inner.as_ref(),
+                            ast::TypeName::Box(..) | ast::TypeName::Reference(..)
+                        ) =>
+                    {
+                        self.errors.push(LoweringError::Other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
+                        return Err(());
+                    }
+                    _ => {}
+                }
+
+                match err_ty.as_ref() {
+                    ast::TypeName::Option(inner, ast::StdlibOrDiplomat::Stdlib)
+                        if !matches!(
+                            inner.as_ref(),
+                            ast::TypeName::Box(..) | ast::TypeName::Reference(..)
+                        ) =>
+                    {
+                        self.errors.push(LoweringError::Other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
+                        return Err(());
+                    }
+                    _ => {}
+                }
+
+                Ok(())
+            }
+            _ => unreachable!("Expected Result type, not {result_type}"),
+        }
+    }
+
     /// Lowers the return type of an [`ast::Method`] into a [`hir::ReturnFallability`].
     ///
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
@@ -1949,6 +1984,7 @@ impl<'ast> LoweringContext<'ast> {
         };
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
+                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self
@@ -2024,6 +2060,7 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<ReturnType<InputOnly>, ()> {
         match return_type.unwrap_or(&ast::TypeName::Unit) {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
+                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
