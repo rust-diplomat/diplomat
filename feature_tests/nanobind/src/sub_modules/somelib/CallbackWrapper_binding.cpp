@@ -4,6 +4,7 @@
 #include "CallbackTestingStruct.hpp"
 #include "CallbackWrapper.hpp"
 #include "MyString.hpp"
+#include "MyStruct.hpp"
 #include "MyStructContainingAnOption.hpp"
 #include "Opaque.hpp"
 #include "PrimitiveStruct.hpp"
@@ -28,6 +29,7 @@ void add_CallbackWrapper_binding(nb::module_ mod) {
         .def_static("test_option_output", &somelib::CallbackWrapper::test_option_output, "t"_a)
         .def_static("test_owned_opaque", &somelib::CallbackWrapper::test_owned_opaque, "t"_a)
         .def_static("test_result_opaque", &somelib::CallbackWrapper::test_result_opaque, "t"_a)
+        .def_static("test_result_option_struct_conversion", &somelib::CallbackWrapper::test_result_option_struct_conversion, "t"_a)
         .def_static("test_result_output", &somelib::CallbackWrapper::test_result_output, "t"_a)
         .def_static("test_result_usize_output", &somelib::CallbackWrapper::test_result_usize_output, "t"_a)
         .def_static("test_slice_cb_arg", &somelib::CallbackWrapper::test_slice_cb_arg, "arg"_a, "f"_a)
