@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "CallbackTestingStruct.hpp"
 #include "MyString.hpp"
+#include "MyStruct.hpp"
 #include "MyStructContainingAnOption.hpp"
 #include "Opaque.hpp"
 #include "PrimitiveStruct.hpp"
@@ -135,6 +136,13 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_slice_conversion_t;
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {somelib::capi::MyStruct_option ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
+
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t {
+        const void* data;
+        DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result (*run_callback)(const void*);
+        void (*destructor)(const void*);
+    } DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t;
     typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {somelib::capi::DiplomatPrimitiveStructView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
@@ -185,6 +193,8 @@ namespace capi {
     void CallbackWrapper_test_str_conversion(DiplomatCallback_CallbackWrapper_test_str_conversion_t t_cb_wrap);
 
     void CallbackWrapper_test_slice_conversion(DiplomatCallback_CallbackWrapper_test_slice_conversion_t t_cb_wrap);
+
+    void CallbackWrapper_test_result_option_struct_conversion(DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t t_cb_wrap);
 
     void CallbackWrapper_test_struct_slice_conversion(DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t t_cb_wrap);
 
@@ -293,6 +303,10 @@ inline void somelib::CallbackWrapper::test_str_conversion(std::function<somelib:
 
 inline void somelib::CallbackWrapper::test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, std::monostate>()> t) {
     somelib::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const double>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+}
+
+inline void somelib::CallbackWrapper::test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t) {
+    somelib::capi::CallbackWrapper_test_result_option_struct_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::optional<somelib::MyStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
 inline void somelib::CallbackWrapper::test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t) {

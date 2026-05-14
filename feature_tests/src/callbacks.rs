@@ -120,8 +120,7 @@ mod ffi {
             assert_eq!(sl[1], 2.0);
         }
 
-        // FIXME: https://github.com/rust-diplomat/diplomat/issues/1154
-        #[diplomat::attr(any(cpp, nanobind, kotlin), disable)]
+        #[diplomat::attr(kotlin, disable)]
         pub fn test_result_option_struct_conversion(
             t: impl Fn() -> Result<DiplomatOption<MyStruct>, ()>,
         ) {

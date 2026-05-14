@@ -16,6 +16,7 @@ class MyString;
 namespace capi { struct Opaque; }
 class Opaque;
 struct CallbackTestingStruct;
+struct MyStruct;
 struct MyStructContainingAnOption;
 struct PrimitiveStruct;
 } // namespace somelib
@@ -76,6 +77,8 @@ struct CallbackWrapper {
   inline static void test_str_conversion(std::function<somelib::diplomat::result<std::string_view, std::monostate>()> t);
 
   inline static void test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, std::monostate>()> t);
+
+  inline static void test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t);
 
   inline static void test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t);
 
