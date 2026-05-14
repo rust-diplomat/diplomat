@@ -50,4 +50,11 @@ int main(int argc, char *argv[])
     auto complex_v = NonTrivial(2);
     // non-trivial type, copying not allowed
     //auto complex_rvalue = diplomat::Ok(complex_v); // This is expected to fail compilation
+
+    auto result_option_some = somelib::ErrorStruct::returns_result_option(true);
+    auto result_option_out = std::move(result_option_some).ok().value();
+    simple_assert_eq("Result of Option of Struct", result_option_out.value().j, 125);
+
+    auto result_option_none = somelib::ErrorStruct::returns_result_option(false);
+    simple_assert("Result of Option of Struct", !std::move(result_option_none).ok().value().has_value());
 }

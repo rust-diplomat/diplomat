@@ -37,6 +37,14 @@ final class ErrorStruct {
     return struct;
   }
 
+  static ErrorStruct? returnsResultOption(bool isSome) {
+    final result = _ErrorStruct_returns_result_option(isSome);
+    if (!result.isOk) {
+      return null;
+    }
+    return result.union.ok.isOk ? ErrorStruct._fromFfi(result.union.ok.union.ok) : null;
+  }
+
 
   @override
   bool operator ==(Object other) =>
@@ -50,5 +58,10 @@ final class ErrorStruct {
         j,
       ]);
 }
+
+@_DiplomatFfiUse('ErrorStruct_returns_result_option')
+@ffi.Native<_ResultResultErrorStructFfiVoidVoid Function(ffi.Bool)>(isLeaf: true, symbol: 'ErrorStruct_returns_result_option')
+// ignore: non_constant_identifier_names
+external _ResultResultErrorStructFfiVoidVoid _ErrorStruct_returns_result_option(bool isSome);
 
 // dart format on

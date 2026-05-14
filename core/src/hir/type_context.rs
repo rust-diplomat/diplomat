@@ -341,11 +341,11 @@ impl TypeContext {
         let structs = ctx.lower_all_structs(ast_structs.into_iter());
         let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
         let enums = ctx.lower_all_enums(ast_enums.into_iter());
-        let traits = ctx.lower_all_traits(ast_traits.into_iter()).unwrap();
+        let traits = ctx.lower_all_traits(ast_traits.into_iter());
         let functions = ctx.lower_all_functions(ast_functions.into_iter());
 
-        match (out_structs, structs, opaques, enums, functions) {
-            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums), Ok(functions)) => {
+        match (out_structs, structs, opaques, enums, functions, traits) {
+            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums), Ok(functions), Ok(traits)) => {
                 let res = Self {
                     out_structs,
                     structs,
@@ -954,6 +954,7 @@ mod tests {
                     pub fn use_opaque_owned(&self, opaque: OtherOpaque) {}
                     pub fn return_opaque_owned(&self) -> OtherOpaque {}
                     pub fn use_out_as_in(&self, out: OutStruct) {}
+                    pub fn wraps_result_option(&self) -> Result<Option<OutStruct>, Option<OutStruct>> {}
                 }
 
                 pub fn free_function(foo : &Opaque) {}
@@ -1440,6 +1441,45 @@ mod tests {
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.abi_compatibles = true;
         attr_validator.support.struct_refs = true;
+        attr_validator.support.callbacks = true;
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None) {
+            Ok(_context) => (),
+            Err(e) => {
+                for (ctx, err) in e {
+                    writeln!(&mut output, "Lowering error in {ctx}: {err}").unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+
+    #[test]
+    fn test_callback_result_option_wrap_fails() {
+        // We may end up supporting this in the future, but
+        // we want to test that it is currently forbidden
+        let parsed: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct MyStruct {
+                    a : i32
+                }
+
+                pub trait SomeTrait {
+                    fn xyz() -> Result<Option<MyStruct>, Option<MyStruct>>;
+                }
+
+                impl MyStruct {
+                    pub fn takes_callback(c : impl Fn() -> Result<Option<MyStruct>, Option<MyStruct>>) {}
+                }
+            }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
         attr_validator.support.callbacks = true;
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,

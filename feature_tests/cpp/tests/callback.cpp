@@ -184,4 +184,19 @@ int main(int argc, char *argv[])
         });
     }
 
+    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1154
+    // {
+    //     o.test_result_option_struct_conversion([]() {
+    //         return diplomat::Ok<std::optional<somelib::MyStruct>>(std::optional(somelib::MyStruct {
+    //             5,
+    //             false,
+    //             1,
+    //             2,
+    //             3,
+    //             'A',
+    //             somelib::MyEnum::A
+    //         }));
+    //     });
+    // }
+
 }

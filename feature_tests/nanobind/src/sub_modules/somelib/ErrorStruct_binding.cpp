@@ -10,7 +10,8 @@ void add_ErrorStruct_binding(nb::module_ mod) {
         .def(nb::init<>())
         .def(nb::init<int32_t, int32_t>(), "i"_a.none(),  "j"_a.none())
         .def_rw("i", &somelib::ErrorStruct::i)
-        .def_rw("j", &somelib::ErrorStruct::j);
+        .def_rw("j", &somelib::ErrorStruct::j)
+        .def_static("returns_result_option", &somelib::ErrorStruct::returns_result_option, "is_some"_a);
 }
 
 } 

@@ -22,4 +22,6 @@ export class ErrorStruct {
     */
     constructor(structObj: ErrorStruct_obj);
 
+
+    static returnsResultOption(isSome: boolean): ErrorStruct | null | null;
 }
