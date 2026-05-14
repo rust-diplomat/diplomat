@@ -221,6 +221,32 @@ final class _ResultDoubleVoid extends ffi.Struct {
   }
 }
 
+final class _ResultErrorStructFfiVoidUnion extends ffi.Union {
+  external _ErrorStructFfi ok;
+
+}
+
+final class _ResultErrorStructFfiVoid extends ffi.Struct {
+  external _ResultErrorStructFfiVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+
+  // ignore: unused_element
+  factory _ResultErrorStructFfiVoid.ok(_ErrorStructFfi val) {
+    final struct = ffi.Struct.create<_ResultErrorStructFfiVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  // ignore: unused_element
+  factory _ResultErrorStructFfiVoid.err() {
+    final struct = ffi.Struct.create<_ResultErrorStructFfiVoid>();
+    struct.isOk = false;
+    return struct;
+  }
+}
+
 final class _ResultInt32OpaqueUnion extends ffi.Union {
   @ffi.Int32()
   external int ok;
@@ -460,6 +486,32 @@ final class _ResultOptionStructFfiVoid extends ffi.Struct {
   // ignore: unused_element
   factory _ResultOptionStructFfiVoid.err() {
     final struct = ffi.Struct.create<_ResultOptionStructFfiVoid>();
+    struct.isOk = false;
+    return struct;
+  }
+}
+
+final class _ResultResultErrorStructFfiVoidVoidUnion extends ffi.Union {
+  external _ResultErrorStructFfiVoid ok;
+
+}
+
+final class _ResultResultErrorStructFfiVoidVoid extends ffi.Struct {
+  external _ResultResultErrorStructFfiVoidVoidUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+
+  // ignore: unused_element
+  factory _ResultResultErrorStructFfiVoidVoid.ok(_ResultErrorStructFfiVoid val) {
+    final struct = ffi.Struct.create<_ResultResultErrorStructFfiVoidVoid>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  // ignore: unused_element
+  factory _ResultResultErrorStructFfiVoidVoid.err() {
+    final struct = ffi.Struct.create<_ResultResultErrorStructFfiVoidVoid>();
     struct.isOk = false;
     return struct;
   }

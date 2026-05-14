@@ -13,7 +13,10 @@
 
 
 
-// No Content
+
+
+typedef struct ErrorStruct_returns_result_option_result {union {ErrorStruct_option ok; }; bool is_ok;} ErrorStruct_returns_result_option_result;
+ErrorStruct_returns_result_option_result ErrorStruct_returns_result_option(bool is_some);
 
 
 

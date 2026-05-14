@@ -9,6 +9,7 @@
 
 #include "CallbackTestingStruct.d.h"
 #include "MyString.d.h"
+#include "MyStruct.d.h"
 #include "MyStructContainingAnOption.d.h"
 #include "Opaque.d.h"
 #include "PrimitiveStruct.d.h"
@@ -132,6 +133,13 @@ typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t {
     DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_slice_conversion_t;
+typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {MyStruct_option ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
+
+typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t {
+    const void* data;
+    DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result (*run_callback)(const void*);
+    void (*destructor)(const void*);
+} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t;
 typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {DiplomatPrimitiveStructView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
@@ -182,6 +190,8 @@ void CallbackWrapper_test_inner_conversion(DiplomatCallback_CallbackWrapper_test
 void CallbackWrapper_test_str_conversion(DiplomatCallback_CallbackWrapper_test_str_conversion_t t_cb_wrap);
 
 void CallbackWrapper_test_slice_conversion(DiplomatCallback_CallbackWrapper_test_slice_conversion_t t_cb_wrap);
+
+void CallbackWrapper_test_result_option_struct_conversion(DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t t_cb_wrap);
 
 void CallbackWrapper_test_struct_slice_conversion(DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t t_cb_wrap);
 

@@ -107,6 +107,25 @@ export class ErrorStruct {
     }
 
 
+    static returnsResultOption(isSome) {
+        const diplomatReceive = new diplomatRuntime.DiplomatReceiveBuf(wasm, 13, 4, true);
+
+
+        const result = wasm.ErrorStruct_returns_result_option(diplomatReceive.buffer, isSome);
+
+        try {
+            if (!diplomatReceive.resultFlag) {
+                return null;
+            }
+            return diplomatRuntime.readOption(wasm, diplomatReceive.buffer, 8, (wasm, offset) => { const deref = offset; return ErrorStruct._fromFFI(diplomatRuntime.internalConstructor, deref) });
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            diplomatReceive.free();
+        }
+    }
+
     constructor(structObj) {
         return this.#internalConstructor(...arguments)
     }

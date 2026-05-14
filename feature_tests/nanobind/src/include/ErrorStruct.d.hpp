@@ -10,6 +10,10 @@
 #include <optional>
 #include <cstdlib>
 #include "diplomat_runtime.hpp"
+namespace somelib {
+struct ErrorStruct;
+} // namespace somelib
+
 
 
 namespace somelib {
@@ -28,6 +32,8 @@ namespace somelib {
 struct ErrorStruct {
     int32_t i;
     int32_t j;
+
+  inline static somelib::diplomat::result<std::optional<somelib::ErrorStruct>, std::monostate> returns_result_option(bool is_some);
 
     inline somelib::capi::ErrorStruct AsFFI() const;
     inline static somelib::ErrorStruct FromFFI(somelib::capi::ErrorStruct c_struct);
