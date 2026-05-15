@@ -273,6 +273,10 @@ impl Param {
     pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs: Attrs) -> Self {
         Self { name, ty, attrs }
     }
+
+    pub fn default_value(&self) -> Option<&super::DefaultArgValue> {
+        self.attrs.default_value.as_ref()
+    }
 }
 
 impl Method {
