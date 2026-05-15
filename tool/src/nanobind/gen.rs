@@ -53,6 +53,14 @@ pub(super) struct NamedType<'a, P: hir::TyPosition> {
     pub(super) name: Cow<'a, str>,
     pub(super) type_name: Cow<'a, str>,
     pub(super) ty: &'a hir::Type<P>,
+    /// Default value (for method params, but could eventually be for structs).
+    pub(crate) default_value: Option<hir::DefaultArgValue>,
+}
+
+impl<'a, P : hir::TyPosition> NamedType<'a, P> {
+    pub(super) fn default_value(&self) -> Option<&hir::DefaultArgValue> {
+        self.default_value.as_ref()
+    }
 }
 
 /// Context for generating a particular type's impl
@@ -398,6 +406,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             name: named_type_cpp.var_name,
             type_name: named_type_cpp.type_name,
             ty,
+            default_value: None,
         }
     }
 
@@ -474,6 +483,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
                     type_name: self.cpp.gen_type_name(&p.ty),
                     ty: &p.ty,
+                    default_value: p.attrs.default_value.clone(),
                 })
                 .collect(),
         };
