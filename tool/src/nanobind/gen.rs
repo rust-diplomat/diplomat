@@ -57,7 +57,7 @@ pub(super) struct NamedType<'a, P: hir::TyPosition> {
     pub(crate) default_value: Option<hir::DefaultArgValue>,
 }
 
-impl<'a, P : hir::TyPosition> NamedType<'a, P> {
+impl<'a, P: hir::TyPosition> NamedType<'a, P> {
     pub(super) fn default_value(&self) -> Option<&hir::DefaultArgValue> {
         self.default_value.as_ref()
     }
