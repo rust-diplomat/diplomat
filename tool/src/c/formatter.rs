@@ -272,6 +272,19 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
     }
 
+    pub fn fmt_opaque_slice_name(&self, borrow: MaybeOwn, op_id: TypeId) -> Cow<'tcx, str> {
+        let op_name = self.fmt_type_name(op_id);
+
+        let mtb = match borrow {
+            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
+            _ => "Mut",
+        };
+        let ty = format!("Diplomat{op_name}View{mtb}");
+
+        let def = self.tcx.resolve_type(op_id);
+        self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
+    }
+
     pub(crate) fn fmt_write_name(&self) -> Cow<'tcx, str> {
         self.diplomat_namespace("DiplomatWrite".into())
     }

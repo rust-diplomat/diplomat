@@ -823,6 +823,14 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
+            Type::Slice(hir::Slice::Opaque(b, ref op_ty)) => {
+                // Treat the inner type as mutable, we'll handle adding `const` directives in a second:
+                let type_name = self.gen_opaque_name::<hir::Everywhere>(op_ty, true);
+                let ret = self
+                    .formatter
+                    .fmt_borrowed_slice(&type_name, b.mutability());
+                ret.into_owned().into()
+            }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
@@ -1094,6 +1102,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 )
                 .into()
             }
+            Type::Slice(Slice::Opaque(b, ref op)) => format!(
+                "{{reinterpret_cast<{}{}**>({cpp_name}.data()), {cpp_name}.size()}}",
+                if b.mutability().is_mutable() {
+                    ""
+                } else {
+                    "const "
+                },
+                self.formatter.namespace_c_name(
+                    op.id().into(),
+                    &self.formatter.fmt_type_name_unnamespaced(op.id())
+                )
+            )
+            .into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
                 let conversion = self.gen_cpp_to_c_for_type(

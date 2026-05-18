@@ -14,6 +14,11 @@
 typedef struct MutableCallbackHolder MutableCallbackHolder;
 
 
+typedef struct DiplomatMutableCallbackHolderView {
+  const MutableCallbackHolder** data;
+  size_t len;
+} DiplomatMutableCallbackHolderView;
+
 
 
 #endif // MutableCallbackHolder_D_H

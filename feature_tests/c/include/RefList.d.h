@@ -14,6 +14,11 @@
 typedef struct RefList RefList;
 
 
+typedef struct DiplomatRefListView {
+  const RefList** data;
+  size_t len;
+} DiplomatRefListView;
+
 
 
 #endif // RefList_D_H

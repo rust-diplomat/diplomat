@@ -14,6 +14,11 @@
 typedef struct Foo Foo;
 
 
+typedef struct DiplomatFooView {
+  const Foo** data;
+  size_t len;
+} DiplomatFooView;
+
 
 
 #endif // Foo_D_H

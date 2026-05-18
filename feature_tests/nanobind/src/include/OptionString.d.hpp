@@ -20,6 +20,12 @@ class OptionString;
 namespace somelib {
 namespace capi {
     struct OptionString;
+
+
+    typedef struct DiplomatOptionStringView {
+      const OptionString** data;
+      size_t len;
+    } DiplomatOptionStringView;
 } // namespace capi
 } // namespace
 

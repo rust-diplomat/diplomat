@@ -24,6 +24,12 @@ class RenamedMyIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedMyIterable;
+
+
+    typedef struct DiplomatRenamedMyIterableView {
+      const RenamedMyIterable** data;
+      size_t len;
+    } DiplomatRenamedMyIterableView;
 } // namespace capi
 } // namespace
 

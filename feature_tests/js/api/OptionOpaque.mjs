@@ -236,7 +236,7 @@ export class OptionOpaque {
 
     static optionOpaqueArgument(arg) {
 
-        const result = wasm.OptionOpaque_option_opaque_argument(arg.ffiValue ?? 0);
+        const result = wasm.OptionOpaque_option_opaque_argument(arg?.ffiValue ?? 0);
 
         try {
             return result;
