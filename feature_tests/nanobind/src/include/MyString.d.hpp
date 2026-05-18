@@ -27,7 +27,7 @@ namespace somelib {
 class MyString {
 public:
 
-  inline static std::unique_ptr<somelib::MyString> new_(std::string_view v);
+  inline static std::unique_ptr<somelib::MyString> new_(std::string_view v = { "T", 1 });
 
   inline static somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::diplomat::Utf8Error> new_unsafe(std::string_view v);
 

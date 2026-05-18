@@ -1,6 +1,19 @@
-{% macro params(p, lifetime_args) %}
+{% macro params(p, lifetime_args, is_method=false) %}
 {%- for param in &p -%}
-    , "{{param.name}}"_a
+    , "{{param.name}}"_a {%- if let Some(v) = param.default_value() -%} =
+    {%- match v -%}
+    {%- when hir::DefaultArgValue::Bool(b) -%}
+    {{b}}
+    {%- when hir::DefaultArgValue::Char(c) -%}
+    '{{c}}'
+    {%- when hir::DefaultArgValue::Integer(i) -%}
+    {{i}}
+    {%- when hir::DefaultArgValue::Float(f) -%}
+    {{f}}
+    {%- when _ -%}
+    /*Unknown default arg value*/
+    {%- endmatch -%}
+    {%- else -%}
     {%- match param.ty -%}
     {%- when Type::DiplomatOption(_) -%}
         = nb::none()
@@ -10,6 +23,7 @@
     {%- endif -%}
     {%- else -%}
     {%- endmatch -%}
+    {%- endif -%}
 {%- endfor -%}
 {%- if let Some(lifetime_args) = lifetime_args -%} 
     , {{lifetime_args}}
