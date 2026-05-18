@@ -31,7 +31,7 @@ public:
 
   inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y = 12);
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, float y = 14.48);
+  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, float y = 14.48, std::optional<float> z = 0);
 
   inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, bool z);
 
