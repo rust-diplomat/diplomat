@@ -13,7 +13,7 @@
     {%- when _ -%}
     /*Unknown default arg value*/
     {%- endmatch -%}
-    {%- endif -%}
+    {%- else -%}
     {%- match param.ty -%}
     {%- when Type::DiplomatOption(_) -%}
         = nb::none()
@@ -23,6 +23,7 @@
     {%- endif -%}
     {%- else -%}
     {%- endmatch -%}
+    {%- endif -%}
 {%- endfor -%}
 {%- if let Some(lifetime_args) = lifetime_args -%} 
     , {{lifetime_args}}
