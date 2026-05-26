@@ -328,10 +328,11 @@ pub mod ffi {
         pub fn make_overload(
             x: f32,
             #[diplomat::attr(auto, default_value = 14.48)] y: f32,
+            #[diplomat::attr(auto, default_value = 0)] z: Option<f32>,
         ) -> Box<Self> {
             Box::new(Self {
                 x: (x as i32) + 2,
-                y: y as i32,
+                y: y as i32 + (z.unwrap_or_default() as i32),
             })
         }
 

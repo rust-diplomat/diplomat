@@ -20,7 +20,7 @@ namespace capi {
 
     somelib::ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make(int32_t x, int32_t y);
 
-    somelib::ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make_overload(float x, float y);
+    somelib::ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make_overload(float x, float y, somelib::diplomat::capi::OptionF32 z);
 
     somelib::ns::capi::RenamedOpaqueArithmetic* namespace_OpaqueArithmetic_make_overload_rename_arg(float x, bool z);
 
@@ -58,9 +58,10 @@ inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::Rename
     return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::make(float x, float y) {
+inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::make(float x, float y, std::optional<float> z) {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_make_overload(x,
-        y);
+        y,
+        z.has_value() ? (somelib::diplomat::capi::OptionF32{ { z.value() }, true }) : (somelib::diplomat::capi::OptionF32{ {}, false }));
     return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
 }
 

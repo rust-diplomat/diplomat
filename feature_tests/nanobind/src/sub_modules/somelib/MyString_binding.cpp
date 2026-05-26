@@ -12,7 +12,7 @@ void add_MyString_binding(nb::module_ mod) {
     
     nb::class_<somelib::MyString> opaque(mod, "MyString", nb::type_slots(somelib_MyString_slots));
     opaque
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::MyString::new_))), "v"_a)
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::MyString::new_))), "v"_a='T')
         .def("borrow", &somelib::MyString::borrow)
         .def_static("get_static_str", &somelib::MyString::get_static_str)
         .def_static("new_from_first", std::move(maybe_op_unwrap(&somelib::MyString::new_from_first)), "v"_a)
