@@ -1,0 +1,120 @@
+{#- Shared idiomatic method body — encoding setup, pin chain, raw call,
+    return wrap. The caller is responsible for the method declaration line,
+    the `unsafe { }` wrap, and (for opaque) the disposed check.
+
+    Body indent comes from `method.body_indent()`:
+      - 12 spaces normally (inside `unsafe { }` inside a class method)
+      - 16 spaces when the method has `fixed (...) { ... }` wrapping,
+        so the body reads as nested under the `fixed` line rather than
+        flush with it.
+
+    Variables in scope (from the caller's `for method in methods` loop):
+      - method: MethodInfo
+      - name:   the owner type's bare C# name (e.g. "Color", "Point2D")
+-#}
+{%- let bi = method.body_indent() -%}
+{%- for statement in method.inputs.to_bytes_statements %}
+            {{ statement }}
+{%- endfor %}
+{%- for statement in method.inputs.validation_statements %}
+            {{ statement }}
+{%- endfor %}
+{%- if !method.inputs.fix_statements.is_empty() %}
+{%- for statement in method.inputs.fix_statements %}
+            {{ statement }}
+{%- endfor %}
+            {
+{%- endif %}
+{%- if method.return_type.is_write() %}
+            {# Benoit-compat surface: caller supplies the writer, we never
+               allocate or dispose internally. Method returns void; the writer
+               fills with the formatted string.
+
+               The signature is `ref DiplomatWriteable writeable` so the writer
+               isn't copied (struct semantics would leave the caller's buffer
+               empty). Taking `&writeable` on a `ref` parameter requires a
+               `fixed` block — the compiler can't otherwise prove the pointer
+               won't be moved by the GC. #}
+{{ bi }}fixed (DiplomatWriteable* writeablePtr = &writeable)
+{{ bi }}{
+{%- if let Some(info) = method.error_info %}
+{{ bi }}    var result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }}{% if !method.inputs.raw_call_args.is_empty() %}, {% endif %}writeablePtr);
+{{ bi }}    if (!result.IsOk)
+{{ bi }}    {
+{%- if info.error.is_unit() %}
+{{ bi }}        throw new {{ info.exception_name }}("FFI function failed with unit error");
+{%- else if info.error.is_opaque() %}
+{{ bi }}        throw new {{ info.exception_name }}(new {{ info.error }}(result.Err));
+{%- else if info.error.is_struct() %}
+{{ bi }}        throw new {{ info.exception_name }}({{ info.error }}.FromFFI(result.Err));
+{%- else %}
+{{ bi }}        throw new {{ info.exception_name }}(result.Err);
+{%- endif %}
+{{ bi }}    }
+{%- else %}
+{{ bi }}    Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }}{% if !method.inputs.raw_call_args.is_empty() %}, {% endif %}writeablePtr);
+{%- endif %}
+{{ bi }}}
+{%- else if let Some(info) = method.error_info %}
+{{ bi }}var result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{{ bi }}if (!result.IsOk)
+{{ bi }}{
+{%- if info.error.is_unit() %}
+{{ bi }}    throw new {{ info.exception_name }}("FFI function failed with unit error");
+{%- else if info.error.is_opaque() %}
+{{ bi }}    throw new {{ info.exception_name }}(new {{ info.error }}(result.Err));
+{%- else if info.error.is_struct() %}
+{{ bi }}    throw new {{ info.exception_name }}({{ info.error }}.FromFFI(result.Err));
+{%- else %}
+{{ bi }}    throw new {{ info.exception_name }}(result.Err);
+{%- endif %}
+{{ bi }}}
+{%- if let Some(opt) = method.option_info %}
+{%- if let Some(_) = opt.raw_option_type %}
+{%- if method.return_type.is_opaque() %}
+{{ bi }}return result.Ok.IsSome ? new {{ method.return_type }}(result.Ok.Value) : null;
+{%- else if method.return_type.is_struct() %}
+{{ bi }}return result.Ok.IsSome ? {{ method.return_type }}.FromFFI(result.Ok.Value) : ({{ method.return_type }}?)null;
+{%- else %}
+{{ bi }}return result.Ok.IsSome ? result.Ok.Value : ({{ method.return_type }}?)null;
+{%- endif %}
+{%- else %}
+{{ bi }}return result.Ok == null ? null : new {{ method.return_type }}(result.Ok);
+{%- endif %}
+{%- else if method.return_type.is_opaque() %}
+{{ bi }}return new {{ method.return_type }}(result.Ok);
+{%- else if method.return_type.is_struct() %}
+{{ bi }}return {{ method.return_type }}.FromFFI(result.Ok);
+{%- else if method.return_type.is_void() %}
+{{ bi }}return;
+{%- else %}
+{{ bi }}return result.Ok;
+{%- endif %}
+{%- else if let Some(opt) = method.option_info %}
+{%- if let Some(_) = opt.raw_option_type %}
+{{ bi }}var result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{%- if method.return_type.is_opaque() %}
+{{ bi }}return result.IsSome ? new {{ method.return_type }}(result.Value) : null;
+{%- else if method.return_type.is_struct() %}
+{{ bi }}return result.IsSome ? {{ method.return_type }}.FromFFI(result.Value) : ({{ method.return_type }}?)null;
+{%- else %}
+{{ bi }}return result.IsSome ? result.Value : ({{ method.return_type }}?)null;
+{%- endif %}
+{%- else %}
+{{ bi }}Raw.{{ method.return_type.raw() }} result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{{ bi }}return result == null ? null : new {{ method.return_type }}(result);
+{%- endif %}
+{%- else if method.return_type.is_opaque() %}
+{{ bi }}Raw.{{ method.return_type.raw() }} result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{{ bi }}return new {{ method.return_type }}(result);
+{%- else if method.return_type.is_struct() %}
+{{ bi }}Raw.{{ method.return_type.raw() }} result = Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{{ bi }}return {{ method.return_type }}.FromFFI(result);
+{%- else if method.return_type.is_void() %}
+{{ bi }}Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{%- else %}
+{{ bi }}return Raw.{{ name }}.{{ method.name }}({{ method.inputs.raw_call_args }});
+{%- endif %}
+{%- if !method.inputs.fix_statements.is_empty() %}
+            }
+{%- endif %}

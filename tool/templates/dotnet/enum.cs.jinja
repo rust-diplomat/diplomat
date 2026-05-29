@@ -1,0 +1,22 @@
+{#-
+  Minimal C# enum scaffold.
+
+  Uses only `enum_def` for now; as `DotnetFormatter` grows methods
+  (`fmt_type_name`, `fmt_enum_variant`, `fmt_docs`), revisit this
+  template to:
+    - route names through the formatter so reserved-word escaping
+      and casing rules kick in
+    - render `enum_def.docs` as XML doc comments
+    - choose an explicit underlying type (`: byte` / `: long`) based
+      on the discriminant range
+    - emit attached methods from `methods`
+    - handle `#[diplomat::attr(*, rename = "...")]`
+-#}
+namespace {{ namespace }};
+
+public enum {{ name }}
+{
+{%- for variant in variants %}
+    {{ variant.name }} = {{ variant.discriminant }},
+{%- endfor %}
+}
