@@ -1,0 +1,41 @@
+using System;
+using System.Runtime.InteropServices;
+
+namespace {{ namespace }}.Raw;
+
+using {{ namespace }};
+
+[StructLayout(LayoutKind.Sequential)]
+public partial struct {{ result_struct_name }}
+{
+    {%- if !ok_result.is_void() || !error.is_unit() %}
+    [StructLayout(LayoutKind.Explicit)]
+    private unsafe struct InnerUnion
+    {
+        {%- if !ok_result.is_void() %}
+        {%- if ok_result.is_bool() %}
+        [MarshalAs(UnmanagedType.U1)]
+        {%- endif %}
+        [FieldOffset(0)] internal {{ ok_result.raw() }} ok;
+        {%- endif %}
+        {%- if !error.is_unit() %}
+        {%- if error.is_bool() %}
+        [MarshalAs(UnmanagedType.U1)]
+        {%- endif %}
+        [FieldOffset(0)] internal {{ error.raw() }} err;
+        {%- endif %}
+    }
+
+    private InnerUnion _inner;
+    {%- endif %}
+
+    [MarshalAs(UnmanagedType.U1)]
+    public bool IsOk;
+
+    {%- if !ok_result.is_void() %}
+    public {% if ok_result.is_opaque() %}unsafe {% endif %}{{ ok_result.raw() }} Ok => IsOk ? _inner.ok : throw new InvalidOperationException("Result does not contain Ok value");
+    {%- endif %}
+    {%- if !error.is_unit() %}
+    public {% if error.is_opaque() %}unsafe {% endif %}{{ error.raw() }} Err => !IsOk ? _inner.err : throw new InvalidOperationException("Result does not contain Err value");
+    {%- endif %}
+}

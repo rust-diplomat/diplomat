@@ -12,7 +12,9 @@ use syn::{
 };
 use toml::{value::Table, Value};
 
-use crate::{cpp::CppConfig, demo_gen::DemoConfig, js::JsConfig, kotlin::KotlinConfig};
+use crate::{
+    cpp::CppConfig, demo_gen::DemoConfig, dotnet::DotnetConfig, js::JsConfig, kotlin::KotlinConfig,
+};
 use diplomat_core::hir::LoweringConfig;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
@@ -120,6 +122,8 @@ pub struct Config {
     pub js_config: JsConfig,
     #[serde(rename = "cpp")]
     pub cpp_config: CppConfig,
+    #[serde(rename = "dotnet")]
+    pub dotnet_config: DotnetConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,
@@ -155,6 +159,12 @@ impl Config {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
                 self.cpp_config.set(&key.replace("cpp.", ""), value);
+            }
+        } else if key.starts_with("dotnet.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.dotnet_config.set(&key.replace("dotnet.", ""), value);
             }
         } else {
             self.shared_config.set(key, value)

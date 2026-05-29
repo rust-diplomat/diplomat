@@ -1,4 +1,5 @@
 example/c/include/** linguist-generated=true
+example/dotnet/Generated/** linguist-generated=true
 example/c2/include/** linguist-generated=true
 example/cpp/include/** linguist-generated=true
 example/cpp/docs/source/** linguist-generated=true

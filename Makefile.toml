@@ -403,6 +403,7 @@ dependencies = [
     "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
+    "gen-dotnet-example",
 ]
 
 
@@ -423,6 +424,10 @@ dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = ["gen-js-feature", "gen-js-example"]
+
+[tasks.gen-dotnet]
+category = "Code generation"
+dependencies = ["gen-dotnet-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -506,6 +511,15 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests dart lib/src
+'''
+
+[tasks.gen-dotnet-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example dotnet Generated
 '''
 
 [tasks.gen-dart-example]
