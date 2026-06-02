@@ -29,14 +29,29 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .into_owned()
     }
 
-    pub(super) fn returnable_struct_name(&self, struct_path: &ReturnableStructPath) -> String {
-        match struct_path {
+    pub(super) fn returnable_struct_name(
+        &self,
+        struct_path: &ReturnableStructPath,
+    ) -> Option<String> {
+        Some(match struct_path {
             ReturnableStructPath::Struct(p) => {
                 self.formatter.fmt_type_name(p.tcx_id.into()).into_owned()
             }
-            ReturnableStructPath::OutStruct(_) => todo!("out struct returns not yet supported"),
-            _ => todo!("unsupported struct return type"),
-        }
+            ReturnableStructPath::OutStruct(p) => {
+                let name = self.formatter.fmt_type_name(p.tcx_id.into());
+                self.errors.push_error(format!(
+                    "[.NET backend] out struct (`#[diplomat::out] struct {name}`) return is \
+                     not yet supported"
+                ));
+                return None;
+            }
+            _ => {
+                self.errors.push_error(
+                    "[.NET backend] unsupported struct return type".to_string(),
+                );
+                return None;
+            }
+        })
     }
 
     /// Bare C# name of a *borrowed* opaque (`&T` / `&mut T`). Returns `"Color"`;
