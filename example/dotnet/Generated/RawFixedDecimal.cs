@@ -21,7 +21,7 @@ public static unsafe extern FixedDecimal* New(int v);
 public static unsafe extern void MultiplyPow10(FixedDecimal* handle, short power);
 
     [DllImport(NativeLib, EntryPoint = "icu4x_FixedDecimal_to_string_mv1", CallingConvention = CallingConvention.Cdecl)]
-public static unsafe extern DiplomatResultvoidUnit ToString(FixedDecimal* handle, DiplomatWriteable* writeable);
+public static unsafe extern DiplomatResultVoidUnit ToString(FixedDecimal* handle, DiplomatWriteable* writeable);
 
     [DllImport(NativeLib, EntryPoint = "icu4x_FixedDecimal_destroy_mv1", CallingConvention = CallingConvention.Cdecl)]
     public static unsafe extern void Destroy(FixedDecimal* handle);
