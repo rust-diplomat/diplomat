@@ -32,6 +32,7 @@ public partial class Locale: IDisposable
     {
         unsafe
         {
+            if (name == null) throw new ArgumentNullException(nameof(name));
             byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name);
             fixed (byte* namePtr = nameBytes)
             {

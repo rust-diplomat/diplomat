@@ -913,6 +913,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 raw_call_arg: format!(
                                     "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}.Length }}"
                                 ),
+                                // `&DiplomatStr` is non-optional on the Rust
+                                // side, so a null string is a contract
+                                // violation. Surface `ArgumentNullException`
+                                // naming the actual parameter — without this,
+                                // `Encoding.UTF8.GetBytes(null)` throws with
+                                // its own internal param name (`"s"`). The
+                                // template emits validation before to-bytes.
+                                validation_statement: Some(format!(
+                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                )),
                                 to_bytes_statement: Some(format!(
                                     "byte[] {bytes} = System.Text.Encoding.UTF8.GetBytes({arg_name});"
                                 )),
@@ -967,6 +977,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 raw_call_arg: format!(
                                     "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
                                 ),
+                                // Non-optional slice param — null array is a
+                                // contract violation. Without this check the
+                                // `{arg_name}.Length` in the call arg throws a
+                                // bare `NullReferenceException` with no
+                                // parameter name.
+                                validation_statement: Some(format!(
+                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                )),
                                 fix_statement: Some(format!(
                                     "fixed ({ptr_type}* {ptr} = {arg_name})"
                                 )),
