@@ -7,5 +7,8 @@ lib-name = "icu4x"
 domain = "dev.diplomattest"
 dylib-name = "diplomat_example"
 
+[dotnet]
+native-lib = "diplomat_example"
+
 [demo-gen]
 relative-js-path = "../../js/lib/api/"
