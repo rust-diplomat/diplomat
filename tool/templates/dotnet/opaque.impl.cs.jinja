@@ -73,10 +73,11 @@ public partial class {{ name }}: IDisposable
                 throw new ObjectDisposedException("{{ name }}");
             }
             {%- endif %}
-{%- for statement in method.inputs.to_bytes_statements %}
+{#- Validation precedes to-bytes encoding — see method_body.cs.jinja. #}
+{%- for statement in method.inputs.validation_statements %}
             {{ statement }}
 {%- endfor %}
-{%- for statement in method.inputs.validation_statements %}
+{%- for statement in method.inputs.to_bytes_statements %}
             {{ statement }}
 {%- endfor %}
 {%- if !method.inputs.fix_statements.is_empty() %}

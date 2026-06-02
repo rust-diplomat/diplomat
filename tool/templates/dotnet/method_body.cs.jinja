@@ -13,10 +13,15 @@
       - name:   the owner type's bare C# name (e.g. "Color", "Point2D")
 -#}
 {%- let bi = method.body_indent() -%}
-{%- for statement in method.inputs.to_bytes_statements %}
+{#- Validation (null / disposed checks) MUST precede the to-bytes encoding
+    step: a string param's `Encoding.UTF8.GetBytes(arg)` would otherwise
+    throw before our `ArgumentNullException(nameof(arg))` runs, surfacing
+    the wrong parameter name. No validation statement depends on a
+    to-bytes output, so this ordering is always safe. #}
+{%- for statement in method.inputs.validation_statements %}
             {{ statement }}
 {%- endfor %}
-{%- for statement in method.inputs.validation_statements %}
+{%- for statement in method.inputs.to_bytes_statements %}
             {{ statement }}
 {%- endfor %}
 {%- if !method.inputs.fix_statements.is_empty() %}
