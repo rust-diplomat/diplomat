@@ -78,7 +78,14 @@ public struct DiplomatWriteable : IDisposable
         {
             throw new IndexOutOfRangeException("DiplomatWriteable buffer is too big");
         }
+#if NET6_0_OR_GREATER
         return Marshal.PtrToStringUTF8(buf, (int)len) ?? string.Empty;
+#else
+        // `Marshal.PtrToStringUTF8` doesn't exist on netstandard2.0 / .NET
+        // Framework. Fall back to copying the bytes out and decoding via
+        // `Encoding.UTF8`, both of which are available there.
+        return System.Text.Encoding.UTF8.GetString(ToUtf8Bytes());
+#endif
     }
 
     public void Dispose()
