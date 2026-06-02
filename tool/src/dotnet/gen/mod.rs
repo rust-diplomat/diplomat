@@ -39,6 +39,8 @@ mod lower;
 mod method;
 mod opaque;
 
+use self::method::{MethodInfo, StructMethodContext};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Codegen context
 // ─────────────────────────────────────────────────────────────────────────────
@@ -94,7 +96,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         display_name: String,
         enum_def: &'tcx EnumDef,
-    ) -> (Option<String>, String) {
+    ) -> Option<(Option<String>, String)> {
         let variants = enum_def
             .variants
             .iter()
@@ -103,7 +105,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 discriminant: variant.discriminant,
             })
             .collect();
-        (
+        Some((
             None,
             EnumTemplate {
                 namespace: self.namespace,
@@ -112,48 +114,111 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
             .render()
             .unwrap(),
-        )
+        ))
     }
 
     pub(crate) fn gen_opaque(
         &self,
         display_name: String,
         opaque_def: &'tcx OpaqueDef,
-    ) -> (Option<String>, String) {
-        (
-            self.gen_opaque_raw(display_name.clone(), opaque_def),
-            self.gen_opaque_impl(display_name, opaque_def),
-        )
+    ) -> Option<(Option<String>, String)> {
+        // Lower every method exactly once, then hand the same `MethodInfo`s
+        // to both the raw and idiomatic templates. Lowering twice (once per
+        // template) would push every unsupported-shape diagnostic twice.
+        // A method that uses an unsupported shape is dropped here (the
+        // diagnostic was recorded during lowering); the end-gate aborts the
+        // whole run before any file is written.
+        let methods: Vec<MethodInfo<'tcx>> = opaque_def
+            .methods
+            .iter()
+            .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
+            .collect();
+        let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, methods.clone());
+        let content = self.gen_opaque_impl(display_name, methods);
+        Some((Some(raw), content))
     }
 
     pub(crate) fn gen_struct(
         &self,
         display_name: String,
         struct_def: &'tcx StructDef,
-    ) -> (Option<String>, String) {
-        (
-            self.gen_struct_raw(display_name.clone(), struct_def),
-            self.gen_struct_impl(display_name, struct_def),
-        )
+    ) -> Option<(Option<String>, String)> {
+        // An unsupported field type skips the whole struct — there's no
+        // partial struct to emit. Methods are lowered once and shared
+        // between the raw and idiomatic templates (see `gen_opaque`).
+        let fields = self.lower_fields(struct_def)?;
+        let methods: Vec<MethodInfo<'tcx>> = struct_def
+            .methods
+            .iter()
+            .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
+            .collect();
+        let raw = self.gen_struct_raw(display_name.clone(), fields.clone(), methods.clone());
+        let content = self.gen_struct_impl(display_name, fields, methods);
+        Some((Some(raw), content))
     }
 
     pub(crate) fn gen_out_struct(
         &self,
         out_struct_def: &'tcx OutStructDef,
-    ) -> (Option<String>, String) {
+    ) -> Option<(Option<String>, String)> {
         // `#[diplomat::out]` structs (return-position-only structs whose
         // fields can hold types like owned slices and Rust-owned opaques
         // by value) need their own codegen path — the regular struct
         // templates only handle primitive / enum fields. There's no
         // `BackendAttrSupport` flag to reject them at HIR validation, so
-        // we panic here with a clear message. Picky / IronRDP / the
-        // checked-in example don't use them, so this isn't a regression.
-        unimplemented!(
+        // we record a diagnostic and skip the type here. Picky / IronRDP /
+        // the checked-in example don't use them, so this isn't a regression.
+        self.errors.push_error(format!(
             "[.NET backend] out struct (`#[diplomat::out] struct {}`) is \
              not yet supported. Convert to a regular struct or wrap the \
              return in an opaque if possible.",
             out_struct_def.name
-        );
+        ));
+        None
+    }
+
+    /// Lower a HIR primitive to its C# vocabulary. Returns `None` (after
+    /// recording a diagnostic) for primitives the backend can't represent
+    /// yet, so callers skip the offending method/type rather than panic.
+    pub(super) fn lower_primitive(
+        &self,
+        primitive: &hir::PrimitiveType,
+    ) -> Option<DotnetPrimitives> {
+        Some(match primitive {
+            hir::PrimitiveType::Bool => DotnetPrimitives::Bool,
+            hir::PrimitiveType::Char => DotnetPrimitives::UInt,
+            hir::PrimitiveType::Byte => DotnetPrimitives::Byte,
+            hir::PrimitiveType::Ordering => {
+                self.errors.push_error(
+                    "[.NET backend] `Ordering` primitive is not yet supported".to_string(),
+                );
+                return None;
+            }
+            hir::PrimitiveType::Int(int_type) => match int_type {
+                hir::IntType::I8 => DotnetPrimitives::SByte,
+                hir::IntType::I16 => DotnetPrimitives::Short,
+                hir::IntType::I32 => DotnetPrimitives::Int,
+                hir::IntType::I64 => DotnetPrimitives::Long,
+                hir::IntType::U8 => DotnetPrimitives::Byte,
+                hir::IntType::U16 => DotnetPrimitives::UShort,
+                hir::IntType::U32 => DotnetPrimitives::UInt,
+                hir::IntType::U64 => DotnetPrimitives::ULong,
+            },
+            hir::PrimitiveType::IntSize(int_size_type) => match int_size_type {
+                hir::IntSizeType::Isize => DotnetPrimitives::NInt,
+                hir::IntSizeType::Usize => DotnetPrimitives::NUInt,
+            },
+            hir::PrimitiveType::Int128(_) => {
+                self.errors.push_error(
+                    "[.NET backend] 128-bit integer primitives are not yet supported".to_string(),
+                );
+                return None;
+            }
+            hir::PrimitiveType::Float(float_type) => match float_type {
+                hir::FloatType::F32 => DotnetPrimitives::Float,
+                hir::FloatType::F64 => DotnetPrimitives::Double,
+            },
+        })
     }
 }
 
@@ -165,9 +230,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
 /// vocabulary — built so the type knows how to render itself (`Display`)
 /// instead of a function returning `&'static str`.
 ///
-/// Unimplemented variants (Char, Byte, Ordering, IntSize, Int128, Float) hit
-/// `todo!()` on construction, preserving the existing behavior of
-/// `lower::primitives_to_dotnet_type`.
+/// `Ordering` and `Int128` have no C# representation yet; they're rejected
+/// in [`ItemGenContext::lower_primitive`] with a recorded diagnostic rather
+/// than constructed here.
 #[derive(Debug, Clone)]
 pub(super) enum DotnetPrimitives {
     Bool,
@@ -192,36 +257,6 @@ impl DotnetPrimitives {
     /// `repr(C)` `bool` is 1 byte and the ABI requires U1.
     pub(super) fn is_bool(&self) -> bool {
         matches!(self, Self::Bool)
-    }
-}
-
-impl From<&hir::PrimitiveType> for DotnetPrimitives {
-    fn from(primitive: &hir::PrimitiveType) -> Self {
-        match primitive {
-            hir::PrimitiveType::Bool => Self::Bool,
-            hir::PrimitiveType::Char => Self::UInt,
-            hir::PrimitiveType::Byte => Self::Byte,
-            hir::PrimitiveType::Ordering => todo!(),
-            hir::PrimitiveType::Int(int_type) => match int_type {
-                hir::IntType::I8 => Self::SByte,
-                hir::IntType::I16 => Self::Short,
-                hir::IntType::I32 => Self::Int,
-                hir::IntType::I64 => Self::Long,
-                hir::IntType::U8 => Self::Byte,
-                hir::IntType::U16 => Self::UShort,
-                hir::IntType::U32 => Self::UInt,
-                hir::IntType::U64 => Self::ULong,
-            },
-            hir::PrimitiveType::IntSize(int_size_type) => match int_size_type {
-                hir::IntSizeType::Isize => Self::NInt,
-                hir::IntSizeType::Usize => Self::NUInt,
-            },
-            hir::PrimitiveType::Int128(_) => todo!(),
-            hir::PrimitiveType::Float(float_type) => match float_type {
-                hir::FloatType::F32 => Self::Float,
-                hir::FloatType::F64 => Self::Double,
-            },
-        }
     }
 }
 

@@ -138,6 +138,7 @@ pub(crate) enum DotnetErrorType {
     Unit,
 }
 
+#[derive(Clone)]
 pub(crate) struct ErrorInfo {
     pub(crate) error: DotnetErrorType,
     pub(crate) exception_name: String,
@@ -145,10 +146,10 @@ pub(crate) struct ErrorInfo {
 }
 
 impl DotnetErrorType {
-    pub(crate) fn new(value: &Type<OutputOnly>, ctx: &ItemGenContext) -> Self {
-        match value {
+    pub(crate) fn new(value: &Type<OutputOnly>, ctx: &ItemGenContext) -> Option<Self> {
+        Some(match value {
             Type::Primitive(primitive_type) => {
-                DotnetErrorType::Primitive(DotnetPrimitives::from(primitive_type))
+                DotnetErrorType::Primitive(ctx.lower_primitive(primitive_type)?)
             }
             Type::Opaque(opaque_path) => {
                 let opaque_name = ctx.opaque_name(opaque_path);
@@ -159,11 +160,16 @@ impl DotnetErrorType {
                 DotnetErrorType::Enum(enum_name)
             }
             Type::Struct(struct_path) => {
-                let struct_name = ctx.returnable_struct_name(struct_path);
+                let struct_name = ctx.returnable_struct_name(struct_path)?;
                 DotnetErrorType::Struct(struct_name)
             }
-            _ => unimplemented!("unsupported error type: {:?}", value),
-        }
+            other => {
+                ctx.errors.push_error(format!(
+                    "[.NET backend] unsupported error type: {other:?}"
+                ));
+                return None;
+            }
+        })
     }
 
     pub(crate) fn raw(&self) -> String {

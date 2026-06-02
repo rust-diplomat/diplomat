@@ -260,7 +260,10 @@ pub(crate) fn run<'tcx>(
         // names, the type declaration sites (`public partial class T`),
         // and the type references (`Raw.T.Method`).
         let display_name = ctx.formatter.fmt_type_name(id).into_owned();
-        let (raw, content) = match ty {
+        // Attribute any diagnostic pushed while lowering this type (or its
+        // methods) to `Type` / `Type::method`. Restored on scope exit.
+        let _guard = ctx.errors.set_context_ty(display_name.clone().into());
+        let lowered = match ty {
             diplomat_core::hir::TypeDef::Struct(struct_def) => {
                 ctx.gen_struct(display_name.clone(), struct_def)
             }
@@ -275,8 +278,16 @@ pub(crate) fn run<'tcx>(
                 // No other type variants are expected to be emitted as top-level items, but
                 // if we add any in the future, this will catch them and prevent silent
                 // omissions.
-                panic!("unexpected type variant: {id:?}");
+                unreachable!("unexpected type variant: {id:?}");
             }
+        };
+
+        // A `None` means the type used an unsupported shape: the diagnostic
+        // was already recorded, so skip emitting it. The end-gate in `lib.rs`
+        // aborts the whole run (printing every collected diagnostic) before
+        // any file is written, so a skipped type never ships partial output.
+        let Some((raw, content)) = lowered else {
+            continue;
         };
 
         let file_name = format!("{display_name}.cs");

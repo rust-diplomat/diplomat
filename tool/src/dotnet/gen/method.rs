@@ -221,7 +221,7 @@ struct InputLowering {
 ///
 /// Self's quirks (empty idiomatic decl, kind-specific call arg) are absorbed
 /// by the builder — the finished aggregate has no "self is special" surface.
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub(super) struct DotnetInputs {
     /// Raw `[DllImport]` decl: `"Color* handle, byte value"`.
     pub(super) raw_params: String,
@@ -258,6 +258,7 @@ pub(super) struct ReturnLowering {
 
 /// Pre-processed view of a single HIR `Method`. Carries both raw-layer and
 /// idiomatic-layer render data — templates pick the side they want.
+#[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
     pub(super) abi_name: &'ctx str,
@@ -437,11 +438,18 @@ pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo
 // ─────────────────────────────────────────────────────────────────────────────
 
 impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
+    /// Build a method's render view, or `None` if the method uses an HIR
+    /// shape the backend can't lower yet (the diagnostic is recorded during
+    /// lowering). Callers `filter_map` over this to skip unsupported methods.
     pub(super) fn build_method_info(
         &self,
         method_context: StructMethodContext<'tcx>,
-    ) -> MethodInfo<'tcx> {
+    ) -> Option<MethodInfo<'tcx>> {
         let method = method_context.method();
+        // Refine the diagnostic context from `Type` to `Type::method` for
+        // anything pushed while lowering this method. Restored on scope exit.
+        let method_name = self.formatter.fmt_method_name(method).into_owned();
+        let _guard = self.errors.set_context_method(method_name.clone().into());
         let static_kw = if method.param_self.is_some() {
             ""
         } else {
@@ -451,9 +459,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             error_info,
             option_info,
-        } = self.lower_return(&method.output);
+        } = self.lower_return(&method.output)?;
 
-        let inputs = self.lower_inputs(method_context);
+        let inputs = self.lower_inputs(method_context)?;
         let return_type_name = if option_info.is_some() {
             format!("{return_type}?")
         } else {
@@ -462,16 +470,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
 
-        MethodInfo {
+        Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
-            name: self.formatter.fmt_method_name(method).into_owned(),
+            name: method_name,
             static_kw,
             inputs,
             return_type,
             error_info,
             option_info,
             property_accessor,
-        }
+        })
     }
 
     fn property_accessor(
@@ -528,7 +536,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// jumping. No nested cartesian-product matching between Fallible /
     /// Infallible / Nullable and the success type; each HIR variant appears
     /// in exactly one arm.
-    pub(super) fn lower_return(&self, output: &hir::ReturnType) -> ReturnLowering {
+    pub(super) fn lower_return(&self, output: &hir::ReturnType) -> Option<ReturnLowering> {
         // 1. Decompose the HIR shape into the three orthogonal axes:
         //    success type, optional error, optional "wrap in Option".
         //
@@ -549,16 +557,23 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             // `void?` — both invalid C#. Reject up-front rather than
             // emitting broken code. Same treatment if it ever shows up as
             // a `DiplomatWrite` nullable (`Option<&mut DiplomatWrite>`).
-            hir::ReturnType::Nullable(hir::SuccessType::Unit) => unimplemented!(
-                "[.NET backend] `Option<()>` return is not supported — \
-                 a nullable unit has no representation in C#. Return \
-                 `bool` instead, or use `Result<(), E>` if you need a \
-                 failure-arm with no payload."
-            ),
-            hir::ReturnType::Nullable(hir::SuccessType::Write) => unimplemented!(
-                "[.NET backend] `Option<&mut DiplomatWrite>` return is \
-                 not supported."
-            ),
+            hir::ReturnType::Nullable(hir::SuccessType::Unit) => {
+                self.errors.push_error(
+                    "[.NET backend] `Option<()>` return is not supported — \
+                     a nullable unit has no representation in C#. Return \
+                     `bool` instead, or use `Result<(), E>` if you need a \
+                     failure-arm with no payload."
+                        .to_string(),
+                );
+                return None;
+            }
+            hir::ReturnType::Nullable(hir::SuccessType::Write) => {
+                self.errors.push_error(
+                    "[.NET backend] `Option<&mut DiplomatWrite>` return is not supported."
+                        .to_string(),
+                );
+                return None;
+            }
             hir::ReturnType::Nullable(s) => (s, None, true),
         };
 
@@ -570,7 +585,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::SuccessType::Unit => DotnetReturnType::Unit,
             hir::SuccessType::Write => DotnetReturnType::Write,
             hir::SuccessType::OutType(hir::Type::Primitive(p)) => {
-                DotnetReturnType::Primitive(DotnetPrimitives::from(p))
+                DotnetReturnType::Primitive(self.lower_primitive(p)?)
             }
             hir::SuccessType::OutType(hir::Type::Opaque(p)) => {
                 // Reject borrowed opaque returns. The idiomatic wrapper
@@ -583,12 +598,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 // unsafe code. Picky / IronRDP don't return borrowed
                 // opaques today, so this isn't a regression.
                 if !p.is_owned() {
-                    unimplemented!(
+                    self.errors.push_error(
                         "[.NET backend] borrowed opaque return (`&T` / `&mut T` / \
                          `Option<&T>`) is not yet supported — the generated \
                          IDisposable wrapper would double-free the Rust-owned \
                          pointer. Return `Box<T>` or `Option<Box<T>>` instead."
+                            .to_string(),
                     );
+                    return None;
                 }
                 if p.is_optional() {
                     pointer_nullable = true;
@@ -596,15 +613,17 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 DotnetReturnType::Opaque(self.opaque_name(p))
             }
             hir::SuccessType::OutType(hir::Type::Struct(p)) => {
-                DotnetReturnType::Struct(self.returnable_struct_name(p))
+                DotnetReturnType::Struct(self.returnable_struct_name(p)?)
             }
             hir::SuccessType::OutType(hir::Type::Enum(p)) => {
                 DotnetReturnType::Enum(self.enum_name(p))
             }
-            other => unimplemented!(
-                "[.NET backend] success return type not yet supported: {:?}",
-                other
-            ),
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] success return type not yet supported: {other:?}"
+                ));
+                return None;
+            }
         };
 
         // 3. If there's an error: register the (Ok, Err) pair and build
@@ -613,24 +632,27 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         //    struct with a tag byte) but no err payload field, and the
         //    failure arm throws a built-in `InvalidOperationException`
         //    without per-method exception class generation.
-        let error_info = failed.map(|err| {
-            let error_type = match err {
-                Some(ty) => DotnetErrorType::new(ty, self),
-                None => DotnetErrorType::Unit,
-            };
-            let exception_name = error_type.exception_name(self.exception_trim_suffix);
-            let result = DotnetResult::new(
-                self.namespace.to_string(),
-                return_type.clone(),
-                error_type,
-                exception_name,
-            );
-            let info = result.error_info();
-            self.result_struct_registry
-                .borrow_mut()
-                .insert(result.key(), result);
-            info
-        });
+        let error_info = match failed {
+            Some(err) => {
+                let error_type = match err {
+                    Some(ty) => DotnetErrorType::new(ty, self)?,
+                    None => DotnetErrorType::Unit,
+                };
+                let exception_name = error_type.exception_name(self.exception_trim_suffix);
+                let result = DotnetResult::new(
+                    self.namespace.to_string(),
+                    return_type.clone(),
+                    error_type,
+                    exception_name,
+                );
+                let info = result.error_info();
+                self.result_struct_registry
+                    .borrow_mut()
+                    .insert(result.key(), result);
+                Some(info)
+            }
+            None => None,
+        };
 
         // 4. If the return is wrapped in Option: either Path A (pointer
         //    null carries the None) or Path B (DiplomatOption<T> tagged
@@ -648,18 +670,25 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             None
         };
 
-        ReturnLowering {
+        Some(ReturnLowering {
             return_type,
             error_info,
             option_info,
-        }
+        })
     }
 
     /// Lower `param_self` + user `params` into the joined-string surfaces
-    /// templates consume.
-    pub(super) fn lower_inputs(&self, method_context: StructMethodContext<'tcx>) -> DotnetInputs {
+    /// templates consume. `None` (with a recorded diagnostic) if any input
+    /// uses an unsupported shape.
+    pub(super) fn lower_inputs(
+        &self,
+        method_context: StructMethodContext<'tcx>,
+    ) -> Option<DotnetInputs> {
         let method = method_context.method();
-        let self_lowering = method.param_self.as_ref().map(|s| self.lower_self(s));
+        let self_lowering = match method.param_self.as_ref() {
+            Some(s) => Some(self.lower_self(s)?),
+            None => None,
+        };
         let param_lowerings: Vec<InputLowering> = method
             .params
             .iter()
@@ -668,7 +697,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 let arg_name = self.formatter.fmt_param_name(p.name.as_str()).into_owned();
                 self.lower_input(MethodInputContext::new(method_context, index, p, arg_name))
             })
-            .collect();
+            .collect::<Option<Vec<_>>>()?;
 
         let mut raw_params = Vec::new();
         let mut idiomatic_params = Vec::new();
@@ -714,7 +743,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
         }
 
-        DotnetInputs {
+        Some(DotnetInputs {
             raw_params: raw_params.join(", "),
             idiomatic_params: idiomatic_params.join(", "),
             raw_call_args: call_args.join(", "),
@@ -723,11 +752,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             to_bytes_statements,
             first_param_type,
             param_count,
-        }
+        })
     }
 
-    fn lower_self(&self, this: &hir::ParamSelf) -> InputLowering {
-        match &this.ty {
+    fn lower_self(&self, this: &hir::ParamSelf) -> Option<InputLowering> {
+        Some(match &this.ty {
             hir::SelfType::Opaque(p) => {
                 let name = self.opaque_name_borrowed(p);
                 InputLowering {
@@ -747,19 +776,38 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
             }
             hir::SelfType::Enum(_) => {
-                unimplemented!("[.NET backend] enum receiver (`&self` / `&mut self` on an enum) is not yet supported")
+                self.errors.push_error(
+                    "[.NET backend] enum receiver (`&self` / `&mut self` on an enum) \
+                     is not yet supported"
+                        .to_string(),
+                );
+                return None;
             }
             other => {
-                unimplemented!("[.NET backend] self type not yet supported: {:?}", other)
+                self.errors.push_error(format!(
+                    "[.NET backend] self type not yet supported: {other:?}"
+                ));
+                return None;
             }
-        }
+        })
     }
 
-    fn lower_input(&self, input_context: MethodInputContext<'tcx>) -> InputLowering {
+    /// Derive a C# local-variable name for a slice parameter's pointer / byte
+    /// buffer. Built from the *un-escaped* base identifier and then escaped
+    /// once, so a keyword param such as `class` yields a valid `classPtr`
+    /// rather than `@classPtr` — where the `@` would only have escaped the
+    /// original token, leaving the suffixed name parsed as `classPtr` anyway.
+    fn slice_local_name(&self, base: &str, suffix: &str) -> String {
+        self.formatter
+            .fmt_param_name(&format!("{base}{suffix}"))
+            .into_owned()
+    }
+
+    fn lower_input(&self, input_context: MethodInputContext<'tcx>) -> Option<InputLowering> {
         let arg_name = input_context.arg_name();
-        match &input_context.param().ty {
+        Some(match &input_context.param().ty {
             hir::Type::Primitive(p) => {
-                let primitive = DotnetPrimitives::from(p);
+                let primitive = self.lower_primitive(p)?;
                 let ty = primitive.to_string();
                 let raw_ty = if matches!(primitive, DotnetPrimitives::Bool) {
                     "[MarshalAs(UnmanagedType.U1)] bool".to_string()
@@ -820,9 +868,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::Type::Slice(slice) => match slice {
                 hir::Slice::Str(maybe_static, string_encoding) => match maybe_static {
                     Some(lifetime) => match lifetime {
-                        hir::MaybeStatic::Static => unimplemented!(
-                            "[.NET backend] `&'static str` parameters not yet supported"
-                        ),
+                        hir::MaybeStatic::Static => {
+                            self.errors.push_error(
+                                "[.NET backend] `&'static str` parameters not yet supported"
+                                    .to_string(),
+                            );
+                            return None;
+                        }
                         hir::MaybeStatic::NonStatic(_) => {
                             // The marshaller below is hard-coded to UTF-8.
                             // `attr_support.utf16_strings = false` keeps the
@@ -833,13 +885,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             match string_encoding {
                                 hir::StringEncoding::Utf8
                                 | hir::StringEncoding::UnvalidatedUtf8 => {}
-                                other => unimplemented!(
-                                    "[.NET backend] string encoding not yet supported: {:?}",
-                                    other
-                                ),
+                                other => {
+                                    self.errors.push_error(format!(
+                                        "[.NET backend] string encoding not yet supported: {other:?}"
+                                    ));
+                                    return None;
+                                }
                             }
-                            let ptr = name_ptr(arg_name);
-                            let bytes = name_bytes(arg_name);
+                            let base = input_context.param_ident();
+                            let ptr = self.slice_local_name(base, "Ptr");
+                            let bytes = self.slice_local_name(base, "Bytes");
                             InputLowering {
                                 raw_param: format!("DiplomatSliceU8 {arg_name}"),
                                 idiomatic_param: format!("string {arg_name}"),
@@ -858,19 +913,24 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         }
                     },
                     None => {
-                        todo!();
+                        self.errors.push_error(
+                            "[.NET backend] `&str` parameter without a tracked lifetime is \
+                             not yet supported"
+                                .to_string(),
+                        );
+                        return None;
                     }
                 },
                 hir::Slice::Primitive(maybe_own, primitive_type) => match primitive_type {
                     hir::PrimitiveType::Int(int_type) => match int_type {
                         hir::IntType::U8 | hir::IntType::U32 => {
-                            let ptr = name_ptr(arg_name);
+                            let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
                             let MaybeOwn::Borrow(borrow) = maybe_own else {
-                                unimplemented!(
-                                    "owned primitive slice of {:?} : {:?}",
-                                    int_type,
-                                    maybe_own
-                                );
+                                self.errors.push_error(format!(
+                                    "[.NET backend] owned primitive slice not yet supported: \
+                                     {int_type:?} : {maybe_own:?}"
+                                ));
+                                return None;
                             };
 
                             let (element_type, ptr_type, immutable_class, mutable_class) =
@@ -903,24 +963,44 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 ..Default::default()
                             }
                         }
-                        _ => unimplemented!("primitive slice of {:?} : {:?}", int_type, maybe_own),
+                        _ => {
+                            self.errors.push_error(format!(
+                                "[.NET backend] primitive slice not yet supported: \
+                                 {int_type:?} : {maybe_own:?}"
+                            ));
+                            return None;
+                        }
                     },
-                    other => unimplemented!("primitive type of {:?} : {:?}", other, maybe_own),
+                    other => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] primitive slice element type not yet supported: \
+                             {other:?} : {maybe_own:?}"
+                        ));
+                        return None;
+                    }
                 },
-                hir::Slice::Strs(enc) => unimplemented!(
-                    "[.NET backend] string-slice parameter (`&[&str]`) not yet supported: encoding {:?}",
-                    enc
-                ),
-                hir::Slice::Struct(maybe_own, _) => unimplemented!(
-                    "[.NET backend] struct-slice parameter not yet supported: ownership {:?}",
-                    maybe_own
-                ),
-                other => unimplemented!(
-                    "[.NET backend] slice parameter shape not yet supported: {:?}",
-                    other
-                ),
+                hir::Slice::Strs(enc) => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] string-slice parameter (`&[&str]`) not yet supported: \
+                         encoding {enc:?}"
+                    ));
+                    return None;
+                }
+                hir::Slice::Struct(maybe_own, _) => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] struct-slice parameter not yet supported: \
+                         ownership {maybe_own:?}"
+                    ));
+                    return None;
+                }
+                other => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] slice parameter shape not yet supported: {other:?}"
+                    ));
+                    return None;
+                }
             },
-            hir::Type::Callback(callback) => self.lower_callback_input(input_context, callback),
+            hir::Type::Callback(callback) => self.lower_callback_input(input_context, callback)?,
             hir::Type::Enum(enum_path) => {
                 // Enums cross the FFI boundary by value as their underlying
                 // integer discriminant. The raw extern and the idiomatic
@@ -951,11 +1031,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     ..Default::default()
                 }
             }
-            other => unimplemented!(
-                "[.NET backend] method input type not yet supported: {:?}",
-                other
-            ),
-        }
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] method input type not yet supported: {other:?}"
+                ));
+                return None;
+            }
+        })
     }
 
     // -------------------------------------------------------------------
@@ -975,15 +1057,15 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         input_context: MethodInputContext<'tcx>,
         callback: &hir::Callback,
-    ) -> InputLowering {
+    ) -> Option<InputLowering> {
         let arg_name = input_context.arg_name().to_string();
-        let return_type = self.lower_callback_return_type(&callback.output);
+        let return_type = self.lower_callback_return_type(&callback.output)?;
         let mut callback_param_types = Vec::new();
         let mut callback_param_decls = Vec::new();
         let mut callback_param_names = Vec::new();
 
         for (index, param) in callback.params.iter().enumerate() {
-            let param_type = self.lower_callback_param_type(&param.ty);
+            let param_type = self.lower_callback_param_type(&param.ty)?;
             let param_name = param
                 .name
                 .as_ref()
@@ -1012,7 +1094,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .borrow_mut()
             .insert(callback_name.clone(), callback);
 
-        InputLowering {
+        Some(InputLowering {
             raw_param: format!("{callback_name} {arg_name}"),
             idiomatic_param: format!("{idiomatic_type} {arg_name}"),
             raw_call_arg: format!("{callback_name}.FromDelegate({arg_name})"),
@@ -1021,33 +1103,37 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             )),
             idiomatic_param_type: Some(idiomatic_type),
             ..Default::default()
-        }
+        })
     }
 
     fn lower_callback_return_type(
         &self,
         output: &hir::ReturnType<hir::InputOnly>,
-    ) -> DotnetReturnType {
-        match output {
+    ) -> Option<DotnetReturnType> {
+        Some(match output {
             hir::ReturnType::Infallible(hir::SuccessType::Unit) => DotnetReturnType::Unit,
             hir::ReturnType::Infallible(hir::SuccessType::OutType(hir::Type::Primitive(p))) => {
-                DotnetReturnType::Primitive(DotnetPrimitives::from(p))
+                DotnetReturnType::Primitive(self.lower_primitive(p)?)
             }
-            other => unimplemented!(
-                "[.NET backend] callback return type not yet supported (WIP): {:?}",
-                other
-            ),
-        }
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] callback return type not yet supported (WIP): {other:?}"
+                ));
+                return None;
+            }
+        })
     }
 
-    fn lower_callback_param_type(&self, ty: &hir::Type<hir::OutputOnly>) -> String {
-        match ty {
-            hir::Type::Primitive(p) => DotnetPrimitives::from(p).to_string(),
-            other => unimplemented!(
-                "[.NET backend] callback parameter type not yet supported (WIP): {:?}",
-                other
-            ),
-        }
+    fn lower_callback_param_type(&self, ty: &hir::Type<hir::OutputOnly>) -> Option<String> {
+        Some(match ty {
+            hir::Type::Primitive(p) => self.lower_primitive(p)?.to_string(),
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] callback parameter type not yet supported (WIP): {other:?}"
+                ));
+                return None;
+            }
+        })
     }
 }
 
@@ -1065,10 +1151,3 @@ fn callback_idiomatic_type(param_types: &[String], return_type: &DotnetReturnTyp
     }
 }
 
-fn name_ptr(ty: &str) -> String {
-    format!("{ty}Ptr")
-}
-
-fn name_bytes(ty: &str) -> String {
-    format!("{ty}Bytes")
-}
