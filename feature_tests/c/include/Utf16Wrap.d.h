@@ -14,6 +14,11 @@
 typedef struct Utf16Wrap Utf16Wrap;
 
 
+typedef struct DiplomatUtf16WrapView {
+  const Utf16Wrap** data;
+  size_t len;
+} DiplomatUtf16WrapView;
+
 
 
 #endif // Utf16Wrap_D_H

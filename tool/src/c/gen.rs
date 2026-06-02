@@ -593,6 +593,20 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
                     st_name
                 }
+                hir::Slice::Opaque(borrow, ref op_ty) => {
+                    let op_id = op_ty.id();
+                    let op_name = self.formatter.fmt_opaque_slice_name(*borrow, op_id);
+
+                    if self.tcx.resolve_type(op_id).attrs().disable {
+                        self.errors
+                            .push_error(format!("Found usage of disabled type {op_name}"));
+                    }
+
+                    let header_path = self.formatter.fmt_decl_header_path(op_id.into());
+                    header.includes.insert(header_path);
+
+                    op_name
+                }
                 hir::Slice::Str(_, encoding) => self.formatter.fmt_str_view_name(*encoding),
                 hir::Slice::Strs(encoding) => self.formatter.fmt_strs_view_name(*encoding),
                 &_ => unreachable!("unknown AST/HIR variant"),

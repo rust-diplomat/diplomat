@@ -24,6 +24,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.constructors = true;
     a.fallible_constructors = true;
     a.named_constructors = true;
+    a.opaque_slices = false; // TODO
 
     a
 }
