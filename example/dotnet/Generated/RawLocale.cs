@@ -9,9 +9,9 @@ namespace Somelib.Raw;
 public partial struct Locale
 {
 #if __IOS__
-    private const string NativeLib = "libsomelib.framework/libsomelib";
+    private const string NativeLib = "libdiplomat_example.framework/libdiplomat_example";
 #else
-    private const string NativeLib = "somelib";
+    private const string NativeLib = "diplomat_example";
 #endif
 
     [DllImport(NativeLib, EntryPoint = "icu4x_Locale_new_mv1", CallingConvention = CallingConvention.Cdecl)]

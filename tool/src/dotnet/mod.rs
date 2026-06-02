@@ -393,3 +393,88 @@ pub(crate) fn run<'tcx>(
 
     (files, errors)
 }
+
+#[cfg(test)]
+mod test {
+    use std::collections::HashMap;
+
+    use diplomat_core::hir::{BasicAttributeValidator, DocsUrlGenerator, TypeContext};
+    use quote::quote;
+
+    use crate::Config;
+
+    fn new_tcx(tk_stream: proc_macro2::TokenStream) -> TypeContext {
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
+
+        let mut attr_validator = BasicAttributeValidator::new("dotnet_test");
+        attr_validator.support = super::attr_support();
+
+        match TypeContext::from_syn(&file, Default::default(), attr_validator, None) {
+            Ok(context) => context,
+            Err(e) => {
+                for (_cx, err) in e {
+                    eprintln!("Lowering error: {err}");
+                }
+                panic!("Failed to create context")
+            }
+        }
+    }
+
+    #[test]
+    fn native_lib_and_dylib_name_config_aliases_are_supported() {
+        let mut native_lib_config = super::DotnetConfig::default();
+        native_lib_config.set(
+            "native_lib",
+            toml::Value::String("diplomat_example".to_string()),
+        );
+        assert_eq!(
+            native_lib_config.dylib_name.as_deref(),
+            Some("diplomat_example")
+        );
+
+        let mut dylib_name_config = super::DotnetConfig::default();
+        dylib_name_config.set(
+            "dylib_name",
+            toml::Value::String("diplomat_example".to_string()),
+        );
+        assert_eq!(
+            dylib_name_config.dylib_name.as_deref(),
+            Some("diplomat_example")
+        );
+    }
+
+    #[test]
+    fn borrowed_opaque_error_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct ResultOpaque(i32);
+
+                impl ResultOpaque {
+                    pub fn borrowed_error<'a>(&'a self) -> Result<(), &'a Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let tcx = new_tcx(tk_stream);
+        let mut config = Config::default();
+        config.shared_config.lib_name = Some("somelib".to_string());
+        let docs_url_gen = DocsUrlGenerator::with_base_urls(None, HashMap::new());
+
+        let (_files, errors) = super::run(&tcx, &config, &docs_url_gen);
+        let errors = errors.take_all();
+        assert_eq!(errors.len(), 1);
+        let error_str = errors
+            .iter()
+            .map(|e| format!("{}: {}", e.0, e.1))
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            errors[0].1.contains("borrowed opaque error"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+}

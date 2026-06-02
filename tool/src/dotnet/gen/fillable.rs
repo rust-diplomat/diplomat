@@ -156,6 +156,17 @@ impl DotnetErrorType {
                 DotnetErrorType::Primitive(ctx.lower_primitive(primitive_type)?)
             }
             Type::Opaque(opaque_path) => {
+                if !opaque_path.is_owned() {
+                    ctx.errors.push_error(
+                        "[.NET backend] borrowed opaque error (`Result<_, &E>` / \
+                         `Result<_, &mut E>` / `Result<_, Option<&E>>`) is not \
+                         yet supported — the generated exception wrapper would \
+                         double-free the Rust-owned pointer. Return `Box<E>` \
+                         instead."
+                            .to_string(),
+                    );
+                    return None;
+                }
                 let opaque_name = ctx.opaque_name(opaque_path);
                 DotnetErrorType::Opaque(opaque_name)
             }
