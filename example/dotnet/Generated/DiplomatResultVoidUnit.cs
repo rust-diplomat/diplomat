@@ -6,7 +6,7 @@ namespace Somelib.Raw;
 using Somelib;
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct DiplomatResultvoidUnit
+public partial struct DiplomatResultVoidUnit
 {
 
     [MarshalAs(UnmanagedType.U1)]

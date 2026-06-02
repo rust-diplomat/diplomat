@@ -185,6 +185,18 @@ impl DotnetReturnType {
     pub(super) fn is_bool(&self) -> bool {
         matches!(self, Self::Primitive(DotnetPrimitives::Bool))
     }
+
+    /// PascalCase token for embedding in generated *type names* (result /
+    /// option helper structs). Distinct from [`Display`], which renders the
+    /// C# type and spells `Unit` / `Write` as the lowercase keyword `void` —
+    /// fine in a signature, but it yields awkwardly-cased names like
+    /// `DiplomatResultvoidUnit` when concatenated into an identifier.
+    pub(super) fn name_token(&self) -> String {
+        match self {
+            Self::Unit | Self::Write => "Void".to_string(),
+            _ => self.to_string(),
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

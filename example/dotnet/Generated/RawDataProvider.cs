@@ -18,7 +18,7 @@ public partial struct DataProvider
 public static unsafe extern DataProvider* NewStatic();
 
     [DllImport(NativeLib, EntryPoint = "icu4x_DataProvider_returns_result_mv1", CallingConvention = CallingConvention.Cdecl)]
-public static unsafe extern DiplomatResultvoidUnit ReturnsResult();
+public static unsafe extern DiplomatResultVoidUnit ReturnsResult();
 
     [DllImport(NativeLib, EntryPoint = "icu4x_DataProvider_destroy_mv1", CallingConvention = CallingConvention.Cdecl)]
     public static unsafe extern void Destroy(DataProvider* handle);

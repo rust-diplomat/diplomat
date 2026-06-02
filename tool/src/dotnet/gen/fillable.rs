@@ -51,7 +51,7 @@ impl DotnetOption {
     pub(crate) fn new(namespace: String, inner: DotnetReturnType) -> Self {
         Self {
             namespace,
-            option_struct_name: DotnetOptionName(format!("DiplomatOption{}", inner)),
+            option_struct_name: DotnetOptionName(format!("DiplomatOption{}", inner.name_token())),
             inner,
         }
     }
@@ -105,7 +105,11 @@ impl DotnetResult {
     ) -> Self {
         Self {
             namespace,
-            result_struct_name: DotnetResultName(format!("DiplomatResult{}{}", ok_result, error)),
+            result_struct_name: DotnetResultName(format!(
+                "DiplomatResult{}{}",
+                ok_result.name_token(),
+                error
+            )),
             exception_name,
             ok_result,
             error,
