@@ -930,7 +930,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                     "fixed (byte* {ptr} = {bytes})"
                                 )),
                                 idiomatic_param_type: Some("string".to_string()),
-                                ..Default::default()
                             }
                         }
                     },
@@ -990,7 +989,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 )),
                                 to_bytes_statement: None,
                                 idiomatic_param_type: Some(format!("{element_type}[]")),
-                                ..Default::default()
                             }
                         }
                         _ => {
@@ -1180,4 +1178,3 @@ fn callback_idiomatic_type(param_types: &[String], return_type: &DotnetReturnTyp
         format!("Func<{}>", types.join(", "))
     }
 }
-

@@ -46,9 +46,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 return None;
             }
             _ => {
-                self.errors.push_error(
-                    "[.NET backend] unsupported struct return type".to_string(),
-                );
+                self.errors
+                    .push_error("[.NET backend] unsupported struct return type".to_string());
                 return None;
             }
         })

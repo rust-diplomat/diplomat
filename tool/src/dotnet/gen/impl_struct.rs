@@ -151,7 +151,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     }
                 };
                 Some(StructField {
-                    name: self.formatter.fmt_field_name(field.name.as_str()).into_owned(),
+                    name: self
+                        .formatter
+                        .fmt_field_name(field.name.as_str())
+                        .into_owned(),
                     field_type,
                 })
             })

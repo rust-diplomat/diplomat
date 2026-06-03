@@ -179,9 +179,8 @@ impl DotnetErrorType {
                 DotnetErrorType::Struct(struct_name)
             }
             other => {
-                ctx.errors.push_error(format!(
-                    "[.NET backend] unsupported error type: {other:?}"
-                ));
+                ctx.errors
+                    .push_error(format!("[.NET backend] unsupported error type: {other:?}"));
                 return None;
             }
         })
