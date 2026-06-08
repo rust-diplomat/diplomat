@@ -743,6 +743,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                             r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}, "{}"){alloc_end}{spread_post}"#,
                             self.formatter.fmt_primitive_list_view(*p)
                         ),
+                        // Currently, opaque slices only need to be simply evaluated, as we don't allow borrowing: rust-diplomat.github.io/diplomat/attrs/slices.html#opaques
                         hir::Slice::Opaque(_, op) => format!(r#"{spread_pre}{alloc_stmnt}diplomatRuntime.DiplomatBuf.slice(wasm, {js_name}.map((op) => {}), "u32"){alloc_end}{spread_post}"#, self.gen_js_to_c_for_type::<hir::Everywhere>(&Type::Opaque(op.clone()), "op".into(), struct_borrow_info, alloc, JsToCConversionContext::List)),
                         _ => unreachable!("Unknown Slice variant {ty:?}"),
                     }

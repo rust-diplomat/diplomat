@@ -1222,6 +1222,7 @@ impl<'ast> LoweringContext<'ast> {
                             )));
                         }
 
+                        // Currently made simple since right now we don't support borrowing from opaque slices in output: rust-diplomat.github.io/diplomat/attrs/slices.html#opaques
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
                     }
                     _ => {
