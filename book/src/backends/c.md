@@ -101,13 +101,6 @@ Where `SuccessType` and `ErrorType` are converted from the given rust type into 
 |`&[&str] or &[DiplomatStrSlice]` or `&[DiplomatUtf8StrSlice]`|`DiplomatStringsView`|
 |`&[DiplomatStr16Slice]`|`DiplomatStrings16View`|
 
-#### Primitive Slices
-Diplomat's C backend has custom structs included in `diplomat_runtime.h` which are named `Diplomat{PrimitiveName}View`. 
-
-
-#### Opaque Slices
-As with primitive slices, there is a generated `Diplomat{OpaqueName}View` slice.
-
 `PrimitiveName` is the Rust primitive's name (but in UpperCamelCase). These have the following format:
 
 ```c
@@ -116,6 +109,12 @@ typedef struct DiplomatPrimitiveNameView {
     size_t len;
 };
 ```
+
+#### Primitive Slices
+Diplomat's C backend has custom structs included in `diplomat_runtime.h` which are named `Diplomat{PrimitiveName}View`. 
+
+#### Opaque Slices
+As with primitive slices, there is a generated `Diplomat{OpaqueName}View` slice.
 
 There is also a `DiplomatPrimitiveViewMut` struct for slices with mutable pointers.
 
