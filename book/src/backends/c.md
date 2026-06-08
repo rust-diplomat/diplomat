@@ -105,6 +105,9 @@ Where `SuccessType` and `ErrorType` are converted from the given rust type into 
 Diplomat's C backend has custom structs included in `diplomat_runtime.h` which are named `Diplomat{PrimitiveName}View`. 
 
 
+#### Opaque Slices
+As with primitive slices, there is a generated `Diplomat{OpaqueName}View` slice.
+
 `PrimitiveName` is the Rust primitive's name (but in UpperCamelCase). These have the following format:
 
 ```c

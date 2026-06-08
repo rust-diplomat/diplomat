@@ -34,3 +34,16 @@ Mapping Diplomat types from the bound language to the C API can vary based on wh
 - The struct can only have fields that are either:
     - Primitive
     - Nested primitive structs
+
+## Opaques
+({{get_supports("opaque_slices")}})
+
+Currently, opaque slices are restricted to input only, with no borrows allowed in the output:
+
+```rs
+// Allowed:
+pub fn takes_opaque_slice<'a>(&'a self, sl: &'a [MyOpaque]);
+
+// Will throw an error on lowering:
+pub fn borrows_slice_opaque<'a>(sl : &'a [MyOpaque]) -> &'a SomeType;
+```
