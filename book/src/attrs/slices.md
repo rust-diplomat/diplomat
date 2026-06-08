@@ -38,7 +38,7 @@ Mapping Diplomat types from the bound language to the C API can vary based on wh
 ## Opaques
 ({{get_supports("opaque_slices")}})
 
-Currently, opaque slices are restricted to input only, with no borrows allowed in the output:
+Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See [the relevant issue on GitHub](https://github.com/rust-diplomat/diplomat/issues/1168)):
 
 ```rs
 // Allowed:
