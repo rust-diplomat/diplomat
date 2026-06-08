@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-50536f91.js";
+            window.path_to_searchindex_js = "searchindex-ce127ed9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0b0cd8fa.js"></script>
@@ -1324,6 +1324,15 @@ mod ffi {
 </ul>
 </li>
 </ul>
+<h2 id="opaques"><a class="header" href="#opaques">Opaques</a></h2>
+<p>(Supported by queried with <code>#[diplomat::cfg(supports=opaque_slices)]</code>)</p>
+<p>Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See <a href="https://github.com/rust-diplomat/diplomat/issues/1168">the relevant issue on GitHub</a>):</p>
+<pre><code class="language-rs">// Allowed:
+pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
+
+// Will throw an error on lowering:
+pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="references"><a class="header" href="#references">References</a></h1>
 <h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
@@ -1976,7 +1985,7 @@ to see what is necessary. Documentation for more backends will be added in the f
 </tbody>
 </table>
 </div>
-<h4 id="opaques"><a class="header" href="#opaques">Opaques</a></h4>
+<h4 id="opaques-1"><a class="header" href="#opaques-1">Opaques</a></h4>
 <p>Opaques are represented as pointers to zero-sized structs.</p>
 <h4 id="structs"><a class="header" href="#structs">Structs</a></h4>
 <p>Structs are represented as simple C structs; each member is converted into the relevant C type as detailed here.</p>
@@ -2040,14 +2049,16 @@ to see what is necessary. Documentation for more backends will be added in the f
 </tbody>
 </table>
 </div>
-<h4 id="primitive-slices"><a class="header" href="#primitive-slices">Primitive Slices</a></h4>
-<p>Diplomat’s C backend has custom structs included in <code>diplomat_runtime.h</code> which are named <code>Diplomat{PrimitiveName}View</code>.</p>
 <p><code>PrimitiveName</code> is the Rust primitive’s name (but in UpperCamelCase). These have the following format:</p>
 <pre><code class="language-c">typedef struct DiplomatPrimitiveNameView {
     const CPrimitiveType* data;
     size_t len;
 };
 </code></pre>
+<h4 id="primitive-slices"><a class="header" href="#primitive-slices">Primitive Slices</a></h4>
+<p>Diplomat’s C backend has custom structs included in <code>diplomat_runtime.h</code> which are named <code>Diplomat{PrimitiveName}View</code>.</p>
+<h4 id="opaque-slices"><a class="header" href="#opaque-slices">Opaque Slices</a></h4>
+<p>As with primitive slices, there is a generated <code>Diplomat{OpaqueName}View</code> slice.</p>
 <p>There is also a <code>DiplomatPrimitiveViewMut</code> struct for slices with mutable pointers.</p>
 <h3 id="diplomatwrite"><a class="header" href="#diplomatwrite">DiplomatWrite</a></h3>
 <p>In the C ABI, <code>DiplomatWrite</code> is defined in <code>diplomat_runtime.h</code>:</p>
@@ -2202,6 +2213,9 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 <li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
+</li>
+<li>
 <p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
 </li>
 </ul>
@@ -2224,7 +2238,7 @@ typedef struct TraitName_VTable {
 </tbody>
 </table>
 </div>
-<h3 id="opaques-1"><a class="header" href="#opaques-1">Opaques</a></h3>
+<h3 id="opaques-2"><a class="header" href="#opaques-2">Opaques</a></h3>
 <p>Opaques are treated as classes that wrap their C ABI pointer, but upon return either wrapped in a <code>std::unique_ptr&lt;Type&gt;</code> or a simple <code>Type*</code> pointer.</p>
 <h4 id="structs-1"><a class="header" href="#structs-1">Structs</a></h4>
 <p>Structs are represented as C++ structs with methods. Each C++ struct is converted from the C ABI into its relevant C++ type.</p>
@@ -2443,6 +2457,9 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 <li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
+</li>
+<li>
 <p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
 </li>
 </ul>
@@ -2554,6 +2571,9 @@ SomeStruct_takes_mut(ffiFriendly);
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
@@ -2669,6 +2689,9 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 <li>
+<p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
+</li>
+<li>
 <p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
 </li>
 </ul>
@@ -2780,6 +2803,9 @@ SomeStruct_takes_mut(ffiFriendly);
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
@@ -2963,6 +2989,9 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 <li>
+<p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
+</li>
+<li>
 <p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
 </li>
 </ul>
@@ -3009,7 +3038,7 @@ so here some specific examples</p>
 </tbody>
 </table>
 </div>
-<h4 id="opaques-2"><a class="header" href="#opaques-2">Opaques</a></h4>
+<h4 id="opaques-3"><a class="header" href="#opaques-3">Opaques</a></h4>
 <p>These are Python classes bound to C++ through Nanobind.</p>
 <h4 id="structs-2"><a class="header" href="#structs-2">Structs</a></h4>
 <p>These are Python classes, bound similarly to opaques; however, each field is defined as properties on the class.</p>
@@ -3190,6 +3219,9 @@ somelib.Foo.takes_slice(f)
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>

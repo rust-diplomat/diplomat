@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-50536f91.js";
+            window.path_to_searchindex_js = "../searchindex-ce127ed9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0b0cd8fa.js"></script>
@@ -205,6 +205,15 @@ mod ffi {
 </ul>
 </li>
 </ul>
+<h2 id="opaques"><a class="header" href="#opaques">Opaques</a></h2>
+<p>(Supported by queried with <code>#[diplomat::cfg(supports=opaque_slices)]</code>)</p>
+<p>Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See <a href="https://github.com/rust-diplomat/diplomat/issues/1168">the relevant issue on GitHub</a>):</p>
+<pre><code class="language-rs">// Allowed:
+pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
+
+// Will throw an error on lowering:
+pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
+</code></pre>
 
                     </main>
 
