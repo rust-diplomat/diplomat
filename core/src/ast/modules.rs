@@ -11,6 +11,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
+use crate::ast::logging::create_report;
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -208,7 +209,7 @@ impl<'a> ModuleBuilder<'a> {
                         self.module_location,
                     )),
                     Err(errors) => {
-                        panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
+                        create_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
 
@@ -249,7 +250,7 @@ impl<'a> ModuleBuilder<'a> {
                         ))
                     }
                     Err(errors) => {
-                        panic!("Multiple conflicting Diplomat enum attributes, there can be at most one: {errors:?}");
+                        create_report((&enm.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat enum attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
                 self.custom_types_by_name.insert(ident, custom_enum);
@@ -579,9 +580,11 @@ impl File {
                         let pth = std::path::Path::new(p);
                         let new_pth = pth.join(format!("{}.rs", item_mod.ident));
                         if !new_pth.exists() {
-                            panic!("Could not find file: {:?}", new_pth.to_str());
+                            // We could just be in an item submodule, so we stay in the entry module path:
+                            &SpanLocation::FilePath(p.clone())
+                        } else {
+                            &SpanLocation::FilePath(new_pth.to_string_lossy().into())
                         }
-                        &SpanLocation::FilePath(new_pth.to_string_lossy().into())
                     }
                     SpanLocation::None => &SpanLocation::None,
                     SpanLocation::LocalSource(..) => unreachable!("Span Location for ast::File should never be LocalSource, we expect a filepath.")
