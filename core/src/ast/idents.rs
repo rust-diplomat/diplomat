@@ -157,3 +157,36 @@ impl ToTokens for Ident {
         tokens.append(self.to_syn());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::ast::Module;
+
+    #[test]
+    fn test_span_parsing() {
+        let crate_dir = env!("CARGO_MANIFEST_DIR");
+        let file = std::fs::read_to_string(
+            std::path::Path::new(crate_dir).join("src/ast/snapshots/span_testing.txt"),
+        )
+        .expect("Could not read file");
+        let f = syn::parse_str::<syn::ItemMod>(&file);
+        let inner = match f {
+            Ok(i) => i,
+            Err(e) => {
+                let span = e.span();
+                panic!(
+                    "File parsing error: {e:?} ./snapshots/span_testing.txt:{}:{}",
+                    span.start().line,
+                    span.start().column
+                )
+            }
+        };
+        let file = Module::from_syn(
+            &inner,
+            true,
+            None,
+            &super::SpanLocation::FilePath("./snapshots/span_testing.txt".into()),
+        );
+        insta::assert_yaml_snapshot!(file);
+    }
+}
