@@ -17,4 +17,4 @@ crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
 diplomat.workspace = true
-diplomat-runtime = { workspace = true, features = ["jvm-callback-support"] }
+diplomat-runtime = { workspace = true, features = ["log", "jvm-callback-support"] }
