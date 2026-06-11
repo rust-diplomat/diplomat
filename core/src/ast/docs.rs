@@ -104,7 +104,7 @@ pub struct RustLink {
 impl Parse for RustLink {
     fn parse(input: ParseStream<'_>) -> parse::Result<Self> {
         let path = input.parse()?;
-        let path = Path::from_syn(&path);
+        let path = Path::from_syn(&path, &super::SpanLocation::LocalSource(input.to_string()));
         let _comma: Token![,] = input.parse()?;
         let ty_ident: Ident = input.parse()?;
         let typ = match &*ty_ident.to_string() {

@@ -1,16 +1,43 @@
 ---
 source: core/src/ast/functions.rs
-expression: "Function::from_syn(&syn::parse_quote!\n{ fn some_func(a : SomeType) -> Option<()> {} }, &Attrs::default())"
+expression: "Function::from_syn(&syn::parse_quote!\n{ fn some_func(a : SomeType) -> Option<()> {} }, &Attrs::default(),\n&crate::ast::SpanLocation::None)"
 ---
-name: some_func
-abi_name: diplomat_external_some_func
+name:
+  - some_func
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
+abi_name:
+  - diplomat_external_some_func
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 params:
-  - name: a
+  - name:
+      - a
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     ty:
       Named:
         path:
           elements:
-            - SomeType
+            - - SomeType
+              - start_line: 1
+                column_line: 0
+                range:
+                  start: 0
+                  end: 0
+                span_location: None
         lifetimes: []
     attrs: {}
 output_type:

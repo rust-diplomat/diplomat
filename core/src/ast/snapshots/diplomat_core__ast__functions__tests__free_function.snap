@@ -1,15 +1,43 @@
 ---
 source: core/src/ast/functions.rs
-expression: "Function::from_syn(&syn::parse_quote! { fn some_func(a : f32, b: f64) {} },\n&Attrs::default())"
+expression: "Function::from_syn(&syn::parse_quote! { fn some_func(a : f32, b: f64) {} },\n&Attrs::default(), &crate::ast::SpanLocation::None)"
 ---
-name: some_func
-abi_name: diplomat_external_some_func
+name:
+  - some_func
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
+abi_name:
+  - diplomat_external_some_func
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 params:
-  - name: a
+  - name:
+      - a
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     ty:
       Primitive: f32
     attrs: {}
-  - name: b
+  - name:
+      - b
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     ty:
       Primitive: f64
     attrs: {}

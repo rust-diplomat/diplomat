@@ -1,13 +1,37 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! { :: core :: my_type :: Foo < 'test > },\n    None)"
+expression: "TypeName::from_syn(&syn::parse_quote! { ::core::my_type::Foo<'test> }, None,\n&SpanLocation::None)"
 ---
 Named:
   path:
     elements:
-      - core
-      - my_type
-      - Foo
+      - - core
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - my_type
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - Foo
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
   lifetimes:
-    - Named: test
-
+    - Named:
+        - test
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None

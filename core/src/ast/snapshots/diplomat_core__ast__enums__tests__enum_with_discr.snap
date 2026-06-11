@@ -1,37 +1,82 @@
 ---
 source: core/src/ast/enums.rs
-expression: "Enum::new(&syn::parse_quote!\n{\n    #[doc = r\" Some docs.\"] #[diplomat::rust_link(foo::Bar, Enum)] enum\n    DiscriminantedEnum { Abc = -1, Def = 0, Ghi = 1, Jkl = 2, }\n}, &Default::default())"
+expression: "Enum::new(&syn::parse_quote!\n{\n    #[doc = r\" Some docs.\"] #[diplomat::rust_link(foo::Bar, Enum)] enum\n    DiscriminantedEnum { Abc = -1, Def = 0, Ghi = 1, Jkl = 2, }\n}, &Default::default(), &crate::ast::SpanLocation::None)"
 ---
-name: DiscriminantedEnum
+name:
+  - DiscriminantedEnum
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 docs:
   - - cfg: Star
       lines: Some docs.
   - - path:
         elements:
-          - foo
-          - Bar
+          - - foo
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location:
+                LocalSource: ", Enum"
+          - - Bar
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location:
+                LocalSource: ", Enum"
       typ: Enum
       display: Normal
 variants:
-  - - Abc
+  - - - Abc
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - -1
     - - - cfg: Star
           lines: ""
       - []
     - {}
-  - - Def
+  - - - Def
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - 0
     - - - cfg: Star
           lines: ""
       - []
     - {}
-  - - Ghi
+  - - - Ghi
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - 1
     - - - cfg: Star
           lines: ""
       - []
     - {}
-  - - Jkl
+  - - - Jkl
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - 2
     - - - cfg: Star
           lines: ""

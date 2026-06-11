@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
 
+use crate::ast::idents::IntoWithSpan;
+use crate::ast::SpanLocation;
+
 use super::docs::Docs;
 use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
 
@@ -48,6 +51,7 @@ impl Method {
         self_path_type: PathType,
         impl_generics: Option<&syn::Generics>,
         impl_attrs: &Attrs,
+        module_location: &SpanLocation,
     ) -> Method {
         let mut attrs = impl_attrs.clone();
         attrs.add_attrs(&m.attrs);
@@ -66,14 +70,16 @@ impl Method {
             .iter()
             .filter_map(|a| match a {
                 syn::FnArg::Receiver(_) => None,
-                syn::FnArg::Typed(ref t) => Some(Param::from_syn(t, self_path_type.clone())),
+                syn::FnArg::Typed(ref t) => {
+                    Some(Param::from_syn(t, self_path_type.clone(), module_location))
+                }
             })
             .collect::<Vec<_>>();
 
         let self_param = m
             .sig
             .receiver()
-            .map(|rec| SelfParam::from_syn(rec, self_path_type.clone()));
+            .map(|rec| SelfParam::from_syn(rec, self_path_type.clone(), module_location));
 
         let return_ty = match &m.sig.output {
             syn::ReturnType::Type(_, return_typ) => {
@@ -82,6 +88,7 @@ impl Method {
                 Some(TypeName::from_syn(
                     return_typ.as_ref(),
                     Some(self_path_type.clone()),
+                    module_location,
                 ))
             }
             syn::ReturnType::Default => None,
@@ -93,12 +100,13 @@ impl Method {
             self_param.as_ref(),
             &all_params[..],
             return_ty.as_ref(),
+            module_location,
         );
 
         Method {
-            name: Ident::from(method_ident),
+            name: (method_ident).spanned_into(module_location),
             docs: Docs::from_attrs(&m.attrs),
-            abi_name: Ident::from(&extern_ident),
+            abi_name: (&extern_ident).spanned_into(module_location),
             self_param,
             self_type: Some(self_path_type),
             params: all_params,
@@ -247,12 +255,18 @@ impl SelfParam {
         typ
     }
 
-    pub fn from_syn(rec: &syn::Receiver, path_type: PathType) -> Self {
+    pub fn from_syn(
+        rec: &syn::Receiver,
+        path_type: PathType,
+        module_location: &SpanLocation,
+    ) -> Self {
         SelfParam {
-            reference: rec
-                .reference
-                .as_ref()
-                .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
+            reference: rec.reference.as_ref().map(|(_, lt)| {
+                (
+                    lt.spanned_into(module_location),
+                    Mutability::from_syn(&rec.mutability),
+                )
+            }),
             path_type,
             attrs: Attrs::from_attrs(&rec.attrs),
         }
@@ -280,12 +294,18 @@ impl TraitSelfParam {
         typ
     }
 
-    pub fn from_syn(rec: &syn::Receiver, path_trait: PathType) -> Self {
+    pub fn from_syn(
+        rec: &syn::Receiver,
+        path_trait: PathType,
+        module_location: &SpanLocation,
+    ) -> Self {
         TraitSelfParam {
-            reference: rec
-                .reference
-                .as_ref()
-                .map(|(_, lt)| (lt.into(), Mutability::from_syn(&rec.mutability))),
+            reference: rec.reference.as_ref().map(|(_, lt)| {
+                (
+                    lt.spanned_into(module_location),
+                    Mutability::from_syn(&rec.mutability),
+                )
+            }),
             path_trait,
         }
     }
@@ -314,7 +334,11 @@ impl Param {
         }
     }
 
-    pub fn from_syn(t: &syn::PatType, self_path_type: PathType) -> Self {
+    pub fn from_syn(
+        t: &syn::PatType,
+        self_path_type: PathType,
+        module_location: &SpanLocation,
+    ) -> Self {
         let ident = match t.pat.as_ref() {
             syn::Pat::Ident(ident) => ident,
             _ => panic!("Unexpected param type"),
@@ -323,8 +347,8 @@ impl Param {
         let attrs = Attrs::from_attrs(&t.attrs);
 
         Param {
-            name: (&ident.ident).into(),
-            ty: TypeName::from_syn(&t.ty, Some(self_path_type)),
+            name: (&ident.ident).spanned_into(module_location),
+            ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
             attrs,
         }
     }
@@ -419,7 +443,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &Attrs::default()
+            &Attrs::default(),
+            &crate::ast::SpanLocation::None
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -435,7 +460,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &Attrs::default()
+            &Attrs::default(),
+            &crate::ast::SpanLocation::None
         ));
     }
 
@@ -452,7 +478,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &Attrs::default()
+            &Attrs::default(),
+            &crate::ast::SpanLocation::None
         ));
     }
 
@@ -466,7 +493,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &Attrs::default()
+            &Attrs::default(),
+            &crate::ast::SpanLocation::None
         ));
 
         insta::assert_yaml_snapshot!(Method::from_syn(
@@ -478,7 +506,8 @@ mod tests {
             },
             PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
             None,
-            &Attrs::default()
+            &Attrs::default(),
+            &crate::ast::SpanLocation::None
         ));
     }
 
@@ -488,7 +517,8 @@ mod tests {
                 &syn::parse_quote! { $($tokens)* },
                 PathType::new(Path::empty().sub_path(Ident::from("MyStructContainingMethod"))),
                 None,
-                &Attrs::default()
+                &Attrs::default(),
+                &crate::ast::SpanLocation::None
             );
 
             let borrowed_params = method.borrowed_params();

@@ -1,5 +1,8 @@
 use serde::Serialize;
 
+use crate::ast::idents::IntoWithSpan;
+use crate::ast::SpanLocation;
+
 use super::docs::Docs;
 use super::{AttrInheritContext, Attrs, Ident, Method};
 use quote::ToTokens;
@@ -18,7 +21,7 @@ pub struct Enum {
 
 impl Enum {
     /// Extract an [`Enum`] metadata value from an AST node.
-    pub fn new(enm: &syn::ItemEnum, parent_attrs: &Attrs) -> Enum {
+    pub fn new(enm: &syn::ItemEnum, parent_attrs: &Attrs, module_location: &SpanLocation) -> Enum {
         let mut last_discriminant = -1;
         if !enm.generics.params.is_empty() {
             // Generic types are not allowed.
@@ -33,7 +36,7 @@ impl Enum {
         let variant_parent_attrs = attrs.attrs_for_inheritance(AttrInheritContext::Variant);
 
         Enum {
-            name: (&enm.ident).into(),
+            name: (&enm.ident).spanned_into(module_location),
             docs: Docs::from_attrs(&enm.attrs),
             variants: enm
                 .variants
@@ -61,7 +64,7 @@ impl Enum {
                     let mut v_attrs = variant_parent_attrs.clone();
                     v_attrs.add_attrs(&v.attrs);
                     (
-                        (&v.ident).into(),
+                        (&v.ident).spanned_into(module_location),
                         new_discriminant,
                         Docs::from_attrs(&v.attrs),
                         v_attrs,
@@ -98,7 +101,8 @@ mod tests {
                         Def
                     }
                 },
-                &Default::default()
+                &Default::default(),
+                &crate::ast::SpanLocation::None
             ));
         });
     }
@@ -120,7 +124,8 @@ mod tests {
                         Jkl = 2,
                     }
                 },
-                &Default::default()
+                &Default::default(),
+                &crate::ast::SpanLocation::None
             ));
         });
     }

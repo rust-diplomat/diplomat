@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+use crate::ast::idents::{IntoWithSpan, SpanLocation};
+
 use super::Ident;
 
 #[derive(Hash, Eq, PartialEq, Deserialize, Serialize, Clone, Debug, Ord, PartialOrd)]
@@ -40,12 +42,12 @@ impl Path {
         }
     }
 
-    pub fn from_syn(path: &syn::Path) -> Path {
+    pub fn from_syn(path: &syn::Path, module_location: &SpanLocation) -> Path {
         Path {
             elements: path
                 .segments
                 .iter()
-                .map(|seg| (&seg.ident).into())
+                .map(|seg| (&seg.ident).spanned_into(module_location))
                 .collect(),
         }
     }

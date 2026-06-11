@@ -1,9 +1,16 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! { DiplomatSlice<'a, u16> }, None)"
+expression: "TypeName::from_syn(&syn::parse_quote! { DiplomatSlice<'a, u16> }, None,\n&SpanLocation::None)"
 ---
 PrimitiveSlice:
-  - - Named: a
+  - - Named:
+        - a
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
     - Immutable
   - u16
   - Diplomat

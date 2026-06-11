@@ -1,14 +1,47 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! { Foo < 'a, 'b, 'c, 'd > }, None)"
+expression: "TypeName::from_syn(&syn::parse_quote! { Foo<'a, 'b, 'c, 'd> }, None,\n&SpanLocation::None)"
 ---
 Named:
   path:
     elements:
-      - Foo
+      - - Foo
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
   lifetimes:
-    - Named: a
-    - Named: b
-    - Named: c
-    - Named: d
-
+    - Named:
+        - a
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+    - Named:
+        - b
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+    - Named:
+        - c
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+    - Named:
+        - d
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None

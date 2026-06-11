@@ -1,5 +1,8 @@
 use serde::Serialize;
 
+use crate::ast::idents::IntoWithSpan;
+use crate::ast::SpanLocation;
+
 use super::docs::Docs;
 use super::{Attrs, Ident, LifetimeEnv, Method, Mutability};
 
@@ -25,15 +28,16 @@ impl OpaqueType {
         strct: &syn::ItemStruct,
         mutability: Mutability,
         parent_attrs: &Attrs,
+        module_location: &SpanLocation,
     ) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&strct.attrs);
-        let name = Ident::from(&strct.ident);
+        let name = (&strct.ident).spanned_into(module_location);
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),
             name,
             docs: Docs::from_attrs(&strct.attrs),
-            lifetimes: LifetimeEnv::from_struct_item(strct, &[]),
+            lifetimes: LifetimeEnv::from_struct_item(strct, &[], module_location),
             methods: vec![],
             mutability,
             attrs,
@@ -41,15 +45,20 @@ impl OpaqueType {
     }
 
     /// Extract a [`OpaqueType`] metadata value from an AST node representing an enum.
-    pub fn new_enum(enm: &syn::ItemEnum, mutability: Mutability, parent_attrs: &Attrs) -> Self {
+    pub fn new_enum(
+        enm: &syn::ItemEnum,
+        mutability: Mutability,
+        parent_attrs: &Attrs,
+        module_location: &SpanLocation,
+    ) -> Self {
         let mut attrs = parent_attrs.clone();
         attrs.add_attrs(&enm.attrs);
-        let name = Ident::from(&enm.ident);
+        let name = (&enm.ident).spanned_into(module_location);
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),
             name,
             docs: Docs::from_attrs(&enm.attrs),
-            lifetimes: LifetimeEnv::from_enum_item(enm, &[]),
+            lifetimes: LifetimeEnv::from_enum_item(enm, &[], module_location),
             methods: vec![],
             mutability,
             attrs,
