@@ -493,7 +493,12 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
         .expect("Could not read CARGO_MANIFEST_DIR for parsing #[diplomat::include]");
     let base_path = std::path::Path::new(&base);
 
-    let module_loc = ast::SpanLocation::FilePath(input.span().file());
+    let module_loc = if let Some(f) = input.span().local_file() {
+        // This should generally be the case, it's rare that we're reading from a bridge in a place where there isn't a file.
+        ast::SpanLocation::FilePath(f.to_string_lossy().into())
+    } else {
+        ast::SpanLocation::None
+    };
     // We do not cache:
     let module = ast::Module::from_syn(
         &input,

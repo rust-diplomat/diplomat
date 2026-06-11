@@ -22,7 +22,7 @@ pub struct Span {
 #[non_exhaustive]
 pub enum SpanLocation {
     /// For testing or when accessing SpanLocation is not possible.
-    /// Will panic on trying to render an error (we need to know where a file is located to properly display).
+    /// Will render as <location unknown> on rendering an error.
     None,
     /// An absolute path to a rust file.
     FilePath(String),
