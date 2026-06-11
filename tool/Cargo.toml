@@ -12,18 +12,16 @@ keywords.workspace = true
 readme = "../README.md"
 
 [dependencies]
-diplomat_core = { workspace = true, features = ["displaydoc", "hir"] }
+diplomat_core = { workspace = true, features = ["hir"] }
 syn = { version = "2", features = ["full", "extra-traits"] }
 syn-inline-mod = "0.6.0"
 quote = "1.0"
 indenter = "0.3.3"
-pulldown-cmark = "0.13.0"
 clap = { features = ["color", "derive", "std", "suggestions"], version = "4.2" }
 colored = "3.0"
 serde = { features = ["derive"], version = "1.0.130" }
 toml = "0.8.0"
 heck = "0.5" # conversion between naming convention
-displaydoc = "0.2"
 askama = "0.15.4"
 itertools = "0.14.0"
 
