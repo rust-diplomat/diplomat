@@ -1,31 +1,70 @@
 ---
 source: core/src/ast/structs.rs
-expression: "Struct::new(&syn::parse_quote!\n{\n    #[doc = r\" Some docs.\"] #[diplomat::rust_link(foo::Bar, Struct)] struct\n    MyLocalStruct { a: i32, b: Box<MyLocalStruct> }\n}, true, &Default::default())"
+expression: "Struct::new(&syn::parse_quote!\n{\n    #[doc = r\" Some docs.\"] #[diplomat::rust_link(foo::Bar, Struct)] struct\n    MyLocalStruct { a: i32, b: Box<MyLocalStruct> }\n}, true, &Default::default(), &SpanLocation::None)"
 ---
-name: MyLocalStruct
+name:
+  - MyLocalStruct
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 docs:
   - - cfg: Star
       lines: Some docs.
   - - path:
         elements:
-          - foo
-          - Bar
+          - - foo
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location:
+                LocalSource: ", Struct"
+          - - Bar
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location:
+                LocalSource: ", Struct"
       typ: Struct
       display: Normal
 lifetimes: {}
 fields:
-  - - a
+  - - - a
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - Primitive: i32
     - - - cfg: Star
           lines: ""
       - []
     - {}
-  - - b
+  - - - b
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     - Box:
         Named:
           path:
             elements:
-              - MyLocalStruct
+              - - MyLocalStruct
+                - start_line: 1
+                  column_line: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
           lifetimes: []
     - - - cfg: Star
           lines: ""

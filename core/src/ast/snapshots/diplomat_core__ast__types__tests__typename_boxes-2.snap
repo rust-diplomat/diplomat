@@ -1,11 +1,16 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! { Box < MyLocalStruct > }, None)"
+expression: "TypeName::from_syn(&syn::parse_quote! { Box<MyLocalStruct> }, None,\n&SpanLocation::None)"
 ---
 Box:
   Named:
     path:
       elements:
-        - MyLocalStruct
+        - - MyLocalStruct
+          - start_line: 1
+            column_line: 0
+            range:
+              start: 0
+              end: 0
+            span_location: None
     lifetimes: []
-

@@ -1,13 +1,27 @@
 ---
 source: core/src/ast/methods.rs
-expression: "Method::from_syn(&syn::parse_quote!\n{ fn foo(&self, x: u64, y: MyCustomStruct) {} },\nPathType::new(Path::empty().sub_path(Ident::from(\"MyStructContainingMethod\"))),\nNone, &Attrs::default())"
+expression: "Method::from_syn(&syn::parse_quote!\n{ fn foo(&self, x: u64, y: MyCustomStruct) {} },\nPathType::new(Path::empty().sub_path(Ident::from(\"MyStructContainingMethod\"))),\nNone, &Attrs::default(), &crate::ast::SpanLocation::None)"
 ---
-name: foo
+name:
+  - foo
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 docs:
   - - cfg: Star
       lines: ""
   - []
-abi_name: MyStructContainingMethod_foo
+abi_name:
+  - MyStructContainingMethod_foo
+  - start_line: 1
+    column_line: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 self_param:
   reference:
     - Anonymous
@@ -15,25 +29,47 @@ self_param:
   path_type:
     path:
       elements:
-        - MyStructContainingMethod
+        - - MyStructContainingMethod
+          - ~
     lifetimes: []
   attrs: {}
 self_type:
   path:
     elements:
-      - MyStructContainingMethod
+      - - MyStructContainingMethod
+        - ~
   lifetimes: []
 params:
-  - name: x
+  - name:
+      - x
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     ty:
       Primitive: u64
     attrs: {}
-  - name: y
+  - name:
+      - y
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     ty:
       Named:
         path:
           elements:
-            - MyCustomStruct
+            - - MyCustomStruct
+              - start_line: 1
+                column_line: 0
+                range:
+                  start: 0
+                  end: 0
+                span_location: None
         lifetimes: []
     attrs: {}
 return_type: ~

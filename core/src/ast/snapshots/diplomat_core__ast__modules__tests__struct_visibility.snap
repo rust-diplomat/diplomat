@@ -1,15 +1,35 @@
 ---
 source: core/src/ast/modules.rs
-expression: "File::from(&syn::parse_quote!\n{\n    #[diplomat::bridge] #[diplomat::skip_private_items] mod ffi\n    {\n        struct Foo {} #[diplomat::opaque] #[diplomat::skip_private_items] pub struct\n        Opaque{ foo: Foo, }\n    }\n})"
+expression: "File::from(&syn::parse_quote!\n{\n    #[diplomat::bridge] #[diplomat::skip_private_items] mod ffi\n    { struct Foo {} #[diplomat::opaque] pub struct Opaque{ foo: Foo, } }\n})"
 ---
 modules:
   ffi:
-    name: ffi
+    name:
+      - ffi
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     imports: []
     declared_types:
-      Opaque:
-        Opaque:
-          name: Opaque
+      ? - Opaque
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      : Opaque:
+          name:
+            - Opaque
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location: None
           docs:
             - - cfg: Star
                 lines: ""
@@ -18,7 +38,9 @@ modules:
           methods: []
           mutability: Immutable
           attrs: {}
-          dtor_abi_name: Opaque_destroy
+          dtor_abi_name:
+            - Opaque_destroy
+            - ~
     declared_traits: {}
     declared_functions: {}
     sub_modules: []

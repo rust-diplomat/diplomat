@@ -4,12 +4,32 @@ expression: "File::from(&syn::parse_quote!\n{\n    #[diplomat::bridge] mod ffi {
 ---
 modules:
   ffi:
-    name: ffi
+    name:
+      - ffi
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     imports: []
     declared_types:
-      Foo:
-        Struct:
-          name: Foo
+      ? - Foo
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      : Struct:
+          name:
+            - Foo
+            - start_line: 1
+              column_line: 0
+              range:
+                start: 0
+                end: 0
+              span_location: None
           docs:
             - - cfg: Star
                 lines: ""
@@ -24,7 +44,14 @@ modules:
     sub_modules: []
     attrs: {}
   other:
-    name: other
+    name:
+      - other
+      - start_line: 1
+        column_line: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     imports: []
     declared_types: {}
     declared_traits: {}

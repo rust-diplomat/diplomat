@@ -1,10 +1,23 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! { DiplomatSliceStr<'a> }, None)"
+expression: "TypeName::from_syn(&syn::parse_quote! { DiplomatSliceStr<'a> }, None,\n&SpanLocation::None)"
 ---
 Named:
   path:
     elements:
-      - DiplomatSliceStr
+      - - DiplomatSliceStr
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
   lifetimes:
-    - Named: a
+    - Named:
+        - a
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None

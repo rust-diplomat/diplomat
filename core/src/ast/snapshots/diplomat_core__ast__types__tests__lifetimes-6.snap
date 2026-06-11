@@ -1,18 +1,74 @@
 ---
 source: core/src/ast/types.rs
-expression: "TypeName::from_syn(&syn::parse_quote! {\n                very :: long :: path :: to :: my :: Type < 'x, 'y, 'z >\n            }, None)"
+expression: "TypeName::from_syn(&syn::parse_quote!\n{ very::long::path::to::my::Type<'x, 'y, 'z> }, None, &SpanLocation::None)"
 ---
 Named:
   path:
     elements:
-      - very
-      - long
-      - path
-      - to
-      - my
-      - Type
+      - - very
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - long
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - path
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - to
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - my
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+      - - Type
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
   lifetimes:
-    - Named: x
-    - Named: y
-    - Named: z
-
+    - Named:
+        - x
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+    - Named:
+        - y
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
+    - Named:
+        - z
+        - start_line: 1
+          column_line: 0
+          range:
+            start: 0
+            end: 0
+          span_location: None
