@@ -4,13 +4,22 @@ use std::borrow::{Borrow, Cow};
 use std::fmt;
 use std::ops::Range;
 
+/// Equivalent to `proc_macro2::LineColumn`
+#[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug)]
+pub struct LineColumn {
+    /// The 1-indexed row of where we are in a file
+    /// (Alternatively, the offset by the number of newline characters + 1)
+    pub line: usize,
+    /// The 0-indexed column of where we are in a file
+    /// (Alternatively, the offset by newline characters plus this amount)
+    pub col: usize,
+}
+
 /// Equivalent to `proc_macro2::Span`.
 #[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug)]
 pub struct Span {
-    /// The row where we are in a file (Alternatively, the offset by the number of newline characters)
-    pub start_line: usize,
-    /// The column where we are in a file (Alternatively, the offset by newline characters plus this amount)
-    pub column_line: usize,
+    pub start: LineColumn,
+    pub end: LineColumn,
     /// The range in bytes of the span. Used mostly to determine length.
     pub range: Range<usize>,
     /// Equivalent to `proc_macro2::Span::file`, but we have to allow for internal testing or
@@ -140,11 +149,18 @@ impl FromWithSpan<&syn::Ident> for Ident {
     fn spanned_from(ident: &syn::Ident, span_location: &SpanLocation) -> Self {
         let span = ident.span();
         let start = span.start();
+        let end = span.end();
         Self(
             Cow::from(ident.to_string()),
             Some(Span {
-                start_line: start.line,
-                column_line: start.column,
+                start: LineColumn {
+                    line: start.line,
+                    col: start.column,
+                },
+                end: LineColumn {
+                    line: end.line,
+                    col: end.column,
+                },
                 range: span.byte_range(),
                 span_location: span_location.clone(),
             }),
