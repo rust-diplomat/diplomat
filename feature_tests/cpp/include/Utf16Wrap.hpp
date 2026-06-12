@@ -49,7 +49,7 @@ inline void somelib::Utf16Wrap::get_debug_str_write(W& writeable) const {
         &write);
 }
 
-inline std::u16string_view somelib::Utf16Wrap::borrow_cont() const {
+inline std::u16string_view somelib::Utf16Wrap::borrow_cont() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Utf16Wrap_borrow_cont(this->AsFFI());
     return std::u16string_view(result.data, result.len);
 }

@@ -27,7 +27,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::RefList> somelib::RefList::node(const somelib::RefListParameter& data) {
+inline std::unique_ptr<somelib::RefList> somelib::RefList::node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::RefList_node(data.AsFFI());
     return std::unique_ptr<somelib::RefList>(somelib::RefList::FromFFI(result));
 }

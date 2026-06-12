@@ -117,7 +117,7 @@ inline somelib::diplomat::result<std::monostate, somelib::diplomat::Utf8Error> s
     return somelib::diplomat::Ok<std::monostate>();
 }
 
-inline std::string_view somelib::MyString::borrow() const {
+inline std::string_view somelib::MyString::borrow() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::MyString_borrow(this->AsFFI());
     return std::string_view(result.data, result.len);
 }

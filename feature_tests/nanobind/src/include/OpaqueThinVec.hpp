@@ -43,7 +43,7 @@ inline std::unique_ptr<somelib::OpaqueThinVec> somelib::OpaqueThinVec::create(so
     return std::unique_ptr<somelib::OpaqueThinVec>(somelib::OpaqueThinVec::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::OpaqueThinIter> somelib::OpaqueThinVec::iter() const {
+inline std::unique_ptr<somelib::OpaqueThinIter> somelib::OpaqueThinVec::iter() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_iter(this->AsFFI());
     return std::unique_ptr<somelib::OpaqueThinIter>(somelib::OpaqueThinIter::FromFFI(result));
 }
@@ -57,13 +57,13 @@ inline size_t somelib::OpaqueThinVec::__len__() const {
     return result;
 }
 
-inline const somelib::OpaqueThin* somelib::OpaqueThinVec::operator[](size_t idx) const {
+inline const somelib::OpaqueThin* somelib::OpaqueThinVec::operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_get(this->AsFFI(),
         idx);
     return somelib::OpaqueThin::FromFFI(result);
 }
 
-inline const somelib::OpaqueThin* somelib::OpaqueThinVec::first() const {
+inline const somelib::OpaqueThin* somelib::OpaqueThinVec::first() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_first(this->AsFFI());
     return somelib::OpaqueThin::FromFFI(result);
 }

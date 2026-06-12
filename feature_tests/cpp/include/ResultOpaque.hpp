@@ -100,12 +100,12 @@ inline somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::Re
     return result.is_ok ? somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Ok<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Err<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err))));
 }
 
-inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::give_self() const {
+inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::give_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::ResultOpaque_give_self(this->AsFFI());
     return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) {
+inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) DIPLOMAT_LIFETIME_BOUND {
     if (!somelib::diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
@@ -114,7 +114,7 @@ inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8
     return somelib::diplomat::Ok<somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result));
 }
 
-inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error() const {
+inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error() const DIPLOMAT_LIFETIME_BOUND {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
@@ -122,7 +122,7 @@ inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> some
     return result.is_ok ? somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
 }
 template<typename W>
-inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error_write(W& writeable) const {
+inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error_write(W& writeable) const DIPLOMAT_LIFETIME_BOUND {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
         &write);

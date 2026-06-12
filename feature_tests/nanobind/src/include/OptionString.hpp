@@ -52,7 +52,7 @@ inline somelib::diplomat::result<std::monostate, std::monostate> somelib::Option
     return result.is_ok ? somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline std::optional<std::string_view> somelib::OptionString::borrow() const {
+inline std::optional<std::string_view> somelib::OptionString::borrow() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionString_borrow(this->AsFFI());
     return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }

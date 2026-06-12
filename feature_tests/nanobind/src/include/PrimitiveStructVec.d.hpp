@@ -45,7 +45,7 @@ public:
 
   inline size_t __len__() const;
 
-  inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const;
+  inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const DIPLOMAT_LIFETIME_BOUND;
 
   inline std::optional<somelib::PrimitiveStruct> operator[](size_t idx) const;
 

@@ -33,7 +33,7 @@ namespace somelib {
 class OpaqueThinIter {
 public:
 
-  inline const somelib::OpaqueThin* next();
+  inline const somelib::OpaqueThin* next() DIPLOMAT_LIFETIME_BOUND;
 
     inline const somelib::capi::OpaqueThinIter* AsFFI() const;
     inline somelib::capi::OpaqueThinIter* AsFFI();

@@ -34,7 +34,7 @@ inline std::unique_ptr<somelib::ns::RenamedOpaqueRefIterable> somelib::ns::Renam
     return std::unique_ptr<somelib::ns::RenamedOpaqueRefIterable>(somelib::ns::RenamedOpaqueRefIterable::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueRefIterator> somelib::ns::RenamedOpaqueRefIterable::iter() const {
+inline std::unique_ptr<somelib::ns::RenamedOpaqueRefIterator> somelib::ns::RenamedOpaqueRefIterable::iter() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_OpaqueRefIterable_iter(this->AsFFI());
     return std::unique_ptr<somelib::ns::RenamedOpaqueRefIterator>(somelib::ns::RenamedOpaqueRefIterator::FromFFI(result));
 }

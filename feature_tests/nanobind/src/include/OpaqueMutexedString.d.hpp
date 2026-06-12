@@ -39,15 +39,15 @@ public:
 
   inline void change(size_t number) const;
 
-  inline const somelib::OpaqueMutexedString& borrow() const;
+  inline const somelib::OpaqueMutexedString& borrow() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline static const somelib::OpaqueMutexedString& borrow_other(const somelib::OpaqueMutexedString& other);
+  inline static const somelib::OpaqueMutexedString& borrow_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND);
 
-  inline const somelib::OpaqueMutexedString& borrow_self_or_other(const somelib::OpaqueMutexedString& other) const;
+  inline const somelib::OpaqueMutexedString& borrow_self_or_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND) const DIPLOMAT_LIFETIME_BOUND;
 
   inline size_t get_len_and_add(size_t other) const;
 
-  inline std::string_view dummy_str() const;
+  inline std::string_view dummy_str() const DIPLOMAT_LIFETIME_BOUND;
 
   inline std::unique_ptr<somelib::Utf16Wrap> wrapper() const;
 

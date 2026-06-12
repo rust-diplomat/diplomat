@@ -25,7 +25,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline somelib::diplomat::result<somelib::BorrowedFields, somelib::diplomat::Utf8Error> somelib::BorrowedFields::from_bar_and_strings(const somelib::Bar& bar, std::u16string_view dstr16, std::string_view utf8_str) {
+inline somelib::diplomat::result<somelib::BorrowedFields, somelib::diplomat::Utf8Error> somelib::BorrowedFields::from_bar_and_strings(const somelib::Bar& bar DIPLOMAT_LIFETIME_BOUND, std::u16string_view dstr16 DIPLOMAT_LIFETIME_BOUND, std::string_view utf8_str DIPLOMAT_LIFETIME_BOUND) {
     if (!somelib::diplomat::capi::diplomat_is_str(utf8_str.data(), utf8_str.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }

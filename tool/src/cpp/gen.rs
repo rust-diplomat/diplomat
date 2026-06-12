@@ -6,6 +6,7 @@ use crate::config;
 use crate::read_custom_binding;
 use crate::ErrorStore;
 use askama::Template;
+use diplomat_core::hir::borrowing_param::ParamBorrowInfo;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::IncludeLocation;
 use diplomat_core::hir::IncludeSource;
@@ -28,6 +29,7 @@ pub struct NamedType<'a> {
     pub(crate) type_name: Cow<'a, str>,
     /// Default value (for method params, but could eventually be for structs).
     pub(crate) default_value: Option<Cow<'a, str>>,
+    pub(crate) lifetimebound: bool,
 }
 
 impl<'a> NamedType<'a> {
@@ -507,6 +509,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let abi_name = self
             .formatter
             .namespace_c_name(id, method.abi_name.as_str());
+
+        let mut this_borrowed = false;
+        let mut visitor = method.borrowing_param_visitor(self.c.tcx, false);
+
+        if let Some(param_self) = method.param_self.as_ref() {
+            let info = visitor.visit_param(&param_self.ty.clone().into(), "this");
+            if !matches!(
+                info,
+                ParamBorrowInfo::NotBorrowed | ParamBorrowInfo::TemporarySlice
+            ) {
+                this_borrowed = true;
+            }
+        }
+
         let mut param_decls = Vec::new();
         let mut cpp_to_c_params = Vec::new();
 
@@ -559,6 +575,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         for param in method.params.iter() {
             let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
+            let info = visitor.visit_param(&param.ty, decls.var_name.as_ref());
+            if !matches!(
+                info,
+                ParamBorrowInfo::NotBorrowed | ParamBorrowInfo::TemporarySlice
+            ) {
+                decls.lifetimebound = true;
+            }
             if let Some(d) = &param.attrs.default_value {
                 let s = match d {
                     hir::DefaultArgValue::Bool(b) => b.to_string(),
@@ -702,7 +725,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 vec![]
             };
 
-        let post_qualifiers = match &method.param_self {
+        let mut post_qualifiers = match &method.param_self {
             Some(param_self)
                 if param_self.ty.is_immutably_borrowed() || param_self.ty.is_consuming() =>
             {
@@ -711,6 +734,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             Some(_) => vec![],
             None => vec![],
         };
+
+        if this_borrowed {
+            post_qualifiers.push("DIPLOMAT_LIFETIME_BOUND".into());
+        }
 
         Some(MethodInfo::<'ccx> {
             method,
@@ -773,6 +800,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             var_name,
             type_name,
             default_value: None,
+            lifetimebound: false,
         }
     }
 

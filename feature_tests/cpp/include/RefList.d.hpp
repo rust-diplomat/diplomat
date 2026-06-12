@@ -35,7 +35,7 @@ namespace somelib {
 class RefList {
 public:
 
-  inline static std::unique_ptr<somelib::RefList> node(const somelib::RefListParameter& data);
+  inline static std::unique_ptr<somelib::RefList> node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND);
 
     inline const somelib::capi::RefList* AsFFI() const;
     inline somelib::capi::RefList* AsFFI();

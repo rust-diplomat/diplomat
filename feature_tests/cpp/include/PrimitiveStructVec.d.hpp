@@ -45,9 +45,9 @@ public:
 
   inline size_t len() const;
 
-  inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const;
+  inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline somelib::diplomat::span<somelib::PrimitiveStruct> as_slice_mut();
+  inline somelib::diplomat::span<somelib::PrimitiveStruct> as_slice_mut() DIPLOMAT_LIFETIME_BOUND;
 
   inline std::optional<somelib::PrimitiveStruct> get(size_t idx) const;
 

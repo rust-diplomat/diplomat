@@ -56,7 +56,7 @@ inline size_t somelib::PrimitiveStructVec::__len__() const {
     return result;
 }
 
-inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const {
+inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::PrimitiveStructVec_as_slice(this->AsFFI());
     return somelib::diplomat::span<const somelib::PrimitiveStruct>(reinterpret_cast<const somelib::PrimitiveStruct*>(result.data), result.len);
 }

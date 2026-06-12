@@ -35,27 +35,27 @@ namespace somelib {
 class One {
 public:
 
-  inline static std::unique_ptr<somelib::One> transitivity(const somelib::One& hold, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> transitivity(const somelib::One& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
-  inline static std::unique_ptr<somelib::One> cycle(const somelib::Two& hold, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> cycle(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
-  inline static std::unique_ptr<somelib::One> many_dependents(const somelib::One& a, const somelib::One& b, const somelib::Two& c, const somelib::Two& d, const somelib::Two& nohold);
+  inline static std::unique_ptr<somelib::One> many_dependents(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::Two& c DIPLOMAT_LIFETIME_BOUND, const somelib::Two& d DIPLOMAT_LIFETIME_BOUND, const somelib::Two& nohold);
 
-  inline static std::unique_ptr<somelib::One> return_outlives_param(const somelib::Two& hold, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> return_outlives_param(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
-  inline static std::unique_ptr<somelib::One> diamond_top(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom);
+  inline static std::unique_ptr<somelib::One> diamond_top(const somelib::One& top DIPLOMAT_LIFETIME_BOUND, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND);
 
-  inline static std::unique_ptr<somelib::One> diamond_left(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom);
+  inline static std::unique_ptr<somelib::One> diamond_left(const somelib::One& top, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND);
 
-  inline static std::unique_ptr<somelib::One> diamond_right(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom);
+  inline static std::unique_ptr<somelib::One> diamond_right(const somelib::One& top, const somelib::One& left, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND);
 
-  inline static std::unique_ptr<somelib::One> diamond_bottom(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom);
+  inline static std::unique_ptr<somelib::One> diamond_bottom(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND);
 
-  inline static std::unique_ptr<somelib::One> diamond_and_nested_types(const somelib::One& a, const somelib::One& b, const somelib::One& c, const somelib::One& d, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> diamond_and_nested_types(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::One& c DIPLOMAT_LIFETIME_BOUND, const somelib::One& d DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
-  inline static std::unique_ptr<somelib::One> implicit_bounds(const somelib::One& explicit_hold, const somelib::One& implicit_hold, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> implicit_bounds(const somelib::One& explicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
-  inline static std::unique_ptr<somelib::One> implicit_bounds_deep(const somelib::One& explicit_, const somelib::One& implicit_1, const somelib::One& implicit_2, const somelib::One& nohold);
+  inline static std::unique_ptr<somelib::One> implicit_bounds_deep(const somelib::One& explicit_ DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_1 DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_2 DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold);
 
     inline const somelib::capi::One* AsFFI() const;
     inline somelib::capi::One* AsFFI();

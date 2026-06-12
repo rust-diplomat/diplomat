@@ -39,7 +39,7 @@ public:
 
   inline static std::unique_ptr<somelib::ns::RenamedOpaqueRefIterable> new_(size_t size);
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueRefIterator> iter() const;
+  inline std::unique_ptr<somelib::ns::RenamedOpaqueRefIterator> iter() const DIPLOMAT_LIFETIME_BOUND;
   inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueRefIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 

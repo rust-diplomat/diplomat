@@ -53,17 +53,17 @@ inline void somelib::OpaqueMutexedString::change(size_t number) const {
         number);
 }
 
-inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow() const {
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueMutexedString_borrow(this->AsFFI());
     return *somelib::OpaqueMutexedString::FromFFI(result);
 }
 
-inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_other(const somelib::OpaqueMutexedString& other) {
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::OpaqueMutexedString_borrow_other(other.AsFFI());
     return *somelib::OpaqueMutexedString::FromFFI(result);
 }
 
-inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_self_or_other(const somelib::OpaqueMutexedString& other) const {
+inline const somelib::OpaqueMutexedString& somelib::OpaqueMutexedString::borrow_self_or_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueMutexedString_borrow_self_or_other(this->AsFFI(),
         other.AsFFI());
     return *somelib::OpaqueMutexedString::FromFFI(result);
@@ -75,7 +75,7 @@ inline size_t somelib::OpaqueMutexedString::get_len_and_add(size_t other) const 
     return result;
 }
 
-inline std::string_view somelib::OpaqueMutexedString::dummy_str() const {
+inline std::string_view somelib::OpaqueMutexedString::dummy_str() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueMutexedString_dummy_str(this->AsFFI());
     return std::string_view(result.data, result.len);
 }
