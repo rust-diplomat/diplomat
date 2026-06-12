@@ -39,15 +39,15 @@ public:
 
   inline static std::unique_ptr<somelib::OpaqueThinVec> create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c);
 
-  inline std::unique_ptr<somelib::OpaqueThinIter> iter() const;
+  inline std::unique_ptr<somelib::OpaqueThinIter> iter() const DIPLOMAT_LIFETIME_BOUND;
   inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
   inline size_t len() const;
 
-  inline const somelib::OpaqueThin* operator[](size_t idx) const;
+  inline const somelib::OpaqueThin* operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND;
 
-  inline const somelib::OpaqueThin* first() const;
+  inline const somelib::OpaqueThin* first() const DIPLOMAT_LIFETIME_BOUND;
 
     inline const somelib::capi::OpaqueThinVec* AsFFI() const;
     inline somelib::capi::OpaqueThinVec* AsFFI();

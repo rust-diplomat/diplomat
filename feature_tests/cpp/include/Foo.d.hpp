@@ -38,20 +38,20 @@ namespace somelib {
 class Foo {
 public:
 
-  inline static std::unique_ptr<somelib::Foo> new_(std::string_view x);
+  inline static std::unique_ptr<somelib::Foo> new_(std::string_view x DIPLOMAT_LIFETIME_BOUND);
 
-  inline std::unique_ptr<somelib::Bar> get_bar() const;
+  inline std::unique_ptr<somelib::Bar> get_bar() const DIPLOMAT_LIFETIME_BOUND;
 
   inline static std::unique_ptr<somelib::Foo> new_static(std::string_view x);
 
-  inline somelib::BorrowedFieldsReturning as_returning() const;
+  inline somelib::BorrowedFieldsReturning as_returning() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline static std::unique_ptr<somelib::Foo> extract_from_fields(somelib::BorrowedFields fields);
+  inline static std::unique_ptr<somelib::Foo> extract_from_fields(somelib::BorrowedFields fields DIPLOMAT_LIFETIME_BOUND);
 
   /**
    * Test that the extraction logic correctly pins the right fields
    */
-  inline static std::unique_ptr<somelib::Foo> extract_from_bounds(somelib::BorrowedFieldsWithBounds bounds, std::string_view another_string);
+  inline static std::unique_ptr<somelib::Foo> extract_from_bounds(somelib::BorrowedFieldsWithBounds bounds DIPLOMAT_LIFETIME_BOUND, std::string_view another_string DIPLOMAT_LIFETIME_BOUND);
 
     inline const somelib::capi::Foo* AsFFI() const;
     inline somelib::capi::Foo* AsFFI();

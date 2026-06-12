@@ -34,7 +34,7 @@ inline std::unique_ptr<somelib::ns::RenamedMyIterable> somelib::ns::RenamedMyIte
     return std::unique_ptr<somelib::ns::RenamedMyIterable>(somelib::ns::RenamedMyIterable::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::ns::RenamedMyIterator> somelib::ns::RenamedMyIterable::iter() const {
+inline std::unique_ptr<somelib::ns::RenamedMyIterator> somelib::ns::RenamedMyIterable::iter() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIterable_iter(this->AsFFI());
     return std::unique_ptr<somelib::ns::RenamedMyIterator>(somelib::ns::RenamedMyIterator::FromFFI(result));
 }

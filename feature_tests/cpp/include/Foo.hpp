@@ -40,12 +40,12 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::Foo> somelib::Foo::new_(std::string_view x) {
+inline std::unique_ptr<somelib::Foo> somelib::Foo::new_(std::string_view x DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::Foo_new({x.data(), x.size()});
     return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::Bar> somelib::Foo::get_bar() const {
+inline std::unique_ptr<somelib::Bar> somelib::Foo::get_bar() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Foo_get_bar(this->AsFFI());
     return std::unique_ptr<somelib::Bar>(somelib::Bar::FromFFI(result));
 }
@@ -55,17 +55,17 @@ inline std::unique_ptr<somelib::Foo> somelib::Foo::new_static(std::string_view x
     return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));
 }
 
-inline somelib::BorrowedFieldsReturning somelib::Foo::as_returning() const {
+inline somelib::BorrowedFieldsReturning somelib::Foo::as_returning() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Foo_as_returning(this->AsFFI());
     return somelib::BorrowedFieldsReturning::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Foo> somelib::Foo::extract_from_fields(somelib::BorrowedFields fields) {
+inline std::unique_ptr<somelib::Foo> somelib::Foo::extract_from_fields(somelib::BorrowedFields fields DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::Foo_extract_from_fields(fields.AsFFI());
     return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::Foo> somelib::Foo::extract_from_bounds(somelib::BorrowedFieldsWithBounds bounds, std::string_view another_string) {
+inline std::unique_ptr<somelib::Foo> somelib::Foo::extract_from_bounds(somelib::BorrowedFieldsWithBounds bounds DIPLOMAT_LIFETIME_BOUND, std::string_view another_string DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::Foo_extract_from_bounds(bounds.AsFFI(),
         {another_string.data(), another_string.size()});
     return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));

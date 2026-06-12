@@ -27,7 +27,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::ns::AttrOpaque1Renamed* somelib::ns::RenamedOpaqueRefIterator::next() {
+inline const somelib::ns::AttrOpaque1Renamed* somelib::ns::RenamedOpaqueRefIterator::next() DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_OpaqueRefIterator_next(this->AsFFI());
     return somelib::ns::AttrOpaque1Renamed::FromFFI(result);
 }

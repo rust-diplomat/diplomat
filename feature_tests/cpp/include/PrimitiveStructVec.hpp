@@ -58,12 +58,12 @@ inline size_t somelib::PrimitiveStructVec::len() const {
     return result;
 }
 
-inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const {
+inline somelib::diplomat::span<const somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::PrimitiveStructVec_as_slice(this->AsFFI());
     return somelib::diplomat::span<const somelib::PrimitiveStruct>(reinterpret_cast<const somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
-inline somelib::diplomat::span<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice_mut() {
+inline somelib::diplomat::span<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::as_slice_mut() DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::PrimitiveStructVec_as_slice_mut(this->AsFFI());
     return somelib::diplomat::span<somelib::PrimitiveStruct>(reinterpret_cast<somelib::PrimitiveStruct*>(result.data), result.len);
 }

@@ -126,12 +126,12 @@ inline somelib::OptionStruct somelib::OptionOpaque::new_struct_nones() {
     return somelib::OptionStruct::FromFFI(result);
 }
 
-inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_none_self() const {
+inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_none_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionOpaque_returns_none_self(this->AsFFI());
     return somelib::OptionOpaque::FromFFI(result);
 }
 
-inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_some_self() const {
+inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_some_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionOpaque_returns_some_self(this->AsFFI());
     return somelib::OptionOpaque::FromFFI(result);
 }

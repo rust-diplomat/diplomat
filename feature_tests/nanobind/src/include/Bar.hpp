@@ -27,7 +27,7 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::Foo& somelib::Bar::foo() const {
+inline const somelib::Foo& somelib::Bar::foo() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Bar_foo(this->AsFFI());
     return *somelib::Foo::FromFFI(result);
 }

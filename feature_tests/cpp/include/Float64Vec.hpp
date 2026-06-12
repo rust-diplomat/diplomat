@@ -86,7 +86,7 @@ inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_f64_be_byte
     return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
 }
 
-inline somelib::diplomat::span<const double> somelib::Float64Vec::as_slice() const {
+inline somelib::diplomat::span<const double> somelib::Float64Vec::as_slice() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Float64Vec_as_slice(this->AsFFI());
     return somelib::diplomat::span<const double>(result.data, result.len);
 }
@@ -115,7 +115,7 @@ inline void somelib::Float64Vec::to_string_write(W& writeable) const {
         &write);
 }
 
-inline somelib::diplomat::span<const double> somelib::Float64Vec::borrow() const {
+inline somelib::diplomat::span<const double> somelib::Float64Vec::borrow() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Float64Vec_borrow(this->AsFFI());
     return somelib::diplomat::span<const double>(result.data, result.len);
 }

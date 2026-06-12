@@ -37,13 +37,13 @@ inline std::unique_ptr<somelib::ns::RenamedMyIndexer> somelib::ns::RenamedMyInde
     return std::unique_ptr<somelib::ns::RenamedMyIndexer>(somelib::ns::RenamedMyIndexer::FromFFI(result));
 }
 
-inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](size_t i) const {
+inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](size_t i) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIndexer_get(this->AsFFI(),
         i);
     return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
 }
 
-inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](std::string_view s) const {
+inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](std::string_view s) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIndexer_get_str(this->AsFFI(),
         {s.data(), s.size()});
     return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;

@@ -37,7 +37,7 @@ struct BorrowedFieldsWithBounds {
     std::string_view field_b;
     std::string_view field_c;
 
-  inline static somelib::diplomat::result<somelib::BorrowedFieldsWithBounds, somelib::diplomat::Utf8Error> from_foo_and_strings(const somelib::Foo& foo, std::u16string_view dstr16_x, std::string_view utf8_str_z);
+  inline static somelib::diplomat::result<somelib::BorrowedFieldsWithBounds, somelib::diplomat::Utf8Error> from_foo_and_strings(const somelib::Foo& foo DIPLOMAT_LIFETIME_BOUND, std::u16string_view dstr16_x DIPLOMAT_LIFETIME_BOUND, std::string_view utf8_str_z DIPLOMAT_LIFETIME_BOUND);
 
     inline somelib::capi::BorrowedFieldsWithBounds AsFFI() const;
     inline static somelib::BorrowedFieldsWithBounds FromFFI(somelib::capi::BorrowedFieldsWithBounds c_struct);

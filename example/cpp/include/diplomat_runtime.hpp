@@ -18,6 +18,20 @@
 #include <array>
 #endif
 
+#ifndef DIPLOMAT_LIFETIME_BOUND
+#if defined(__has_cpp_attribute)
+#if __has_cpp_attribute(msvc::lifetimebound)
+#define DIPLOMAT_LIFETIME_BOUND [[msvc::lifetimebound]]
+#elif __has_cpp_attribute(clang::lifetimebound)
+#define DIPLOMAT_LIFETIME_BOUND [[clang::lifetimebound]]
+#endif
+#endif
+#endif
+
+#ifndef DIPLOMAT_LIFETIME_BOUND
+#define DIPLOMAT_LIFETIME_BOUND
+#endif
+
 namespace icu4x {
 namespace diplomat {
 
