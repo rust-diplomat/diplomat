@@ -1,6 +1,14 @@
+use std::sync::RwLock;
+
 use crate::ast::{Ident, SpanLocation};
 
+/// For overwriting by tests.
+static WRITER : RwLock<&(dyn Fn()->Box<dyn std::io::Write> + Send + Sync)> = RwLock::new(&(|| Box::new(std::io::stderr())));
+
 pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
+    use std::io::Write;
+    let mut out = WRITER.read().unwrap()();
+
     let span = id.span();
     let src = if let Some(sp) = &span {
         match &sp.span_location {
@@ -81,7 +89,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
                 .element(Level::ERROR.message(label))]
         };
         let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
-        eprintln!("{}", renderer.render(report));
+        writeln!(out, "{}", renderer.render(report)).expect("Could not write report.");
     }
     #[cfg(not(feature = "pretty-print"))]
     {
@@ -111,45 +119,133 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
         };
         // Ansi escape codes to provide emphasis.
         // Color red, bold:
-        eprint!("\x1b[1;31m");
-        eprint!("Diplomat error: ");
+        write!(out, "\x1b[1;31m").expect("Could not write to report.");
+        write!(out, "Diplomat error: ").expect("Could not write to report.");
         // Reset:
-        eprint!("\x1b[0m");
-        eprintln!("{title}");
-        eprintln!("In {location}:");
+        write!(out, "\x1b[0m").expect("Could not write to report.");
+        writeln!(out, "{title}").expect("Could not write to report.");
+        writeln!(out, "In {location}:").expect("Could not write to report.");
 
         let excerpt_pre_trimmed = excerpt_pre.trim_start();
 
         if excerpt_pre.len() > 0 {
-            eprint!("...{}", excerpt_pre_trimmed);
+            write!(out, "...{}", excerpt_pre_trimmed).expect("Could not write to report.");
         }
 
         // Color red, bold, underline:
-        eprint!("\x1b[1;4;31m");
-        eprint!("{excerpt}");
+        write!(out, "\x1b[1;4;31m").expect("Could not write to report.");
+        write!(out, "{excerpt}").expect("Could not write to report.");
         // Reset:
-        eprint!("\x1b[0m");
+        write!(out, "\x1b[0m").expect("Could not write to report.");
 
         if excerpt_post.len() > 0 {
-            eprintln!("{}...", excerpt_post.trim_end());
+            writeln!(out, "{}...", excerpt_post.trim_end()).expect("Could not write to report.");
         }
 
         // Clarify that above is the source, and below is the label attached to the source:
         // Color blue, bold:
-        eprint!("\x1b[1;34m");
+        write!(out, "\x1b[1;34m").expect("Could not write to report.");
         if excerpt.len() > 0 {
             // This works well for most one-line excerpts.
             // The pretty-printer tends to handle whitespacing better, however.
-            eprintln!("{}{}", " ".repeat(3 + excerpt_pre_trimmed.len()), "^".repeat(excerpt.len()));
+            writeln!(out, "{}{}", " ".repeat(3 + excerpt_pre_trimmed.len()), "^".repeat(excerpt.len())).expect("Could not write to report.");
         }
         
         // Blue on the new line, just in case newlines reset in some terminals:
-        eprint!("\x1b[1;34m");
-        eprint!("{label}");
+        write!(out, "\x1b[1;34m").expect("Could not write to report.");
+        write!(out, "{label}").expect("Could not write to report.");
         // Reset:
-        eprintln!("\x1b[0m");
+        writeln!(out, "\x1b[0m").expect("Could not write to report.");
     }
+    out.flush().expect("Could not write to output.");
     // Rust-analyzer will not show error messages unless we panic,
     // This just tells rust-analyzer users to check stderr:
     panic!("{} (check stderr for more)", title);
+}
+
+
+#[cfg(test)]
+mod tests {
+    use std::fmt::Write;
+
+    #[derive(Clone, Debug)]
+    struct StderrWrapper {
+        buf : String,
+    }
+    impl std::io::Write for StderrWrapper {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            let st = str::from_utf8(buf).expect("Could not read utf8");
+            self.buf.write_str(st).expect("Could not write str");
+            Ok(buf.len())
+        }
+        
+        fn flush(&mut self) -> std::io::Result<()> {
+            insta::assert_snapshot!(self.buf);
+            Ok(())
+        }
+    }
+
+    fn reader_fn() -> Box<dyn std::io::Write> {
+        Box::new(StderrWrapper {
+            buf: String::new()
+        })
+    }
+
+    fn parse_file_hook_errors(file_loc : &str, suffix : &str) {
+        let crate_dir = env!("CARGO_MANIFEST_DIR");
+        let local_path = format!("src/ast/snapshots/span_testing/{file_loc}");
+        let file_path = std::path::Path::new(crate_dir).join(&local_path);
+
+        let mut settings = insta::Settings::clone_current();
+        settings.set_snapshot_suffix(format!("{file_loc}_{suffix}"));
+        settings.set_snapshot_path("snapshots/span_testing");
+        let _drop = settings.bind_to_scope();
+
+        {
+            let mut inner = super::WRITER.try_write().unwrap();
+            *inner = &reader_fn;
+        }
+
+        let st = std::fs::read_to_string(&file_path).expect("Could not read file.");
+        let p = syn::parse_str::<syn::ItemMod>(&st).expect("Could not parse syn mod");
+        crate::ast::Module::from_syn(&p, true, None, &crate::ast::SpanLocation::FilePath(local_path));
+    }
+
+    const FILES_TO_TEST : &[&'static str] = &["duplicate_attrs.rs", "enum_field_variant.rs"];
+
+    fn test_file_list(suffix : &'static str) {
+        let mut threads = vec![];
+        for f in FILES_TO_TEST {
+            let t = std::thread::spawn(|| {
+                parse_file_hook_errors(f, suffix);
+            });
+            threads.push(t);
+        }
+        for t in threads {
+            // The panic will still be printed, but we don't care about panicking or not:
+            let res = t.join();
+            match res {
+                Ok(_) => {}
+                Err(p) => {
+                    if let Some(st) = p.downcast_ref::<String>() {
+                        if st.contains("snapshot assertion") {
+                            assert!(false, "{st}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(feature="pretty-print")]
+    #[test]
+    fn test_errors_pretty() {
+        test_file_list("pretty");
+    }
+
+    #[cfg(not(feature="pretty-print"))]
+    #[test]
+    fn test_errors_ugly() {
+        test_file_list("ugly");
+    }
 }
