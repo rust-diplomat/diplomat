@@ -77,6 +77,26 @@ final class {{type_name}}
     {%- endif %}
     struct.{{field.name}} = {{field.dart_to_c}};
     {%- endfor %}
+    {%- for l in lifetimes.all_lifetimes() %}
+    {%- let ltname = lifetimes.fmt_lifetime(l) %}
+    {%- for field in self::iter_fields_with_lifetimes_from_set(fields, l) %}
+      {%- if field.is_opaque() || field.is_option_opaque() %}
+        {%- if field.is_nullable() %}
+    if ({{field.name}} != null && {{ltname}}AppendArray.isNotEmpty) {
+      for (final edge in {{ltname}}AppendArray) {
+        edge.add({{field.name}}!);
+      }
+    }
+        {%- else %}
+    if ({{ltname}}AppendArray.isNotEmpty) {
+      for (final edge in {{ltname}}AppendArray) {
+        edge.add({{field.name}});
+      }
+    }
+        {%- endif %}
+      {%- endif %}
+    {%- endfor %}
+    {%- endfor %}
     return struct;
   }
   {%- endif %}

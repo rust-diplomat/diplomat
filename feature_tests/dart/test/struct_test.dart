@@ -12,4 +12,10 @@ void main() {
     expect(s.f, '餐'.runes.first);
     expect(s.g, MyEnum.b);
   });
+
+  test('Verify ImmutableStructOfOpaque', () {
+    final op = Opaque.fromStr('String');
+    final immut = ImmutableStructOfOpaque(i: op);
+    expect(immut.takeIn(), '"String"');
+  });
 }
