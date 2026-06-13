@@ -601,7 +601,7 @@ pub mod ffi {
     }
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
-    #[diplomat::cfg(all(not(dart), supports=struct_refs))]
+    #[diplomat::cfg(supports=struct_refs)]
     pub struct ImmutableStructOfOpaque<'a> {
         i: &'a Opaque,
     }
