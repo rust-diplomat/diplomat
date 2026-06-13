@@ -47,6 +47,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_sync = false;
     a.generate_mocking_interface = false;
     a.owned_slices = true;
+    a.struct_refs = true;
 
     a
 }
@@ -844,7 +845,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             SelfType::Struct(s) => {
                 let id = s.id();
                 let type_name = self.formatter.fmt_type_name(id);
-                format!("_{type_name}Ffi").into()
+                if s.owner().is_owned() {
+                    format!("_{type_name}Ffi").into()
+                } else {
+                    format!("ffi.Pointer<_{type_name}Ffi>").into()
+                }
             }
             SelfType::Enum(_) => self.formatter.fmt_enum_as_ffi(cast).into(),
             _ => unreachable!("unknown AST/HIR variant"),
@@ -855,7 +860,16 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_dart_to_c_self(&self, ty: &SelfType, allocator: &str) -> Cow<'static, str> {
         match *ty {
             SelfType::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => "index".into(),
-            SelfType::Struct(..) => format!("_toFfi({allocator})").into(),
+            SelfType::Struct(ref s) => {
+                let id = s.id();
+                let type_name = self.formatter.fmt_type_name(id);
+                let conversion = format!("_toFfi({allocator})");
+                if s.owner().is_owned() {
+                    conversion.into()
+                } else {
+                    format!("() {{ final ptr = {allocator}<_{type_name}Ffi>(); ptr.ref = {conversion}; return ptr; }}()").into()
+                }
+            }
             SelfType::Opaque(..) | SelfType::Enum(..) => "_ffi".into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -881,8 +895,16 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             Type::Enum(ref e) if is_contiguous_enum(e.resolve(self.tcx)) => {
                 format!("{dart_name}.index").into()
             }
-            Type::Struct(..) => {
-                self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info, alloc.unwrap())
+            Type::Struct(ref s) => {
+                let id = s.id();
+                let type_name = self.formatter.fmt_type_name(id);
+                let conversion = self.gen_dart_to_c_for_struct_type(dart_name, struct_borrow_info, alloc.unwrap());
+                if s.owner().is_owned() {
+                    conversion
+                } else {
+                    let alloc = alloc.unwrap();
+                    format!("() {{ final ptr = {alloc}<_{type_name}Ffi>(); ptr.ref = {conversion}; return ptr; }}()").into()
+                }
             }
             Type::Opaque(..) | Type::Enum(..) => format!("{dart_name}._ffi").into(),
             Type::Slice(ref s) => {
@@ -1411,6 +1433,25 @@ struct FieldInfo<'a, P: TyPosition> {
     dart_to_c: Cow<'a, str>,
     /// If this is a struct field that borrows, the borrowing information for that field.
     param_info: Option<StructBorrowInfo<'a>>,
+}
+
+impl<'a, P: TyPosition> FieldInfo<'a, P> {
+    fn is_opaque(&self) -> bool {
+        matches!(self.ty, Type::Opaque(..))
+    }
+    fn is_option_opaque(&self) -> bool {
+        if let Type::DiplomatOption(inner) = self.ty {
+            matches!(inner.as_ref(), Type::Opaque(..))
+        } else {
+            false
+        }
+    }
+    fn is_nullable(&self) -> bool {
+        self.ty.is_option() || match self.ty {
+            Type::Opaque(ref op) => op.is_optional(),
+            _ => false
+        }
+    }
 }
 
 // Helpers used in templates (Askama has restrictions on Rust syntax)
