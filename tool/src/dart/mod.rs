@@ -347,62 +347,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
-        let default_constructor = if !is_out {
-            if let Some(constructor) = methods
-                .iter_mut()
-                .find(|m| m.declaration.contains(&format!("{type_name}()")))
-            {
-                // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
-                let args = fields
-                    .iter()
-                    .map(|field| {
-                        format!(
-                            "{} {}",
-                            self.formatter.fmt_nullable(&field.dart_type_name),
-                            field.name
-                        )
-                    })
-                    .collect::<Vec<_>>();
-                constructor.declaration =
-                    format!("factory {type_name}({{{args}}})", args = args.join(", "));
-
-                let mut r = String::new();
-                writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
-                for field in &fields {
-                    let name = &field.name;
-                    writeln!(&mut r, "if ({name} != null) {{").unwrap();
-                    writeln!(&mut r, "  dart.{name} = {name};").unwrap();
-                    writeln!(&mut r, "}}").unwrap();
-                }
-                write!(&mut r, "return dart;").unwrap();
-                constructor.return_expression = Some(r.into());
-
-                None
-            } else if fields.is_empty() {
-                // ZST
-                Some(format!("{type_name}();"))
-            } else {
-                // Otherwise we create a constructor with required values for all non-optional fields.
-                let args = fields
-                    .iter()
-                    .map(|field| {
-                        format!(
-                            "{}this.{}",
-                            if field.ty.is_option() {
-                                ""
-                            } else {
-                                "required "
-                            },
-                            field.name
-                        )
-                    })
-                    .collect::<Vec<_>>();
-
-                Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
-            }
-        } else {
-            None
-        };
+        let default_constructor =
+            self.gen_struct_default_constructor(type_name, is_out, &fields, &mut methods);
 
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
@@ -431,6 +377,109 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
         .render()
         .unwrap()
+    }
+
+    /// Generates the default constructor for a struct, or repurposes an existing
+    /// zero-argument constructor to allow setting fields.
+    ///
+    /// In Dart, structs can be constructed with optional arguments for all fields
+    /// if there is a zero-argument constructor (either default or custom).
+    /// If a custom zero-argument constructor exists, we "repurpose" it by
+    /// modifying its declaration to take all fields as optional arguments, and
+    /// modifying its body to apply these overrides after calling the Rust constructor.
+    ///
+    /// If no zero-argument constructor exists, we generate a default constructor
+    /// that requires all non-optional fields.
+    fn gen_struct_default_constructor<P: TyPosition>(
+        &mut self,
+        type_name: &str,
+        is_out: bool,
+        fields: &[FieldInfo<'cx, P>],
+        methods: &mut [MethodInfo<'cx>],
+    ) -> Option<String> {
+        if is_out {
+            return None;
+        }
+
+        if let Some(constructor) = methods
+            .iter_mut()
+            .find(|m| m.declaration.contains(&format!("{type_name}()")))
+        {
+            // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
+            let args = fields
+                .iter()
+                .map(|field| {
+                    format!(
+                        "{} {}",
+                        self.formatter.fmt_nullable(&field.dart_type_name),
+                        field.name
+                    )
+                })
+                .collect::<Vec<_>>();
+            constructor.declaration =
+                format!("factory {type_name}({{{args}}})", args = args.join(", "));
+
+            let mut r = String::new();
+            match &constructor.method.output {
+                ReturnType::Infallible(SuccessType::OutType(_)) => {
+                    writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
+                }
+                ReturnType::Fallible(SuccessType::OutType(ref ok_ty), ref err_ty) => {
+                    writeln!(&mut r, "if (!result.isOk) {{").unwrap();
+                    if let Some(e) = err_ty {
+                        let err_conv = self.gen_c_to_dart_for_type(
+                            e,
+                            "result.union.err".into(),
+                            &constructor.method.lifetime_env,
+                        );
+                        writeln!(&mut r, "  throw {err_conv};").unwrap();
+                    } else {
+                        writeln!(&mut r, "  throw Object();").unwrap();
+                    }
+                    writeln!(&mut r, "}}").unwrap();
+                    let ok_conv = self.gen_c_to_dart_for_type(
+                        ok_ty,
+                        "result.union.ok".into(),
+                        &constructor.method.lifetime_env,
+                    );
+                    writeln!(&mut r, "final dart = {ok_conv};").unwrap();
+                }
+                _ => {
+                    writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
+                }
+            }
+            for field in fields {
+                let name = &field.name;
+                writeln!(&mut r, "if ({name} != null) {{").unwrap();
+                writeln!(&mut r, "  dart.{name} = {name};").unwrap();
+                writeln!(&mut r, "}}").unwrap();
+            }
+            write!(&mut r, "return dart;").unwrap();
+            constructor.return_expression = Some(r.into());
+
+            None
+        } else if fields.is_empty() {
+            // ZST
+            Some(format!("{type_name}();"))
+        } else {
+            // Otherwise we create a constructor with required values for all non-optional fields.
+            let args = fields
+                .iter()
+                .map(|field| {
+                    format!(
+                        "{}this.{}",
+                        if field.ty.is_option() {
+                            ""
+                        } else {
+                            "required "
+                        },
+                        field.name
+                    )
+                })
+                .collect::<Vec<_>>();
+
+            Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
+        }
     }
 
     fn gen_method_info(
