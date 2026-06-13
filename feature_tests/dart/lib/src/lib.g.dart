@@ -25,6 +25,7 @@ part 'CyclicStructC.g.dart';
 part 'DefaultEnum.g.dart';
 part 'ErrorEnum.g.dart';
 part 'ErrorStruct.g.dart';
+part 'FallibleOpaqueConstructor.g.dart';
 part 'Float64Vec.g.dart';
 part 'Foo.g.dart';
 part 'ImportedStruct.g.dart';
@@ -243,6 +244,34 @@ final class _ResultErrorStructFfiVoid extends ffi.Struct {
   factory _ResultErrorStructFfiVoid.err() {
     final struct = ffi.Struct.create<_ResultErrorStructFfiVoid>();
     struct.isOk = false;
+    return struct;
+  }
+}
+
+final class _ResultFallibleOpaqueConstructorFfiOpaqueUnion extends ffi.Union {
+  external _FallibleOpaqueConstructorFfi ok;
+
+  external ffi.Pointer<ffi.Opaque> err;
+}
+
+final class _ResultFallibleOpaqueConstructorFfiOpaque extends ffi.Struct {
+  external _ResultFallibleOpaqueConstructorFfiOpaqueUnion union;
+
+  @ffi.Bool()
+  external bool isOk;
+
+  // ignore: unused_element
+  factory _ResultFallibleOpaqueConstructorFfiOpaque.ok(_FallibleOpaqueConstructorFfi val) {
+    final struct = ffi.Struct.create<_ResultFallibleOpaqueConstructorFfiOpaque>();
+    struct.isOk = true;
+    struct.union.ok = val;
+    return struct;
+  }
+  // ignore: unused_element
+  factory _ResultFallibleOpaqueConstructorFfiOpaque.err(ffi.Pointer<ffi.Opaque> val) {
+    final struct = ffi.Struct.create<_ResultFallibleOpaqueConstructorFfiOpaque>();
+    struct.isOk = false;
+    struct.union.err = val;
     return struct;
   }
 }

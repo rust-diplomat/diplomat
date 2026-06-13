@@ -347,62 +347,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
-        let default_constructor = if !is_out {
-            if let Some(constructor) = methods
-                .iter_mut()
-                .find(|m| m.declaration.contains(&format!("{type_name}()")))
-            {
-                // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
-                let args = fields
-                    .iter()
-                    .map(|field| {
-                        format!(
-                            "{} {}",
-                            self.formatter.fmt_nullable(&field.dart_type_name),
-                            field.name
-                        )
-                    })
-                    .collect::<Vec<_>>();
-                constructor.declaration =
-                    format!("factory {type_name}({{{args}}})", args = args.join(", "));
-
-                let mut r = String::new();
-                writeln!(&mut r, "final dart = {type_name}._fromFfi(result);").unwrap();
-                for field in &fields {
-                    let name = &field.name;
-                    writeln!(&mut r, "if ({name} != null) {{").unwrap();
-                    writeln!(&mut r, "  dart.{name} = {name};").unwrap();
-                    writeln!(&mut r, "}}").unwrap();
-                }
-                write!(&mut r, "return dart;").unwrap();
-                constructor.return_expression = Some(r.into());
-
-                None
-            } else if fields.is_empty() {
-                // ZST
-                Some(format!("{type_name}();"))
-            } else {
-                // Otherwise we create a constructor with required values for all non-optional fields.
-                let args = fields
-                    .iter()
-                    .map(|field| {
-                        format!(
-                            "{}this.{}",
-                            if field.ty.is_option() {
-                                ""
-                            } else {
-                                "required "
-                            },
-                            field.name
-                        )
-                    })
-                    .collect::<Vec<_>>();
-
-                Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
-            }
-        } else {
-            None
-        };
+        let default_constructor =
+            self.gen_struct_default_constructor(type_name, is_out, &fields, &mut methods);
 
         #[derive(Template)]
         #[template(path = "dart/struct.dart.jinja", escape = "none")]
@@ -431,6 +377,91 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
         .render()
         .unwrap()
+    }
+
+    /// Generates the default constructor for a struct, or repurposes an existing
+    /// zero-argument constructor to allow setting fields.
+    ///
+    /// In Dart, structs can be constructed with optional arguments for all fields
+    /// if there is a zero-argument constructor (either default or custom).
+    /// If a custom zero-argument constructor exists, we "repurpose" it by
+    /// modifying its declaration to take all fields as optional arguments, and
+    /// modifying its body to apply these overrides after calling the Rust constructor.
+    ///
+    /// If no zero-argument constructor exists, we generate a default constructor
+    /// that requires all non-optional fields.
+    fn gen_struct_default_constructor<P: TyPosition>(
+        &mut self,
+        type_name: &str,
+        is_out: bool,
+        fields: &[FieldInfo<'cx, P>],
+        methods: &mut [MethodInfo<'cx>],
+    ) -> Option<String> {
+        if is_out {
+            return None;
+        }
+
+        if let Some(constructor) = methods
+            .iter_mut()
+            .find(|m| m.declaration.contains(&format!("{type_name}()")))
+        {
+            // If there's an existing zero-arg constructor, we repurpose it with optional arguments for all fields
+            let args = fields
+                .iter()
+                .map(|field| {
+                    format!(
+                        "{} {}",
+                        self.formatter.fmt_nullable(&field.dart_type_name),
+                        field.name
+                    )
+                })
+                .collect::<Vec<_>>();
+            constructor.declaration =
+                format!("factory {type_name}({{{args}}})", args = args.join(", "));
+
+            let mut r = String::new();
+            let handling = self
+                .gen_c_to_dart_for_return_type_with_post_process(
+                    &constructor.method.output,
+                    &constructor.method.lifetime_env,
+                    "result.union.err",
+                    "throw Object();",
+                    |expr| format!("final dart = {expr};"),
+                )
+                .unwrap_or_else(|| format!("final dart = {type_name}._fromFfi(result);"));
+            writeln!(&mut r, "{handling}").unwrap();
+            for field in fields {
+                let name = &field.name;
+                writeln!(&mut r, "if ({name} != null) {{").unwrap();
+                writeln!(&mut r, "  dart.{name} = {name};").unwrap();
+                writeln!(&mut r, "}}").unwrap();
+            }
+            write!(&mut r, "return dart;").unwrap();
+            constructor.return_expression = Some(r.into());
+
+            None
+        } else if fields.is_empty() {
+            // ZST
+            Some(format!("{type_name}();"))
+        } else {
+            // Otherwise we create a constructor with required values for all non-optional fields.
+            let args = fields
+                .iter()
+                .map(|field| {
+                    format!(
+                        "{}this.{}",
+                        if field.ty.is_option() {
+                            ""
+                        } else {
+                            "required "
+                        },
+                        field.name
+                    )
+                })
+                .collect::<Vec<_>>();
+
+            Some(format!("{type_name}({{{args}}});", args = args.join(", ")))
+        }
     }
 
     fn gen_method_info(
@@ -1053,64 +1084,83 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         }
     }
 
+    /// Generates the return handling code for a return type, allowing customization
+    /// of how the success value is wrapped.
+    ///
+    /// - `result_ty`: The return type to handle.
+    /// - `lifetime_env`: The lifetime environment.
+    /// - `err_ffi_expr`: The FFI expression for the error value (e.g. "result.union.err").
+    /// - `fallback_action`: The Dart statement to execute on error fallback when there is no specific error type to convert and throw (e.g. "return null;" or "throw Object();").
+    /// - `wrap_success`: A closure that takes the success Dart expression and returns the wrapped statement.
+    fn gen_c_to_dart_for_return_type_with_post_process<F>(
+        &mut self,
+        result_ty: &ReturnType,
+        lifetime_env: &LifetimeEnv,
+        err_ffi_expr: &'cx str,
+        fallback_action: &str,
+        wrap_success: F,
+    ) -> Option<String>
+    where
+        F: FnOnce(String) -> String,
+    {
+        match *result_ty {
+            ReturnType::Infallible(SuccessType::Unit) => None,
+            ReturnType::Infallible(SuccessType::Write) => {
+                Some(wrap_success("write.finalize()".to_string()))
+            }
+            ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
+                let ok_conv = self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env);
+                Some(wrap_success(ok_conv.into_owned()))
+            }
+            // Special case Result<(), ()> and Option<()> to bool
+            ReturnType::Fallible(SuccessType::Unit, None)
+            | ReturnType::Nullable(SuccessType::Unit) => {
+                Some(wrap_success("result.isOk".to_string()))
+            }
+            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
+                let err_statement = match result_ty {
+                    ReturnType::Fallible(_, Some(e)) => {
+                        let err_conv =
+                            self.gen_c_to_dart_for_type(e, err_ffi_expr.into(), lifetime_env);
+                        format!("throw {err_conv};")
+                    }
+                    _ => fallback_action.to_string(),
+                };
+                let err_check = format!("if (!result.isOk) {{\n  {err_statement}\n}}\n");
+
+                let success_expr = match ok {
+                    SuccessType::Write => "write.finalize()".to_string(),
+                    SuccessType::OutType(o) => self
+                        .gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
+                        .into_owned(),
+                    SuccessType::Unit => "".to_string(),
+                    _ => unreachable!("unknown AST/HIR variant"),
+                };
+
+                if success_expr.is_empty() {
+                    Some(err_check)
+                } else {
+                    Some(format!("{}{}", err_check, wrap_success(success_expr)))
+                }
+            }
+            _ => unreachable!("unknown AST/HIR variant"),
+        }
+    }
+
     /// Generates a Dart expressions for a return type.
     fn gen_c_to_dart_for_return_type(
         &mut self,
         result_ty: &ReturnType,
         lifetime_env: &LifetimeEnv,
     ) -> Option<Cow<'cx, str>> {
-        match *result_ty {
-            ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Write) => {
-                // Note: the `write` variable is initialized in the template
-                Some("return write.finalize();".into())
-            }
-            ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => Some(
-                format!(
-                    "return {};",
-                    self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env)
-                )
-                .into(),
-            ),
-            // Special case Result<(), ()> and Option<()> to bool
-            ReturnType::Fallible(SuccessType::Unit, None)
-            | ReturnType::Nullable(SuccessType::Unit) => Some("return result.isOk;".into()),
-            ReturnType::Fallible(ref ok, _) | ReturnType::Nullable(ref ok) => {
-                let err_check = format!(
-                    "if (!result.isOk) {{\n  {}\n}}\n",
-                    match result_ty {
-                        ReturnType::Fallible(_, Some(e)) => format!(
-                            "throw {};",
-                            self.gen_c_to_dart_for_type(e, "result.union.err".into(), lifetime_env)
-                        ),
-                        _ => "return null;".into(),
-                    }
-                );
-
-                Some(
-                    match ok {
-                        // Note: the `write` variable is initialized in the template
-                        SuccessType::Write => {
-                            format!("{err_check}return write.finalize();")
-                        }
-                        SuccessType::OutType(o) => {
-                            format!(
-                                "{err_check}return {};",
-                                self.gen_c_to_dart_for_type(
-                                    o,
-                                    "result.union.ok".into(),
-                                    lifetime_env
-                                )
-                            )
-                        }
-                        SuccessType::Unit => err_check,
-                        _ => unreachable!("unknown AST/HIR variant"),
-                    }
-                    .into(),
-                )
-            }
-            _ => unreachable!("unknown AST/HIR variant"),
-        }
+        self.gen_c_to_dart_for_return_type_with_post_process(
+            result_ty,
+            lifetime_env,
+            "result.union.err",
+            "return null;",
+            |expr| format!("return {expr};"),
+        )
+        .map(Cow::Owned)
     }
 
     fn gen_slice_element_ty<P: TyPosition>(&mut self, slice: &hir::Slice<P>) -> Cow<'cx, str> {

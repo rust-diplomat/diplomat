@@ -99,7 +99,7 @@ pub mod ffi {
     }
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1123
-    #[diplomat::cfg(all(supports=fallible_constructors, not(dart)))]
+    #[diplomat::cfg(supports=fallible_constructors)]
     pub struct FallibleOpaqueConstructor {
         x: i32,
     }
