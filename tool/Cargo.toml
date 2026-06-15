@@ -11,6 +11,10 @@ repository.workspace = true
 keywords.workspace = true
 readme = "../README.md"
 
+[[bin]]
+name = "diplomat-tool"
+path = "src/main.rs"
+
 [dependencies]
 diplomat_core = { workspace = true, features = ["hir"] }
 syn = { version = "2", features = ["full", "extra-traits"] }

@@ -10,6 +10,7 @@ pub mod c;
 mod cpp;
 mod dart;
 mod demo_gen;
+mod dotnet;
 mod js;
 mod kotlin;
 mod nanobind;
@@ -37,6 +38,7 @@ pub fn get_supported(target_language: &str) -> hir::BackendAttrSupport {
         "js" => js::attr_support(),
         "demo_gen" => demo_gen::attr_support(),
         "kotlin" => kotlin::attr_support(),
+        "dotnet" => dotnet::attr_support(),
         "py-nanobind" | "nanobind" => nanobind::attr_support(),
         o => panic!("Unknown target: {}", o),
     }
@@ -143,6 +145,7 @@ pub fn gen(
         "cpp" => cpp::run(&tcx, &config, docs_url_gen),
         "dart" => dart::run(&tcx, docs_url_gen),
         "js" => js::run(&tcx, config, docs_url_gen),
+        "dotnet" => dotnet::run(&tcx, &config, docs_url_gen),
         "py-nanobind" | "nanobind" => nanobind::run(&tcx, config, docs_url_gen),
         "demo_gen" => {
             // If we don't already have an import path set up, generate our own imports:

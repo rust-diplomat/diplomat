@@ -1,0 +1,23 @@
+using System;
+
+namespace {{ namespace }};
+
+public class {{ exception_name }} : Exception
+{
+    public {{ error }} Inner { get; }
+
+    public {{ exception_name }}({{ error }} inner) : base(
+        {%- if error.is_opaque() %}
+        {%- if let Some(method) = message_method %}
+        inner.{{ method }}()
+        {%- else %}
+        $"{{ error }}: {inner}"
+        {%- endif %}
+        {%- else %}
+        $"{{ error }}: {inner}"
+        {%- endif %}
+    )
+    {
+        Inner = inner;
+    }
+}
