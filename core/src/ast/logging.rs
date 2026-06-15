@@ -249,6 +249,8 @@ mod tests {
                         if st.contains("snapshot assertion") {
                             panic!("{st}");
                         }
+                    } else {
+                        panic!("Could not convert error to string.");
                     }
                 }
             }
