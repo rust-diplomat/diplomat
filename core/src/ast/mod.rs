@@ -47,3 +47,5 @@ pub use docs::{DocType, Docs, RustLink, RustLinkDisplay};
 
 mod macros;
 pub use macros::{MacroDef, MacroUse, Macros};
+
+mod logging;

@@ -11,6 +11,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
+use crate::ast::logging::create_report;
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -208,7 +209,7 @@ impl<'a> ModuleBuilder<'a> {
                         self.module_location,
                     )),
                     Err(errors) => {
-                        panic!("Multiple conflicting Diplomat struct attributes, there can be at most one: {errors:?}");
+                        create_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
 

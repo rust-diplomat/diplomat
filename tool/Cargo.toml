@@ -12,7 +12,7 @@ keywords.workspace = true
 readme = "../README.md"
 
 [dependencies]
-diplomat_core = { workspace = true, features = ["hir"] }
+diplomat_core = { workspace = true, features = ["hir", "pretty-print"] }
 syn = { version = "2", features = ["full", "extra-traits"] }
 syn-inline-mod = "0.6.0"
 quote = "1.0"
