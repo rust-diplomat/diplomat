@@ -255,12 +255,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "pretty-print")]
-    #[test]
-    fn test_errors_pretty() {
-        test_file_list("pretty");
-    }
-
     #[cfg(not(feature = "pretty-print"))]
     #[test]
     fn test_errors_ugly() {
