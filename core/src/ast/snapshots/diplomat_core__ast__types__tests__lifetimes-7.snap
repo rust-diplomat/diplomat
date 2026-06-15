@@ -7,8 +7,12 @@ Result:
       path:
         elements:
           - - OkRef
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -16,16 +20,24 @@ Result:
       lifetimes:
         - Named:
             - a
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
               span_location: None
         - Named:
             - b
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -34,8 +46,12 @@ Result:
       path:
         elements:
           - - ErrRef
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -43,8 +59,12 @@ Result:
       lifetimes:
         - Named:
             - c
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0

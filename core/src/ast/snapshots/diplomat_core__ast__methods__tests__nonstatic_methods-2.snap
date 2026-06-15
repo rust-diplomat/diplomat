@@ -4,8 +4,12 @@ expression: "Method::from_syn(&syn::parse_quote!\n{\n    #[diplomat::rust_link(f
 ---
 name:
   - foo
-  - start_line: 1
-    column_line: 0
+  - start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
     range:
       start: 0
       end: 0
@@ -16,24 +20,36 @@ docs:
   - - path:
         elements:
           - - foo
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
               span_location:
                 LocalSource: ", FnInStruct"
           - - Bar
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
               span_location:
                 LocalSource: ", FnInStruct"
           - - batz
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -43,8 +59,12 @@ docs:
       display: Normal
 abi_name:
   - MyStructContainingMethod_foo
-  - start_line: 1
-    column_line: 0
+  - start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
     range:
       start: 0
       end: 0
@@ -69,8 +89,12 @@ self_type:
 params:
   - name:
       - x
-      - start_line: 1
-        column_line: 0
+      - start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
         range:
           start: 0
           end: 0
@@ -80,8 +104,12 @@ params:
     attrs: {}
   - name:
       - y
-      - start_line: 1
-        column_line: 0
+      - start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
         range:
           start: 0
           end: 0
@@ -91,8 +119,12 @@ params:
         path:
           elements:
             - - MyCustomStruct
-              - start_line: 1
-                column_line: 0
+              - start:
+                  line: 1
+                  col: 0
+                end:
+                  line: 1
+                  col: 0
                 range:
                   start: 0
                   end: 0

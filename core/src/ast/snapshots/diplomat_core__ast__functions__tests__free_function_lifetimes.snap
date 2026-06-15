@@ -4,16 +4,24 @@ expression: "Function::from_syn(&syn::parse_quote!\n{ fn some_func<'a>(a : &'a S
 ---
 name:
   - some_func
-  - start_line: 1
-    column_line: 0
+  - start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
     range:
       start: 0
       end: 0
     span_location: None
 abi_name:
   - diplomat_external_some_func
-  - start_line: 1
-    column_line: 0
+  - start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
     range:
       start: 0
       end: 0
@@ -21,8 +29,12 @@ abi_name:
 params:
   - name:
       - a
-      - start_line: 1
-        column_line: 0
+      - start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
         range:
           start: 0
           end: 0
@@ -31,8 +43,12 @@ params:
       Reference:
         - Named:
             - a
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -42,8 +58,12 @@ params:
             path:
               elements:
                 - - SomeType
-                  - start_line: 1
-                    column_line: 0
+                  - start:
+                      line: 1
+                      col: 0
+                    end:
+                      line: 1
+                      col: 0
                     range:
                       start: 0
                       end: 0
@@ -55,8 +75,12 @@ output_type:
     - Reference:
         - Named:
             - a
-            - start_line: 1
-              column_line: 0
+            - start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
               range:
                 start: 0
                 end: 0
@@ -66,8 +90,12 @@ output_type:
             path:
               elements:
                 - - SomeType
-                  - start_line: 1
-                    column_line: 0
+                  - start:
+                      line: 1
+                      col: 0
+                    end:
+                      line: 1
+                      col: 0
                     range:
                       start: 0
                       end: 0
@@ -76,8 +104,12 @@ output_type:
     - Stdlib
 lifetimes:
   ? - a
-    - start_line: 1
-      column_line: 0
+    - start:
+        line: 1
+        col: 0
+      end:
+        line: 1
+        col: 0
       range:
         start: 0
         end: 0

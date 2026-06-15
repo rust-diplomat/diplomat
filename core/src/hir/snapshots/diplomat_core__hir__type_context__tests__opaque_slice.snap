@@ -2,7 +2,7 @@
 source: core/src/hir/type_context.rs
 expression: output
 ---
-Lowering error in Foo::static_opaque_slice: 'static Reference(Static, Immutable, Named(PathType { path: Path { elements: [Ident("Foo", Some(Span { start_line: 1, column_line: 0, range: 0..0, span_location: None }))] }, lifetimes: [] })) slice types not supported. Try #[diplomat::cfg(supports = static_slices)]
+Lowering error in Foo::static_opaque_slice: 'static Reference(Static, Immutable, Named(PathType { path: Path { elements: [Ident("Foo", Some(Span { start: LineColumn { line: 1, col: 0 }, end: LineColumn { line: 1, col: 0 }, range: 0..0, span_location: None }))] }, lifetimes: [] })) slice types not supported. Try #[diplomat::cfg(supports = static_slices)]
 Lowering error in Foo::static_opaque_slice: &'static slices of opaques (&'static [&'static Foo]) are currently unsupported in Diplomat.
 Lowering error in Foo::static_opaque_slice: Slices of &'static opaques (&[&'static Foo]) are currently unsupported in Diplomat.
 Lowering error in Foo::static_opaque_slice: Slice of opaque &[&'static Foo] is unsupported by this backend.

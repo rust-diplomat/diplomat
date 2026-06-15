@@ -6,22 +6,34 @@ Named:
   path:
     elements:
       - - core
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - my_type
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - Foo
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
@@ -29,8 +41,12 @@ Named:
   lifetimes:
     - Named:
         - test
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
