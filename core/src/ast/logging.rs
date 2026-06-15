@@ -176,7 +176,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
     out.flush().expect("Could not write to output.");
     // Rust-analyzer will not show error messages unless we panic,
     // This just tells rust-analyzer users to check stderr:
-    panic!("{} (check stderr for more)", title);
+    panic!("Diplomat error: {} (check stderr for more)", title);
 }
 
 #[cfg(all(test, not(feature = "pretty-print")))]
@@ -214,11 +214,6 @@ mod tests {
         settings.set_snapshot_path("snapshots/span_testing");
         let _drop = settings.bind_to_scope();
 
-        {
-            let mut inner = super::WRITER.try_write().unwrap();
-            *inner = &reader_fn;
-        }
-
         let st = std::fs::read_to_string(&file_path).expect("Could not read file.");
         let p = syn::parse_str::<syn::ItemMod>(&st).expect("Could not parse syn mod");
         crate::ast::Module::from_syn(
@@ -232,21 +227,23 @@ mod tests {
     const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs"];
 
     fn test_file_list(suffix: &'static str) {
-        let mut threads = vec![];
+        {
+            let mut inner = super::WRITER.try_write().unwrap();
+            *inner = &reader_fn;
+        }
+        let mut results = vec![];
         for f in FILES_TO_TEST {
             let t = std::thread::spawn(|| {
                 parse_file_hook_errors(f, suffix);
             });
-            threads.push(t);
+            results.push(t.join());
         }
-        for t in threads {
-            // The panic will still be printed, but we don't care about panicking or not:
-            let res = t.join();
+        for res in results {
             match res {
                 Ok(_) => {}
                 Err(p) => {
                     if let Some(st) = p.downcast_ref::<String>() {
-                        if st.contains("snapshot assertion") {
+                        if !st.contains("Diplomat error") {
                             panic!("{st}");
                         }
                     } else {
