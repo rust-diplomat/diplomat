@@ -102,12 +102,16 @@ extern "C" inline void _flush(capi::DiplomatWrite* w) {
   string->resize(w->len);
 }
 
-extern "C" inline bool _grow(capi::DiplomatWrite* w, uintptr_t requested) {
+extern "C" inline bool _grow_impl(capi::DiplomatWrite* w, uintptr_t requested) {
   std::string* string = reinterpret_cast<std::string*>(w->context);
   string->resize(requested);
   w->cap = string->length();
   w->buf = &(*string)[0];
   return true;
+}
+
+extern "C" inline bool _grow(capi::DiplomatWrite* w, size_t requested) {
+  return _grow_impl(w, static_cast<uintptr_t>(requested));
 }
 
 inline capi::DiplomatWrite WriteFromString(std::string& string) {
