@@ -3,7 +3,8 @@ use std::sync::RwLock;
 use crate::ast::{Ident, SpanLocation};
 
 /// For overwriting by tests.
-static WRITER : RwLock<&(dyn Fn()->Box<dyn std::io::Write> + Send + Sync)> = RwLock::new(&(|| Box::new(std::io::stderr())));
+static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
+    RwLock::new(&(|| Box::new(std::io::stderr())));
 
 pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
     use std::io::Write;
@@ -31,7 +32,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
         // Bytes range has not been stabilized in Rust macro.
         // We can't tell if we're in a proc macro context,
         // so we just check if the range doesn't make sense:
-        if sp.range.len() == 0 && (sp.start.line != sp.end.line || sp.end.col - sp.start.col > 0) {
+        if sp.range.is_empty() && (sp.start.line != sp.end.line || sp.end.col - sp.start.col > 0) {
             match sp.span_location {
                 SpanLocation::None => 0..0,
                 _ => {
@@ -61,7 +62,11 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
 
     if let Some(b) = &bytes_range {
         // If we go past the length, then we've somehow got the wrong SpanLocation.
-        if matches!(span.as_ref().map(|s| &s.span_location), Some(SpanLocation::FilePath(..)) | Some(SpanLocation::LocalSource(..))) && b.end > src.len() {
+        if matches!(
+            span.as_ref().map(|s| &s.span_location),
+            Some(SpanLocation::FilePath(..)) | Some(SpanLocation::LocalSource(..))
+        ) && b.end > src.len()
+        {
             panic!("Span source improperly calculated. Got range {0} > {1}. Original error: {title}: {label}", b.end, src.len());
         }
     }
@@ -115,7 +120,12 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
                 ),
             }
         } else {
-            ("<No associated span>".into(), "", "<Excerpt not available>", "")
+            (
+                "<No associated span>".into(),
+                "",
+                "<Excerpt not available>",
+                "",
+            )
         };
         // Ansi escape codes to provide emphasis.
         // Color red, bold:
@@ -128,7 +138,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
 
         let excerpt_pre_trimmed = excerpt_pre.trim_start();
 
-        if excerpt_pre.len() > 0 {
+        if !excerpt_pre.is_empty() {
             write!(out, "...{}", excerpt_pre_trimmed).expect("Could not write to report.");
         }
 
@@ -138,19 +148,25 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
         // Reset:
         write!(out, "\x1b[0m").expect("Could not write to report.");
 
-        if excerpt_post.len() > 0 {
+        if !excerpt_post.is_empty() {
             writeln!(out, "{}...", excerpt_post.trim_end()).expect("Could not write to report.");
         }
 
         // Clarify that above is the source, and below is the label attached to the source:
         // Color blue, bold:
         write!(out, "\x1b[1;34m").expect("Could not write to report.");
-        if excerpt.len() > 0 {
+        if !excerpt.is_empty() {
             // This works well for most one-line excerpts.
             // The pretty-printer tends to handle whitespacing better, however.
-            writeln!(out, "{}{}", " ".repeat(3 + excerpt_pre_trimmed.len()), "^".repeat(excerpt.len())).expect("Could not write to report.");
+            writeln!(
+                out,
+                "{}{}",
+                " ".repeat(3 + excerpt_pre_trimmed.len()),
+                "^".repeat(excerpt.len())
+            )
+            .expect("Could not write to report.");
         }
-        
+
         // Blue on the new line, just in case newlines reset in some terminals:
         write!(out, "\x1b[1;34m").expect("Could not write to report.");
         write!(out, "{label}").expect("Could not write to report.");
@@ -163,14 +179,13 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
     panic!("{} (check stderr for more)", title);
 }
 
-
-#[cfg(test)]
+#[cfg(all(test, not(feature = "pretty-print")))]
 mod tests {
     use std::fmt::Write;
 
     #[derive(Clone, Debug)]
     struct StderrWrapper {
-        buf : String,
+        buf: String,
     }
     impl std::io::Write for StderrWrapper {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
@@ -178,7 +193,7 @@ mod tests {
             self.buf.write_str(st).expect("Could not write str");
             Ok(buf.len())
         }
-        
+
         fn flush(&mut self) -> std::io::Result<()> {
             insta::assert_snapshot!(self.buf);
             Ok(())
@@ -186,12 +201,10 @@ mod tests {
     }
 
     fn reader_fn() -> Box<dyn std::io::Write> {
-        Box::new(StderrWrapper {
-            buf: String::new()
-        })
+        Box::new(StderrWrapper { buf: String::new() })
     }
 
-    fn parse_file_hook_errors(file_loc : &str, suffix : &str) {
+    fn parse_file_hook_errors(file_loc: &str, suffix: &str) {
         let crate_dir = env!("CARGO_MANIFEST_DIR");
         let local_path = format!("src/ast/snapshots/span_testing/{file_loc}");
         let file_path = std::path::Path::new(crate_dir).join(&local_path);
@@ -208,12 +221,17 @@ mod tests {
 
         let st = std::fs::read_to_string(&file_path).expect("Could not read file.");
         let p = syn::parse_str::<syn::ItemMod>(&st).expect("Could not parse syn mod");
-        crate::ast::Module::from_syn(&p, true, None, &crate::ast::SpanLocation::FilePath(local_path));
+        crate::ast::Module::from_syn(
+            &p,
+            true,
+            None,
+            &crate::ast::SpanLocation::FilePath(local_path),
+        );
     }
 
-    const FILES_TO_TEST : &[&'static str] = &["duplicate_attrs.rs", "enum_field_variant.rs"];
+    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs"];
 
-    fn test_file_list(suffix : &'static str) {
+    fn test_file_list(suffix: &'static str) {
         let mut threads = vec![];
         for f in FILES_TO_TEST {
             let t = std::thread::spawn(|| {
@@ -229,7 +247,7 @@ mod tests {
                 Err(p) => {
                     if let Some(st) = p.downcast_ref::<String>() {
                         if st.contains("snapshot assertion") {
-                            assert!(false, "{st}");
+                            panic!("{st}");
                         }
                     }
                 }
@@ -237,13 +255,13 @@ mod tests {
         }
     }
 
-    #[cfg(feature="pretty-print")]
+    #[cfg(feature = "pretty-print")]
     #[test]
     fn test_errors_pretty() {
         test_file_list("pretty");
     }
 
-    #[cfg(not(feature="pretty-print"))]
+    #[cfg(not(feature = "pretty-print"))]
     #[test]
     fn test_errors_ugly() {
         test_file_list("ugly");
