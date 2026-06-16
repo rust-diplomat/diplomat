@@ -27,14 +27,14 @@ impl Function {
         module_location: &SpanLocation,
     ) -> Function {
         let ident: Ident = (&f.sig.ident).spanned_into(module_location);
-        if f.sig.receiver().is_some() {
+        if let Some(recv) = f.sig.receiver() {
             create_report(
                 AstReport::new(
                     "Cannot use self parameter in free function.".into(),
-                    (&f.sig.ident).spanned_into(module_location),
+                    f.sig.ident.span().spanned_into(module_location),
                     "".into(),
                     vec![
-                        ContextLocation::new(f.sig.receiver().unwrap().self_token.span.spanned_into(module_location), "Suggestion: remove self param.".into())
+                        ContextLocation::new(recv.self_token.span.spanned_into(module_location), "Suggestion: remove self param.".into())
                     ]
                 )
             );

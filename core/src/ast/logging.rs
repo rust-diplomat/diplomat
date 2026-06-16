@@ -1,6 +1,6 @@
 use std::sync::RwLock;
 
-use crate::ast::{Ident, SpanLocation};
+use crate::ast::{Ident, SpanLocation, idents::Span};
 
 /// For overwriting by tests.
 static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
@@ -10,14 +10,14 @@ static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
 pub(crate) struct ContextLocation {
     // Allow for pretty-print:
     #[allow(unused)]
-    location : super::idents::Span,
+    location : Span,
     // Allow for pretty-print:
     #[allow(unused)]
     label : String
 }
 
 impl ContextLocation {
-    pub fn new(location : super::idents::Span, label : String) -> Self {
+    pub fn new(location : Span, label : String) -> Self {
         Self {
             location,
             label
@@ -27,7 +27,7 @@ impl ContextLocation {
 
 pub(crate) struct AstReport {
     title : String,
-    primary_loc : Ident,
+    primary_loc : Option<Span>,
     primary_label : String,
     // Used for pretty-printing, not ugly printing:
     #[allow(unused)]
@@ -35,10 +35,10 @@ pub(crate) struct AstReport {
 }
 
 impl AstReport {
-    pub fn new(title : String, primary_loc : Ident, primary_label : String, context_locations : Vec<ContextLocation>) -> Self {
+    pub fn new(title : String, primary_loc : Span, primary_label : String, context_locations : Vec<ContextLocation>) -> Self {
         Self {
             title,
-            primary_loc,
+            primary_loc: Some(primary_loc),
             primary_label,
             context_locations,
         }
@@ -46,7 +46,7 @@ impl AstReport {
 }
 
 pub(crate) fn create_simple_report(id: Ident, title: String, label: String) -> ! {
-    create_report(AstReport { title, primary_loc: id, primary_label: label, context_locations: vec![] })
+    create_report(AstReport { title, primary_loc: id.span(), primary_label: label, context_locations: vec![] })
 }
 
 
@@ -86,7 +86,7 @@ pub(crate) fn create_report(report : AstReport) -> ! {
     use std::io::Write;
     let mut out = WRITER.read().unwrap()();
 
-    let span = report.primary_loc.span();
+    let span = report.primary_loc;
     let src = if let Some(sp) = &span {
         match &sp.span_location {
             SpanLocation::FilePath(f) => {
@@ -260,7 +260,14 @@ mod tests {
         );
     }
 
-    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs", "attr_on_non_pub.rs", "nonstd_result.rs", "self_in_free_func.rs"];
+    const FILES_TO_TEST: &[&str] = &[
+        "duplicate_attrs.rs",
+        "enum_field_variant.rs",
+        "attr_on_non_pub.rs",
+        "nonstd_result.rs",
+        "self_in_free_func.rs",
+        "lifetime_on_trait.rs"
+    ];
 
     fn test_file_list(suffix: &'static str) {
         {

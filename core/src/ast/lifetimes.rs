@@ -1,11 +1,11 @@
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
+use syn::spanned::Spanned;
 use std::fmt;
 
 use crate::ast::{
-    idents::{FromWithSpan, IntoWithSpan},
-    SpanLocation,
+    SpanLocation, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report}
 };
 
 use super::{Attrs, Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
@@ -156,9 +156,13 @@ impl LifetimeEnv {
         this
     }
 
-    pub fn from_trait(trt: &syn::ItemTrait) -> Self {
-        if trt.generics.lifetimes().next().is_some() {
-            panic!("Diplomat traits are not allowed to have any lifetime parameters")
+    pub fn from_trait(trt: &syn::ItemTrait, module_location: &SpanLocation) -> Self {
+        if let Some(lt) = trt.generics.lifetimes().next() {
+            create_report(AstReport::new(
+                "Diplomat traits are not allowed to have any lifetime parameters.".into(),
+                trt.ident.span().spanned_into(module_location),
+                "".into(),
+                vec![ContextLocation::new(lt.span().spanned_into(module_location), "Remove lifetime annotations".into())]));
         }
         LifetimeEnv::new()
     }
