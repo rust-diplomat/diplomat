@@ -2,8 +2,7 @@ use serde::Serialize;
 use syn::ItemFn;
 
 use crate::ast::{
-    idents::{FromWithSpan, IntoWithSpan},
-    Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, TypeName,
+    Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, TypeName, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report}
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -29,7 +28,16 @@ impl Function {
     ) -> Function {
         let ident: Ident = (&f.sig.ident).spanned_into(module_location);
         if f.sig.receiver().is_some() {
-            panic!("Cannot use self parameter in free function {ident:?}")
+            create_report(
+                AstReport::new(
+                    "Cannot use self parameter in free function.".into(),
+                    (&f.sig.ident).spanned_into(module_location),
+                    "".into(),
+                    vec![
+                        ContextLocation::new(f.sig.receiver().unwrap().self_token.span.spanned_into(module_location), "Suggestion: remove self param.".into())
+                    ]
+                )
+            );
         }
 
         let mut attrs = parent_attrs.clone();
