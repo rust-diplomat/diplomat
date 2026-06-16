@@ -127,12 +127,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
                 "",
             )
         };
-        // Ansi escape codes to provide emphasis.
-        // Color red, bold:
-        write!(out, "\x1b[1;31m").expect("Could not write to report.");
         write!(out, "Diplomat error: ").expect("Could not write to report.");
-        // Reset:
-        write!(out, "\x1b[0m").expect("Could not write to report.");
         writeln!(out, "{title}").expect("Could not write to report.");
         writeln!(out, "In {location}:").expect("Could not write to report.");
 
@@ -142,19 +137,13 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
             write!(out, "...{}", excerpt_pre_trimmed).expect("Could not write to report.");
         }
 
-        // Color red, bold, underline:
-        write!(out, "\x1b[1;4;31m").expect("Could not write to report.");
         write!(out, "{excerpt}").expect("Could not write to report.");
-        // Reset:
-        write!(out, "\x1b[0m").expect("Could not write to report.");
 
         if !excerpt_post.is_empty() {
             writeln!(out, "{}...", excerpt_post.trim_end()).expect("Could not write to report.");
         }
 
-        // Clarify that above is the source, and below is the label attached to the source:
-        // Color blue, bold:
-        write!(out, "\x1b[1;34m").expect("Could not write to report.");
+        // Add visible separation between the label and the excerpt.
         if !excerpt.is_empty() {
             // This works well for most one-line excerpts.
             // The pretty-printer tends to handle whitespacing better, however.
@@ -167,11 +156,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
             .expect("Could not write to report.");
         }
 
-        // Blue on the new line, just in case newlines reset in some terminals:
-        write!(out, "\x1b[1;34m").expect("Could not write to report.");
         write!(out, "{label}").expect("Could not write to report.");
-        // Reset:
-        writeln!(out, "\x1b[0m").expect("Could not write to report.");
     }
     out.flush().expect("Could not write to output.");
     // Rust-analyzer will not show error messages unless we panic,
