@@ -10,7 +10,10 @@ use std::fmt::Display;
 use askama::Template;
 use diplomat_core::hir::{OutputOnly, Type};
 
-use crate::dotnet::r#gen::{method::DotnetReturnType, DotnetPrimitives, ItemGenContext};
+use crate::dotnet::r#gen::{
+    method::{DotnetReturnType, RawExpr},
+    DotnetPrimitives, ItemGenContext,
+};
 
 #[derive(Template)]
 #[template(path = "dotnet/result.raw.cs.jinja", escape = "none")]
@@ -169,6 +172,26 @@ pub(crate) struct ErrorInfo {
     pub(crate) raw_return_type: DotnetResultName,
 }
 
+impl ErrorInfo {
+    pub(crate) fn throw_statement<R>(&self, raw_expr: R) -> String
+    where
+        R: TryInto<RawExpr>,
+        R::Error: Display,
+    {
+        let raw_expr = raw_expr.try_into().unwrap_or_else(|err| panic!("{err}"));
+
+        if self.error.is_unit() {
+            return format!(
+                "throw new {}(\"FFI function failed with unit error\");",
+                self.exception_name
+            );
+        }
+
+        let inner = self.error.exception_inner_expr(raw_expr);
+        format!("throw new {}({inner});", self.exception_name)
+    }
+}
+
 impl DotnetErrorType {
     pub(crate) fn new(value: &Type<OutputOnly>, ctx: &ItemGenContext) -> Option<Self> {
         Some(match value {
@@ -243,10 +266,6 @@ impl DotnetErrorType {
         matches!(self, DotnetErrorType::Opaque(_))
     }
 
-    pub(crate) fn is_struct(&self) -> bool {
-        matches!(self, DotnetErrorType::Struct(_))
-    }
-
     /// Stable, variant-aware key for deduplicating exception emission.
     /// `Display` collapses Opaque/Enum/Struct/Primitive to bare names, so
     /// two distinct error types that happen to share a name (e.g. an
@@ -286,6 +305,15 @@ impl DotnetErrorType {
             }
         }
         format!("{name}Exception")
+    }
+
+    fn exception_inner_expr(&self, raw_expr: RawExpr) -> String {
+        match self {
+            DotnetErrorType::Opaque(name) => format!("new {name}({raw_expr})"),
+            DotnetErrorType::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
+            DotnetErrorType::Unit => unreachable!("unit errors do not carry an inner value"),
+            DotnetErrorType::Primitive(_) | DotnetErrorType::Enum(_) => raw_expr.to_string(),
+        }
     }
 }
 

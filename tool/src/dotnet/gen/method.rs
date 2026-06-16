@@ -30,6 +30,69 @@ use crate::dotnet::r#gen::fillable::{
 
 use super::{callback::DotnetCallback, DotnetPrimitives, ItemGenContext};
 
+#[derive(Debug, Clone)]
+pub(crate) struct RawExprParseError {
+    value: String,
+}
+
+impl Display for RawExprParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "unsupported .NET raw expression: {}", self.value)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RawExpr {
+    Result,
+    ResultOk,
+    ResultErr,
+    ResultValue,
+    ResultOkValue,
+}
+
+impl RawExpr {
+    fn option_value(self) -> Self {
+        match self {
+            Self::Result => Self::ResultValue,
+            Self::ResultOk => Self::ResultOkValue,
+            other => panic!("{other} cannot be read as an option value"),
+        }
+    }
+
+    fn is_some_expr(self) -> String {
+        format!("{self}.IsSome")
+    }
+}
+
+impl TryFrom<&str> for RawExpr {
+    type Error = RawExprParseError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        match value {
+            "result" => Ok(Self::Result),
+            "result.Ok" => Ok(Self::ResultOk),
+            "result.Err" => Ok(Self::ResultErr),
+            "result.Value" => Ok(Self::ResultValue),
+            "result.Ok.Value" => Ok(Self::ResultOkValue),
+            _ => Err(RawExprParseError {
+                value: value.to_string(),
+            }),
+        }
+    }
+}
+
+impl Display for RawExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Result => write!(f, "result"),
+            Self::ResultOk => write!(f, "result.Ok"),
+            Self::ResultErr => write!(f, "result.Err"),
+            Self::ResultValue => write!(f, "result.Value"),
+            Self::ResultOkValue => write!(f, "result.Ok.Value"),
+        }
+    }
+}
+
 /// Context from the type-level codegen call site that a bare HIR method
 /// does not carry by itself.
 ///
@@ -164,10 +227,6 @@ impl DotnetReturnType {
         matches!(self, Self::Opaque(_))
     }
 
-    pub(super) fn is_struct(&self) -> bool {
-        matches!(self, Self::Struct(_))
-    }
-
     pub(super) fn is_void(&self) -> bool {
         // Both `Unit` (no return) and `Write` (writer-out-param) have no
         // value in the success arm of a Result struct — neither belongs
@@ -224,6 +283,41 @@ impl DotnetReturnType {
             Self::Unit | Self::Write => "Void".to_string(),
             Self::Primitive(p) => p.name_token().to_string(),
             _ => self.to_string(),
+        }
+    }
+
+    /// Convert a raw FFI value expression into the public C# value
+    /// expression for this return type.
+    fn idiomatic_value_expr(&self, raw_expr: RawExpr) -> String {
+        match self {
+            Self::Opaque(name) => format!("new {name}({raw_expr})"),
+            Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
+            Self::Unit | Self::Write => String::new(),
+            Self::Primitive(_) | Self::Enum(_) => raw_expr.to_string(),
+        }
+    }
+
+    fn option_none_expr(&self) -> String {
+        match self {
+            Self::Opaque(_) => "null".to_string(),
+            Self::Unit | Self::Write => unreachable!("unit/write options are rejected earlier"),
+            Self::Primitive(_) | Self::Struct(_) | Self::Enum(_) => format!("({self}?)null"),
+        }
+    }
+
+    fn tagged_option_expr(&self, option_expr: RawExpr) -> String {
+        format!(
+            "{} ? {} : {}",
+            option_expr.is_some_expr(),
+            self.idiomatic_value_expr(option_expr.option_value()),
+            self.option_none_expr()
+        )
+    }
+
+    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr) -> String {
+        match self {
+            Self::Opaque(name) => format!("{raw_expr} == null ? null : new {name}({raw_expr})"),
+            _ => unreachable!("nullable pointer options only lower from opaque returns"),
         }
     }
 }
@@ -433,6 +527,72 @@ impl MethodInfo<'_> {
             "&writeable".to_string()
         } else {
             format!("{}, &writeable", self.inputs.raw_call_args)
+        }
+    }
+
+    pub(super) fn raw_call_expr(&self, owner_name: &str) -> String {
+        format!(
+            "Raw.{owner_name}.{}({})",
+            self.name, self.inputs.raw_call_args
+        )
+    }
+
+    pub(super) fn raw_call_statement(&self, owner_name: &str) -> String {
+        format!("{};", self.raw_call_expr(owner_name))
+    }
+
+    pub(super) fn direct_raw_return_statement(&self, owner_name: &str) -> String {
+        format!("return {};", self.raw_call_expr(owner_name))
+    }
+
+    pub(super) fn can_return_raw_call_directly(&self) -> bool {
+        self.option_info.is_none()
+            && matches!(
+                self.return_type,
+                DotnetReturnType::Primitive(_) | DotnetReturnType::Enum(_)
+            )
+    }
+
+    pub(super) fn success_result_declaration(&self, owner_name: &str) -> String {
+        let raw_call = self.raw_call_expr(owner_name);
+        let uses_tagged_option = self
+            .option_info
+            .as_ref()
+            .and_then(|option| option.raw_option_type.as_ref())
+            .is_some();
+        if uses_tagged_option {
+            format!("var result = {raw_call};")
+        } else {
+            format!("Raw.{} result = {raw_call};", self.return_type.raw())
+        }
+    }
+
+    /// Full public return statement for a raw success expression. This keeps
+    /// nullable option, opaque wrapping, and struct bridging out of the C#
+    /// control-flow template.
+    pub(super) fn success_return_statement<R>(&self, raw_expr: R) -> String
+    where
+        R: TryInto<RawExpr>,
+        R::Error: Display,
+    {
+        let raw_expr = raw_expr.try_into().unwrap_or_else(|err| panic!("{err}"));
+
+        if let Some(option_info) = &self.option_info {
+            let expr = if option_info.raw_option_type.is_some() {
+                self.return_type.tagged_option_expr(raw_expr)
+            } else {
+                self.return_type.nullable_pointer_option_expr(raw_expr)
+            };
+            return format!("return {expr};");
+        }
+
+        if self.return_type.is_void() {
+            "return;".to_string()
+        } else {
+            format!(
+                "return {};",
+                self.return_type.idiomatic_value_expr(raw_expr)
+            )
         }
     }
 }
