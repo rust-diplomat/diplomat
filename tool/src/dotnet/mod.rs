@@ -26,8 +26,8 @@
 //!   owns (double-free). Return `Box<T>` / `Option<Box<T>>` instead.
 //!
 //! Lifetime relationships *between* parameters and returns (e.g. a returned
-//! handle that borrows from an input) are not tracked. Consumers driving this
-//! backend (picky-rs, IronRDP) only use call-scoped borrows today.
+//! handle that borrows from an input) are not tracked; only call-scoped
+//! borrows are supported.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
@@ -120,9 +120,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     //     during struct codegen.
     // The granularity needed to express this in `attr_support` doesn't
     // exist (no per-primitive flag), so we keep the broad flags `true`
-    // and document the gaps here + via the panic messages themselves.
-    // Picky-rs and IronRDP — the consumers driving this backend — both
-    // exercise only the supported subset.
+    // and document the gaps here + via the diagnostics themselves.
     a.option = true;
     a.mutable_slices = true;
     // `static_slices` and `owned_slices` would advertise support for
@@ -156,13 +154,13 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct DotnetConfig {
-    /// Root .NET namespace for the generated bindings (e.g. `Devolutions.Icu4x`).
+    /// Root .NET namespace for the generated bindings (e.g. `Icu4x`).
     pub namespace: Option<String>,
     /// The native library name passed to `LibraryImport`. Defaults to the
     /// crate's `lib_name`.
     pub dylib_name: Option<String>,
-    /// Suffix trimmed when generating exception names from error types.
-    /// Existing Devolutions bindings use `IronRdpError` -> `IronRdpException`.
+    /// Suffix trimmed when generating exception names from error types,
+    /// e.g. trimming `Error` so `FooError` -> `FooException`.
     pub exception_trim_suffix: Option<String>,
     /// Error method used for exception messages, e.g. `ToDisplay`.
     pub exception_message_method: Option<String>,

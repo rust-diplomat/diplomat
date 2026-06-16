@@ -185,8 +185,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         // by value) need their own codegen path — the regular struct
         // templates only handle primitive / enum fields. There's no
         // `BackendAttrSupport` flag to reject them at HIR validation, so
-        // we record a diagnostic and skip the type here. Picky / IronRDP /
-        // the checked-in example don't use them, so this isn't a regression.
+        // we record a diagnostic and skip the type here.
         self.errors.push_error(format!(
             "[.NET backend] out struct (`#[diplomat::out] struct {}`) is \
              not yet supported. Convert to a regular struct or wrap the \

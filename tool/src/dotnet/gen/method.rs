@@ -435,7 +435,6 @@ impl MethodInfo<'_> {
             format!("{}, &writeable", self.inputs.raw_call_args)
         }
     }
-
 }
 
 pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo> {
@@ -633,8 +632,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 // double-free / use-after-free. A proper fix needs a
                 // non-owning wrapper variant; until that lands, refuse
                 // codegen with a clear message rather than emitting
-                // unsafe code. Picky / IronRDP don't return borrowed
-                // opaques today, so this isn't a regression.
+                // unsafe code.
                 if !p.is_owned() {
                     self.errors.push_error(
                         "[.NET backend] borrowed opaque return (`&T` / `&mut T` / \
@@ -869,10 +867,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     ty.clone()
                 };
                 // Cache `AsFFI()` to a local — calling it once for the
-                // null check and again at the call site is wasted; the
-                // Benoit fork uses the same `{name}Raw` convention for
-                // the same reason. The disposed check then guards against
-                // a use-after-Dispose without invoking `AsFFI()` twice.
+                // null check and again at the call site is wasted. The
+                // disposed check then guards against a use-after-Dispose
+                // without invoking `AsFFI()` twice.
                 // The opaque is non-nullable in the C# signature (`Locale
                 // locale`), but the warning is suppressible — a caller
                 // compiled without `#nullable enable` can still hand us
