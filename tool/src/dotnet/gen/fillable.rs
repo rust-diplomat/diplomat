@@ -131,7 +131,20 @@ impl DotnetResult {
     }
 
     pub(crate) fn key(&self) -> String {
-        format!("{}|{}", self.ok_result, self.error)
+        // Variant-tagged, mirroring the exception dedup path (see
+        // `DotnetErrorType::dedup_key`). Bare `Display` collapses
+        // Opaque/Struct/Enum to their name and renders both `Unit` and
+        // `Write` as `void`, so two genuinely distinct (Ok, Err) pairs
+        // could hash to the same registry slot and silently overwrite one
+        // another. `name_token()` (PascalCase, distinguishes `Void`) plus
+        // the error's `dedup_key()` keeps distinct pairs distinct.
+        //
+        // The ok side uses `name_token()` rather than a variant-tagged key on
+        // purpose: two distinct ok types sharing one C# name (an opaque `Foo`
+        // and a struct `Foo`) is already unreachable — they'd emit a clashing
+        // `class Foo` / `struct Foo` and fail to compile upstream — so there's
+        // no ok-side collision left for the key to guard against.
+        format!("{}|{}", self.ok_result.name_token(), self.error.dedup_key())
     }
 
     pub(crate) fn error_info(&self) -> ErrorInfo {
