@@ -11,10 +11,10 @@ public partial struct {{ option_struct_name }}
     [StructLayout(LayoutKind.Explicit)]
     private struct InnerUnion
     {
-        {%- if inner.is_bool() %}
-        [MarshalAs(UnmanagedType.U1)]
-        {%- endif %}
-        [FieldOffset(0)] internal {{ inner.raw() }} value;
+        {#- See result.raw.cs.jinja / `union_field_type()`: a `bool` arm is
+            stored as a blittable `byte` so the explicit-layout union never
+            mixes a `[MarshalAs]` field with a pointer arm at the same offset. #}
+        [FieldOffset(0)] internal {{ inner.union_field_type() }} value;
     }
 
     private InnerUnion _inner;
@@ -22,5 +22,5 @@ public partial struct {{ option_struct_name }}
     [MarshalAs(UnmanagedType.U1)]
     public bool IsSome;
 
-    public {{ inner.raw() }} Value => IsSome ? _inner.value : throw new InvalidOperationException("Option is None");
+    public {{ inner.raw() }} Value => IsSome ? {{ inner.read_union_field("_inner.value") }} : throw new InvalidOperationException("Option is None");
 }

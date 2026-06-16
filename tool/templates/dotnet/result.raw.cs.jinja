@@ -12,17 +12,16 @@ public partial struct {{ result_struct_name }}
     [StructLayout(LayoutKind.Explicit)]
     private unsafe struct InnerUnion
     {
+        {#- `union_field_type()` stores a `bool` arm as a blittable `byte`: a
+            `[MarshalAs(U1)] bool` overlapping a pointer arm at the same
+            `FieldOffset` makes the explicit-layout struct non-blittable and
+            can throw `TypeLoadException`. The `Ok`/`Err` accessors convert
+            back via `read_union_field()`. #}
         {%- if !ok_result.is_void() %}
-        {%- if ok_result.is_bool() %}
-        [MarshalAs(UnmanagedType.U1)]
-        {%- endif %}
-        [FieldOffset(0)] internal {{ ok_result.raw() }} ok;
+        [FieldOffset(0)] internal {{ ok_result.union_field_type() }} ok;
         {%- endif %}
         {%- if !error.is_unit() %}
-        {%- if error.is_bool() %}
-        [MarshalAs(UnmanagedType.U1)]
-        {%- endif %}
-        [FieldOffset(0)] internal {{ error.raw() }} err;
+        [FieldOffset(0)] internal {{ error.union_field_type() }} err;
         {%- endif %}
     }
 
@@ -33,9 +32,9 @@ public partial struct {{ result_struct_name }}
     public bool IsOk;
 
     {%- if !ok_result.is_void() %}
-    public {% if ok_result.is_opaque() %}unsafe {% endif %}{{ ok_result.raw() }} Ok => IsOk ? _inner.ok : throw new InvalidOperationException("Result does not contain Ok value");
+    public {% if ok_result.is_opaque() %}unsafe {% endif %}{{ ok_result.raw() }} Ok => IsOk ? {{ ok_result.read_union_field("_inner.ok") }} : throw new InvalidOperationException("Result does not contain Ok value");
     {%- endif %}
     {%- if !error.is_unit() %}
-    public {% if error.is_opaque() %}unsafe {% endif %}{{ error.raw() }} Err => !IsOk ? _inner.err : throw new InvalidOperationException("Result does not contain Err value");
+    public {% if error.is_opaque() %}unsafe {% endif %}{{ error.raw() }} Err => !IsOk ? {{ error.read_union_field("_inner.err") }} : throw new InvalidOperationException("Result does not contain Err value");
     {%- endif %}
 }

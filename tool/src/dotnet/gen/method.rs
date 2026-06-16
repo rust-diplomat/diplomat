@@ -186,6 +186,32 @@ impl DotnetReturnType {
         matches!(self, Self::Primitive(DotnetPrimitives::Bool))
     }
 
+    /// C# type stored for this arm inside a result/option
+    /// `[StructLayout(LayoutKind.Explicit)]` union. A `bool` is stored as a
+    /// blittable `byte`: a `[MarshalAs(U1)] bool` overlapping a pointer arm
+    /// at the same `FieldOffset` makes the union non-blittable and can throw
+    /// `TypeLoadException` at first use. Everything else uses the raw
+    /// spelling. Pairs with [`Self::read_union_field`].
+    pub(super) fn union_field_type(&self) -> String {
+        if self.is_bool() {
+            "byte".to_string()
+        } else {
+            self.raw()
+        }
+    }
+
+    /// Read this arm back out of the union field expression `expr` as its
+    /// idiomatic value: `bool` arms are stored as `byte` (see
+    /// [`Self::union_field_type`]) and converted with `!= 0`; everything else
+    /// is the field unchanged.
+    pub(super) fn read_union_field(&self, expr: &str) -> String {
+        if self.is_bool() {
+            format!("{expr} != 0")
+        } else {
+            expr.to_string()
+        }
+    }
+
     /// PascalCase token for embedding in generated *type names* (result /
     /// option helper structs). Distinct from [`Display`], which renders the
     /// C# type and spells `Unit` / `Write` as the lowercase keyword `void` —

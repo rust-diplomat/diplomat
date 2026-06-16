@@ -223,6 +223,29 @@ impl DotnetErrorType {
         }
     }
 
+    /// C# type stored for this error arm inside a result
+    /// `[StructLayout(LayoutKind.Explicit)]` union — `byte` for `bool`,
+    /// the raw spelling otherwise. See [`DotnetReturnType::union_field_type`]
+    /// for why `bool` can't sit in the union as a `[MarshalAs(U1)] bool`.
+    pub(crate) fn union_field_type(&self) -> String {
+        if self.is_bool() {
+            "byte".to_string()
+        } else {
+            self.raw()
+        }
+    }
+
+    /// Read this error arm back out of union field `expr` (`!= 0` for the
+    /// `byte`-stored `bool`, the field unchanged otherwise). Pairs with
+    /// [`Self::union_field_type`].
+    pub(crate) fn read_union_field(&self, expr: &str) -> String {
+        if self.is_bool() {
+            format!("{expr} != 0")
+        } else {
+            expr.to_string()
+        }
+    }
+
     pub(crate) fn is_opaque(&self) -> bool {
         matches!(self, DotnetErrorType::Opaque(_))
     }
