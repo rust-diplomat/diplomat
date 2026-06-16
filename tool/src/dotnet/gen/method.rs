@@ -394,6 +394,13 @@ pub(super) struct ReturnLowering {
 
 /// Pre-processed view of a single HIR `Method`. Carries both raw-layer and
 /// idiomatic-layer render data — templates pick the side they want.
+///
+/// TODO(dotnet): Model Rust lifetime relationships on the public C# surface.
+/// Today `MethodInfo` only carries call-shape data. Borrowed inputs are lowered
+/// as call-scoped borrows (pinned arrays, temporary slices, opaque handles), but
+/// no lifetime information is preserved to tie a returned object/handle to an
+/// input or receiver. Borrowed opaque returns/errors are rejected until the
+/// backend has a non-owning wrapper/lifetime strategy.
 #[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
