@@ -12,11 +12,9 @@ use super::{
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    ast::{
-        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
-        Function,
-    },
-    Env,
+    Env, ast::{
+        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::create_report
+    }
 };
 
 /// A type declared inside a Diplomat-annotated module.
@@ -1023,10 +1021,9 @@ impl TypeName {
                     if let syn::PathArguments::AngleBracketed(type_args) =
                         &p.path.segments.last().unwrap().arguments
                     {
-                        assert!(
-                            type_args.args.len() > 1,
-                            "Not enough arguments given to Result<T,E>. Are you using a non-std Result type?"
-                        );
+                        if type_args.args.len() != 2 {
+                            create_report((&p.path.segments.last().unwrap().ident).spanned_into(module_location), "Not enough arguments given to Result<T,E>. Are you using a non-std Result type?".into(), "Expected 2 generic arguments.".into());
+                        }
 
                         if let (syn::GenericArgument::Type(ok), syn::GenericArgument::Type(err)) =
                             (&type_args.args[0], &type_args.args[1])
