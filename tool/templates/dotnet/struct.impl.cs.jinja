@@ -50,7 +50,7 @@ public partial struct {{ name }}
     /// </returns>
 {%- endif %}
 
-    public {{ method.static_kw }}{{ method.idiomatic_return_type() }} {{ method.name }}({{ method.idiomatic_params_with_writer() }})
+    public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.name }}({{ method.inputs.idiomatic_params }})
     {
         unsafe
         {

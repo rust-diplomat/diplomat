@@ -72,26 +72,6 @@ public partial class FixedDecimal: IDisposable
             }
         }
     }
-    /// <exception cref="InvalidOperationException"></exception>
-    public void ToString(ref DiplomatWriteable writeable)
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("FixedDecimal");
-            }
-
-            fixed (DiplomatWriteable* writeablePtr = &writeable)
-            {
-                var result = Raw.FixedDecimal.ToString(_inner, writeablePtr);
-                if (!result.IsOk)
-                {
-                    throw new InvalidOperationException("FFI function failed with unit error");
-                }
-            }
-        }
-    }
 
     /// <summary>
     /// Returns the underlying raw handle.

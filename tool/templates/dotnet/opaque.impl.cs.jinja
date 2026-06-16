@@ -43,86 +43,11 @@ public partial class {{ name }}: IDisposable
     {
         _inner = handle;
     }
-    {#- For each method this loop emits 1 or 2 declarations:
-        a `DiplomatWrite`-returning method yields BOTH a convenience
-        overload (returns `string`, allocates the writer internally) AND
-        the standard overload (`void M(..., ref DiplomatWriteable writeable)`)
-        for callers who want to own the buffer. Non-Write methods emit
-        only the standard overload. #}
+    {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
+        methods surface as `string` — the writer is allocated, filled, and
+        disposed inside the generated body (see method_body.cs.jinja), so
+        the low-level DiplomatWriteable never appears on the public API. #}
     {%- for method in methods %}
-    {%- if method.return_type.is_write() %}
-
-    {#- Convenience overload (Benoit-compat).
-
-        Inlines the full call sequence — allocates the writer in this
-        frame, takes its address, passes that to Rust, reads the buffer
-        back, disposes. We DO NOT forward to the `void M(..., writeable)`
-        overload below because DiplomatWriteable is a value type — a
-        forwarding call would copy it, and Rust would mutate the callee's
-        copy, leaving the caller's writer empty. #}
-{%- if let Some(info) = method.error_info %}
-    /// <exception cref="{{ info.exception_name }}"></exception>
-{%- endif %}
-    public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}string {{ method.name }}({{ method.inputs.idiomatic_params }})
-    {
-        unsafe
-        {
-            {%- if method.is_instance() %}
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("{{ name }}");
-            }
-            {%- endif %}
-{#- Validation precedes to-bytes encoding — see method_body.cs.jinja. #}
-{%- for statement in method.inputs.validation_statements %}
-            {{ statement }}
-{%- endfor %}
-{%- for statement in method.inputs.to_bytes_statements %}
-            {{ statement }}
-{%- endfor %}
-{%- if !method.inputs.fix_statements.is_empty() %}
-{%- for statement in method.inputs.fix_statements %}
-            {{ statement }}
-{%- endfor %}
-            {
-{%- endif %}
-            {#- try/finally guarantees the unmanaged buffer is freed even
-                if the raw call throws (e.g. native panic surfacing as
-                AccessViolationException) or `ToUnicode()` throws. The
-                error-arm `throw` below sits inside the try; finally
-                still runs. #}
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            try
-            {
-{%- if let Some(info) = method.error_info %}
-                var result = Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
-                if (!result.IsOk)
-                {
-{%- if info.error.is_unit() %}
-                    throw new {{ info.exception_name }}("FFI function failed with unit error");
-{%- else if info.error.is_opaque() %}
-                    throw new {{ info.exception_name }}(new {{ info.error }}(result.Err));
-{%- else if info.error.is_struct() %}
-                    throw new {{ info.exception_name }}({{ info.error }}.FromFFI(result.Err));
-{%- else %}
-                    throw new {{ info.exception_name }}(result.Err);
-{%- endif %}
-                }
-{%- else %}
-                Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
-{%- endif %}
-                return writeable.ToUnicode();
-            }
-            finally
-            {
-                writeable.Dispose();
-            }
-{%- if !method.inputs.fix_statements.is_empty() %}
-            }
-{%- endif %}
-        }
-    }
-    {%- endif %}
 {%- if let Some(info) = method.error_info %}
     /// <exception cref="{{ info.exception_name }}"></exception>
 {%- endif %}
@@ -131,7 +56,7 @@ public partial class {{ name }}: IDisposable
     /// A <c>{{ method.return_type }}</c> allocated on Rust side.
     /// </returns>
 {%- endif %}
-    public {{ method.static_kw }}{{ method.idiomatic_return_type() }} {{ method.name }}({{ method.idiomatic_params_with_writer() }})
+    public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.name }}({{ method.inputs.idiomatic_params }})
     {
         unsafe
         {

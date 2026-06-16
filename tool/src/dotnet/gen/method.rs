@@ -133,11 +133,11 @@ impl Display for DotnetReturnType {
         match self {
             Self::Primitive(p) => write!(f, "{p}"),
             Self::Opaque(name) | Self::Struct(name) | Self::Enum(name) => write!(f, "{name}"),
-            // Benoit-compat: Write methods surface as `void M(args,
-            // DiplomatWriteable writeable)` on the idiomatic side, with
-            // the caller managing writer lifecycle. The `string`-returning
-            // convenience form would have been a more modern idiom but
-            // would not be source-compatible with picky's hand-written C#.
+            // Both render as the C# keyword `void` in raw externs. The
+            // idiomatic signature spells `Write` methods as `string`
+            // instead (see `idiomatic_signature_return_type`) — the writer
+            // is allocated and consumed internally, so `DiplomatWriteable`
+            // never appears on the public API.
             Self::Write | Self::Unit => write!(f, "void"),
         }
     }
@@ -280,8 +280,9 @@ pub(super) struct DotnetInputs {
 
 /// One method's lowered return — `return_type` is always present;
 /// `error_info` is `Some` iff the Rust side returns `Result<T, E>` with a
-/// concrete error type; `option_info` is `Some` iff the Rust side returns
-/// `Option<T>`. The three are mutually exclusive at the HIR level.
+/// concrete error type; `option_info` is `Some` iff the success value is
+/// wrapped in `Option<T>`. `error_info` and `option_info` are NOT mutually
+/// exclusive: `Result<Option<Box<T>>, E>` populates both (see `MethodInfo`).
 /// Consumers pattern-match these Option fields directly; no separate
 /// is_fallible / is_optional predicates exist.
 pub(super) struct ReturnLowering {
@@ -311,10 +312,14 @@ pub(super) struct MethodInfo<'ctx> {
     /// Templates branch on `{% if let Some(info) = method.error_info %}` —
     /// no separate `is_fallible()` predicate needed.
     pub(super) error_info: Option<ErrorInfo>,
-    /// `Some` iff this method returns `Option<T>`. Templates branch on
-    /// `{% if let Some(opt) = method.option_info %}` to render the
-    /// nullable C# return type + null/IsSome check. Mutually exclusive
-    /// with `error_info`.
+    /// `Some` iff this method's return is wrapped in `Option<T>`. Templates
+    /// branch on `{% if let Some(opt) = method.option_info %}` to render the
+    /// nullable C# return type + null/IsSome check.
+    ///
+    /// NOT mutually exclusive with `error_info`: `Result<Option<Box<T>>, E>`
+    /// populates both — the error arm throws, and the success arm is a
+    /// nullable pointer. `method_body.cs.jinja` handles that combination
+    /// (the `error_info` branch checks `option_info` after `result.IsOk`).
     pub(super) option_info: Option<OptionInfo>,
     pub(super) property_accessor: Option<PropertyAccessor>,
 }
@@ -368,9 +373,8 @@ impl MethodInfo<'_> {
     /// signature-matching hides that aren't explicitly `override` or
     /// `new`; treating it as `override` matches author intent (Rust's
     /// `to_string` is meant to be THE stringifier) and silences the
-    /// warning. Only applies to the convenience overload — the
-    /// `void ToString(ref DiplomatWriteable)` overload has a different
-    /// signature and doesn't collide.
+    /// warning. Treating it as `override` matches author intent (Rust's
+    /// `to_string` is meant to be THE stringifier) and silences the warning.
     pub(super) fn is_to_string_override(&self) -> bool {
         self.is_instance() && self.name == "ToString" && self.inputs.idiomatic_params.is_empty()
     }
@@ -384,6 +388,19 @@ impl MethodInfo<'_> {
             format!("{}?", self.return_type)
         } else {
             self.return_type.to_string()
+        }
+    }
+
+    /// Idiomatic return type as it appears in the generated method
+    /// signature. `Write` methods surface as `string`: the writer is
+    /// allocated, filled, and disposed inside the generated body, so the
+    /// low-level `DiplomatWriteable` is never exposed on the public API.
+    /// Everything else defers to [`Self::idiomatic_return_type`].
+    pub(super) fn idiomatic_signature_return_type(&self) -> String {
+        if self.return_type.is_write() {
+            "string".to_string()
+        } else {
+            self.idiomatic_return_type()
         }
     }
 
@@ -416,26 +433,6 @@ impl MethodInfo<'_> {
         }
     }
 
-    /// Idiomatic-side param list. For `DiplomatWrite` returns the caller
-    /// supplies the writer. `DiplomatWriteable` is a value type — passing
-    /// by value would copy, and Rust mutating the callee's copy would
-    /// leave the caller's writer empty. So we declare it as
-    /// `ref DiplomatWriteable writeable`; the body uses
-    /// `fixed (DiplomatWriteable* ptr = &writeable)` so Rust's writes
-    /// hit the caller's buffer.
-    pub(super) fn idiomatic_params_with_writer(&self) -> String {
-        if !self.return_type.is_write() {
-            return self.inputs.idiomatic_params.clone();
-        }
-        if self.inputs.idiomatic_params.is_empty() {
-            "ref DiplomatWriteable writeable".to_string()
-        } else {
-            format!(
-                "{}, ref DiplomatWriteable writeable",
-                self.inputs.idiomatic_params
-            )
-        }
-    }
 }
 
 pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo> {

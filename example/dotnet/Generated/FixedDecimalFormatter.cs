@@ -70,24 +70,6 @@ public partial class FixedDecimalFormatter: IDisposable
             }
         }
     }
-    public void FormatWrite(FixedDecimal value, ref DiplomatWriteable writeable)
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("FixedDecimalFormatter");
-            }
-            if (value == null) throw new ArgumentNullException(nameof(value));
-            Raw.FixedDecimal* valueRaw = value.AsFFI();
-            if (valueRaw == null) throw new ObjectDisposedException(nameof(FixedDecimal));
-
-            fixed (DiplomatWriteable* writeablePtr = &writeable)
-            {
-                Raw.FixedDecimalFormatter.FormatWrite(_inner, valueRaw, writeablePtr);
-            }
-        }
-    }
 
     /// <summary>
     /// Returns the underlying raw handle.
