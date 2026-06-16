@@ -28,7 +28,6 @@ struct OpaqueRawTemplate<'ctx> {
     /// C#-side name after `#[diplomat::rename]` + keyword escaping.
     name: String,
     methods: Vec<MethodInfo<'ctx>>,
-    dylib_name: &'ctx str,
     namespace: &'ctx str,
     dtor_abi_name: &'ctx IdentBuf,
 }
@@ -61,7 +60,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             // as type references — `#[diplomat::rename]` applied,
             // C# reserved words escaped with `@`.
             name: display_name,
-            dylib_name: self.dylib_name,
             namespace: self.namespace,
             methods,
             dtor_abi_name: &opaque_def.dtor_abi_name,

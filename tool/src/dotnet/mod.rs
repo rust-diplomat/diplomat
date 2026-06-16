@@ -83,6 +83,16 @@ struct DiplomatWriteableTemplate<'a> {
     namespace: &'a str,
 }
 
+/// `DiplomatNativeLib` — the single shared `[DllImport]` library-name
+/// constant referenced by every raw extern. Emitted once so the
+/// iOS-vs-other `#if __IOS__` block isn't duplicated per type.
+#[derive(Template)]
+#[template(path = "dotnet/NativeLib.cs.jinja", escape = "none")]
+struct NativeLibTemplate<'a> {
+    namespace: &'a str,
+    dylib_name: &'a str,
+}
+
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -408,6 +418,16 @@ pub(crate) fn run<'tcx>(
         }
         .render()
         .expect("DiplomatWriteable template render failed"),
+    );
+    add_cs_file(
+        &files,
+        "NativeLib.cs".to_string(),
+        NativeLibTemplate {
+            namespace: &namespace,
+            dylib_name: &dylib_name,
+        }
+        .render()
+        .expect("NativeLib template render failed"),
     );
 
     (files, errors)

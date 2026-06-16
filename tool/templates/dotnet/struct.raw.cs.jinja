@@ -19,11 +19,6 @@ internal partial struct {{ name }}
     public {{ field.field_type }} {{ field.name }};
     {%- endfor %}
 
-#if __IOS__
-    private const string NativeLib = "lib{{ dylib_name }}.framework/lib{{ dylib_name }}";
-#else
-    private const string NativeLib = "{{ dylib_name }}";
-#endif
 
     {%- for method in methods %}
 

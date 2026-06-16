@@ -71,7 +71,6 @@ struct RawStructTemplate<'ctx, 'tcx> {
     name: String,
     fields: Vec<StructField>,
     methods: Vec<MethodInfo<'tcx>>,
-    dylib_name: &'ctx str,
     namespace: &'ctx str,
 }
 
@@ -100,7 +99,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         methods: Vec<MethodInfo<'tcx>>,
     ) -> String {
         RawStructTemplate {
-            dylib_name: self.dylib_name,
             namespace: self.namespace,
             name: display_name,
             fields,

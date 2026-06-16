@@ -9,7 +9,7 @@
       - method: MethodInfo
     Caller wraps in: namespace + `Raw` partial class + owner partial struct.
 -#}
-[DllImport(NativeLib, EntryPoint = "{{ method.abi_name }}", CallingConvention = CallingConvention.Cdecl)]
+[DllImport(DiplomatNativeLib.Name, EntryPoint = "{{ method.abi_name }}", CallingConvention = CallingConvention.Cdecl)]
 {%- if let Some(info) = method.error_info %}
     {#- Fallible takes precedence over the Write check: `Result<DiplomatWrite,
         E>` returns a result struct on the wire, with the writer as an
