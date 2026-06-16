@@ -266,7 +266,8 @@ mod tests {
         "attr_on_non_pub.rs",
         "nonstd_result.rs",
         "self_in_free_func.rs",
-        "lifetime_on_trait.rs"
+        "lifetime_on_trait.rs",
+        "generic_types.rs"
     ];
 
     fn test_file_list(suffix: &'static str) {

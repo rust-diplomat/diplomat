@@ -263,9 +263,23 @@ impl LifetimeEnv {
     /// Add the lifetimes from generic parameters and where bounds.
     fn extend_generics(&mut self, generics: &syn::Generics, module_location: &SpanLocation) {
         let generic_bounds = generics.params.iter().map(|generic| match generic {
-            syn::GenericParam::Type(_) => panic!("generic types are unsupported"),
+            syn::GenericParam::Type(_) => {
+                create_report(AstReport::new(
+                    "Generic types are unsupported.".into(),
+                    generic.span().spanned_into(module_location),
+                    "Suggestion: Remove generic type.".into(),
+                    vec![]
+                ));
+            },
             syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
-            syn::GenericParam::Const(_) => panic!("const generics are unsupported"),
+            syn::GenericParam::Const(_) => {
+                create_report(AstReport::new(
+                    "Const generics are unsupported.".into(),
+                    generic.span().spanned_into(module_location),
+                    "Suggestion: Remove const generic.".into(),
+                    vec![]
+                ));
+            },
         });
 
         let generic_defs = generic_bounds.clone().map(|(lifetime, _)| lifetime);
