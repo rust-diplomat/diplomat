@@ -209,7 +209,7 @@ mod tests {
         );
     }
 
-    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs"];
+    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs", "attr_on_non_pub.rs"];
 
     fn test_file_list(suffix: &'static str) {
         {

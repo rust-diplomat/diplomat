@@ -295,11 +295,9 @@ impl<'a> ModuleBuilder<'a> {
                             .attrs
                             .iter()
                             .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                        assert!(
-                            is_public || !has_diplomat_attrs,
-                            "Non-public method with diplomat attrs found: {self_ident}::{}",
-                            m.sig.ident
-                        );
+                        if !is_public && has_diplomat_attrs {
+                            create_report((&m.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                        }
                         is_public
                     })
                     .map(|m| {
@@ -369,11 +367,9 @@ impl<'a> ModuleBuilder<'a> {
                     .attrs
                     .iter()
                     .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                assert!(
-                    is_public || !has_diplomat_attrs,
-                    "Non-public function with diplomat attrs found: {}",
-                    f.sig.ident
-                );
+                if !is_public && has_diplomat_attrs {
+                    create_report((&f.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                }
                 if is_public {
                     let parent_attrs = self
                         .impl_parent_attrs
