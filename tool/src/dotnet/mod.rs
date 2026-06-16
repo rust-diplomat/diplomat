@@ -9,6 +9,25 @@
 //! This file is the entry point that the Diplomat CLI dispatches to. Codegen
 //! itself lives in [`gen`] and naming/type-formatting concerns live in
 //! [`formatter`].
+//!
+//! ## Borrowing / lifetime model
+//!
+//! The backend does **not** model Rust lifetimes. It assumes every borrow a
+//! method takes is *call-scoped* — valid only for the duration of the single
+//! P/Invoke call:
+//!
+//! * `&[u8]` / `&[u32]` / `&DiplomatStr` params are pinned with `fixed (...)`
+//!   (or copied into a pinned `byte[]`) for the call and unpinned immediately
+//!   after. If the Rust side stashes the pointer past the call, the C# GC may
+//!   move or free the backing buffer — that is unsupported.
+//! * Borrowed opaque **returns** and **errors** (`&T`, `&mut T`, `Option<&T>`,
+//!   `Result<_, &E>`) are rejected outright with a diagnostic, because the
+//!   generated `IDisposable` wrapper would `Destroy` a pointer Rust still
+//!   owns (double-free). Return `Box<T>` / `Option<Box<T>>` instead.
+//!
+//! Lifetime relationships *between* parameters and returns (e.g. a returned
+//! handle that borrows from an input) are not tracked. Consumers driving this
+//! backend (picky-rs, IronRDP) only use call-scoped borrows today.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
