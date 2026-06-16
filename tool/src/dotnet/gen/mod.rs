@@ -277,6 +277,28 @@ impl DotnetPrimitives {
     pub(super) fn is_bool(&self) -> bool {
         matches!(self, Self::Bool)
     }
+
+    /// PascalCase token for embedding in generated *type names* (e.g.
+    /// `DiplomatOptionDouble`). [`Display`] renders the lowercase C#
+    /// keyword (`double`, `int`), which is right in a signature but yields
+    /// awkward identifiers like `DiplomatOptiondouble` when concatenated.
+    pub(super) fn name_token(&self) -> &'static str {
+        match self {
+            Self::Bool => "Bool",
+            Self::SByte => "SByte",
+            Self::Short => "Short",
+            Self::Int => "Int",
+            Self::Long => "Long",
+            Self::Byte => "Byte",
+            Self::NInt => "NInt",
+            Self::NUInt => "NUInt",
+            Self::UShort => "UShort",
+            Self::UInt => "UInt",
+            Self::ULong => "ULong",
+            Self::Float => "Float",
+            Self::Double => "Double",
+        }
+    }
 }
 
 impl Display for DotnetPrimitives {

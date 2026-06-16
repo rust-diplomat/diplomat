@@ -216,10 +216,13 @@ impl DotnetReturnType {
     /// option helper structs). Distinct from [`Display`], which renders the
     /// C# type and spells `Unit` / `Write` as the lowercase keyword `void` —
     /// fine in a signature, but it yields awkwardly-cased names like
-    /// `DiplomatResultvoidUnit` when concatenated into an identifier.
+    /// `DiplomatResultvoidUnit` when concatenated into an identifier. Likewise
+    /// primitives render lowercase (`int`, `double`) via `Display`, so they go
+    /// through [`DotnetPrimitives::name_token`] for a PascalCase spelling.
     pub(super) fn name_token(&self) -> String {
         match self {
             Self::Unit | Self::Write => "Void".to_string(),
+            Self::Primitive(p) => p.name_token().to_string(),
             _ => self.to_string(),
         }
     }
