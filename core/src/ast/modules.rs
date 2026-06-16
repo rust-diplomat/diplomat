@@ -11,7 +11,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::create_report;
+use crate::ast::logging::create_simple_report;
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -209,7 +209,7 @@ impl<'a> ModuleBuilder<'a> {
                         self.module_location,
                     )),
                     Err(errors) => {
-                        create_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
+                        create_simple_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
 
@@ -250,7 +250,7 @@ impl<'a> ModuleBuilder<'a> {
                         ))
                     }
                     Err(errors) => {
-                        create_report((&enm.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat enum attributes, there can be at most one.".into(), format!("{errors:?}"));
+                        create_simple_report((&enm.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat enum attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
                 self.custom_types_by_name.insert(ident, custom_enum);
@@ -296,7 +296,7 @@ impl<'a> ModuleBuilder<'a> {
                             .iter()
                             .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
                         if !is_public && has_diplomat_attrs {
-                            create_report((&m.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                            create_simple_report((&m.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
                         }
                         is_public
                     })
@@ -368,7 +368,7 @@ impl<'a> ModuleBuilder<'a> {
                     .iter()
                     .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
                 if !is_public && has_diplomat_attrs {
-                    create_report((&f.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                    create_simple_report((&f.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
                 }
                 if is_public {
                     let parent_attrs = self

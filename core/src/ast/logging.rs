@@ -6,11 +6,87 @@ use crate::ast::{Ident, SpanLocation};
 static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
     RwLock::new(&(|| Box::new(std::io::stderr())));
 
-pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
+
+pub(crate) struct ContextLocation {
+    // Allow for pretty-print:
+    #[allow(unused)]
+    location : super::idents::Span,
+    // Allow for pretty-print:
+    #[allow(unused)]
+    label : String
+}
+
+impl ContextLocation {
+    pub fn new(location : super::idents::Span, label : String) -> Self {
+        Self {
+            location,
+            label
+        }
+    }
+}
+
+pub(crate) struct AstReport {
+    title : String,
+    primary_loc : Ident,
+    primary_label : String,
+    // Used for pretty-printing, not ugly printing:
+    #[allow(unused)]
+    context_locations : Vec<ContextLocation>,
+}
+
+impl AstReport {
+    pub fn new(title : String, primary_loc : Ident, primary_label : String, context_locations : Vec<ContextLocation>) -> Self {
+        Self {
+            title,
+            primary_loc,
+            primary_label,
+            context_locations,
+        }
+    }
+}
+
+pub(crate) fn create_simple_report(id: Ident, title: String, label: String) -> ! {
+    create_report(AstReport { title, primary_loc: id, primary_label: label, context_locations: vec![] })
+}
+
+
+/// Bytes range has not been stabilized in Rust macro.
+/// We can't tell if we're in a proc macro context,
+/// so we just check if the range doesn't make sense:
+fn evaluate_bytes(sp : &super::idents::Span, src : &String) -> std::ops::Range<usize> {
+    if sp.range.is_empty() && (sp.start.line != sp.end.line || sp.end.col - sp.start.col > 0) {
+        match sp.span_location {
+            SpanLocation::None => 0..0,
+            _ => {
+                // Need an accurate byte count that accounts for both:
+                // CRLF and LF endings, so we just make sure to split on the end at `\n` (LF):
+                let split = src.split_inclusive('\n');
+                let mut start_byte = 0usize;
+                let mut end_byte = src.len();
+                let mut running_byte_total = 0usize;
+                for (idx, st) in split.enumerate() {
+                    if (idx + 1) == sp.start.line {
+                        start_byte = running_byte_total + sp.start.col;
+                    }
+                    if (idx + 1) == sp.end.line {
+                        end_byte = running_byte_total + sp.end.col;
+                        break;
+                    }
+                    running_byte_total += st.len();
+                }
+                start_byte..end_byte
+            }
+        }
+    } else {
+        sp.range.clone()
+    }
+}
+
+pub(crate) fn create_report(report : AstReport) -> ! {
     use std::io::Write;
     let mut out = WRITER.read().unwrap()();
 
-    let span = id.span();
+    let span = report.primary_loc.span();
     let src = if let Some(sp) = &span {
         match &sp.span_location {
             SpanLocation::FilePath(f) => {
@@ -28,37 +104,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
         "<No associated span>".into()
     };
 
-    let bytes_range = span.as_ref().map(|sp| {
-        // Bytes range has not been stabilized in Rust macro.
-        // We can't tell if we're in a proc macro context,
-        // so we just check if the range doesn't make sense:
-        if sp.range.is_empty() && (sp.start.line != sp.end.line || sp.end.col - sp.start.col > 0) {
-            match sp.span_location {
-                SpanLocation::None => 0..0,
-                _ => {
-                    // Need an accurate byte count that accounts for both:
-                    // CRLF and LF endings, so we just make sure to split on the end at `\n` (LF):
-                    let split = src.split_inclusive('\n');
-                    let mut start_byte = 0usize;
-                    let mut end_byte = src.len();
-                    let mut running_byte_total = 0usize;
-                    for (idx, st) in split.enumerate() {
-                        if (idx + 1) == sp.start.line {
-                            start_byte = running_byte_total + sp.start.col;
-                        }
-                        if (idx + 1) == sp.end.line {
-                            end_byte = running_byte_total + sp.end.col;
-                            break;
-                        }
-                        running_byte_total += st.len();
-                    }
-                    start_byte..end_byte
-                }
-            }
-        } else {
-            sp.range.clone()
-        }
-    });
+    let bytes_range = span.as_ref().map(|sp| evaluate_bytes(sp, &src));
 
     if let Some(b) = &bytes_range {
         // If we go past the length, then we've somehow got the wrong SpanLocation.
@@ -67,7 +113,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
             Some(SpanLocation::FilePath(..)) | Some(SpanLocation::LocalSource(..))
         ) && b.end > src.len()
         {
-            panic!("Span source improperly calculated. Got range {0} > {1}. Original error: {title}: {label}", b.end, src.len());
+            panic!("Span source improperly calculated. Got range {} > {}. Original error: {}: {}", b.end, src.len(), report.title, report.primary_label);
         }
     }
     #[cfg(feature = "pretty-print")]
@@ -76,22 +122,27 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
         let report = if let Some(sp) = span {
             use annotate_snippets::{Annotation, AnnotationKind};
 
-            &[Level::ERROR.primary_title(&title).element(
-                Snippet::<Annotation>::source(src)
+            let annotations = report.context_locations.iter().map(|l| {
+                let bytes = evaluate_bytes(&l.location, &src);
+                AnnotationKind::Context.span(bytes).label(&l.label)
+            });
+
+            &[Level::ERROR.primary_title(&report.title).element(
+                Snippet::<Annotation>::source(&src)
                     .path(match sp.span_location {
                         SpanLocation::FilePath(f) => Some(f),
                         _ => None,
                     })
                     .annotation(
-                        AnnotationKind::Context
+                        AnnotationKind::Primary
                             .span(bytes_range.unwrap())
-                            .label(label),
-                    ),
+                            .label(report.primary_label),
+                    ).annotations(annotations),
             )]
         } else {
             &[Level::ERROR
-                .primary_title(&title)
-                .element(Level::ERROR.message(label))]
+                .primary_title(&report.title)
+                .element(Level::ERROR.message(report.primary_label))]
         };
         let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
         writeln!(out, "{}", renderer.render(report)).expect("Could not write report.");
@@ -128,7 +179,7 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
             )
         };
         write!(out, "Diplomat error: ").expect("Could not write to report.");
-        writeln!(out, "{title}").expect("Could not write to report.");
+        writeln!(out, "{}", report.title).expect("Could not write to report.");
         writeln!(out, "In {location}:").expect("Could not write to report.");
 
         let excerpt_pre_trimmed = excerpt_pre.trim_start();
@@ -156,12 +207,12 @@ pub(crate) fn create_report(id: Ident, title: String, label: String) -> ! {
             .expect("Could not write to report.");
         }
 
-        write!(out, "{label}").expect("Could not write to report.");
+        write!(out, "{}", report.primary_label).expect("Could not write to report.");
     }
     out.flush().expect("Could not write to output.");
     // Rust-analyzer will not show error messages unless we panic,
     // This just tells rust-analyzer users to check stderr:
-    panic!("Diplomat error: {} (check stderr for more)", title);
+    panic!("Diplomat error: {} (check stderr for more)", report.title);
 }
 
 #[cfg(all(test, not(feature = "pretty-print")))]
@@ -209,7 +260,7 @@ mod tests {
         );
     }
 
-    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs", "attr_on_non_pub.rs", "nonstd_result.rs"];
+    const FILES_TO_TEST: &[&str] = &["duplicate_attrs.rs", "enum_field_variant.rs", "attr_on_non_pub.rs", "nonstd_result.rs", "self_in_free_func.rs"];
 
     fn test_file_list(suffix: &'static str) {
         {
