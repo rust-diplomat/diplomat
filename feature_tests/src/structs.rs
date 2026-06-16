@@ -65,6 +65,7 @@ pub mod ffi {
 
     // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
     // `diplomat-tool js` was crashing when trying to process options-in-structs
+    #[diplomat::attr(dotnet, disable)]
     pub struct MyStructContainingAnOption {
         pub(crate) a: DiplomatOption<MyStruct>,
         pub(crate) b: DiplomatOption<DefaultEnum>,
@@ -109,6 +110,7 @@ pub mod ffi {
             unimplemented!()
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn cmp() -> core::cmp::Ordering {
             unimplemented!()
         }
@@ -125,14 +127,17 @@ pub mod ffi {
             *guard = format!("{number}");
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow<'a>(&'a self) -> &'a OpaqueMutexedString {
             self
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow_other<'a>(other: &'a OpaqueMutexedString) -> &'a OpaqueMutexedString {
             other
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow_self_or_other<'a>(
             &'a self,
             other: &'a OpaqueMutexedString,
@@ -150,6 +155,7 @@ pub mod ffi {
             guard.len() + other
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn dummy_str<'a>(&'a self) -> &'a DiplomatStr {
             "A const str with non byte char: 餐 which is a DiplomatChar,".as_bytes()
         }
@@ -168,6 +174,7 @@ pub mod ffi {
 
     impl Utf16Wrap {
         #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn from_utf16(input: &DiplomatStr16) -> Box<Self> {
             Box::new(Self(input.into()))
         }
@@ -176,6 +183,7 @@ pub mod ffi {
             let _infallible = write!(write, "{:?}", &self.0);
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }
@@ -307,6 +315,7 @@ pub mod ffi {
     // they reference each other in the methods
     #[derive(Default)]
     #[diplomat::attr(auto, abi_compatible)]
+    #[diplomat::attr(dotnet, disable)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
@@ -318,6 +327,7 @@ pub mod ffi {
 
     // For demo_gen testing. How many layers in are we going?
     #[derive(Default)]
+    #[diplomat::attr(dotnet, disable)]
     pub struct CyclicStructC {
         pub a: CyclicStructA,
     }
@@ -356,10 +366,12 @@ pub mod ffi {
     }
 
     impl CyclicStructB {
+        #[diplomat::attr(dotnet, disable)]
         pub fn get_a() -> CyclicStructA {
             Default::default()
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn get_a_option() -> Option<CyclicStructA> {
             Some(Default::default())
         }
@@ -478,6 +490,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(dotnet, disable)]
     pub struct StructWithSlices<'a> {
         pub first: DiplomatStrSlice<'a>,
         pub second: DiplomatSlice<'a, u16>,
@@ -587,6 +600,7 @@ pub mod ffi {
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
     #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(dotnet, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
     pub struct StructOfOpaque<'a> {
         i: &'a Opaque,

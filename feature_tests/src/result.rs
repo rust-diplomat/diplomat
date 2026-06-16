@@ -24,6 +24,7 @@ pub mod ffi {
     }
     impl ErrorStruct {
         #[diplomat::attr(kotlin, disable)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn returns_result_option(is_some: bool) -> Result<DiplomatOption<ErrorStruct>, ()> {
             if is_some {
                 Ok(Some(ErrorStruct { i: 0, j: 125 }).into())
@@ -77,18 +78,21 @@ pub mod ffi {
             Err(Box::new(ResultOpaque(i)))
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn give_self<'a>(&'a self) -> Result<(), &'a Self> {
             Err(self)
         }
 
         /// When we take &str, the return type becomes a Result
         /// Test that this interacts gracefully with returning a reference type
+        #[diplomat::attr(dotnet, disable)]
         pub fn takes_str<'a>(&'a mut self, _v: &str) -> &'a mut Self {
             self
         }
 
         #[diplomat::attr(auto, stringifier)]
         #[diplomat::attr(any(kotlin), disable)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {
             Err(self)
         }

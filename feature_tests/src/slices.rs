@@ -23,10 +23,12 @@ pub mod ffi {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_from_first(v: &[DiplomatStrSlice]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0].into()).unwrap().into()))
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_from_utf16(v: &[DiplomatStr16Slice]) -> Box<MyString> {
             let first: &[u16] = v[0].into();
             Box::new(Self(String::from_utf16(first).unwrap()))
@@ -42,6 +44,7 @@ pub mod ffi {
             let _infallible = write!(write, "{}", self.0);
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn get_static_str() -> &'static str {
             "hello"
         }
@@ -51,6 +54,7 @@ pub mod ffi {
             let _ = write;
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow<'a>(&'a self) -> DiplomatStrSlice<'a> {
             AsRef::<[u8]>::as_ref(&self.0).into()
         }
@@ -87,31 +91,37 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor = "bool")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_bool(v: &[bool]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as u8 as f64).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "i16")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_i16(v: &[i16]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as f64).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "u16")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_u16(v: &[u16]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as f64).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "isize")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_isize(v: &[isize]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as f64).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "usize")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_usize(v: &[usize]) -> Box<Float64Vec> {
             Box::new(Self(v.iter().map(|&x| x as f64).collect()))
         }
 
         #[diplomat::attr(auto, named_constructor = "f64BeBytes")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new_f64_be_bytes(v: &[DiplomatByte]) -> Box<Float64Vec> {
             Box::new(Self(
                 v.chunks_exact(8)
@@ -127,15 +137,18 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, getter = "asSlice")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn as_slice<'a>(&'a self) -> &'a [f64] {
             &self.0
         }
 
         #[diplomat::cfg(supports=mutable_slices)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn fill_slice(&self, v: &mut [f64]) {
             v.copy_from_slice(&self.0)
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn set_value(&mut self, new_slice: &[f64]) {
             self.0 = new_slice.to_vec();
         }
@@ -146,6 +159,7 @@ pub mod ffi {
         }
 
         #[allow(clippy::needless_lifetimes)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn borrow<'a>(&'a self) -> &'a [f64] {
             &self.0
         }

@@ -6,5 +6,12 @@ unsafe_references_in_callbacks = true
 domain = "dev.diplomattest"
 dylib-name = "diplomat_feature_tests"
 
+[dotnet]
+# lib-name in src/lib.rs is a deliberately-messy test value; pin a clean
+# C# namespace and the real cdylib name (the crate builds
+# `libdiplomat_feature_tests`) so the generated bindings compile and load.
+namespace = "Somelib"
+dylib-name = "diplomat_feature_tests"
+
 [demo-gen]
 relative-js-path = "../../js/api/"

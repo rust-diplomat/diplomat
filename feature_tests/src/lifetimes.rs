@@ -11,18 +11,21 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
+    #[diplomat::attr(dotnet, disable)]
     pub struct BorrowedFields<'a> {
         a: DiplomatStr16Slice<'a>,
         b: DiplomatStrSlice<'a>,
         c: DiplomatUtf8StrSlice<'a>,
     }
 
+    #[diplomat::attr(dotnet, disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: DiplomatStr16Slice<'a>,
         field_b: DiplomatStrSlice<'b>,
         field_c: DiplomatUtf8StrSlice<'c>,
     }
 
+    #[diplomat::attr(dotnet, disable)]
     pub struct BorrowedFieldsReturning<'a> {
         bytes: DiplomatStrSlice<'a>,
     }
@@ -43,6 +46,7 @@ pub mod ffi {
             Box::new(Foo(x))
         }
 
+        #[diplomat::attr(dotnet, disable)]
         pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
             BorrowedFieldsReturning {
                 bytes: self.0.into(),
@@ -50,12 +54,14 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b.into()))
         }
 
         // Don't yet support borrowing from slices
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         /// Test that the extraction logic correctly pins the right fields
         pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
             bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
@@ -97,6 +103,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(dotnet, disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
@@ -127,6 +134,7 @@ pub mod ffi {
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         #[diplomat::attr(auto, getter)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
         }
@@ -325,6 +333,7 @@ pub mod ffi {
 
     impl<'a> OpaqueThinIter<'a> {
         #[diplomat::attr(auto, iterator)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn next(&'a mut self) -> Option<&'a OpaqueThin> {
             self.0.next().map(OpaqueThin::transparent_convert)
         }
@@ -335,6 +344,7 @@ pub mod ffi {
 
     impl OpaqueThinVec {
         #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn create(a: &[i32], b: &[f32], c: &DiplomatStr) -> Box<Self> {
             assert!(a.len() == b.len(), "arrays must be of equal size");
             Box::new(Self(
@@ -362,12 +372,14 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, indexer)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn get<'a>(&'a self, idx: usize) -> Option<&'a OpaqueThin> {
             self.0.get(idx).map(OpaqueThin::transparent_convert)
         }
 
         #[diplomat::attr(auto, getter)]
         #[diplomat::attr(dart, rename = "firstelement")]
+        #[diplomat::attr(dotnet, disable)]
         pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
