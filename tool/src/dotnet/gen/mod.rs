@@ -97,6 +97,25 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: String,
         enum_def: &'tcx EnumDef,
     ) -> Option<(Option<String>, String)> {
+        // A Diplomat enum crosses the FFI boundary as a plain C `enum`, i.e.
+        // `int`-width (see the C backend's `enum.h.jinja`). The generated C#
+        // enum is therefore always `: int`. A discriminant that doesn't fit
+        // `i32` can't be represented on the wire at all, so reject it with a
+        // diagnostic rather than emit a `long` that would silently mismatch
+        // the C ABI when the enum is passed by value (e.g. as a struct field).
+        if let Some(bad) = enum_def
+            .variants
+            .iter()
+            .find(|v| i32::try_from(v.discriminant).is_err())
+        {
+            self.errors.push_error(format!(
+                "[.NET backend] enum `{display_name}` variant `{}` has discriminant \
+                 {} outside the `i32` range; Diplomat represents enums as a C `int` \
+                 on the wire, so this value cannot be represented.",
+                bad.name, bad.discriminant
+            ));
+            return None;
+        }
         let variants = enum_def
             .variants
             .iter()

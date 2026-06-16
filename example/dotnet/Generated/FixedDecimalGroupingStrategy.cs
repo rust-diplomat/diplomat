@@ -1,6 +1,6 @@
 namespace Somelib;
 
-public enum FixedDecimalGroupingStrategy
+public enum FixedDecimalGroupingStrategy : int
 {
     Auto = 0,
     Never = 1,
