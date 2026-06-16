@@ -268,7 +268,8 @@ mod tests {
         "self_in_free_func.rs",
         "lifetime_on_trait.rs",
         "generic_types.rs",
-        "where_pred.rs"
+        "where_pred.rs",
+        "lifetime_redefine.rs"
     ];
 
     fn test_file_list(suffix: &'static str) {

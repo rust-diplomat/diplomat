@@ -348,11 +348,19 @@ impl LifetimeEnv {
         I: IntoIterator<Item = &'a L>,
     {
         for lifetime in iter {
-            if self.id(lifetime).is_some() {
-                panic!(
-                    "lifetime name `{}` declared twice in the same scope",
-                    NamedLifetime::spanned_from(lifetime, module_location)
-                );
+            if let Some(idx) = self.id(lifetime) {
+                let context_locations = if let Some(sp) = self.nodes[idx].lifetime.0.span() {
+                    vec![ContextLocation::new(sp, "Defined first here.".into())]
+                } else {
+                    vec![]
+                };
+                let lt = NamedLifetime::spanned_from(lifetime, module_location);
+                create_report(AstReport::new(
+                    "Lifetime declared twice in the same scope".into(),
+                    lt.0.span().unwrap(),
+                    format!("Lifetime {lt} already exists."),
+                    context_locations
+                ));
             }
 
             self.nodes.push(LifetimeNode {
