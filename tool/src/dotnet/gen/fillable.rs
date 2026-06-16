@@ -1,3 +1,17 @@
+//! `Result` / `Option` / exception runtime helpers.
+//!
+//! ## Why one `DiplomatResult{T}{E}` / `DiplomatOption{T}` per type
+//!
+//! These are emitted per concrete (Ok, Err) / inner type rather than as a
+//! single generic `DiplomatResult<T, E>` / `DiplomatOption<T>`. That isn't an
+//! oversight: the structs carry an `[StructLayout(LayoutKind.Explicit)]`
+//! union with `[FieldOffset(0)]` on the payload arms so the C# layout matches
+//! the Rust `repr(C)` result/option on the wire. C# forbids `[FieldOffset]`
+//! (explicit layout) on a generic type whose layout depends on a type
+//! parameter, so a generic wrapper can't reproduce the overlapped-field
+//! layout. The per-type structs are the price of an exact, blittable ABI
+//! match. (`bool` arms are stored as `byte` inside the union — see
+//! result.raw.cs.jinja — to keep the explicit layout blittable.)
 use std::fmt::Display;
 
 use askama::Template;
