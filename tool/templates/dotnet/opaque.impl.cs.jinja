@@ -39,7 +39,7 @@ public partial class {{ name }}: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe {{ name }}(Raw.{{ name }}* handle)
+    internal unsafe {{ name }}(Raw.{{ name }}* handle)
     {
         _inner = handle;
     }
@@ -74,7 +74,7 @@ public partial class {{ name }}: IDisposable
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.{{ name }}* AsFFI()
+    internal unsafe Raw.{{ name }}* AsFFI()
     {
         return _inner;
     }

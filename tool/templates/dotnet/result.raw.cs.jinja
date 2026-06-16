@@ -6,7 +6,7 @@ namespace {{ namespace }}.Raw;
 using {{ namespace }};
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct {{ result_struct_name }}
+internal partial struct {{ result_struct_name }}
 {
     {%- if !ok_result.is_void() || !error.is_unit() %}
     [StructLayout(LayoutKind.Explicit)]

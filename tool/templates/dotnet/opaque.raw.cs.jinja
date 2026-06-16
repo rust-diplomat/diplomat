@@ -7,7 +7,7 @@ using {{ namespace }}.Diplomat;
 namespace {{ namespace }}.Raw;
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct {{ name }}
+internal partial struct {{ name }}
 {
 #if __IOS__
     private const string NativeLib = "lib{{ dylib_name }}.framework/lib{{ dylib_name }}";
@@ -21,5 +21,5 @@ public partial struct {{ name }}
     {%- endfor %}
 
     [DllImport(NativeLib, EntryPoint = "{{ dtor_abi_name }}", CallingConvention = CallingConvention.Cdecl)]
-    public static unsafe extern void Destroy({{ name }}* handle);
+    internal static unsafe extern void Destroy({{ name }}* handle);
 }

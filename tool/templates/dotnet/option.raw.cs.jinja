@@ -6,7 +6,7 @@ namespace {{ namespace }}.Raw;
 using {{ namespace }};
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct {{ option_struct_name }}
+internal partial struct {{ option_struct_name }}
 {
     [StructLayout(LayoutKind.Explicit)]
     private struct InnerUnion

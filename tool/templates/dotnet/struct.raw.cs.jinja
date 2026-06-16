@@ -7,7 +7,7 @@ using {{ namespace }}.Diplomat;
 namespace {{ namespace }}.Raw;
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct {{ name }}
+internal partial struct {{ name }}
 {
     {%- for field in fields %}
     {#- C#'s default marshaling of `bool` is `BOOL` (4 bytes) — wrong for

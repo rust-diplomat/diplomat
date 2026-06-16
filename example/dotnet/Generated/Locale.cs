@@ -21,7 +21,7 @@ public partial class Locale: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe Locale(Raw.Locale* handle)
+    internal unsafe Locale(Raw.Locale* handle)
     {
         _inner = handle;
     }
@@ -45,7 +45,7 @@ public partial class Locale: IDisposable
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.Locale* AsFFI()
+    internal unsafe Raw.Locale* AsFFI()
     {
         return _inner;
     }

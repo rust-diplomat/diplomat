@@ -6,7 +6,7 @@ namespace Somelib.Raw;
 using Somelib;
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct DiplomatResultFixedDecimalFormatterUnit
+internal partial struct DiplomatResultFixedDecimalFormatterUnit
 {
     [StructLayout(LayoutKind.Explicit)]
     private unsafe struct InnerUnion

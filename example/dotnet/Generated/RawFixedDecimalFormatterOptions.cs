@@ -7,7 +7,7 @@ using Somelib.Diplomat;
 namespace Somelib.Raw;
 
 [StructLayout(LayoutKind.Sequential)]
-public partial struct FixedDecimalFormatterOptions
+internal partial struct FixedDecimalFormatterOptions
 {
     public FixedDecimalGroupingStrategy GroupingStrategy;
     [MarshalAs(UnmanagedType.U1)]
@@ -20,5 +20,5 @@ public partial struct FixedDecimalFormatterOptions
 #endif
 
     [DllImport(NativeLib, EntryPoint = "icu4x_FixedDecimalFormatterOptions_default_mv1", CallingConvention = CallingConvention.Cdecl)]
-public static unsafe extern FixedDecimalFormatterOptions Default();
+internal static unsafe extern FixedDecimalFormatterOptions Default();
 }

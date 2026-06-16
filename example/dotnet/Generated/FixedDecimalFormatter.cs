@@ -21,7 +21,7 @@ public partial class FixedDecimalFormatter: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe FixedDecimalFormatter(Raw.FixedDecimalFormatter* handle)
+    internal unsafe FixedDecimalFormatter(Raw.FixedDecimalFormatter* handle)
     {
         _inner = handle;
     }
@@ -74,7 +74,7 @@ public partial class FixedDecimalFormatter: IDisposable
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.FixedDecimalFormatter* AsFFI()
+    internal unsafe Raw.FixedDecimalFormatter* AsFFI()
     {
         return _inner;
     }

@@ -21,7 +21,7 @@ public partial class DataProvider: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    public unsafe DataProvider(Raw.DataProvider* handle)
+    internal unsafe DataProvider(Raw.DataProvider* handle)
     {
         _inner = handle;
     }
@@ -53,7 +53,7 @@ public partial class DataProvider: IDisposable
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    public unsafe Raw.DataProvider* AsFFI()
+    internal unsafe Raw.DataProvider* AsFFI()
     {
         return _inner;
     }

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace Somelib.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
-public unsafe struct DiplomatSliceU8
+internal unsafe struct DiplomatSliceU8
 {
     public byte* Ptr;
     public nuint Len;

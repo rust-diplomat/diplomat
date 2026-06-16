@@ -24,7 +24,7 @@ internal delegate bool WriteableGrow(IntPtr self, nuint capacity);
 // field corresponds to Rust's `grow_failed: bool`; Sequential layout pads
 // it to the next 8-byte boundary so `flush`/`grow` land at offsets 40/48.
 [StructLayout(LayoutKind.Sequential)]
-public struct DiplomatWriteable : IDisposable
+internal struct DiplomatWriteable : IDisposable
 {
     IntPtr context;
     IntPtr buf;

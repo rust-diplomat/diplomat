@@ -11,7 +11,7 @@ namespace {{ namespace }}.Diplomat;
 internal delegate {{ return_type }} {{ run_delegate_name() }}({{ args }});
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct {{ name }}
+internal readonly struct {{ name }}
 {
     private delegate void DestructorDelegate(IntPtr callbackHandle);
 
