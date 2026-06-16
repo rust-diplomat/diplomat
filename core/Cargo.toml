@@ -17,6 +17,8 @@ path = "src/lib.rs"
 [features]
 # Enable the higher level IR
 hir = ["either"]
+# Pretty print errors
+pretty-print = ["annotate-snippets"]
 
 [package.metadata.docs.rs]
 all-features = true
@@ -29,6 +31,7 @@ serde = { version = "1.0", features = ["derive", "alloc"], default-features = fa
 smallvec = "1.9.0"
 strck = { version = "1.0", features = ["ident"] }
 either = {version = "1.9.0", optional = true, default-features = false}
+annotate-snippets = { version = "0.12.13", optional = true }
 
 [dev-dependencies]
 insta = { version = "1.7.1", features = ["yaml"] }

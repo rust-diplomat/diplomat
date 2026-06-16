@@ -1,6 +1,7 @@
 use serde::Serialize;
 
 use crate::ast::idents::IntoWithSpan;
+use crate::ast::logging::create_report;
 use crate::ast::SpanLocation;
 
 use super::docs::Docs;
@@ -28,7 +29,11 @@ impl Enum {
             // Assuming all enums cannot have lifetimes? We don't even have a
             // `lifetimes` field. If we change our minds we can adjust this later
             // and update the `CustomType::lifetimes` API accordingly.
-            panic!("Enums cannot have generic parameters");
+            create_report(
+                (&enm.ident).spanned_into(module_location),
+                "Enums cannot have generic parameters.".into(),
+                "Suggestion: remove generics".into(),
+            );
         }
 
         let mut attrs = parent_attrs.clone();
@@ -43,7 +48,11 @@ impl Enum {
                 .iter()
                 .map(|v| {
                     if !matches!(v.fields, syn::Fields::Unit) {
-                        panic!("Enums cannot have fields, we only support C-like enums");
+                        create_report(
+                            (&v.ident).spanned_into(module_location),
+                            "Enums cannot have fields, we only support C-like enums".into(),
+                            "Remove field variant".into(),
+                        );
                     }
                     let new_discriminant = v
                         .discriminant
@@ -55,7 +64,11 @@ impl Enum {
                             if let Ok(syn::Lit::Int(ref lit_int)) = lit {
                                 lit_int.base10_parse::<isize>().unwrap()
                             } else {
-                                panic!("Expected a discriminant to be a constant integer");
+                                create_report(
+                                    (&v.ident).spanned_into(module_location),
+                                    "Enum discriminants must be constant integers".into(),
+                                    "Expected discriminant to be a constant integer".into(),
+                                );
                             }
                         })
                         .unwrap_or_else(|| last_discriminant + 1);

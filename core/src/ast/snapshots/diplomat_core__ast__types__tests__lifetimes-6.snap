@@ -6,43 +6,67 @@ Named:
   path:
     elements:
       - - very
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - long
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - path
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - to
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - my
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
       - - Type
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
@@ -50,24 +74,36 @@ Named:
   lifetimes:
     - Named:
         - x
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
     - Named:
         - y
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
     - Named:
         - z
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0

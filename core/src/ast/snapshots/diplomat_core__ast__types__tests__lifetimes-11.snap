@@ -5,8 +5,12 @@ expression: "TypeName::from_syn(&syn::parse_quote! { DiplomatSliceMut<'a, f32> }
 PrimitiveSlice:
   - - Named:
         - a
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0

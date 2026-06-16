@@ -52,6 +52,10 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
 
+    # Test without pretty printing (which is enabled in the workspace by default)
+    - name: Run ugly printing tests
+      run: cargo test -p diplomat_core -- ast::logging
+
   msrv:
     runs-on: ubuntu-latest
     steps:

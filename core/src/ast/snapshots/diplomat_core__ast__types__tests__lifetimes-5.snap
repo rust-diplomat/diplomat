@@ -6,8 +6,12 @@ Named:
   path:
     elements:
       - - Foo
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
@@ -15,32 +19,48 @@ Named:
   lifetimes:
     - Named:
         - a
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
     - Named:
         - b
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
     - Named:
         - c
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
           span_location: None
     - Named:
         - d
-        - start_line: 1
-          column_line: 0
+        - start:
+            line: 1
+            col: 0
+          end:
+            line: 1
+            col: 0
           range:
             start: 0
             end: 0
