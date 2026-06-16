@@ -926,6 +926,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 to_bytes_statement: Some(format!(
                                     "byte[] {bytes} = System.Text.Encoding.UTF8.GetBytes({arg_name});"
                                 )),
+                                // FIXME: an empty string yields a zero-length
+                                // `byte[]`, and `fixed` on an empty array binds
+                                // a null pointer — so Rust receives
+                                // `{ Ptr = null, Len = 0 }`. Diplomat's C ABI
+                                // tolerates `(null, 0)` today (it only reads the
+                                // pointer when `Len > 0`), but a strictly-correct
+                                // binding would hand over a non-null dangling
+                                // pointer for the empty case.
                                 fix_statement: Some(format!(
                                     "fixed (byte* {ptr} = {bytes})"
                                 )),
