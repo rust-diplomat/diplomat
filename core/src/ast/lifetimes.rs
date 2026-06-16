@@ -289,9 +289,18 @@ impl LifetimeEnv {
 
         if let Some(ref where_clause) = generics.where_clause {
             self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
-                syn::WherePredicate::Type(_) => panic!("trait bounds are unsupported"),
+                syn::WherePredicate::Type(_) => {
+                    create_report(AstReport::new(
+                        "Trait bounds are unsupported.".into(),
+                        pred.span().spanned_into(module_location),
+                        "Suggestion: Remove type predicate.".into(),
+                        vec![]
+                    ))
+                },
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
-                _ => panic!("Found unknown kind of where predicate"),
+                _ => {
+                    create_report(AstReport::new("Unrecognized where predicate.".into(), pred.span().spanned_into(module_location), "".into(), vec![]))
+                },
             }));
         }
     }

@@ -267,7 +267,8 @@ mod tests {
         "nonstd_result.rs",
         "self_in_free_func.rs",
         "lifetime_on_trait.rs",
-        "generic_types.rs"
+        "generic_types.rs",
+        "where_pred.rs"
     ];
 
     fn test_file_list(suffix: &'static str) {
