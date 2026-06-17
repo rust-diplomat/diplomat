@@ -1,11 +1,13 @@
 use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
-use syn::spanned::Spanned;
 use std::fmt;
+use syn::spanned::Spanned;
 
 use crate::ast::{
-    SpanLocation, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report}
+    idents::{FromWithSpan, IntoWithSpan},
+    logging::{create_report, AstReport, ContextLocation},
+    SpanLocation,
 };
 
 use super::{Attrs, Docs, Ident, Param, SelfParam, TraitSelfParam, TypeName};
@@ -162,7 +164,11 @@ impl LifetimeEnv {
                 "Diplomat traits are not allowed to have any lifetime parameters.".into(),
                 trt.ident.span().spanned_into(module_location),
                 "".into(),
-                vec![ContextLocation::new(lt.span().spanned_into(module_location), "Remove lifetime annotations".into())]));
+                vec![ContextLocation::new(
+                    lt.span().spanned_into(module_location),
+                    "Remove lifetime annotations".into(),
+                )],
+            ));
         }
         LifetimeEnv::new()
     }
@@ -268,18 +274,18 @@ impl LifetimeEnv {
                     "Generic types are unsupported.".into(),
                     generic.span().spanned_into(module_location),
                     "Suggestion: Remove generic type.".into(),
-                    vec![]
+                    vec![],
                 ));
-            },
+            }
             syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
             syn::GenericParam::Const(_) => {
                 create_report(AstReport::new(
                     "Const generics are unsupported.".into(),
                     generic.span().spanned_into(module_location),
                     "Suggestion: Remove const generic.".into(),
-                    vec![]
+                    vec![],
                 ));
-            },
+            }
         });
 
         let generic_defs = generic_bounds.clone().map(|(lifetime, _)| lifetime);
@@ -289,18 +295,19 @@ impl LifetimeEnv {
 
         if let Some(ref where_clause) = generics.where_clause {
             self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
-                syn::WherePredicate::Type(_) => {
-                    create_report(AstReport::new(
-                        "Trait bounds are unsupported.".into(),
-                        pred.span().spanned_into(module_location),
-                        "Suggestion: Remove type predicate.".into(),
-                        vec![]
-                    ))
-                },
+                syn::WherePredicate::Type(_) => create_report(AstReport::new(
+                    "Trait bounds are unsupported.".into(),
+                    pred.span().spanned_into(module_location),
+                    "Suggestion: Remove type predicate.".into(),
+                    vec![],
+                )),
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
-                _ => {
-                    create_report(AstReport::new("Unrecognized where predicate.".into(), pred.span().spanned_into(module_location), "".into(), vec![]))
-                },
+                _ => create_report(AstReport::new(
+                    "Unrecognized where predicate.".into(),
+                    pred.span().spanned_into(module_location),
+                    "".into(),
+                    vec![],
+                )),
             }));
         }
     }
@@ -359,7 +366,7 @@ impl LifetimeEnv {
                     "Lifetime declared twice in the same scope".into(),
                     lt.0.span().unwrap(),
                     format!("Lifetime {lt} already exists."),
-                    context_locations
+                    context_locations,
                 ));
             }
 

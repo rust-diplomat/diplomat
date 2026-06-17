@@ -2,7 +2,9 @@ use serde::Serialize;
 use syn::ItemFn;
 
 use crate::ast::{
-    Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, TypeName, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report}
+    idents::{FromWithSpan, IntoWithSpan},
+    logging::{create_report, AstReport, ContextLocation},
+    Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, TypeName,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -28,16 +30,15 @@ impl Function {
     ) -> Function {
         let ident: Ident = (&f.sig.ident).spanned_into(module_location);
         if let Some(recv) = f.sig.receiver() {
-            create_report(
-                AstReport::new(
-                    "Cannot use self parameter in free function.".into(),
-                    f.sig.ident.span().spanned_into(module_location),
-                    "".into(),
-                    vec![
-                        ContextLocation::new(recv.self_token.span.spanned_into(module_location), "Suggestion: remove self param.".into())
-                    ]
-                )
-            );
+            create_report(AstReport::new(
+                "Cannot use self parameter in free function.".into(),
+                f.sig.ident.span().spanned_into(module_location),
+                "".into(),
+                vec![ContextLocation::new(
+                    recv.self_token.span.spanned_into(module_location),
+                    "Suggestion: remove self param.".into(),
+                )],
+            ));
         }
 
         let mut attrs = parent_attrs.clone();

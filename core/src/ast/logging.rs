@@ -1,41 +1,42 @@
 use std::sync::RwLock;
 
-use crate::ast::{Ident, SpanLocation, idents::Span};
+use crate::ast::{idents::Span, Ident, SpanLocation};
 
 /// For overwriting by tests.
 static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
     RwLock::new(&(|| Box::new(std::io::stderr())));
 
-
 pub(crate) struct ContextLocation {
     // Allow for pretty-print:
     #[allow(unused)]
-    location : Span,
+    location: Span,
     // Allow for pretty-print:
     #[allow(unused)]
-    label : String
+    label: String,
 }
 
 impl ContextLocation {
-    pub fn new(location : Span, label : String) -> Self {
-        Self {
-            location,
-            label
-        }
+    pub fn new(location: Span, label: String) -> Self {
+        Self { location, label }
     }
 }
 
 pub(crate) struct AstReport {
-    title : String,
-    primary_loc : Option<Span>,
-    primary_label : String,
+    title: String,
+    primary_loc: Option<Span>,
+    primary_label: String,
     // Used for pretty-printing, not ugly printing:
     #[allow(unused)]
-    context_locations : Vec<ContextLocation>,
+    context_locations: Vec<ContextLocation>,
 }
 
 impl AstReport {
-    pub fn new(title : String, primary_loc : Span, primary_label : String, context_locations : Vec<ContextLocation>) -> Self {
+    pub fn new(
+        title: String,
+        primary_loc: Span,
+        primary_label: String,
+        context_locations: Vec<ContextLocation>,
+    ) -> Self {
         Self {
             title,
             primary_loc: Some(primary_loc),
@@ -46,14 +47,18 @@ impl AstReport {
 }
 
 pub(crate) fn create_simple_report(id: Ident, title: String, label: String) -> ! {
-    create_report(AstReport { title, primary_loc: id.span(), primary_label: label, context_locations: vec![] })
+    create_report(AstReport {
+        title,
+        primary_loc: id.span(),
+        primary_label: label,
+        context_locations: vec![],
+    })
 }
-
 
 /// Bytes range has not been stabilized in Rust macro.
 /// We can't tell if we're in a proc macro context,
 /// so we just check if the range doesn't make sense:
-fn evaluate_bytes(sp : &super::idents::Span, src : &String) -> std::ops::Range<usize> {
+fn evaluate_bytes(sp: &super::idents::Span, src: &str) -> std::ops::Range<usize> {
     if sp.range.is_empty() && (sp.start.line != sp.end.line || sp.end.col - sp.start.col > 0) {
         match sp.span_location {
             SpanLocation::None => 0..0,
@@ -82,7 +87,7 @@ fn evaluate_bytes(sp : &super::idents::Span, src : &String) -> std::ops::Range<u
     }
 }
 
-pub(crate) fn create_report(report : AstReport) -> ! {
+pub(crate) fn create_report(report: AstReport) -> ! {
     use std::io::Write;
     let mut out = WRITER.read().unwrap()();
 
@@ -113,7 +118,13 @@ pub(crate) fn create_report(report : AstReport) -> ! {
             Some(SpanLocation::FilePath(..)) | Some(SpanLocation::LocalSource(..))
         ) && b.end > src.len()
         {
-            panic!("Span source improperly calculated. Got range {} > {}. Original error: {}: {}", b.end, src.len(), report.title, report.primary_label);
+            panic!(
+                "Span source improperly calculated. Got range {} > {}. Original error: {}: {}",
+                b.end,
+                src.len(),
+                report.title,
+                report.primary_label
+            );
         }
     }
     #[cfg(feature = "pretty-print")]
@@ -137,7 +148,8 @@ pub(crate) fn create_report(report : AstReport) -> ! {
                         AnnotationKind::Primary
                             .span(bytes_range.unwrap())
                             .label(report.primary_label),
-                    ).annotations(annotations),
+                    )
+                    .annotations(annotations),
             )]
         } else {
             &[Level::ERROR
@@ -272,7 +284,7 @@ mod tests {
         "lifetime_redefine.rs",
         "undefined_macro.rs",
         "macro_parse_error.rs",
-        "macro_expansion_error.rs"
+        "macro_expansion_error.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

@@ -275,7 +275,9 @@ impl<'a> ModuleBuilder<'a> {
                             impl_item_vec.push(ImplItem::Fn(f.clone()));
                         }
                         ImplItem::Macro(mac) => {
-                            let mut items = self.mod_macros.evaluate_impl_item_macro(mac, self.module_location);
+                            let mut items = self
+                                .mod_macros
+                                .evaluate_impl_item_macro(mac, self.module_location);
                             impl_item_vec.append(&mut items);
                         }
                         _ => {}
@@ -296,7 +298,11 @@ impl<'a> ModuleBuilder<'a> {
                             .iter()
                             .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
                         if !is_public && has_diplomat_attrs {
-                            create_simple_report((&m.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                            create_simple_report(
+                                (&m.sig.ident).spanned_into(self.module_location),
+                                "Found non-public method with diplomat attrs".into(),
+                                "Remove #[diplomat::*] attributes.".into(),
+                            );
                         }
                         is_public
                     })
@@ -355,7 +361,9 @@ impl<'a> ModuleBuilder<'a> {
                         );
                     }
                 } else {
-                    let items = self.mod_macros.evaluate_item_macro(mac, self.module_location);
+                    let items = self
+                        .mod_macros
+                        .evaluate_item_macro(mac, self.module_location);
                     for i in items {
                         self.add(&i);
                     }
@@ -368,7 +376,11 @@ impl<'a> ModuleBuilder<'a> {
                     .iter()
                     .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
                 if !is_public && has_diplomat_attrs {
-                    create_simple_report((&f.sig.ident).spanned_into(self.module_location), "Found non-public method with diplomat attrs".into(), "Remove #[diplomat::*] attributes.".into());
+                    create_simple_report(
+                        (&f.sig.ident).spanned_into(self.module_location),
+                        "Found non-public method with diplomat attrs".into(),
+                        "Remove #[diplomat::*] attributes.".into(),
+                    );
                 }
                 if is_public {
                     let parent_attrs = self

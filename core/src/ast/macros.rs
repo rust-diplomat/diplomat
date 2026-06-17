@@ -13,7 +13,11 @@ use syn::{
     token, Error, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
-use crate::ast::{SpanLocation, idents::IntoWithSpan, logging::{AstReport, create_report, create_simple_report}};
+use crate::ast::{
+    idents::IntoWithSpan,
+    logging::{create_report, create_simple_report, AstReport},
+    SpanLocation,
+};
 
 #[derive(Default, Debug)]
 pub struct Macros {
@@ -40,7 +44,11 @@ impl Macros {
         }
     }
 
-    pub fn evaluate_item_macro(&self, input: &ItemMacro, module_location : &SpanLocation) -> Vec<Item> {
+    pub fn evaluate_item_macro(
+        &self,
+        input: &ItemMacro,
+        module_location: &SpanLocation,
+    ) -> Vec<Item> {
         // This should never be called without an ident attached:
         assert!(input.ident.is_none(), "Expected macro usage. Got {input:?}");
         let m = input.mac.parse_body::<TokenStream>();
@@ -59,7 +67,11 @@ impl Macros {
         }
     }
 
-    pub fn evaluate_impl_item_macro(&self, input: &ImplItemMacro, module_location : &SpanLocation) -> Vec<ImplItem> {
+    pub fn evaluate_impl_item_macro(
+        &self,
+        input: &ImplItemMacro,
+        module_location: &SpanLocation,
+    ) -> Vec<ImplItem> {
         let m: syn::Result<TokenStream> = input.mac.parse_body();
         // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
         let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
@@ -68,7 +80,6 @@ impl Macros {
             if let Some(def) = self.defs.get(&path_ident) {
                 def.evaluate(matched, module_location)
             } else {
-                
                 create_simple_report((&path_ident).spanned_into(module_location), format!("Macro {path_ident}! undefined."), format!("Suggestion: Create #[diplomat::macro_rules] macro_rules! {path_ident} definition before this item."));
             }
         } else {
@@ -537,7 +548,11 @@ impl MacroDef {
         }
     }
 
-    fn parse_group(matched: &MacroUse, inner: Cursor, group_location : &SpanLocation) -> TokenStream {
+    fn parse_group(
+        matched: &MacroUse,
+        inner: Cursor,
+        group_location: &SpanLocation,
+    ) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let mut c = inner;
@@ -550,25 +565,27 @@ impl MacroDef {
                             c = next;
                         } else {
                             create_report(AstReport::new(
-                                format!("Expected ident when expanding macro argument."),
+                                "Expected ident when expanding macro argument.".to_string(),
                                 tt.span().spanned_into(group_location),
                                 "Need ident after $ to replace with variable".into(),
-                                vec![]
+                                vec![],
                             ));
                         }
                     } else {
                         create_report(AstReport::new(
-                            format!("Expected token tree."),
+                            "Expected token tree.".to_string(),
                             next.span().spanned_into(group_location),
                             "".into(),
-                            vec![]
+                            vec![],
                         ));
                     }
                 }
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
-                    let group =
-                        proc_macro2::Group::new(g.delimiter(), Self::parse_group(matched, inner, group_location));
+                    let group = proc_macro2::Group::new(
+                        g.delimiter(),
+                        Self::parse_group(matched, inner, group_location),
+                    );
                     // Once we detect a group, we push it to the array for syn to evaluate.
                     stream.append(group);
                     c = next;
@@ -583,7 +600,7 @@ impl MacroDef {
         stream
     }
 
-    fn evaluate_buf(&self, matched: MacroUse, buf_location : &SpanLocation) -> TokenStream {
+    fn evaluate_buf(&self, matched: MacroUse, buf_location: &SpanLocation) -> TokenStream {
         let mut stream = TokenStream::new();
 
         let buf = TokenBuffer::new2(self.body.clone());
@@ -598,26 +615,28 @@ impl MacroDef {
                             c = next;
                         } else {
                             create_report(AstReport::new(
-                                format!("Expected ident when expanding macro argument."),
+                                "Expected ident when expanding macro argument.".to_string(),
                                 tt.span().spanned_into(buf_location),
                                 "Need ident after $ to replace with variable".into(),
-                                vec![]
+                                vec![],
                             ));
                         }
                     } else {
                         create_report(AstReport::new(
-                            format!("Expected token tree."),
+                            "Expected token tree.".to_string(),
                             next.span().spanned_into(buf_location),
                             "".into(),
-                            vec![]
+                            vec![],
                         ));
                     }
                 }
                 TokenTree::Group(g) => {
                     let (inner, _, next) = c.group(g.delimiter()).unwrap();
                     // We need to read inside of any groups to find and replace `$` idents.
-                    let group =
-                        proc_macro2::Group::new(g.delimiter(), Self::parse_group(&matched, inner, buf_location));
+                    let group = proc_macro2::Group::new(
+                        g.delimiter(),
+                        Self::parse_group(&matched, inner, buf_location),
+                    );
                     stream.append(group);
                     c = next;
                 }
@@ -631,13 +650,17 @@ impl MacroDef {
         stream
     }
 
-    fn evaluate<T: Parse + Debug>(&self, matched: TokenStream, use_location : &SpanLocation) -> Vec<T> {
+    fn evaluate<T: Parse + Debug>(
+        &self,
+        matched: TokenStream,
+        use_location: &SpanLocation,
+    ) -> Vec<T> {
         let macro_use = MacroUse::parse(self, matched).unwrap_or_else(|e| {
             create_report(AstReport::new(
                 e.to_string(),
                 e.span().spanned_into(use_location),
                 "Error parsing macro here".into(),
-                vec![]
+                vec![],
             ));
         });
         let stream = self.evaluate_buf(macro_use, use_location);
@@ -652,7 +675,7 @@ impl MacroDef {
                 e.to_string(),
                 e.span().spanned_into(use_location),
                 "Error expanding macro here".into(),
-                vec![]
+                vec![],
             ));
         }
     }
