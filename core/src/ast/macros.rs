@@ -13,6 +13,8 @@ use syn::{
     token, Error, Ident, ImplItem, ImplItemMacro, Item, ItemMacro, Token,
 };
 
+use crate::ast::{SpanLocation, idents::IntoWithSpan, logging::create_simple_report};
+
 #[derive(Default, Debug)]
 pub struct Macros {
     pub(crate) defs: BTreeMap<Ident, MacroDef>,
@@ -37,7 +39,8 @@ impl Macros {
         }
     }
 
-    pub fn evaluate_item_macro(&self, input: &ItemMacro) -> Vec<Item> {
+    pub fn evaluate_item_macro(&self, input: &ItemMacro, module_location : &SpanLocation) -> Vec<Item> {
+        // This should never be called without an ident attached:
         assert!(input.ident.is_none(), "Expected macro usage. Got {input:?}");
         let m = input.mac.parse_body::<TokenStream>();
         if let Ok(mac) = m {
@@ -47,7 +50,7 @@ impl Macros {
             if let Some(def) = self.defs.get(&ident) {
                 def.evaluate(mac)
             } else {
-                panic!("Could not find definition for {ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {ident} definition?");
+                create_simple_report((&ident).spanned_into(module_location), format!("Macro {ident}! undefined."), format!("Suggestion: Create #[diplomat::macro_rules] macro_rules! {ident} definition before this item."));
             }
         } else {
             // We handle errors automatically in `diplomat/macro`
@@ -55,7 +58,7 @@ impl Macros {
         }
     }
 
-    pub fn evaluate_impl_item_macro(&self, input: &ImplItemMacro) -> Vec<ImplItem> {
+    pub fn evaluate_impl_item_macro(&self, input: &ImplItemMacro, module_location : &SpanLocation) -> Vec<ImplItem> {
         let m: syn::Result<TokenStream> = input.mac.parse_body();
         // FIXME: Extremely hacky. In the future for importing macros, we'll want to do something else.
         let path_ident = input.mac.path.segments.last().unwrap().ident.clone();
@@ -64,7 +67,8 @@ impl Macros {
             if let Some(def) = self.defs.get(&path_ident) {
                 def.evaluate(matched)
             } else {
-                panic!("Could not find definition for {path_ident}. Have you tried creating a #[diplomat::macro_rules] macro_rules! {path_ident} definition?");
+                
+                create_simple_report((&path_ident).spanned_into(module_location), format!("Macro {path_ident}! undefined."), format!("Suggestion: Create #[diplomat::macro_rules] macro_rules! {path_ident} definition before this item."));
             }
         } else {
             // We handle errors automatically in `diplomat/macro`

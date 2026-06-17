@@ -275,7 +275,7 @@ impl<'a> ModuleBuilder<'a> {
                             impl_item_vec.push(ImplItem::Fn(f.clone()));
                         }
                         ImplItem::Macro(mac) => {
-                            let mut items = self.mod_macros.evaluate_impl_item_macro(mac);
+                            let mut items = self.mod_macros.evaluate_impl_item_macro(mac, self.module_location);
                             impl_item_vec.append(&mut items);
                         }
                         _ => {}
@@ -355,7 +355,7 @@ impl<'a> ModuleBuilder<'a> {
                         );
                     }
                 } else {
-                    let items = self.mod_macros.evaluate_item_macro(mac);
+                    let items = self.mod_macros.evaluate_item_macro(mac, self.module_location);
                     for i in items {
                         self.add(&i);
                     }

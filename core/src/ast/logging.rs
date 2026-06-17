@@ -269,7 +269,8 @@ mod tests {
         "lifetime_on_trait.rs",
         "generic_types.rs",
         "where_pred.rs",
-        "lifetime_redefine.rs"
+        "lifetime_redefine.rs",
+        "undefined_macro.rs"
     ];
 
     fn test_file_list(suffix: &'static str) {
