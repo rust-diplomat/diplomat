@@ -270,7 +270,9 @@ mod tests {
         "generic_types.rs",
         "where_pred.rs",
         "lifetime_redefine.rs",
-        "undefined_macro.rs"
+        "undefined_macro.rs",
+        "macro_parse_error.rs",
+        "macro_expansion_error.rs"
     ];
 
     fn test_file_list(suffix: &'static str) {
