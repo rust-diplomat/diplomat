@@ -31,6 +31,7 @@ pub mod ffi {
     }
     impl<'a> Foo<'a> {
         #[diplomat::attr(auto, constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn new(x: &'a DiplomatStr) -> Box<Self> {
             Box::new(Foo(x))
         }

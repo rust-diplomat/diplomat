@@ -551,7 +551,7 @@ mod test {
     }
 
     #[test]
-    fn lifetime_carrying_owned_return_gets_warning() {
+    fn lifetime_carrying_owned_return_borrowing_slice_input_is_rejected() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -562,6 +562,34 @@ mod test {
 
                 impl<'a> Foo<'a> {
                     pub fn new(x: &'a DiplomatStr) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1);
+        let error_str = errors.join("\n");
+        assert!(
+            errors[0].contains("return value borrows from slice/string parameter"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    #[test]
+    fn lifetime_carrying_owned_return_borrowing_opaque_gets_warning() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Parent;
+
+                #[diplomat::opaque]
+                pub struct Child<'a>(&'a Parent);
+
+                impl Parent {
+                    pub fn child<'a>(&'a self) -> Box<Child<'a>> {
                         unimplemented!()
                     }
                 }
@@ -584,10 +612,10 @@ mod test {
             errors.join("\n")
         );
 
-        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        let parent = files.get("Parent.cs").expect("expected Parent.cs output");
         assert!(
-            foo.contains("Lifetime: the returned native-backed value may borrow"),
-            "expected lifetime warning in Foo.cs:\n{foo}"
+            parent.contains("Lifetime: the returned native-backed value may borrow"),
+            "expected lifetime warning in Parent.cs:\n{parent}"
         );
 
         let owned_foo = files

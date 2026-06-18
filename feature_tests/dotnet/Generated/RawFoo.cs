@@ -9,9 +9,6 @@ namespace Somelib.Raw;
 internal partial struct Foo
 {
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "Foo_new", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern Foo* New(DiplomatSliceU8 x);
-
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Foo_get_bar", CallingConvention = CallingConvention.Cdecl)]
 internal static unsafe extern Bar* GetBar(Foo* handle);
 

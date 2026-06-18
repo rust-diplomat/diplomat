@@ -22,7 +22,7 @@ use std::{
     fmt::{self, Display},
 };
 
-use diplomat_core::hir::{self, MaybeOwn, Method};
+use diplomat_core::hir::{self, borrowing_param::LifetimeEdgeKind, MaybeOwn, Method};
 
 use crate::dotnet::r#gen::fillable::{
     DotnetErrorType, DotnetOption, DotnetResult, ErrorInfo, OptionInfo,
@@ -677,7 +677,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
-        let lifetime_warning = self.has_borrowed_output_lifetime(method);
+        let lifetime_warning = self.borrowed_output_lifetime_warning(method)?;
 
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
@@ -692,7 +692,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         })
     }
 
-    fn has_borrowed_output_lifetime(&self, method: &'tcx Method) -> bool {
+    fn borrowed_output_lifetime_warning(&self, method: &'tcx Method) -> Option<bool> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
         if let Some(param_self) = method.param_self.as_ref() {
@@ -703,10 +703,33 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             visitor.visit_param(&param.ty, param.name.as_str());
         }
 
-        visitor
+        let mut has_borrowed_output_lifetime = false;
+        let mut slice_params = Vec::new();
+
+        for edge in visitor
             .borrow_map()
             .into_values()
-            .any(|borrow_info| !borrow_info.incoming_edges.is_empty())
+            .flat_map(|borrow_info| borrow_info.incoming_edges)
+        {
+            has_borrowed_output_lifetime = true;
+            if matches!(edge.kind, LifetimeEdgeKind::SliceParam) {
+                slice_params.push(edge.param_name);
+            }
+        }
+
+        if !slice_params.is_empty() {
+            slice_params.sort();
+            slice_params.dedup();
+            self.errors.push_error(format!(
+                "[.NET backend] return value borrows from slice/string parameter(s) `{}`; \
+                 this is not supported because generated C# only pins or converts those \
+                 inputs for the duration of the call",
+                slice_params.join("`, `")
+            ));
+            return None;
+        }
+
+        Some(has_borrowed_output_lifetime)
     }
 
     fn property_accessor(

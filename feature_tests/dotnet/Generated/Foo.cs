@@ -26,26 +26,6 @@ public partial class Foo: IDisposable
         _inner = handle;
     }
     /// <returns>
-    /// A <c>Foo</c> allocated on Rust side.
-    /// </returns>
-    /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
-    /// </remarks>
-    public static Foo New(string x)
-    {
-        unsafe
-        {
-            if (x == null) throw new ArgumentNullException(nameof(x));
-            byte[] xBytes = System.Text.Encoding.UTF8.GetBytes(x);
-            fixed (byte* xPtr = xBytes)
-            {
-                Raw.Foo* result = Raw.Foo.New(new DiplomatSliceU8 { Ptr = xPtr, Len = (nuint)xBytes.Length });
-                return new Foo(result);
-            }
-        }
-    }
-    /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
     /// </returns>
     /// <remarks>
