@@ -21,12 +21,15 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
+    <RollForward>Major</RollForward>
     <RootNamespace>Somelib.FeatureTests</RootNamespace>
 
     <NativeLibName Condition="'$(NativeLibName)' == '' And $([MSBuild]::IsOSPlatform('Windows'))">diplomat_feature_tests.dll</NativeLibName>
     <NativeLibName Condition="'$(NativeLibName)' == '' And $([MSBuild]::IsOSPlatform('OSX'))">libdiplomat_feature_tests.dylib</NativeLibName>
     <NativeLibName Condition="'$(NativeLibName)' == ''">libdiplomat_feature_tests.so</NativeLibName>
-    <NativeLibPath Condition="'$(NativeLibPath)' == ''">$(MSBuildProjectDirectory)/../../target/debug/$(NativeLibName)</NativeLibPath>
+    <CargoTargetDir Condition="'$(CargoTargetDir)' == '' And '$(CARGO_TARGET_DIR)' != ''">$(CARGO_TARGET_DIR)</CargoTargetDir>
+    <CargoTargetDir Condition="'$(CargoTargetDir)' == ''">$(MSBuildProjectDirectory)/../../target</CargoTargetDir>
+    <NativeLibPath Condition="'$(NativeLibPath)' == ''">$(CargoTargetDir)/debug/$(NativeLibName)</NativeLibPath>
   </PropertyGroup>
 
   <ItemGroup>
