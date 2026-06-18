@@ -1,10 +1,11 @@
 //! .NET backend for Diplomat.
 //!
 //! Generates C# bindings that call into the Diplomat-generated C ABI via
-//! P/Invoke (`LibraryImport` source generators on .NET 7+). Opaque Rust
-//! handles map to a `SafeHandle`-based wrapper plus `IDisposable`; slices
-//! and strings copy across the boundary; callbacks are pinned via
-//! `GCHandle` on the managed side.
+//! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
+//! Opaque Rust handles map to an `IDisposable` partial class holding the
+//! raw `Raw.T*` pointer (freed via the generated `Destroy` extern in
+//! `Dispose`/the finalizer); slices and strings copy across the boundary;
+//! callbacks are pinned via `GCHandle` on the managed side.
 //!
 //! This file is the entry point that the Diplomat CLI dispatches to. Codegen
 //! itself lives in [`gen`] and naming/type-formatting concerns live in
