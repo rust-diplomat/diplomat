@@ -399,8 +399,10 @@ pub(super) struct ReturnLowering {
 /// Today borrowed inputs are lowered as call-scoped borrows (pinned arrays,
 /// temporary slices, opaque handles), but the generated C# does not enforce
 /// Rust lifetime edges. Borrowed opaque returns/errors are rejected until the
-/// backend has a non-owning wrapper/lifetime strategy; lifetime-carrying owned
-/// returns are documented so callers know they must preserve backing storage.
+/// backend has a non-owning wrapper/lifetime strategy. Lifetime-carrying owned
+/// returns that borrow from temporary slice/string params are rejected; those
+/// that borrow from an opaque wrapper are documented so callers know they must
+/// preserve backing storage.
 #[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).

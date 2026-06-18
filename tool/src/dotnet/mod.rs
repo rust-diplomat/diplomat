@@ -12,22 +12,24 @@
 //!
 //! ## Borrowing / lifetime model
 //!
-//! The backend does **not** model Rust lifetimes. It assumes every borrow a
-//! method takes is *call-scoped* — valid only for the duration of the single
-//! P/Invoke call:
+//! The backend does not encode Rust lifetimes in C# types. It supports
+//! call-scoped borrows — valid only for the duration of the single P/Invoke
+//! call — and uses HIR lifetime-edge analysis to decide which borrowed outputs
+//! can be documented and which must be rejected:
 //!
 //! * `&[u8]` / `&[u32]` / `&DiplomatStr` params are pinned with `fixed (...)`
 //!   (or copied into a pinned `byte[]`) for the call and unpinned immediately
 //!   after. If the Rust side stashes the pointer past the call, the C# GC may
-//!   move or free the backing buffer — that is unsupported.
+//!   move or free the backing buffer, so any returned value borrowing from
+//!   these temporary slice/string params is rejected with a diagnostic.
 //! * Borrowed opaque **returns** and **errors** (`&T`, `&mut T`, `Option<&T>`,
 //!   `Result<_, &E>`) are rejected outright with a diagnostic, because the
 //!   generated `IDisposable` wrapper would `Destroy` a pointer Rust still
 //!   owns (double-free). Return `Box<T>` / `Option<Box<T>>` instead.
-//!
-//! Lifetime relationships *between* parameters and returns (e.g. a returned
-//! handle that borrows from an input) are not tracked; only call-scoped
-//! borrows are supported.
+//! * Lifetime-carrying owned returns (`Box<T<'a>>`) that borrow from `self` or
+//!   another opaque wrapper are generated with XML lifetime remarks. C# cannot
+//!   enforce the relationship, so the caller must keep the borrowed-from wrapper
+//!   alive and undisposed while the returned value is used.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
@@ -115,8 +117,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     //     `&mut [u32]` lower today; other primitive element types report a
     //     diagnostic in the slice-primitive arm of `gen::method::lower_input`.
     //   - `option`: works for primitive / enum / struct success values;
-    //     non-primitive struct fields panic with a descriptive message
-    //     during struct codegen.
+    //     unsupported non-primitive struct fields report a diagnostic during
+    //     struct codegen.
     // The granularity needed to express this in `attr_support` doesn't
     // exist (no per-primitive flag), so we keep the broad flags `true`
     // and document the gaps here + via the diagnostics themselves.
@@ -124,10 +126,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.mutable_slices = true;
     // `static_slices` and `owned_slices` would advertise support for
     // `&'static [T]` / `Box<[T]>` style inputs and outputs. The backend
-    // panics on those paths today (see `method.rs` slice arms), so we
-    // tell the HIR validator to REJECT them at lowering — better to
-    // surface "this backend doesn't support X" than to panic during
-    // generation.
+    // reports diagnostics on those paths today (see `method.rs` slice arms),
+    // so we tell the HIR validator to reject them at lowering.
     a.static_slices = false;
     a.owned_slices = false;
 
