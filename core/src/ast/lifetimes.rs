@@ -2,9 +2,11 @@ use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use syn::spanned::Spanned;
 
 use crate::ast::{
     idents::{FromWithSpan, IntoWithSpan},
+    logging::{create_report, AstReport, ContextLocation},
     SpanLocation,
 };
 
@@ -156,9 +158,17 @@ impl LifetimeEnv {
         this
     }
 
-    pub fn from_trait(trt: &syn::ItemTrait) -> Self {
-        if trt.generics.lifetimes().next().is_some() {
-            panic!("Diplomat traits are not allowed to have any lifetime parameters")
+    pub fn from_trait(trt: &syn::ItemTrait, module_location: &SpanLocation) -> Self {
+        if let Some(lt) = trt.generics.lifetimes().next() {
+            create_report(AstReport::new(
+                "Diplomat traits are not allowed to have any lifetime parameters.".into(),
+                trt.ident.span().spanned_into(module_location),
+                "".into(),
+                vec![ContextLocation::new(
+                    lt.span().spanned_into(module_location),
+                    "Remove lifetime annotations".into(),
+                )],
+            ));
         }
         LifetimeEnv::new()
     }
@@ -259,9 +269,23 @@ impl LifetimeEnv {
     /// Add the lifetimes from generic parameters and where bounds.
     fn extend_generics(&mut self, generics: &syn::Generics, module_location: &SpanLocation) {
         let generic_bounds = generics.params.iter().map(|generic| match generic {
-            syn::GenericParam::Type(_) => panic!("generic types are unsupported"),
+            syn::GenericParam::Type(_) => {
+                create_report(AstReport::new(
+                    "Generic types are unsupported.".into(),
+                    generic.span().spanned_into(module_location),
+                    "Suggestion: Remove generic type.".into(),
+                    vec![],
+                ));
+            }
             syn::GenericParam::Lifetime(def) => (&def.lifetime, &def.bounds),
-            syn::GenericParam::Const(_) => panic!("const generics are unsupported"),
+            syn::GenericParam::Const(_) => {
+                create_report(AstReport::new(
+                    "Const generics are unsupported.".into(),
+                    generic.span().spanned_into(module_location),
+                    "Suggestion: Remove const generic.".into(),
+                    vec![],
+                ));
+            }
         });
 
         let generic_defs = generic_bounds.clone().map(|(lifetime, _)| lifetime);
@@ -271,9 +295,19 @@ impl LifetimeEnv {
 
         if let Some(ref where_clause) = generics.where_clause {
             self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
-                syn::WherePredicate::Type(_) => panic!("trait bounds are unsupported"),
+                syn::WherePredicate::Type(_) => create_report(AstReport::new(
+                    "Trait bounds are unsupported.".into(),
+                    pred.span().spanned_into(module_location),
+                    "Suggestion: Remove type predicate.".into(),
+                    vec![],
+                )),
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
-                _ => panic!("Found unknown kind of where predicate"),
+                _ => create_report(AstReport::new(
+                    "Unrecognized where predicate.".into(),
+                    pred.span().spanned_into(module_location),
+                    "".into(),
+                    vec![],
+                )),
             }));
         }
     }
@@ -321,11 +355,19 @@ impl LifetimeEnv {
         I: IntoIterator<Item = &'a L>,
     {
         for lifetime in iter {
-            if self.id(lifetime).is_some() {
-                panic!(
-                    "lifetime name `{}` declared twice in the same scope",
-                    NamedLifetime::spanned_from(lifetime, module_location)
-                );
+            if let Some(idx) = self.id(lifetime) {
+                let context_locations = if let Some(sp) = self.nodes[idx].lifetime.0.span() {
+                    vec![ContextLocation::new(sp, "Defined first here.".into())]
+                } else {
+                    vec![]
+                };
+                let lt = NamedLifetime::spanned_from(lifetime, module_location);
+                create_report(AstReport::new(
+                    "Lifetime declared twice in the same scope".into(),
+                    lt.0.span().unwrap(),
+                    format!("Lifetime {lt} already exists."),
+                    context_locations,
+                ));
             }
 
             self.nodes.push(LifetimeNode {

@@ -11,7 +11,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::create_report;
+use crate::ast::logging::create_simple_report;
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -209,7 +209,7 @@ impl<'a> ModuleBuilder<'a> {
                         self.module_location,
                     )),
                     Err(errors) => {
-                        create_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
+                        create_simple_report((&strct.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat struct attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
 
@@ -250,7 +250,7 @@ impl<'a> ModuleBuilder<'a> {
                         ))
                     }
                     Err(errors) => {
-                        create_report((&enm.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat enum attributes, there can be at most one.".into(), format!("{errors:?}"));
+                        create_simple_report((&enm.ident).spanned_into(self.module_location), "Multiple conflicting Diplomat enum attributes, there can be at most one.".into(), format!("{errors:?}"));
                     }
                 };
                 self.custom_types_by_name.insert(ident, custom_enum);
@@ -275,7 +275,9 @@ impl<'a> ModuleBuilder<'a> {
                             impl_item_vec.push(ImplItem::Fn(f.clone()));
                         }
                         ImplItem::Macro(mac) => {
-                            let mut items = self.mod_macros.evaluate_impl_item_macro(mac);
+                            let mut items = self
+                                .mod_macros
+                                .evaluate_impl_item_macro(mac, self.module_location);
                             impl_item_vec.append(&mut items);
                         }
                         _ => {}
@@ -295,11 +297,13 @@ impl<'a> ModuleBuilder<'a> {
                             .attrs
                             .iter()
                             .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                        assert!(
-                            is_public || !has_diplomat_attrs,
-                            "Non-public method with diplomat attrs found: {self_ident}::{}",
-                            m.sig.ident
-                        );
+                        if !is_public && has_diplomat_attrs {
+                            create_simple_report(
+                                (&m.sig.ident).spanned_into(self.module_location),
+                                "Found non-public method with diplomat attrs".into(),
+                                "Remove #[diplomat::*] attributes.".into(),
+                            );
+                        }
                         is_public
                     })
                     .map(|m| {
@@ -357,7 +361,9 @@ impl<'a> ModuleBuilder<'a> {
                         );
                     }
                 } else {
-                    let items = self.mod_macros.evaluate_item_macro(mac);
+                    let items = self
+                        .mod_macros
+                        .evaluate_item_macro(mac, self.module_location);
                     for i in items {
                         self.add(&i);
                     }
@@ -369,11 +375,13 @@ impl<'a> ModuleBuilder<'a> {
                     .attrs
                     .iter()
                     .any(|a| a.path().segments.iter().next().unwrap().ident == "diplomat");
-                assert!(
-                    is_public || !has_diplomat_attrs,
-                    "Non-public function with diplomat attrs found: {}",
-                    f.sig.ident
-                );
+                if !is_public && has_diplomat_attrs {
+                    create_simple_report(
+                        (&f.sig.ident).spanned_into(self.module_location),
+                        "Found non-public method with diplomat attrs".into(),
+                        "Remove #[diplomat::*] attributes.".into(),
+                    );
+                }
                 if is_public {
                     let parent_attrs = self
                         .impl_parent_attrs

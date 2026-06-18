@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::ast::idents::IntoWithSpan;
-use crate::ast::logging::create_report;
+use crate::ast::logging::create_simple_report;
 use crate::ast::SpanLocation;
 
 use super::docs::Docs;
@@ -29,7 +29,7 @@ impl Enum {
             // Assuming all enums cannot have lifetimes? We don't even have a
             // `lifetimes` field. If we change our minds we can adjust this later
             // and update the `CustomType::lifetimes` API accordingly.
-            create_report(
+            create_simple_report(
                 (&enm.ident).spanned_into(module_location),
                 "Enums cannot have generic parameters.".into(),
                 "Suggestion: remove generics".into(),
@@ -48,7 +48,7 @@ impl Enum {
                 .iter()
                 .map(|v| {
                     if !matches!(v.fields, syn::Fields::Unit) {
-                        create_report(
+                        create_simple_report(
                             (&v.ident).spanned_into(module_location),
                             "Enums cannot have fields, we only support C-like enums".into(),
                             "Remove field variant".into(),
@@ -64,7 +64,7 @@ impl Enum {
                             if let Ok(syn::Lit::Int(ref lit_int)) = lit {
                                 lit_int.base10_parse::<isize>().unwrap()
                             } else {
-                                create_report(
+                                create_simple_report(
                                     (&v.ident).spanned_into(module_location),
                                     "Enum discriminants must be constant integers".into(),
                                     "Expected discriminant to be a constant integer".into(),

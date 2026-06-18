@@ -147,24 +147,29 @@ impl fmt::Display for Ident {
 
 impl FromWithSpan<&syn::Ident> for Ident {
     fn spanned_from(ident: &syn::Ident, span_location: &SpanLocation) -> Self {
-        let span = ident.span();
-        let start = span.start();
-        let end = span.end();
         Self(
             Cow::from(ident.to_string()),
-            Some(Span {
-                start: LineColumn {
-                    line: start.line,
-                    col: start.column,
-                },
-                end: LineColumn {
-                    line: end.line,
-                    col: end.column,
-                },
-                range: span.byte_range(),
-                span_location: span_location.clone(),
-            }),
+            Some(ident.span().spanned_into(span_location)),
         )
+    }
+}
+
+impl FromWithSpan<proc_macro2::Span> for Span {
+    fn spanned_from(span: proc_macro2::Span, span_location: &SpanLocation) -> Self {
+        let start = span.start();
+        let end = span.end();
+        Span {
+            start: LineColumn {
+                line: start.line,
+                col: start.column,
+            },
+            end: LineColumn {
+                line: end.line,
+                col: end.column,
+            },
+            range: span.byte_range(),
+            span_location: span_location.clone(),
+        }
     }
 }
 

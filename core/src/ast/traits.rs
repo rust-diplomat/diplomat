@@ -144,7 +144,7 @@ impl Trait {
             name: (&trt.ident).spanned_into(module_location),
             methods: trait_fcts,
             docs: Docs::from_attrs(&trt.attrs),
-            lifetimes: LifetimeEnv::from_trait(trt), // TODO
+            lifetimes: LifetimeEnv::from_trait(trt, module_location), // TODO
             attrs,
             is_send,
             is_sync,

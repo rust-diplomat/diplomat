@@ -3,6 +3,7 @@ use syn::ItemFn;
 
 use crate::ast::{
     idents::{FromWithSpan, IntoWithSpan},
+    logging::{create_report, AstReport, ContextLocation},
     Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, TypeName,
 };
 
@@ -28,8 +29,16 @@ impl Function {
         module_location: &SpanLocation,
     ) -> Function {
         let ident: Ident = (&f.sig.ident).spanned_into(module_location);
-        if f.sig.receiver().is_some() {
-            panic!("Cannot use self parameter in free function {ident:?}")
+        if let Some(recv) = f.sig.receiver() {
+            create_report(AstReport::new(
+                "Cannot use self parameter in free function.".into(),
+                f.sig.ident.span().spanned_into(module_location),
+                "".into(),
+                vec![ContextLocation::new(
+                    recv.self_token.span.spanned_into(module_location),
+                    "Suggestion: remove self param.".into(),
+                )],
+            ));
         }
 
         let mut attrs = parent_attrs.clone();
