@@ -462,6 +462,21 @@ mod test {
         }
     }
 
+    fn run_dotnet(tk_stream: proc_macro2::TokenStream) -> (HashMap<String, String>, Vec<String>) {
+        let tcx = new_tcx(tk_stream);
+        let mut config = Config::default();
+        config.shared_config.lib_name = Some("somelib".to_string());
+        let docs_url_gen = DocsUrlGenerator::with_base_urls(None, HashMap::new());
+
+        let (files, errors) = super::run(&tcx, &config, &docs_url_gen);
+        let errors = errors
+            .take_all()
+            .into_iter()
+            .map(|e| format!("{}: {}", e.0, e.1))
+            .collect();
+        (files.take_files(), errors)
+    }
+
     #[test]
     fn native_lib_and_dylib_name_config_aliases_are_supported() {
         let mut native_lib_config = super::DotnetConfig::default();
@@ -501,22 +516,86 @@ mod test {
             }
         };
 
-        let tcx = new_tcx(tk_stream);
-        let mut config = Config::default();
-        config.shared_config.lib_name = Some("somelib".to_string());
-        let docs_url_gen = DocsUrlGenerator::with_base_urls(None, HashMap::new());
-
-        let (_files, errors) = super::run(&tcx, &config, &docs_url_gen);
-        let errors = errors.take_all();
+        let (_files, errors) = run_dotnet(tk_stream);
         assert_eq!(errors.len(), 1);
-        let error_str = errors
-            .iter()
-            .map(|e| format!("{}: {}", e.0, e.1))
-            .collect::<Vec<_>>()
-            .join("\n");
+        let error_str = errors.join("\n");
         assert!(
-            errors[0].1.contains("borrowed opaque error"),
+            errors[0].contains("borrowed opaque error"),
             "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    #[test]
+    fn borrowed_opaque_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo;
+
+                impl Foo {
+                    pub fn borrowed_return<'a>(&'a self) -> &'a Self {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1);
+        let error_str = errors.join("\n");
+        assert!(
+            errors[0].contains("borrowed opaque return"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    #[test]
+    fn lifetime_carrying_owned_return_gets_warning() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a DiplomatStr);
+
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a DiplomatStr) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+
+                #[diplomat::opaque]
+                pub struct OwnedFoo;
+
+                impl OwnedFoo {
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains("Lifetime: the returned native-backed value may borrow"),
+            "expected lifetime warning in Foo.cs:\n{foo}"
+        );
+
+        let owned_foo = files
+            .get("OwnedFoo.cs")
+            .expect("expected OwnedFoo.cs output");
+        assert!(
+            !owned_foo.contains("Lifetime: the returned native-backed value may borrow"),
+            "unexpected lifetime warning in OwnedFoo.cs:\n{owned_foo}"
         );
     }
 }

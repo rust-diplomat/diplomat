@@ -396,11 +396,11 @@ pub(super) struct ReturnLowering {
 /// idiomatic-layer render data — templates pick the side they want.
 ///
 /// TODO(dotnet): Model Rust lifetime relationships on the public C# surface.
-/// Today `MethodInfo` only carries call-shape data. Borrowed inputs are lowered
-/// as call-scoped borrows (pinned arrays, temporary slices, opaque handles), but
-/// no lifetime information is preserved to tie a returned object/handle to an
-/// input or receiver. Borrowed opaque returns/errors are rejected until the
-/// backend has a non-owning wrapper/lifetime strategy.
+/// Today borrowed inputs are lowered as call-scoped borrows (pinned arrays,
+/// temporary slices, opaque handles), but the generated C# does not enforce
+/// Rust lifetime edges. Borrowed opaque returns/errors are rejected until the
+/// backend has a non-owning wrapper/lifetime strategy; lifetime-carrying owned
+/// returns are documented so callers know they must preserve backing storage.
 #[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
@@ -412,6 +412,7 @@ pub(super) struct MethodInfo<'ctx> {
     pub(super) static_kw: &'static str,
     pub(super) inputs: DotnetInputs,
     pub(super) return_type: DotnetReturnType,
+    pub(super) lifetime_warning: bool,
     /// `Some` iff this method returns `Result<T, E>` with a concrete `E`.
     /// Templates branch on `{% if let Some(info) = method.error_info %}` —
     /// no separate `is_fallible()` predicate needed.
@@ -433,6 +434,7 @@ pub(super) struct PropertyInfo {
     pub(super) property_type: String,
     pub(super) getter: Option<String>,
     pub(super) setter: Option<String>,
+    pub(super) lifetime_warning: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -618,12 +620,14 @@ pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo
                 property_type: accessor.property_type.clone(),
                 getter: None,
                 setter: None,
+                lifetime_warning: false,
             });
 
         match accessor.kind {
             PropertyAccessorKind::Getter => {
                 property.property_type = accessor.property_type.clone();
                 property.getter = Some(method.name.clone());
+                property.lifetime_warning |= method.lifetime_warning;
             }
             PropertyAccessorKind::Setter => {
                 property.setter = Some(method.name.clone());
@@ -673,6 +677,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
+        let lifetime_warning = self.has_borrowed_output_lifetime(method);
 
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
@@ -680,10 +685,28 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             static_kw,
             inputs,
             return_type,
+            lifetime_warning,
             error_info,
             option_info,
             property_accessor,
         })
+    }
+
+    fn has_borrowed_output_lifetime(&self, method: &'tcx Method) -> bool {
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
+
+        if let Some(param_self) = method.param_self.as_ref() {
+            visitor.visit_param(&param_self.ty.clone().into(), "this");
+        }
+
+        for param in &method.params {
+            visitor.visit_param(&param.ty, param.name.as_str());
+        }
+
+        visitor
+            .borrow_map()
+            .into_values()
+            .any(|borrow_info| !borrow_info.incoming_edges.is_empty())
     }
 
     fn property_accessor(

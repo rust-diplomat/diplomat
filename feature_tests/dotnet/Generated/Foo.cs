@@ -28,6 +28,10 @@ public partial class Foo: IDisposable
     /// <returns>
     /// A <c>Foo</c> allocated on Rust side.
     /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
     public static Foo New(string x)
     {
         unsafe
@@ -44,6 +48,10 @@ public partial class Foo: IDisposable
     /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
     /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
     public Bar GetBar()
     {
         unsafe
