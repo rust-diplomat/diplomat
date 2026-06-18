@@ -25,6 +25,21 @@ public partial class Float64Vec: IDisposable
     {
         _inner = handle;
     }
+    /// <returns>
+    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// </returns>
+    public static Float64Vec NewF64BeBytes(byte[] v)
+    {
+        unsafe
+        {
+            if (v == null) throw new ArgumentNullException(nameof(v));
+            fixed (byte* vPtr = v)
+            {
+                Raw.Float64Vec* result = Raw.Float64Vec.NewF64BeBytes(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)v.Length });
+                return new Float64Vec(result);
+            }
+        }
+    }
     public override string ToString()
     {
         unsafe

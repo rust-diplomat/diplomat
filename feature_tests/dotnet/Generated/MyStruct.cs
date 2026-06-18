@@ -73,7 +73,7 @@ public partial struct MyStruct
             var result = Raw.MyStruct.ReturnsZstResult();
             if (!result.IsOk)
             {
-                throw new MyZstException(MyZst.FromFFI(result.Err));
+                throw new MyZstException(new MyZst());
             }
             return;
         }
@@ -87,7 +87,7 @@ public partial struct MyStruct
             var result = Raw.MyStruct.FailsZstResult();
             if (!result.IsOk)
             {
-                throw new MyZstException(MyZst.FromFFI(result.Err));
+                throw new MyZstException(new MyZst());
             }
             return;
         }

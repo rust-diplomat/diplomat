@@ -8,7 +8,7 @@
 use std::fmt::Display;
 
 use askama::Template;
-use diplomat_core::hir::{OutputOnly, Type};
+use diplomat_core::hir::{OutputOnly, ReturnableStructDef, Type};
 
 use crate::dotnet::r#gen::{
     method::{DotnetReturnType, RawExpr},
@@ -158,7 +158,10 @@ pub(crate) enum DotnetErrorType {
     Primitive(DotnetPrimitives),
     Opaque(String),
     Enum(String),
-    Struct(String),
+    Struct {
+        name: String,
+        is_zst: bool,
+    },
     /// `Result<T, ()>` — unit error type. No payload on the wire; the
     /// idiomatic body throws a built-in `InvalidOperationException` on
     /// the failure arm.
@@ -219,7 +222,15 @@ impl DotnetErrorType {
             }
             Type::Struct(struct_path) => {
                 let struct_name = ctx.returnable_struct_name(struct_path)?;
-                DotnetErrorType::Struct(struct_name)
+                let is_zst = match struct_path.resolve(ctx.tcx) {
+                    ReturnableStructDef::Struct(def) => def.fields.is_empty(),
+                    ReturnableStructDef::OutStruct(def) => def.fields.is_empty(),
+                    _ => false,
+                };
+                DotnetErrorType::Struct {
+                    name: struct_name,
+                    is_zst,
+                }
             }
             other => {
                 ctx.errors
@@ -235,8 +246,16 @@ impl DotnetErrorType {
             // Unit err has no payload on the wire; templates gate emission
             // on `is_unit()` so this string is never inserted.
             DotnetErrorType::Unit => String::new(),
+            DotnetErrorType::Struct { is_zst: true, .. } => String::new(),
             _ => self.to_string(),
         }
+    }
+
+    pub(crate) fn has_payload(&self) -> bool {
+        !matches!(
+            self,
+            DotnetErrorType::Unit | DotnetErrorType::Struct { is_zst: true, .. }
+        )
     }
 
     /// C# type stored for this error arm inside a result
@@ -276,7 +295,7 @@ impl DotnetErrorType {
             DotnetErrorType::Primitive(p) => format!("primitive:{p}"),
             DotnetErrorType::Opaque(name) => format!("opaque:{name}"),
             DotnetErrorType::Enum(name) => format!("enum:{name}"),
-            DotnetErrorType::Struct(name) => format!("struct:{name}"),
+            DotnetErrorType::Struct { name, .. } => format!("struct:{name}"),
             DotnetErrorType::Unit => "unit".to_string(),
         }
     }
@@ -310,7 +329,13 @@ impl DotnetErrorType {
     fn exception_inner_expr(&self, raw_expr: RawExpr) -> String {
         match self {
             DotnetErrorType::Opaque(name) => format!("new {name}({raw_expr})"),
-            DotnetErrorType::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
+            DotnetErrorType::Struct { name, is_zst: true } => format!("new {name}()"),
+            DotnetErrorType::Struct {
+                name,
+                is_zst: false,
+            } => {
+                format!("{name}.FromFFI({raw_expr})")
+            }
             DotnetErrorType::Unit => unreachable!("unit errors do not carry an inner value"),
             DotnetErrorType::Primitive(_) | DotnetErrorType::Enum(_) => raw_expr.to_string(),
         }
@@ -321,9 +346,8 @@ impl Display for DotnetErrorType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DotnetErrorType::Primitive(p) => write!(f, "{}", p),
-            DotnetErrorType::Opaque(name)
-            | DotnetErrorType::Enum(name)
-            | DotnetErrorType::Struct(name) => write!(f, "{}", name),
+            DotnetErrorType::Opaque(name) | DotnetErrorType::Enum(name) => write!(f, "{}", name),
+            DotnetErrorType::Struct { name, .. } => write!(f, "{}", name),
             // Unit's name appears in the `{Ok}{Err}` result-struct key
             // (so two methods returning `Result<T1, ()>` and `Result<T2, ()>`
             // map to distinct struct names) but never reaches a generated

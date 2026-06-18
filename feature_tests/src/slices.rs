@@ -121,7 +121,6 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor = "f64BeBytes")]
-        #[diplomat::attr(dotnet, disable)]
         pub fn new_f64_be_bytes(v: &[DiplomatByte]) -> Box<Float64Vec> {
             Box::new(Self(
                 v.chunks_exact(8)

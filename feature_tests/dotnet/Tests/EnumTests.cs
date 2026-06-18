@@ -16,4 +16,20 @@ public class EnumTests
         Assert.Equal(1, (int)MyEnum.D);
         Assert.Equal(2, (int)MyEnum.E);
     }
+
+    [Fact]
+    public void DefaultEnum_HasExpectedDiscriminants()
+    {
+        Assert.Equal(0, (int)DefaultEnum.A);
+        Assert.Equal(1, (int)DefaultEnum.B);
+    }
+
+    [Fact]
+    public void ContiguousEnum_HasExpectedDiscriminants()
+    {
+        Assert.Equal(0, (int)ContiguousEnum.C);
+        Assert.Equal(1, (int)ContiguousEnum.D);
+        Assert.Equal(2, (int)ContiguousEnum.E);
+        Assert.Equal(3, (int)ContiguousEnum.F);
+    }
 }

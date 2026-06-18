@@ -31,4 +31,16 @@ public class MyStructTests
     {
         Assert.Equal(42, MyStruct.NewOverload(42).E);
     }
+
+    [Fact]
+    public void ReturnsZstResult_MapsOkUnit()
+    {
+        MyStruct.ReturnsZstResult();
+    }
+
+    [Fact]
+    public void FailsZstResult_ThrowsZstException()
+    {
+        Assert.Throws<MyZstException>(() => MyStruct.FailsZstResult());
+    }
 }

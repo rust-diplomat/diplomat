@@ -1141,62 +1141,60 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     }
                 },
                 hir::Slice::Primitive(maybe_own, primitive_type) => match primitive_type {
-                    hir::PrimitiveType::Int(int_type) => match int_type {
-                        hir::IntType::U8 | hir::IntType::U32 => {
-                            let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
-                            let MaybeOwn::Borrow(borrow) = maybe_own else {
-                                self.errors.push_error(format!(
-                                    "[.NET backend] owned primitive slice not yet supported: \
-                                     {int_type:?} : {maybe_own:?}"
-                                ));
-                                return None;
-                            };
-
-                            let (element_type, ptr_type, immutable_class, mutable_class) =
-                                match int_type {
-                                    hir::IntType::U8 => {
-                                        ("byte", "byte", "DiplomatSliceU8", "DiplomatSliceMutU8")
-                                    }
-                                    hir::IntType::U32 => {
-                                        ("uint", "uint", "DiplomatSliceU32", "DiplomatSliceMutU32")
-                                    }
-                                    _ => unreachable!(),
-                                };
-
-                            let slice_class = match borrow.mutability {
-                                hir::Mutability::Mutable => mutable_class,
-                                hir::Mutability::Immutable => immutable_class,
-                            };
-
-                            InputLowering {
-                                raw_param: format!("{slice_class} {arg_name}"),
-                                idiomatic_param: format!("{element_type}[] {arg_name}"),
-                                raw_call_arg: format!(
-                                    "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
-                                ),
-                                // Non-optional slice param — null array is a
-                                // contract violation. Without this check the
-                                // `{arg_name}.Length` in the call arg throws a
-                                // bare `NullReferenceException` with no
-                                // parameter name.
-                                validation_statement: Some(format!(
-                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                                )),
-                                fix_statement: Some(format!(
-                                    "fixed ({ptr_type}* {ptr} = {arg_name})"
-                                )),
-                                to_bytes_statement: None,
-                                idiomatic_param_type: Some(format!("{element_type}[]")),
-                            }
-                        }
-                        _ => {
+                    hir::PrimitiveType::Byte
+                    | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::U32) => {
+                        let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
+                        let MaybeOwn::Borrow(borrow) = maybe_own else {
                             self.errors.push_error(format!(
-                                "[.NET backend] primitive slice not yet supported: \
-                                 {int_type:?} : {maybe_own:?}"
+                                "[.NET backend] owned primitive slice not yet supported: \
+                                 {primitive_type:?} : {maybe_own:?}"
                             ));
                             return None;
+                        };
+
+                        let (element_type, ptr_type, immutable_class, mutable_class) =
+                            match primitive_type {
+                                hir::PrimitiveType::Byte
+                                | hir::PrimitiveType::Int(hir::IntType::U8) => {
+                                    ("byte", "byte", "DiplomatSliceU8", "DiplomatSliceMutU8")
+                                }
+                                hir::PrimitiveType::Int(hir::IntType::U32) => {
+                                    ("uint", "uint", "DiplomatSliceU32", "DiplomatSliceMutU32")
+                                }
+                                _ => unreachable!(),
+                            };
+
+                        let slice_class = match borrow.mutability {
+                            hir::Mutability::Mutable => mutable_class,
+                            hir::Mutability::Immutable => immutable_class,
+                        };
+
+                        InputLowering {
+                            raw_param: format!("{slice_class} {arg_name}"),
+                            idiomatic_param: format!("{element_type}[] {arg_name}"),
+                            raw_call_arg: format!(
+                                "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
+                            ),
+                            // Non-optional slice param — null array is a
+                            // contract violation. Without this check the
+                            // `{arg_name}.Length` in the call arg throws a
+                            // bare `NullReferenceException` with no
+                            // parameter name.
+                            validation_statement: Some(format!(
+                                "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                            )),
+                            fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
+                            to_bytes_statement: None,
+                            idiomatic_param_type: Some(format!("{element_type}[]")),
                         }
-                    },
+                    }
+                    hir::PrimitiveType::Int(int_type) => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] primitive slice not yet supported: \
+                             {int_type:?} : {maybe_own:?}"
+                        ));
+                        return None;
+                    }
                     other => {
                         self.errors.push_error(format!(
                             "[.NET backend] primitive slice element type not yet supported: \

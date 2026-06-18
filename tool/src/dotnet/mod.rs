@@ -111,10 +111,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.utf16_strings = false;
     // `option` and `mutable_slices` are advertised but coverage is
     // narrower than the flag suggests:
-    //   - `mutable_slices`: only `&mut [u8]` and `&mut [u32]` lower today;
-    //     other primitive element types hit `unimplemented!()` in the
-    //     slice-primitive arm of `gen::method::lower_input`. Tracked in
-    //     code by the panic message "[.NET backend] primitive slice ...".
+    //   - `mutable_slices`: only `&mut [DiplomatByte]`, `&mut [u8]`, and
+    //     `&mut [u32]` lower today; other primitive element types report a
+    //     diagnostic in the slice-primitive arm of `gen::method::lower_input`.
     //   - `option`: works for primitive / enum / struct success values;
     //     non-primitive struct fields panic with a descriptive message
     //     during struct codegen.

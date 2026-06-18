@@ -9,6 +9,9 @@ namespace Somelib.Raw;
 internal partial struct Float64Vec
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "Float64Vec_new_f64_be_bytes", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern Float64Vec* NewF64BeBytes(DiplomatSliceU8 v);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Float64Vec_to_string", CallingConvention = CallingConvention.Cdecl)]
 internal static unsafe extern void ToString(Float64Vec* handle, DiplomatWriteable* writeable);
 
