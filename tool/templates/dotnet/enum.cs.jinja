@@ -1,0 +1,25 @@
+{#-
+  Minimal C# enum scaffold.
+
+  Uses only `enum_def` for now; as `DotnetFormatter` grows methods
+  (`fmt_type_name`, `fmt_enum_variant`, `fmt_docs`), revisit this
+  template to:
+    - route names through the formatter so reserved-word escaping
+      and casing rules kick in
+    - render `enum_def.docs` as XML doc comments
+    - emit attached methods from `methods`
+    - handle `#[diplomat::attr(*, rename = "...")]`
+
+  The underlying type is the C# default `int`, made explicit to match the
+  C ABI: a Diplomat enum crosses the boundary as a plain C `enum`
+  (`int`-width). `gen_enum` rejects any discriminant that doesn't fit `i32`,
+  so `: int` is always a faithful representation.
+-#}
+namespace {{ namespace }};
+
+public enum {{ name }} : int
+{
+{%- for variant in variants %}
+    {{ variant.name }} = {{ variant.discriminant }},
+{%- endfor %}
+}

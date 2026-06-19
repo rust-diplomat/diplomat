@@ -59,6 +59,10 @@ dependencies = ["test-kotlin-example", "test-kotlin-feature"]
 category = "Tests"
 dependencies = ["test-kotlin-feature-mvn"]
 
+[tasks.test-dotnet]
+category = "Tests"
+dependencies = ["test-dotnet-feature"]
+
 [tasks.test-nanobind]
 category = "Tests"
 dependencies = ["test-nanobind-feature"]
@@ -83,6 +87,7 @@ dependencies = [
     "test-dart-feature",
     "test-kotlin-feature",
     "test-nanobind-feature",
+    "test-dotnet-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -244,6 +249,17 @@ exit_on_error true
 exec --fail-on-error uvx --with feature_tests/nanobind --refresh-package somelib pytest feature_tests/nanobind/test/
 '''
 
+[tasks.test-dotnet-feature]
+category = "Tests"
+# build-feature produces the `diplomat_feature_tests` cdylib that the
+# generated [DllImport]s load; the csproj copies it next to the test binary.
+dependencies = ["build-feature"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+exec --fail-on-error dotnet test feature_tests/dotnet/Somelib.FeatureTests.csproj
+'''
+
 [tasks.check-c-example]
 category = "Tests"
 script_runner = "@duckscript"
@@ -392,6 +408,7 @@ dependencies = [
     "gen-dart-feature",
     "gen-kotlin-feature",
     "gen-nanobind-feature",
+    "gen-dotnet-feature",
 ]
 
 [tasks.gen-example]
@@ -403,6 +420,7 @@ dependencies = [
     "gen-demo-example",
     "gen-dart-example",
     "gen-kotlin-example",
+    "gen-dotnet-example",
 ]
 
 
@@ -423,6 +441,10 @@ dependencies = ["gen-kotlin-feature", "gen-kotlin-example"]
 [tasks.gen-js]
 category = "Code generation"
 dependencies = ["gen-js-feature", "gen-js-example"]
+
+[tasks.gen-dotnet]
+category = "Code generation"
+dependencies = ["gen-dotnet-feature", "gen-dotnet-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -506,6 +528,26 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic feature_tests dart lib/src
+'''
+
+[tasks.gen-dotnet-example]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic example dotnet Generated
+'''
+
+[tasks.gen-dotnet-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+# Only the Generated/ folder is overwritten; the hand-written test project
+# (Somelib.FeatureTests.csproj + Tests/) lives alongside it and is preserved.
+generate_generic feature_tests dotnet Generated
 '''
 
 [tasks.gen-dart-example]

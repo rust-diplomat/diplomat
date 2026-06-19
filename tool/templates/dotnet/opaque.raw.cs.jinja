@@ -1,0 +1,20 @@
+{#- Raw [DllImport] layer for opaque types. -#}
+using System;
+using System.Runtime.InteropServices;
+using {{ namespace }};
+using {{ namespace }}.Diplomat;
+
+namespace {{ namespace }}.Raw;
+
+[StructLayout(LayoutKind.Sequential)]
+internal partial struct {{ name }}
+{
+
+    {%- for method in methods %}
+
+    {% include "dotnet/raw_extern.cs.jinja" %}
+    {%- endfor %}
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "{{ dtor_abi_name }}", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern void Destroy({{ name }}* handle);
+}

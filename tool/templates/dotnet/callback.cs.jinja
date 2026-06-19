@@ -1,0 +1,65 @@
+{#- WIP — .NET callback support is incomplete. This template is paired
+    with tool/src/dotnet/gen/callback.rs; see that file's comment for
+    the outstanding work. Currently unreachable in practice because the
+    backend's `attr_support.callbacks` is `false`. #}
+using System;
+using System.Runtime.InteropServices;
+
+namespace {{ namespace }}.Diplomat;
+
+[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+internal delegate {{ return_type }} {{ run_delegate_name() }}({{ args }});
+
+[StructLayout(LayoutKind.Sequential)]
+internal readonly struct {{ name }}
+{
+    private delegate void DestructorDelegate(IntPtr callbackHandle);
+
+    private static readonly {{ run_delegate_name() }} s_runCallback = Invoke;
+    private static readonly DestructorDelegate s_destructor = Destroy;
+
+    internal readonly IntPtr CallbackHandle;
+    internal readonly IntPtr RunCallback;
+    internal readonly IntPtr Destructor;
+
+    internal {{ name }}(
+        IntPtr callbackHandle,
+        IntPtr runCallback,
+        IntPtr destructor
+    )
+    {
+        CallbackHandle = callbackHandle;
+        RunCallback = runCallback;
+        Destructor = destructor;
+    }
+
+    internal static {{ name }} FromDelegate({{ idiomatic_type }} callback)
+    {
+        if (callback == null)
+        {
+            throw new ArgumentNullException(nameof(callback));
+        }
+
+        GCHandle handle = GCHandle.Alloc(callback);
+        return new {{ name }}(
+            GCHandle.ToIntPtr(handle),
+            Marshal.GetFunctionPointerForDelegate(s_runCallback),
+            Marshal.GetFunctionPointerForDelegate(s_destructor)
+        );
+    }
+
+    private static {{ return_type }} Invoke(IntPtr callbackHandle{% if !callback_args.is_empty() %}, {{ callback_args }}{% endif %})
+    {
+        var callback = ({{ idiomatic_type }})GCHandle.FromIntPtr(callbackHandle).Target!;
+        {%- if return_type.is_void() %}
+        callback({{ callback_arg_names }});
+        {%- else %}
+        return callback({{ callback_arg_names }});
+        {%- endif %}
+    }
+
+    private static void Destroy(IntPtr callbackHandle)
+    {
+        GCHandle.FromIntPtr(callbackHandle).Free();
+    }
+}

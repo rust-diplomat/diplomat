@@ -245,6 +245,22 @@ jobs:
 
     - name: Test Dart
       run: cargo make test-dart
+  test-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: Install .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Test .NET
+      run: cargo make test-dotnet
   test-kotlin:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,22 @@
+using System;
+using System.Runtime.InteropServices;
+
+namespace Somelib.Raw;
+
+using Somelib;
+
+[StructLayout(LayoutKind.Sequential)]
+internal partial struct DiplomatResultRenamedStructWithAttrsUnit
+{
+    [StructLayout(LayoutKind.Explicit)]
+    private unsafe struct InnerUnion
+    {
+        [FieldOffset(0)] internal RenamedStructWithAttrs ok;
+    }
+
+    private InnerUnion _inner;
+
+    [MarshalAs(UnmanagedType.U1)]
+    public bool IsOk;
+    public RenamedStructWithAttrs Ok => IsOk ? _inner.ok : throw new InvalidOperationException("Result does not contain Ok value");
+}

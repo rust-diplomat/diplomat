@@ -1,0 +1,84 @@
+{#- Shared idiomatic method body — encoding setup, pin chain, raw call,
+    return wrap. The caller is responsible for the method declaration line,
+    the `unsafe { }` wrap, and (for opaque) the disposed check.
+
+    Body indent comes from `method.body_indent()`:
+      - 12 spaces normally (inside `unsafe { }` inside a class method)
+      - 16 spaces when the method has `fixed (...) { ... }` wrapping,
+        so the body reads as nested under the `fixed` line rather than
+        flush with it.
+
+    Validation / to-bytes / `fixed (...)` statements stay at the method-body
+    level (12 spaces) because they sit OUTSIDE the `fixed` block; only the
+    code inside the block uses `bi`.
+
+    Control tags below are indented to mirror C# nesting for readability.
+    Every tag uses the `{%-` left-trim, which removes the tag's own leading
+    whitespace AND the preceding line's newline, so the indentation is
+    purely cosmetic and does not reach the generated output.
+
+    Variables in scope (from the caller's `for method in methods` loop):
+      - method: MethodInfo
+      - name:   the owner type's bare C# name (e.g. "Color", "Point2D")
+-#}
+{%- let bi = method.body_indent() -%}
+{#- Validation (null / disposed checks) MUST precede the to-bytes encoding
+    step: a string param's `Encoding.UTF8.GetBytes(arg)` would otherwise
+    throw before our `ArgumentNullException(nameof(arg))` runs, surfacing
+    the wrong parameter name. No validation statement depends on a
+    to-bytes output, so this ordering is always safe. #}
+{%- for statement in method.inputs.validation_statements %}
+            {{ statement }}
+{%- endfor %}
+{%- for statement in method.inputs.to_bytes_statements %}
+            {{ statement }}
+{%- endfor %}
+{%- if !method.inputs.fix_statements.is_empty() %}
+    {%- for statement in method.inputs.fix_statements %}
+            {{ statement }}
+    {%- endfor %}
+            {
+{%- endif %}
+{%- if method.return_type.is_write() %}
+    {#- Write methods return `string`. Allocate the writer in this frame,
+        pass its address to Rust, read the buffer back, dispose. The
+        low-level DiplomatWriteable never appears on the public API.
+        try/finally guarantees the unmanaged buffer is freed even if the
+        raw call or ToUnicode() throws (the error-arm throw sits inside
+        the try; finally still runs). #}
+{{ bi }}DiplomatWriteable writeable = new DiplomatWriteable();
+{{ bi }}try
+{{ bi }}{
+    {%- if let Some(info) = method.error_info %}
+{{ bi }}    var result = Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
+{{ bi }}    if (!result.IsOk)
+{{ bi }}    {
+{{ bi }}        {{ info.throw_statement("result.Err") }}
+{{ bi }}    }
+    {%- else %}
+{{ bi }}    Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
+    {%- endif %}
+{{ bi }}    return writeable.ToUnicode();
+{{ bi }}}
+{{ bi }}finally
+{{ bi }}{
+{{ bi }}    writeable.Dispose();
+{{ bi }}}
+{%- else if let Some(info) = method.error_info %}
+{{ bi }}var result = {{ method.raw_call_expr(name) }};
+{{ bi }}if (!result.IsOk)
+{{ bi }}{
+{{ bi }}    {{ info.throw_statement("result.Err") }}
+{{ bi }}}
+{{ bi }}{{ method.success_return_statement("result.Ok") }}
+{%- else if method.return_type.is_void() %}
+{{ bi }}{{ method.raw_call_statement(name) }}
+{%- else if method.can_return_raw_call_directly() %}
+{{ bi }}{{ method.direct_raw_return_statement(name) }}
+{%- else %}
+{{ bi }}{{ method.success_result_declaration(name) }}
+{{ bi }}{{ method.success_return_statement("result") }}
+{%- endif %}
+{%- if !method.inputs.fix_statements.is_empty() %}
+            }
+{%- endif %}

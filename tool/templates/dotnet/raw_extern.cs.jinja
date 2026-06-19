@@ -1,0 +1,35 @@
+{#- Shared raw [DllImport] extern declaration. Four return-type cases:
+    - Write:              void return + trailing DiplomatWriteable* param
+    - Fallible:           DiplomatResult struct
+    - Option<value-type>: DiplomatOption struct (tagged)
+    - Option<Box<T>> / plain: just method.return_type.raw() (pointer
+                          nullable natively or no nullable concern)
+
+    Variables in scope (from the caller's `for method in methods` loop):
+      - method: MethodInfo
+    Caller wraps in: namespace + `Raw` partial class + owner partial struct.
+-#}
+[DllImport(DiplomatNativeLib.Name, EntryPoint = "{{ method.abi_name }}", CallingConvention = CallingConvention.Cdecl)]
+{%- if let Some(info) = method.error_info %}
+    {#- Fallible takes precedence over the Write check: `Result<DiplomatWrite,
+        E>` returns a result struct on the wire, with the writer as an
+        out-param appended via raw_params_with_writer. #}
+    {%- if method.return_type.is_write() %}
+internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.raw_params_with_writer() }});
+    {%- else %}
+internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.inputs.raw_params }});
+    {%- endif %}
+{%- else if method.return_type.is_write() %}
+internal static unsafe extern void {{ method.name }}({{ method.raw_params_with_writer() }});
+{%- else if let Some(opt) = method.option_info %}
+    {%- if let Some(opt_struct) = opt.raw_option_type %}
+internal static unsafe extern {{ opt_struct }} {{ method.name }}({{ method.inputs.raw_params }});
+    {%- else %}
+internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
+    {%- endif %}
+{%- else %}
+{%- if method.return_type.is_bool() %}
+[return: MarshalAs(UnmanagedType.U1)]
+{%- endif %}
+internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
+{%- endif %}
