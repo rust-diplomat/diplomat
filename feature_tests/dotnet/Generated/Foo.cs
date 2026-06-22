@@ -79,8 +79,9 @@ public partial class Foo: IDisposable
     /// A <c>Bar</c> allocated on Rust side.
     /// </returns>
     /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// Lifetime: this value borrows from the receiver or one or more inputs, which are kept
+    /// reachable for the garbage collector automatically. Disposing them (explicitly or via a
+    /// <c>using</c> block) while this value is still in use will invalidate it.
     /// </remarks>
     public Bar GetBar()
     {

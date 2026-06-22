@@ -38,6 +38,10 @@ public class BorrowSoundnessTests
         Assert.True(
             parentRef.IsAlive,
             "live BorrowChild must keep its borrowed-from BorrowParent alive");
+        // Prove the native pointer (not just the managed wrapper) survived:
+        // Get() reads back through the borrowed `&BorrowParent`, so a freed
+        // parent would surface as a use-after-free here.
+        Assert.Equal(42u, child.Get());
         GC.KeepAlive(child);
     }
 }

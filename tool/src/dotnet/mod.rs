@@ -28,9 +28,15 @@
 //!   generated `IDisposable` wrapper would `Destroy` a pointer Rust still
 //!   owns (double-free). Return `Box<T>` / `Option<Box<T>>` instead.
 //! * Lifetime-carrying owned returns (`Box<T<'a>>`) that borrow from `self` or
-//!   another opaque wrapper are generated with XML lifetime remarks. C# cannot
-//!   enforce the relationship, so the caller must keep the borrowed-from wrapper
-//!   alive and undisposed while the returned value is used.
+//!   another opaque wrapper are generated with **keep-alive edges**: the
+//!   returned wrapper stores a strong reference to each borrowed-from wrapper,
+//!   so the GC cannot collect (and `Destroy`) a parent while the borrower is
+//!   reachable. One hole remains that edges cannot close, because C# has no
+//!   borrow checker: explicitly `Dispose()`-ing (or `using`-scoping) a
+//!   borrowed-from wrapper while the borrower is still in use frees the native
+//!   memory early — a use-after-free the backend cannot statically prevent.
+//!   Borrows that flow into a non-opaque return (e.g. a by-value struct) are
+//!   rejected for now, since edges are only plumbed through opaque wrappers.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
@@ -579,7 +585,7 @@ mod test {
     }
 
     #[test]
-    fn lifetime_carrying_owned_return_borrowing_opaque_gets_warning() {
+    fn lifetime_carrying_owned_return_borrowing_opaque_gets_keep_alive_edge() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -591,6 +597,10 @@ mod test {
 
                 impl Parent {
                     pub fn child<'a>(&'a self) -> Box<Child<'a>> {
+                        unimplemented!()
+                    }
+
+                    pub fn child_of<'a>(hold: &'a Parent, nohold: &Parent) -> Box<Child<'a>> {
                         unimplemented!()
                     }
                 }
@@ -614,17 +624,25 @@ mod test {
         );
 
         let parent = files.get("Parent.cs").expect("expected Parent.cs output");
+        // A receiver-borrowing return roots `this`.
         assert!(
-            parent.contains("Lifetime: the returned native-backed value may borrow"),
-            "expected lifetime warning in Parent.cs:\n{parent}"
+            parent.contains("new Child(result, new object[] { this })"),
+            "expected keep-alive edge rooting the receiver in Parent.cs:\n{parent}"
+        );
+        // The edge analysis selects only the borrowed-from param: `child_of`
+        // ties the output to `hold`, so `hold` is rooted and `nohold` is not.
+        assert!(
+            parent.contains("new Child(result, new object[] { hold })"),
+            "expected keep-alive edge selecting only `hold` in Parent.cs:\n{parent}"
         );
 
+        // A non-borrowing owned return must not over-retain (would leak).
         let owned_foo = files
             .get("OwnedFoo.cs")
             .expect("expected OwnedFoo.cs output");
         assert!(
-            !owned_foo.contains("Lifetime: the returned native-backed value may borrow"),
-            "unexpected lifetime warning in OwnedFoo.cs:\n{owned_foo}"
+            !owned_foo.contains("new object[]"),
+            "non-borrowing return must not emit keep-alive edges in OwnedFoo.cs:\n{owned_foo}"
         );
     }
 }

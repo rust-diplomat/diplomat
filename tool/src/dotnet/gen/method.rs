@@ -747,6 +747,22 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let keep_alive_edges = self.borrowed_output_keep_alive_edges(method)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
+        // Keep-alive edges are only plumbed through the opaque-wrapper
+        // constructor. A non-opaque return (e.g. a by-value struct) that
+        // borrows from the receiver or an opaque parameter would have its
+        // edges silently dropped by `idiomatic_value_expr`, leaving the
+        // borrowed-from object unrooted — a use-after-free. Reject such
+        // returns until struct edge-plumbing exists rather than emit unsound
+        // code. (Opaque returns, incl. `Option<Box<T>>`, carry the edges.)
+        if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
+            self.errors.push_error(format!(
+                "[.NET backend] return value of type `{return_type}` borrows from the receiver \
+                 or an opaque parameter; keep-alive edges are only supported for opaque (`Box<T>`) \
+                 returns today. Return an opaque, or disable this API for .NET."
+            ));
+            return None;
+        }
+
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
             name: method_name,
