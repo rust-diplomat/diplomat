@@ -9,6 +9,7 @@ import com.sun.jna.Structure
 internal interface TraitWrapperLib: Library {
     fun TraitWrapper_test_with_trait(t: DiplomatTrait_TesterTrait_Wrapper_Native, x: Int): Int
     fun TraitWrapper_test_trait_with_struct(t: DiplomatTrait_TesterTrait_Wrapper_Native): Int
+    fun TraitWrapper_test_taking_mutable_opaque(t: DiplomatTrait_TesterTrait_Wrapper_Native): Unit
 }
 
 internal class TraitWrapperNative: Structure(), Structure.ByValue {
@@ -88,6 +89,13 @@ class TraitWrapper (var cantBeEmpty: Boolean) {
             
             val returnVal = lib.TraitWrapper_test_trait_with_struct(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
             return (returnVal)
+        }
+        @JvmStatic
+        
+        fun testTakingMutableOpaque(t: TesterTrait): Unit {
+            
+            val returnVal = lib.TraitWrapper_test_taking_mutable_opaque(DiplomatTrait_TesterTrait_Wrapper.fromTraitObj(t).nativeStruct);
+            
         }
     }
     internal fun toNative(): TraitWrapperNative {
