@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OptionOpaqueChar: IDisposable
 {
-    private unsafe Raw.OptionOpaqueChar* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OptionOpaqueChar*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OptionOpaqueCharHandle : SafeHandle
+    {
+        public OptionOpaqueCharHandle() : base(IntPtr.Zero, true) { }
+
+        public OptionOpaqueCharHandle(Raw.OptionOpaqueChar* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OptionOpaqueChar.Destroy((Raw.OptionOpaqueChar*)handle);
+            return true;
+        }
+    }
+
+    private readonly OptionOpaqueCharHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OptionOpaqueChar</c> from a raw handle.
@@ -23,17 +48,18 @@ public partial class OptionOpaqueChar: IDisposable
     /// </remarks>
     internal unsafe OptionOpaqueChar(Raw.OptionOpaqueChar* handle)
     {
-        _inner = handle;
+        _handle = new OptionOpaqueCharHandle(handle, ownsHandle: true);
     }
     public void AssertChar(uint ch)
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaqueChar");
             }
-            Raw.OptionOpaqueChar.AssertChar(_inner, ch);
+            Raw.OptionOpaqueChar.AssertChar(AsFFI(), ch);
+            GC.KeepAlive(this);
         }
     }
 
@@ -42,30 +68,19 @@ public partial class OptionOpaqueChar: IDisposable
     /// </summary>
     internal unsafe Raw.OptionOpaqueChar* AsFFI()
     {
-        return _inner;
+        return (Raw.OptionOpaqueChar*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OptionOpaqueChar.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OptionOpaqueChar()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RefListParameter: IDisposable
 {
-    private unsafe Raw.RefListParameter* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RefListParameter*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RefListParameterHandle : SafeHandle
+    {
+        public RefListParameterHandle() : base(IntPtr.Zero, true) { }
+
+        public RefListParameterHandle(Raw.RefListParameter* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RefListParameter.Destroy((Raw.RefListParameter*)handle);
+            return true;
+        }
+    }
+
+    private readonly RefListParameterHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RefListParameter</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RefListParameter: IDisposable
     /// </remarks>
     internal unsafe RefListParameter(Raw.RefListParameter* handle)
     {
-        _inner = handle;
+        _handle = new RefListParameterHandle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class RefListParameter: IDisposable
     /// </summary>
     internal unsafe Raw.RefListParameter* AsFFI()
     {
-        return _inner;
+        return (Raw.RefListParameter*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RefListParameter.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RefListParameter()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

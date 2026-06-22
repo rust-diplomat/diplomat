@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RefList: IDisposable
 {
-    private unsafe Raw.RefList* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RefList*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RefListHandle : SafeHandle
+    {
+        public RefListHandle() : base(IntPtr.Zero, true) { }
+
+        public RefListHandle(Raw.RefList* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RefList.Destroy((Raw.RefList*)handle);
+            return true;
+        }
+    }
+
+    private readonly RefListHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RefList</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RefList: IDisposable
     /// </remarks>
     internal unsafe RefList(Raw.RefList* handle)
     {
-        _inner = handle;
+        _handle = new RefListHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>RefList</c> allocated on Rust side.
@@ -40,6 +65,7 @@ public partial class RefList: IDisposable
             Raw.RefListParameter* dataRaw = data.AsFFI();
             if (dataRaw == null) throw new ObjectDisposedException(nameof(RefListParameter));
             Raw.RefList* result = Raw.RefList.Node(dataRaw);
+            GC.KeepAlive(data);
             return new RefList(result);
         }
     }
@@ -49,30 +75,19 @@ public partial class RefList: IDisposable
     /// </summary>
     internal unsafe Raw.RefList* AsFFI()
     {
-        return _inner;
+        return (Raw.RefList*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RefList.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RefList()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

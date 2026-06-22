@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedTestOpaque: IDisposable
 {
-    private unsafe Raw.RenamedTestOpaque* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedTestOpaque*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedTestOpaqueHandle : SafeHandle
+    {
+        public RenamedTestOpaqueHandle() : base(IntPtr.Zero, true) { }
+
+        public RenamedTestOpaqueHandle(Raw.RenamedTestOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedTestOpaque.Destroy((Raw.RenamedTestOpaque*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedTestOpaqueHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedTestOpaque</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedTestOpaque: IDisposable
     /// </remarks>
     internal unsafe RenamedTestOpaque(Raw.RenamedTestOpaque* handle)
     {
-        _inner = handle;
+        _handle = new RenamedTestOpaqueHandle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class RenamedTestOpaque: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedTestOpaque* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedTestOpaque*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedTestOpaque.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedTestOpaque()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

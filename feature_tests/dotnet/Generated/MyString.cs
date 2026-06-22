@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class MyString: IDisposable
 {
-    private unsafe Raw.MyString* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.MyString*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class MyStringHandle : SafeHandle
+    {
+        public MyStringHandle() : base(IntPtr.Zero, true) { }
+
+        public MyStringHandle(Raw.MyString* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.MyString.Destroy((Raw.MyString*)handle);
+            return true;
+        }
+    }
+
+    private readonly MyStringHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>MyString</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class MyString: IDisposable
     /// </remarks>
     internal unsafe MyString(Raw.MyString* handle)
     {
-        _inner = handle;
+        _handle = new MyStringHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
@@ -61,7 +86,7 @@ public partial class MyString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("MyString");
             }
@@ -69,7 +94,8 @@ public partial class MyString: IDisposable
             byte[] newStrBytes = System.Text.Encoding.UTF8.GetBytes(newStr);
             fixed (byte* newStrPtr = newStrBytes)
             {
-                Raw.MyString.SetStr(_inner, new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStrBytes.Length });
+                Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStrBytes.Length });
+                GC.KeepAlive(this);
             }
         }
     }
@@ -77,14 +103,15 @@ public partial class MyString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("MyString");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.MyString.GetStr(_inner, &writeable);
+                Raw.MyString.GetStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -120,30 +147,19 @@ public partial class MyString: IDisposable
     /// </summary>
     internal unsafe Raw.MyString* AsFFI()
     {
-        return _inner;
+        return (Raw.MyString*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.MyString.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~MyString()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

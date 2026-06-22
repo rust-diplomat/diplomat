@@ -10,7 +10,32 @@ namespace {{ namespace }};
 
 public partial class {{ name }}: IDisposable
 {
-    private unsafe Raw.{{ name }}* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.{{ name }}*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class {{ name }}Handle : SafeHandle
+    {
+        public {{ name }}Handle() : base(IntPtr.Zero, true) { }
+
+        public {{ name }}Handle(Raw.{{ name }}* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.{{ name }}.Destroy((Raw.{{ name }}*)handle);
+            return true;
+        }
+    }
+
+    private readonly {{ name }}Handle _handle;
     {%- for property in properties %}
 
 {%- if property.lifetime_warning %}
@@ -47,7 +72,7 @@ public partial class {{ name }}: IDisposable
     /// </remarks>
     internal unsafe {{ name }}(Raw.{{ name }}* handle)
     {
-        _inner = handle;
+        _handle = new {{ name }}Handle(handle, ownsHandle: true);
     }
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
         methods surface as `string` — the writer is allocated, filled, and
@@ -73,7 +98,7 @@ public partial class {{ name }}: IDisposable
         unsafe
         {
 {%- if method.is_instance() %}
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("{{ name }}");
             }
@@ -88,30 +113,19 @@ public partial class {{ name }}: IDisposable
     /// </summary>
     internal unsafe Raw.{{ name }}* AsFFI()
     {
-        return _inner;
+        return (Raw.{{ name }}*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.{{ name }}.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~{{ name }}()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

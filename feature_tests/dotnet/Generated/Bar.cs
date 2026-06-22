@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Bar: IDisposable
 {
-    private unsafe Raw.Bar* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Bar*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class BarHandle : SafeHandle
+    {
+        public BarHandle() : base(IntPtr.Zero, true) { }
+
+        public BarHandle(Raw.Bar* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Bar.Destroy((Raw.Bar*)handle);
+            return true;
+        }
+    }
+
+    private readonly BarHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Bar</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class Bar: IDisposable
     /// </remarks>
     internal unsafe Bar(Raw.Bar* handle)
     {
-        _inner = handle;
+        _handle = new BarHandle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class Bar: IDisposable
     /// </summary>
     internal unsafe Raw.Bar* AsFFI()
     {
-        return _inner;
+        return (Raw.Bar*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Bar.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Bar()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

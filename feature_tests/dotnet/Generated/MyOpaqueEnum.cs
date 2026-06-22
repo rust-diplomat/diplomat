@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class MyOpaqueEnum: IDisposable
 {
-    private unsafe Raw.MyOpaqueEnum* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.MyOpaqueEnum*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class MyOpaqueEnumHandle : SafeHandle
+    {
+        public MyOpaqueEnumHandle() : base(IntPtr.Zero, true) { }
+
+        public MyOpaqueEnumHandle(Raw.MyOpaqueEnum* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.MyOpaqueEnum.Destroy((Raw.MyOpaqueEnum*)handle);
+            return true;
+        }
+    }
+
+    private readonly MyOpaqueEnumHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>MyOpaqueEnum</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class MyOpaqueEnum: IDisposable
     /// </remarks>
     internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle)
     {
-        _inner = handle;
+        _handle = new MyOpaqueEnumHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>MyOpaqueEnum</c> allocated on Rust side.
@@ -40,14 +65,15 @@ public partial class MyOpaqueEnum: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("MyOpaqueEnum");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.MyOpaqueEnum.ToString(_inner, &writeable);
+                Raw.MyOpaqueEnum.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -62,30 +88,19 @@ public partial class MyOpaqueEnum: IDisposable
     /// </summary>
     internal unsafe Raw.MyOpaqueEnum* AsFFI()
     {
-        return _inner;
+        return (Raw.MyOpaqueEnum*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.MyOpaqueEnum.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~MyOpaqueEnum()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class AttrOpaque1Renamed: IDisposable
 {
-    private unsafe Raw.AttrOpaque1Renamed* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.AttrOpaque1Renamed*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class AttrOpaque1RenamedHandle : SafeHandle
+    {
+        public AttrOpaque1RenamedHandle() : base(IntPtr.Zero, true) { }
+
+        public AttrOpaque1RenamedHandle(Raw.AttrOpaque1Renamed* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.AttrOpaque1Renamed.Destroy((Raw.AttrOpaque1Renamed*)handle);
+            return true;
+        }
+    }
+
+    private readonly AttrOpaque1RenamedHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>AttrOpaque1Renamed</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     /// </remarks>
     internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle)
     {
-        _inner = handle;
+        _handle = new AttrOpaque1RenamedHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>AttrOpaque1Renamed</c> allocated on Rust side.
@@ -65,47 +90,54 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            return Raw.AttrOpaque1Renamed.method_renamed(_inner);
+            var result = Raw.AttrOpaque1Renamed.method_renamed(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public byte Abirenamed()
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            return Raw.AttrOpaque1Renamed.Abirenamed(_inner);
+            var result = Raw.AttrOpaque1Renamed.Abirenamed(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public void UseUnnamespaced(Unnamespaced un)
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
             if (un == null) throw new ArgumentNullException(nameof(un));
             Raw.Unnamespaced* unRaw = un.AsFFI();
             if (unRaw == null) throw new ObjectDisposedException(nameof(Unnamespaced));
-            Raw.AttrOpaque1Renamed.UseUnnamespaced(_inner, unRaw);
+            Raw.AttrOpaque1Renamed.UseUnnamespaced(AsFFI(), unRaw);
+            GC.KeepAlive(this);
+            GC.KeepAlive(un);
         }
     }
     public void UseNamespaced(RenamedAttrEnum n)
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            Raw.AttrOpaque1Renamed.UseNamespaced(_inner, n);
+            Raw.AttrOpaque1Renamed.UseNamespaced(AsFFI(), n);
+            GC.KeepAlive(this);
         }
     }
 
@@ -114,30 +146,19 @@ public partial class AttrOpaque1Renamed: IDisposable
     /// </summary>
     internal unsafe Raw.AttrOpaque1Renamed* AsFFI()
     {
-        return _inner;
+        return (Raw.AttrOpaque1Renamed*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.AttrOpaque1Renamed.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~AttrOpaque1Renamed()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

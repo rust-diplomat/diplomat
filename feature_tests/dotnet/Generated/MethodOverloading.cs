@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class MethodOverloading: IDisposable
 {
-    private unsafe Raw.MethodOverloading* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.MethodOverloading*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class MethodOverloadingHandle : SafeHandle
+    {
+        public MethodOverloadingHandle() : base(IntPtr.Zero, true) { }
+
+        public MethodOverloadingHandle(Raw.MethodOverloading* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.MethodOverloading.Destroy((Raw.MethodOverloading*)handle);
+            return true;
+        }
+    }
+
+    private readonly MethodOverloadingHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>MethodOverloading</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class MethodOverloading: IDisposable
     /// </remarks>
     internal unsafe MethodOverloading(Raw.MethodOverloading* handle)
     {
-        _inner = handle;
+        _handle = new MethodOverloadingHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>MethodOverloading</c> allocated on Rust side.
@@ -64,30 +89,19 @@ public partial class MethodOverloading: IDisposable
     /// </summary>
     internal unsafe Raw.MethodOverloading* AsFFI()
     {
-        return _inner;
+        return (Raw.MethodOverloading*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.MethodOverloading.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~MethodOverloading()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OpaqueThinIter: IDisposable
 {
-    private unsafe Raw.OpaqueThinIter* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OpaqueThinIter*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OpaqueThinIterHandle : SafeHandle
+    {
+        public OpaqueThinIterHandle() : base(IntPtr.Zero, true) { }
+
+        public OpaqueThinIterHandle(Raw.OpaqueThinIter* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OpaqueThinIter.Destroy((Raw.OpaqueThinIter*)handle);
+            return true;
+        }
+    }
+
+    private readonly OpaqueThinIterHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThinIter</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OpaqueThinIter: IDisposable
     /// </remarks>
     internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle)
     {
-        _inner = handle;
+        _handle = new OpaqueThinIterHandle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class OpaqueThinIter: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueThinIter* AsFFI()
     {
-        return _inner;
+        return (Raw.OpaqueThinIter*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OpaqueThinIter.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OpaqueThinIter()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

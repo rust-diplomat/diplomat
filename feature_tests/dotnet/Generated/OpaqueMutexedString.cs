@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OpaqueMutexedString: IDisposable
 {
-    private unsafe Raw.OpaqueMutexedString* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OpaqueMutexedString*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OpaqueMutexedStringHandle : SafeHandle
+    {
+        public OpaqueMutexedStringHandle() : base(IntPtr.Zero, true) { }
+
+        public OpaqueMutexedStringHandle(Raw.OpaqueMutexedString* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OpaqueMutexedString.Destroy((Raw.OpaqueMutexedString*)handle);
+            return true;
+        }
+    }
+
+    private readonly OpaqueMutexedStringHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OpaqueMutexedString</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OpaqueMutexedString: IDisposable
     /// </remarks>
     internal unsafe OpaqueMutexedString(Raw.OpaqueMutexedString* handle)
     {
-        _inner = handle;
+        _handle = new OpaqueMutexedStringHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>OpaqueMutexedString</c> allocated on Rust side.
@@ -40,22 +65,25 @@ public partial class OpaqueMutexedString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            Raw.OpaqueMutexedString.Change(_inner, number);
+            Raw.OpaqueMutexedString.Change(AsFFI(), number);
+            GC.KeepAlive(this);
         }
     }
     public nuint GetLenAndAdd(nuint other)
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            return Raw.OpaqueMutexedString.GetLenAndAdd(_inner, other);
+            var result = Raw.OpaqueMutexedString.GetLenAndAdd(AsFFI(), other);
+            GC.KeepAlive(this);
+            return result;
         }
     }
     /// <returns>
@@ -65,11 +93,12 @@ public partial class OpaqueMutexedString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            Raw.Utf16Wrap* result = Raw.OpaqueMutexedString.Wrapper(_inner);
+            Raw.Utf16Wrap* result = Raw.OpaqueMutexedString.Wrapper(AsFFI());
+            GC.KeepAlive(this);
             return new Utf16Wrap(result);
         }
     }
@@ -77,11 +106,13 @@ public partial class OpaqueMutexedString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            return Raw.OpaqueMutexedString.ToUnsignedFromUnsigned(_inner, input);
+            var result = Raw.OpaqueMutexedString.ToUnsignedFromUnsigned(AsFFI(), input);
+            GC.KeepAlive(this);
+            return result;
         }
     }
 
@@ -90,30 +121,19 @@ public partial class OpaqueMutexedString: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueMutexedString* AsFFI()
     {
-        return _inner;
+        return (Raw.OpaqueMutexedString*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OpaqueMutexedString.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OpaqueMutexedString()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

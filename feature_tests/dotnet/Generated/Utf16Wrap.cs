@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Utf16Wrap: IDisposable
 {
-    private unsafe Raw.Utf16Wrap* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Utf16Wrap*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class Utf16WrapHandle : SafeHandle
+    {
+        public Utf16WrapHandle() : base(IntPtr.Zero, true) { }
+
+        public Utf16WrapHandle(Raw.Utf16Wrap* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Utf16Wrap.Destroy((Raw.Utf16Wrap*)handle);
+            return true;
+        }
+    }
+
+    private readonly Utf16WrapHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Utf16Wrap</c> from a raw handle.
@@ -23,20 +48,21 @@ public partial class Utf16Wrap: IDisposable
     /// </remarks>
     internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle)
     {
-        _inner = handle;
+        _handle = new Utf16WrapHandle(handle, ownsHandle: true);
     }
     public string GetDebugStr()
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Utf16Wrap");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Utf16Wrap.GetDebugStr(_inner, &writeable);
+                Raw.Utf16Wrap.GetDebugStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -51,30 +77,19 @@ public partial class Utf16Wrap: IDisposable
     /// </summary>
     internal unsafe Raw.Utf16Wrap* AsFFI()
     {
-        return _inner;
+        return (Raw.Utf16Wrap*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Utf16Wrap.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Utf16Wrap()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

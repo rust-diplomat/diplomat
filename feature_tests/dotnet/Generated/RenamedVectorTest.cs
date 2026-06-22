@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedVectorTest: IDisposable
 {
-    private unsafe Raw.RenamedVectorTest* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedVectorTest*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedVectorTestHandle : SafeHandle
+    {
+        public RenamedVectorTestHandle() : base(IntPtr.Zero, true) { }
+
+        public RenamedVectorTestHandle(Raw.RenamedVectorTest* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedVectorTest.Destroy((Raw.RenamedVectorTest*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedVectorTestHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedVectorTest</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedVectorTest: IDisposable
     /// </remarks>
     internal unsafe RenamedVectorTest(Raw.RenamedVectorTest* handle)
     {
-        _inner = handle;
+        _handle = new RenamedVectorTestHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>RenamedVectorTest</c> allocated on Rust side.
@@ -40,22 +65,25 @@ public partial class RenamedVectorTest: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            return Raw.RenamedVectorTest.Len(_inner);
+            var result = Raw.RenamedVectorTest.Len(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public double? Get(nuint idx)
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            var result = Raw.RenamedVectorTest.Get(_inner, idx);
+            var result = Raw.RenamedVectorTest.Get(AsFFI(), idx);
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (double?)null;
         }
     }
@@ -63,11 +91,12 @@ public partial class RenamedVectorTest: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            Raw.RenamedVectorTest.Push(_inner, value);
+            Raw.RenamedVectorTest.Push(AsFFI(), value);
+            GC.KeepAlive(this);
         }
     }
 
@@ -76,30 +105,19 @@ public partial class RenamedVectorTest: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedVectorTest* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedVectorTest*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedVectorTest.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedVectorTest()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

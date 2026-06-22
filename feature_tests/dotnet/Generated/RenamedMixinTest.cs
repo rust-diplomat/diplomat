@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedMixinTest: IDisposable
 {
-    private unsafe Raw.RenamedMixinTest* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedMixinTest*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedMixinTestHandle : SafeHandle
+    {
+        public RenamedMixinTestHandle() : base(IntPtr.Zero, true) { }
+
+        public RenamedMixinTestHandle(Raw.RenamedMixinTest* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedMixinTest.Destroy((Raw.RenamedMixinTest*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedMixinTestHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedMixinTest</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedMixinTest: IDisposable
     /// </remarks>
     internal unsafe RenamedMixinTest(Raw.RenamedMixinTest* handle)
     {
-        _inner = handle;
+        _handle = new RenamedMixinTestHandle(handle, ownsHandle: true);
     }
     public static string Hello()
     {
@@ -47,30 +72,19 @@ public partial class RenamedMixinTest: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedMixinTest* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedMixinTest*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedMixinTest.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedMixinTest()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

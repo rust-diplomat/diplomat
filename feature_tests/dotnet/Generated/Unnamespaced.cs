@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Unnamespaced: IDisposable
 {
-    private unsafe Raw.Unnamespaced* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Unnamespaced*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class UnnamespacedHandle : SafeHandle
+    {
+        public UnnamespacedHandle() : base(IntPtr.Zero, true) { }
+
+        public UnnamespacedHandle(Raw.Unnamespaced* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Unnamespaced.Destroy((Raw.Unnamespaced*)handle);
+            return true;
+        }
+    }
+
+    private readonly UnnamespacedHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Unnamespaced</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class Unnamespaced: IDisposable
     /// </remarks>
     internal unsafe Unnamespaced(Raw.Unnamespaced* handle)
     {
-        _inner = handle;
+        _handle = new UnnamespacedHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>Unnamespaced</c> allocated on Rust side.
@@ -40,14 +65,16 @@ public partial class Unnamespaced: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Unnamespaced");
             }
             if (n == null) throw new ArgumentNullException(nameof(n));
             Raw.AttrOpaque1Renamed* nRaw = n.AsFFI();
             if (nRaw == null) throw new ObjectDisposedException(nameof(AttrOpaque1Renamed));
-            Raw.Unnamespaced.UseNamespaced(_inner, nRaw);
+            Raw.Unnamespaced.UseNamespaced(AsFFI(), nRaw);
+            GC.KeepAlive(this);
+            GC.KeepAlive(n);
         }
     }
 
@@ -56,30 +83,19 @@ public partial class Unnamespaced: IDisposable
     /// </summary>
     internal unsafe Raw.Unnamespaced* AsFFI()
     {
-        return _inner;
+        return (Raw.Unnamespaced*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Unnamespaced.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Unnamespaced()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

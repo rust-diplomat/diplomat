@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Opaque: IDisposable
 {
-    private unsafe Raw.Opaque* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Opaque*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OpaqueHandle : SafeHandle
+    {
+        public OpaqueHandle() : base(IntPtr.Zero, true) { }
+
+        public OpaqueHandle(Raw.Opaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Opaque.Destroy((Raw.Opaque*)handle);
+            return true;
+        }
+    }
+
+    private readonly OpaqueHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Opaque</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class Opaque: IDisposable
     /// </remarks>
     internal unsafe Opaque(Raw.Opaque* handle)
     {
-        _inner = handle;
+        _handle = new OpaqueHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
@@ -72,14 +97,15 @@ public partial class Opaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Opaque");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Opaque.GetDebugStr(_inner, &writeable);
+                Raw.Opaque.GetDebugStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -92,11 +118,12 @@ public partial class Opaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Opaque");
             }
-            Raw.Opaque.AssertStruct(_inner, s.AsFFI());
+            Raw.Opaque.AssertStruct(AsFFI(), s.AsFFI());
+            GC.KeepAlive(this);
         }
     }
     public static nuint ReturnsUsize()
@@ -120,30 +147,19 @@ public partial class Opaque: IDisposable
     /// </summary>
     internal unsafe Raw.Opaque* AsFFI()
     {
-        return _inner;
+        return (Raw.Opaque*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Opaque.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Opaque()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

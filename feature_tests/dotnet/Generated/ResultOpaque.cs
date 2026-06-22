@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class ResultOpaque: IDisposable
 {
-    private unsafe Raw.ResultOpaque* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.ResultOpaque*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class ResultOpaqueHandle : SafeHandle
+    {
+        public ResultOpaqueHandle() : base(IntPtr.Zero, true) { }
+
+        public ResultOpaqueHandle(Raw.ResultOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.ResultOpaque.Destroy((Raw.ResultOpaque*)handle);
+            return true;
+        }
+    }
+
+    private readonly ResultOpaqueHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>ResultOpaque</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class ResultOpaque: IDisposable
     /// </remarks>
     internal unsafe ResultOpaque(Raw.ResultOpaque* handle)
     {
-        _inner = handle;
+        _handle = new ResultOpaqueHandle(handle, ownsHandle: true);
     }
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
@@ -148,11 +173,12 @@ public partial class ResultOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("ResultOpaque");
             }
-            Raw.ResultOpaque.AssertInteger(_inner, i);
+            Raw.ResultOpaque.AssertInteger(AsFFI(), i);
+            GC.KeepAlive(this);
         }
     }
 
@@ -161,30 +187,19 @@ public partial class ResultOpaque: IDisposable
     /// </summary>
     internal unsafe Raw.ResultOpaque* AsFFI()
     {
-        return _inner;
+        return (Raw.ResultOpaque*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.ResultOpaque.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~ResultOpaque()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

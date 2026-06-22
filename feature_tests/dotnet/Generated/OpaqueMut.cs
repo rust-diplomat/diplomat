@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OpaqueMut: IDisposable
 {
-    private unsafe Raw.OpaqueMut* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OpaqueMut*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OpaqueMutHandle : SafeHandle
+    {
+        public OpaqueMutHandle() : base(IntPtr.Zero, true) { }
+
+        public OpaqueMutHandle(Raw.OpaqueMut* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OpaqueMut.Destroy((Raw.OpaqueMut*)handle);
+            return true;
+        }
+    }
+
+    private readonly OpaqueMutHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OpaqueMut</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OpaqueMut: IDisposable
     /// </remarks>
     internal unsafe OpaqueMut(Raw.OpaqueMut* handle)
     {
-        _inner = handle;
+        _handle = new OpaqueMutHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>OpaqueMut</c> allocated on Rust side.
@@ -42,30 +67,19 @@ public partial class OpaqueMut: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueMut* AsFFI()
     {
-        return _inner;
+        return (Raw.OpaqueMut*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OpaqueMut.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OpaqueMut()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

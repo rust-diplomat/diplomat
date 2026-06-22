@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OptionOpaque: IDisposable
 {
-    private unsafe Raw.OptionOpaque* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OptionOpaque*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OptionOpaqueHandle : SafeHandle
+    {
+        public OptionOpaqueHandle() : base(IntPtr.Zero, true) { }
+
+        public OptionOpaqueHandle(Raw.OptionOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OptionOpaque.Destroy((Raw.OptionOpaque*)handle);
+            return true;
+        }
+    }
+
+    private readonly OptionOpaqueHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OptionOpaque</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OptionOpaque: IDisposable
     /// </remarks>
     internal unsafe OptionOpaque(Raw.OptionOpaque* handle)
     {
-        _inner = handle;
+        _handle = new OptionOpaqueHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
@@ -51,11 +76,12 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionIsize(_inner);
+            var result = Raw.OptionOpaque.OptionIsize(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (nint?)null;
         }
     }
@@ -63,11 +89,12 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionUsize(_inner);
+            var result = Raw.OptionOpaque.OptionUsize(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (nuint?)null;
         }
     }
@@ -75,11 +102,12 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionI32(_inner);
+            var result = Raw.OptionOpaque.OptionI32(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (int?)null;
         }
     }
@@ -87,11 +115,12 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionU32(_inner);
+            var result = Raw.OptionOpaque.OptionU32(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (uint?)null;
         }
     }
@@ -99,11 +128,12 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            Raw.OptionOpaque.AssertInteger(_inner, i);
+            Raw.OptionOpaque.AssertInteger(AsFFI(), i);
+            GC.KeepAlive(this);
         }
     }
     public static bool OptionOpaqueArgument(OptionOpaque? arg)
@@ -112,7 +142,9 @@ public partial class OptionOpaque: IDisposable
         {
             Raw.OptionOpaque* argRaw = arg == null ? null : arg.AsFFI();
             if (arg != null && argRaw == null) throw new ObjectDisposedException(nameof(OptionOpaque));
-            return Raw.OptionOpaque.OptionOpaqueArgument(argRaw);
+            var result = Raw.OptionOpaque.OptionOpaqueArgument(argRaw);
+            GC.KeepAlive(arg);
+            return result;
         }
     }
 
@@ -121,30 +153,19 @@ public partial class OptionOpaque: IDisposable
     /// </summary>
     internal unsafe Raw.OptionOpaque* AsFFI()
     {
-        return _inner;
+        return (Raw.OptionOpaque*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OptionOpaque.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OptionOpaque()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

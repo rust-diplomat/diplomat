@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Two: IDisposable
 {
-    private unsafe Raw.Two* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Two*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class TwoHandle : SafeHandle
+    {
+        public TwoHandle() : base(IntPtr.Zero, true) { }
+
+        public TwoHandle(Raw.Two* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Two.Destroy((Raw.Two*)handle);
+            return true;
+        }
+    }
+
+    private readonly TwoHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Two</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class Two: IDisposable
     /// </remarks>
     internal unsafe Two(Raw.Two* handle)
     {
-        _inner = handle;
+        _handle = new TwoHandle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class Two: IDisposable
     /// </summary>
     internal unsafe Raw.Two* AsFFI()
     {
-        return _inner;
+        return (Raw.Two*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Two.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Two()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

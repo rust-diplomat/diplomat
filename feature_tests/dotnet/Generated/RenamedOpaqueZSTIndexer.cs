@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedOpaqueZSTIndexer: IDisposable
 {
-    private unsafe Raw.RenamedOpaqueZSTIndexer* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedOpaqueZSTIndexer*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedOpaqueZSTIndexerHandle : SafeHandle
+    {
+        public RenamedOpaqueZSTIndexerHandle() : base(IntPtr.Zero, true) { }
+
+        public RenamedOpaqueZSTIndexerHandle(Raw.RenamedOpaqueZSTIndexer* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedOpaqueZSTIndexer.Destroy((Raw.RenamedOpaqueZSTIndexer*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedOpaqueZSTIndexerHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedOpaqueZSTIndexer</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     /// </remarks>
     internal unsafe RenamedOpaqueZSTIndexer(Raw.RenamedOpaqueZSTIndexer* handle)
     {
-        _inner = handle;
+        _handle = new RenamedOpaqueZSTIndexerHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>RenamedOpaqueZSTIndexer</c> allocated on Rust side.
@@ -43,11 +68,12 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedOpaqueZSTIndexer");
             }
-            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(_inner, idx);
+            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(AsFFI(), idx);
+            GC.KeepAlive(this);
             return result == null ? null : new RenamedOpaqueZSTIndexer(result);
         }
     }
@@ -57,30 +83,19 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedOpaqueZSTIndexer* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedOpaqueZSTIndexer*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedOpaqueZSTIndexer.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedOpaqueZSTIndexer()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

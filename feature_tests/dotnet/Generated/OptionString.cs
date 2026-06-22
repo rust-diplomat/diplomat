@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OptionString: IDisposable
 {
-    private unsafe Raw.OptionString* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OptionString*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OptionStringHandle : SafeHandle
+    {
+        public OptionStringHandle() : base(IntPtr.Zero, true) { }
+
+        public OptionStringHandle(Raw.OptionString* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OptionString.Destroy((Raw.OptionString*)handle);
+            return true;
+        }
+    }
+
+    private readonly OptionStringHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OptionString</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OptionString: IDisposable
     /// </remarks>
     internal unsafe OptionString(Raw.OptionString* handle)
     {
-        _inner = handle;
+        _handle = new OptionStringHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>OptionString</c> allocated on Rust side.
@@ -46,14 +71,15 @@ public partial class OptionString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OptionString");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                var result = Raw.OptionString.Write(_inner, &writeable);
+                var result = Raw.OptionString.Write(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 if (!result.IsOk)
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");
@@ -72,30 +98,19 @@ public partial class OptionString: IDisposable
     /// </summary>
     internal unsafe Raw.OptionString* AsFFI()
     {
-        return _inner;
+        return (Raw.OptionString*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OptionString.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OptionString()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

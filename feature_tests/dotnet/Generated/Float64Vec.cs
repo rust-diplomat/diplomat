@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class Float64Vec: IDisposable
 {
-    private unsafe Raw.Float64Vec* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Float64Vec*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class Float64VecHandle : SafeHandle
+    {
+        public Float64VecHandle() : base(IntPtr.Zero, true) { }
+
+        public Float64VecHandle(Raw.Float64Vec* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Float64Vec.Destroy((Raw.Float64Vec*)handle);
+            return true;
+        }
+    }
+
+    private readonly Float64VecHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Float64Vec</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class Float64Vec: IDisposable
     /// </remarks>
     internal unsafe Float64Vec(Raw.Float64Vec* handle)
     {
-        _inner = handle;
+        _handle = new Float64VecHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>Float64Vec</c> allocated on Rust side.
@@ -44,14 +69,15 @@ public partial class Float64Vec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Float64Vec.ToString(_inner, &writeable);
+                Raw.Float64Vec.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -64,11 +90,12 @@ public partial class Float64Vec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
-            var result = Raw.Float64Vec.Get(_inner, i);
+            var result = Raw.Float64Vec.Get(AsFFI(), i);
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (double?)null;
         }
     }
@@ -78,30 +105,19 @@ public partial class Float64Vec: IDisposable
     /// </summary>
     internal unsafe Raw.Float64Vec* AsFFI()
     {
-        return _inner;
+        return (Raw.Float64Vec*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Float64Vec.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Float64Vec()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

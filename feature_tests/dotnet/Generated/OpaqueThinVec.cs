@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class OpaqueThinVec: IDisposable
 {
-    private unsafe Raw.OpaqueThinVec* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.OpaqueThinVec*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class OpaqueThinVecHandle : SafeHandle
+    {
+        public OpaqueThinVecHandle() : base(IntPtr.Zero, true) { }
+
+        public OpaqueThinVecHandle(Raw.OpaqueThinVec* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.OpaqueThinVec.Destroy((Raw.OpaqueThinVec*)handle);
+            return true;
+        }
+    }
+
+    private readonly OpaqueThinVecHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThinVec</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class OpaqueThinVec: IDisposable
     /// </remarks>
     internal unsafe OpaqueThinVec(Raw.OpaqueThinVec* handle)
     {
-        _inner = handle;
+        _handle = new OpaqueThinVecHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
@@ -36,11 +61,12 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
-            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(_inner);
+            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
+            GC.KeepAlive(this);
             return new OpaqueThinIter(result);
         }
     }
@@ -48,11 +74,13 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
-            return Raw.OpaqueThinVec.Len(_inner);
+            var result = Raw.OpaqueThinVec.Len(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
 
@@ -61,30 +89,19 @@ public partial class OpaqueThinVec: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueThinVec* AsFFI()
     {
-        return _inner;
+        return (Raw.OpaqueThinVec*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.OpaqueThinVec.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~OpaqueThinVec()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

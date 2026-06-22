@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedNested2: IDisposable
 {
-    private unsafe Raw.RenamedNested2* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedNested2*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedNested2Handle : SafeHandle
+    {
+        public RenamedNested2Handle() : base(IntPtr.Zero, true) { }
+
+        public RenamedNested2Handle(Raw.RenamedNested2* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedNested2.Destroy((Raw.RenamedNested2*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedNested2Handle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedNested2</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedNested2: IDisposable
     /// </remarks>
     internal unsafe RenamedNested2(Raw.RenamedNested2* handle)
     {
-        _inner = handle;
+        _handle = new RenamedNested2Handle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class RenamedNested2: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedNested2* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedNested2*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedNested2.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedNested2()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

@@ -10,7 +10,32 @@ namespace Somelib;
 
 public partial class RenamedAttrOpaque2: IDisposable
 {
-    private unsafe Raw.RenamedAttrOpaque2* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.RenamedAttrOpaque2*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class RenamedAttrOpaque2Handle : SafeHandle
+    {
+        public RenamedAttrOpaque2Handle() : base(IntPtr.Zero, true) { }
+
+        public RenamedAttrOpaque2Handle(Raw.RenamedAttrOpaque2* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.RenamedAttrOpaque2.Destroy((Raw.RenamedAttrOpaque2*)handle);
+            return true;
+        }
+    }
+
+    private readonly RenamedAttrOpaque2Handle _handle;
 
     /// <summary>
     /// Creates a managed <c>RenamedAttrOpaque2</c> from a raw handle.
@@ -23,7 +48,7 @@ public partial class RenamedAttrOpaque2: IDisposable
     /// </remarks>
     internal unsafe RenamedAttrOpaque2(Raw.RenamedAttrOpaque2* handle)
     {
-        _inner = handle;
+        _handle = new RenamedAttrOpaque2Handle(handle, ownsHandle: true);
     }
 
     /// <summary>
@@ -31,30 +56,19 @@ public partial class RenamedAttrOpaque2: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedAttrOpaque2* AsFFI()
     {
-        return _inner;
+        return (Raw.RenamedAttrOpaque2*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.RenamedAttrOpaque2.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~RenamedAttrOpaque2()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }
