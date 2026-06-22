@@ -38,6 +38,14 @@ public partial class Utf16Wrap: IDisposable
     private readonly Utf16WrapHandle _handle;
 
     /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here prevents the GC from collecting
+    /// (and finalizing -> Destroy) a borrowed-from parent while this value is
+    /// still alive. Empty for values that borrow from nothing.
+    /// </summary>
+    private readonly object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>Utf16Wrap</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -49,6 +57,23 @@ public partial class Utf16Wrap: IDisposable
     internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle)
     {
         _handle = new Utf16WrapHandle(handle, ownsHandle: true);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>Utf16Wrap</c> from a raw handle, retaining
+    /// strong references to the wrappers it borrows from (its keep-alive
+    /// edges) so they outlive this value.
+    /// </summary>
+    /// <remarks>
+    /// Still owns the raw box (<c>ownsHandle: true</c>); the edges only keep
+    /// the borrowed-from objects GC-reachable so they are not collected and
+    /// finalized (-> Destroy) while this value is alive.
+    /// </remarks>
+    internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle, object[] edges)
+    {
+        _handle = new Utf16WrapHandle(handle, ownsHandle: true);
+        _edges = edges;
     }
     public string GetDebugStr()
     {

@@ -38,6 +38,14 @@ public partial class OpaqueThinVec: IDisposable
     private readonly OpaqueThinVecHandle _handle;
 
     /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here prevents the GC from collecting
+    /// (and finalizing -> Destroy) a borrowed-from parent while this value is
+    /// still alive. Empty for values that borrow from nothing.
+    /// </summary>
+    private readonly object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>OpaqueThinVec</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -49,6 +57,23 @@ public partial class OpaqueThinVec: IDisposable
     internal unsafe OpaqueThinVec(Raw.OpaqueThinVec* handle)
     {
         _handle = new OpaqueThinVecHandle(handle, ownsHandle: true);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>OpaqueThinVec</c> from a raw handle, retaining
+    /// strong references to the wrappers it borrows from (its keep-alive
+    /// edges) so they outlive this value.
+    /// </summary>
+    /// <remarks>
+    /// Still owns the raw box (<c>ownsHandle: true</c>); the edges only keep
+    /// the borrowed-from objects GC-reachable so they are not collected and
+    /// finalized (-> Destroy) while this value is alive.
+    /// </remarks>
+    internal unsafe OpaqueThinVec(Raw.OpaqueThinVec* handle, object[] edges)
+    {
+        _handle = new OpaqueThinVecHandle(handle, ownsHandle: true);
+        _edges = edges;
     }
     /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
@@ -67,7 +92,7 @@ public partial class OpaqueThinVec: IDisposable
             }
             Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
             GC.KeepAlive(this);
-            return new OpaqueThinIter(result);
+            return new OpaqueThinIter(result, new object[] { this });
         }
     }
     public nuint Len()

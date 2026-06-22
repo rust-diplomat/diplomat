@@ -38,6 +38,14 @@ public partial class One: IDisposable
     private readonly OneHandle _handle;
 
     /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here prevents the GC from collecting
+    /// (and finalizing -> Destroy) a borrowed-from parent while this value is
+    /// still alive. Empty for values that borrow from nothing.
+    /// </summary>
+    private readonly object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>One</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -49,6 +57,23 @@ public partial class One: IDisposable
     internal unsafe One(Raw.One* handle)
     {
         _handle = new OneHandle(handle, ownsHandle: true);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>One</c> from a raw handle, retaining
+    /// strong references to the wrappers it borrows from (its keep-alive
+    /// edges) so they outlive this value.
+    /// </summary>
+    /// <remarks>
+    /// Still owns the raw box (<c>ownsHandle: true</c>); the edges only keep
+    /// the borrowed-from objects GC-reachable so they are not collected and
+    /// finalized (-> Destroy) while this value is alive.
+    /// </remarks>
+    internal unsafe One(Raw.One* handle, object[] edges)
+    {
+        _handle = new OneHandle(handle, ownsHandle: true);
+        _edges = edges;
     }
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
@@ -70,7 +95,7 @@ public partial class One: IDisposable
             Raw.One* result = Raw.One.Transitivity(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { hold });
         }
     }
     /// <returns>
@@ -93,7 +118,7 @@ public partial class One: IDisposable
             Raw.One* result = Raw.One.Cycle(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { hold });
         }
     }
     /// <returns>
@@ -128,7 +153,7 @@ public partial class One: IDisposable
             GC.KeepAlive(c);
             GC.KeepAlive(d);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { a, b, c, d });
         }
     }
     /// <returns>
@@ -151,7 +176,7 @@ public partial class One: IDisposable
             Raw.One* result = Raw.One.ReturnOutlivesParam(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { hold });
         }
     }
     /// <returns>
@@ -182,7 +207,7 @@ public partial class One: IDisposable
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result);
+            return new One(result, new object[] { top, left, right, bottom });
         }
     }
     /// <returns>
@@ -213,7 +238,7 @@ public partial class One: IDisposable
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result);
+            return new One(result, new object[] { left, bottom });
         }
     }
     /// <returns>
@@ -244,7 +269,7 @@ public partial class One: IDisposable
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result);
+            return new One(result, new object[] { right, bottom });
         }
     }
     /// <returns>
@@ -275,7 +300,7 @@ public partial class One: IDisposable
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result);
+            return new One(result, new object[] { bottom });
         }
     }
     /// <returns>
@@ -310,7 +335,7 @@ public partial class One: IDisposable
             GC.KeepAlive(c);
             GC.KeepAlive(d);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { a, b, c, d });
         }
     }
     /// <returns>
@@ -337,7 +362,7 @@ public partial class One: IDisposable
             GC.KeepAlive(explicitHold);
             GC.KeepAlive(implicitHold);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { explicitHold, implicitHold });
         }
     }
     /// <returns>
@@ -368,7 +393,7 @@ public partial class One: IDisposable
             GC.KeepAlive(implicit1);
             GC.KeepAlive(implicit2);
             GC.KeepAlive(nohold);
-            return new One(result);
+            return new One(result, new object[] { @explicit, implicit1, implicit2 });
         }
     }
 

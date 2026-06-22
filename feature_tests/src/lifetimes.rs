@@ -385,6 +385,35 @@ pub mod ffi {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
     }
+
+    // .NET borrow-soundness fixture: a constructible parent and a child opaque
+    // that borrows it (`Box<BorrowChild<'a>>` carries `'a` tied to the parent).
+    // `get()` reads back the parent's value so a use-after-free is observable.
+    #[diplomat::opaque]
+    pub struct BorrowParent(u32);
+
+    #[diplomat::opaque]
+    pub struct BorrowChild<'a>(&'a BorrowParent);
+
+    impl BorrowParent {
+        pub fn create(value: u32) -> Box<Self> {
+            Box::new(BorrowParent(value))
+        }
+
+        pub fn view<'a>(&'a self) -> Box<BorrowChild<'a>> {
+            Box::new(BorrowChild(self))
+        }
+
+        pub fn value(&self) -> u32 {
+            self.0
+        }
+    }
+
+    impl<'a> BorrowChild<'a> {
+        pub fn get(&self) -> u32 {
+            (self.0).0
+        }
+    }
 }
 
 #[derive(Copy, Clone)]

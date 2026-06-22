@@ -8,20 +8,20 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RenamedOpaqueZSTIndexer: IDisposable
+public partial class BorrowParent: IDisposable
 {
     /// <summary>
-    /// Owns the native <c>Raw.RenamedOpaqueZSTIndexer*</c> handle. Deriving from
+    /// Owns the native <c>Raw.BorrowParent*</c> handle. Deriving from
     /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
     /// finalizer) gives a once-only, thread-safe release and — through its
     /// critical finalizer — prevents the GC from freeing the pointer while a
     /// native call that reads it is still in flight.
     /// </summary>
-    internal sealed unsafe class RenamedOpaqueZSTIndexerHandle : SafeHandle
+    internal sealed unsafe class BorrowParentHandle : SafeHandle
     {
-        public RenamedOpaqueZSTIndexerHandle() : base(IntPtr.Zero, true) { }
+        public BorrowParentHandle() : base(IntPtr.Zero, true) { }
 
-        public RenamedOpaqueZSTIndexerHandle(Raw.RenamedOpaqueZSTIndexer* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        public BorrowParentHandle(Raw.BorrowParent* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
         {
             SetHandle((IntPtr)h);
         }
@@ -30,12 +30,12 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
 
         protected override bool ReleaseHandle()
         {
-            Raw.RenamedOpaqueZSTIndexer.Destroy((Raw.RenamedOpaqueZSTIndexer*)handle);
+            Raw.BorrowParent.Destroy((Raw.BorrowParent*)handle);
             return true;
         }
     }
 
-    private readonly RenamedOpaqueZSTIndexerHandle _handle;
+    private readonly BorrowParentHandle _handle;
 
     /// <summary>
     /// Strong references to the wrappers this value borrows from (its
@@ -46,7 +46,7 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     private readonly object[] _edges;
 
     /// <summary>
-    /// Creates a managed <c>RenamedOpaqueZSTIndexer</c> from a raw handle.
+    /// Creates a managed <c>BorrowParent</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -54,14 +54,14 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe RenamedOpaqueZSTIndexer(Raw.RenamedOpaqueZSTIndexer* handle)
+    internal unsafe BorrowParent(Raw.BorrowParent* handle)
     {
-        _handle = new RenamedOpaqueZSTIndexerHandle(handle, ownsHandle: true);
+        _handle = new BorrowParentHandle(handle, ownsHandle: true);
         _edges = System.Array.Empty<object>();
     }
 
     /// <summary>
-    /// Creates a managed <c>RenamedOpaqueZSTIndexer</c> from a raw handle, retaining
+    /// Creates a managed <c>BorrowParent</c> from a raw handle, retaining
     /// strong references to the wrappers it borrows from (its keep-alive
     /// edges) so they outlive this value.
     /// </summary>
@@ -70,45 +70,62 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
     /// the borrowed-from objects GC-reachable so they are not collected and
     /// finalized (-> Destroy) while this value is alive.
     /// </remarks>
-    internal unsafe RenamedOpaqueZSTIndexer(Raw.RenamedOpaqueZSTIndexer* handle, object[] edges)
+    internal unsafe BorrowParent(Raw.BorrowParent* handle, object[] edges)
     {
-        _handle = new RenamedOpaqueZSTIndexerHandle(handle, ownsHandle: true);
+        _handle = new BorrowParentHandle(handle, ownsHandle: true);
         _edges = edges;
     }
     /// <returns>
-    /// A <c>RenamedOpaqueZSTIndexer</c> allocated on Rust side.
+    /// A <c>BorrowParent</c> allocated on Rust side.
     /// </returns>
-    public static RenamedOpaqueZSTIndexer New()
+    public static BorrowParent Create(uint value)
     {
         unsafe
         {
-            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.New();
-            return new RenamedOpaqueZSTIndexer(result);
+            Raw.BorrowParent* result = Raw.BorrowParent.Create(value);
+            return new BorrowParent(result);
         }
     }
     /// <returns>
-    /// A <c>RenamedOpaqueZSTIndexer</c> allocated on Rust side.
+    /// A <c>BorrowChild</c> allocated on Rust side.
     /// </returns>
-    public RenamedOpaqueZSTIndexer? Index(nuint idx)
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public BorrowChild View()
     {
         unsafe
         {
             if (_handle.IsInvalid || _handle.IsClosed)
             {
-                throw new ObjectDisposedException("RenamedOpaqueZSTIndexer");
+                throw new ObjectDisposedException("BorrowParent");
             }
-            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(AsFFI(), idx);
+            Raw.BorrowChild* result = Raw.BorrowParent.View(AsFFI());
             GC.KeepAlive(this);
-            return result == null ? null : new RenamedOpaqueZSTIndexer(result);
+            return new BorrowChild(result, new object[] { this });
+        }
+    }
+    public uint Value()
+    {
+        unsafe
+        {
+            if (_handle.IsInvalid || _handle.IsClosed)
+            {
+                throw new ObjectDisposedException("BorrowParent");
+            }
+            var result = Raw.BorrowParent.Value(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.RenamedOpaqueZSTIndexer* AsFFI()
+    internal unsafe Raw.BorrowParent* AsFFI()
     {
-        return (Raw.RenamedOpaqueZSTIndexer*)_handle.DangerousGetHandle();
+        return (Raw.BorrowParent*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
