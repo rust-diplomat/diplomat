@@ -12,9 +12,9 @@ namespace Somelib.FeatureTests;
 // drop) mid-call — a UAF that the generated GC.KeepAlive(this) prevents. See
 // https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
 //
-// Only reproduces under optimized IL + JIT (-c Release -e
-// DOTNET_TieredCompilation=0); Debug roots locals conservatively, so this is
-// green there regardless — a manual reproducer, not a CI guard.
+// Needs optimized IL so the JIT drops the receiver at last use; the csproj
+// sets <Optimize>true</Optimize> for that, so the default `dotnet test` (CI)
+// reproduces it. Without it, Debug roots locals and the race can't surface.
 public class GcRaceTests
 {
     // AggressiveOptimization: Tier1's precise liveness drops `probe` at its
