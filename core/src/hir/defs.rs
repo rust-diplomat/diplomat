@@ -31,6 +31,7 @@ pub struct TraitDef {
     pub methods: Vec<Callback>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
+    pub usage : TypingUseInfo,
 }
 
 /// Structs that can only be returned from methods.
@@ -47,6 +48,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
     pub special_method_presence: SpecialMethodPresence,
+    pub usage : TypingUseInfo,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -69,6 +71,7 @@ pub struct OpaqueDef {
 
     /// The ABI name of the generated destructor
     pub dtor_abi_name: IdentBuf,
+    pub usage : TypingUseInfo,
 }
 
 /// The enum type.
@@ -81,6 +84,7 @@ pub struct EnumDef {
     pub methods: Vec<Method>,
     pub attrs: Attrs,
     pub special_method_presence: SpecialMethodPresence,
+    pub usage : TypingUseInfo,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -94,6 +98,14 @@ pub struct StructField<P: TyPosition = Everywhere> {
     pub name: IdentBuf,
     pub ty: Type<P>,
     pub attrs: Attrs,
+}
+
+/// Information on how a [`TypeDef`] is used across the HIR.
+#[derive(Debug, Clone, Default)]
+pub struct TypingUseInfo {
+    /// If the given type is ever used as a slice.
+    pub sliced : bool,
+    pub optioned : bool
 }
 
 /// A variant of an [`Enum`].
@@ -120,6 +132,7 @@ impl TraitDef {
             methods,
             attrs,
             lifetimes,
+            usage: Default::default(),
         }
     }
 }
@@ -142,6 +155,7 @@ impl<P: TyPosition> StructDef<P> {
             attrs,
             lifetimes,
             special_method_presence,
+            usage: TypingUseInfo::default(),
         }
     }
 }
@@ -164,6 +178,7 @@ impl OpaqueDef {
             lifetimes,
             special_method_presence,
             dtor_abi_name,
+            usage: Default::default(),
         }
     }
 }
@@ -184,6 +199,7 @@ impl EnumDef {
             methods,
             attrs,
             special_method_presence,
+            usage: Default::default(),
         }
     }
 }

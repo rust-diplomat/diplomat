@@ -9,9 +9,10 @@ use super::{
     TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
-use crate::hir::Docs;
+use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
+use std::collections::HashMap;
 use strck::IntoCk;
 
 /// An error from lowering the AST to the HIR.
@@ -115,6 +116,7 @@ pub(super) struct LoweringContext<'ast> {
     pub env: &'ast Env,
     pub attr_validator: Box<dyn AttributeValidator>,
     pub cfg: super::LoweringConfig,
+    pub type_usage : HashMap<SymbolId, TypingUseInfo>,
 }
 
 /// An item and the info needed to
@@ -204,6 +206,14 @@ impl<'ast> LoweringContext<'ast> {
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Function>>,
     ) -> Result<Vec<Method>, ()> {
         self.lower_all(ast_defs, Self::lower_function)
+    }
+
+    pub(super) fn update_usage<Ast : super::TypeUsage>(&self, defs : &mut Vec<Ast>) {
+        for (idx, d) in defs.iter_mut().enumerate() {
+            if let Some(u) = self.type_usage.get(&Ast::id_from_idx(idx)) {
+                d.set_usage(u.clone());
+            }
+        }
     }
 
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
@@ -1199,7 +1209,10 @@ impl<'ast> LoweringContext<'ast> {
 
                 let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
                 match inner {
-                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
+                    Type::Struct(st) => {
+                        self.usage_get_or_insert::<P>(st.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    },
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
@@ -1221,6 +1234,8 @@ impl<'ast> LoweringContext<'ast> {
                                 "Slice of opaque &[{type_name}] is unsupported by this backend."
                             )));
                         }
+                        
+                        self.usage_get_or_insert::<P>(op.tcx_id.into()).sliced = true;
 
                         // Currently made simple since right now we don't support borrowing from opaque slices in output: rust-diplomat.github.io/diplomat/attrs/slices.html#opaques
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
@@ -1579,7 +1594,10 @@ impl<'ast> LoweringContext<'ast> {
                 let inner =
                     self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
                 match inner {
-                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
+                    Type::Struct(st) => {
+                        self.usage_get_or_insert::<super::OutputOnly>(st.id().into()).sliced = true;
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    },
                     Type::Opaque(..) => {
                         self.errors.push(LoweringError::Other(
                             "Opaque slices are currently disallowed as an output type.".to_string(),
@@ -2114,5 +2132,12 @@ impl<'ast> LoweringContext<'ast> {
             .collect::<Result<_, ()>>()?;
 
         Ok(LifetimeEnv::new(nodes, ast.nodes.len()))
+    }
+
+    fn usage_get_or_insert<'a, P: TyPosition>(&'a mut self, id : SymbolId) -> &'a mut TypingUseInfo {
+        if !self.type_usage.contains_key(&id) {
+            self.type_usage.insert(id.clone(), TypingUseInfo::default());
+        }
+        self.type_usage.get_mut(&id).unwrap()
     }
 }

@@ -83,6 +83,61 @@ enum Param<'a> {
     Return,
 }
 
+pub(super) trait TypeUsage {
+    fn set_usage(&mut self, usage : super::TypingUseInfo);
+    fn id_from_idx(idx : usize) -> super::SymbolId;
+}
+
+impl TypeUsage for StructDef<super::Everywhere> {
+    fn set_usage(&mut self, usage : super::TypingUseInfo) {
+        self.usage = usage;
+    }
+
+    fn id_from_idx(idx : usize) -> super::SymbolId {
+        StructId(idx).into()
+    }
+}
+
+impl TypeUsage for StructDef<super::OutputOnly> {
+    fn set_usage(&mut self, usage : super::TypingUseInfo) {
+        self.usage = usage;
+    }
+
+    fn id_from_idx(idx : usize) -> super::SymbolId {
+        OutStructId(idx).into()
+    }
+}
+
+impl TypeUsage for OpaqueDef {
+    fn set_usage(&mut self, usage : super::TypingUseInfo) {
+        self.usage = usage;
+    }
+
+    fn id_from_idx(idx : usize) -> super::SymbolId {
+        OpaqueId(idx).into()
+    }
+}
+
+impl TypeUsage for EnumDef {
+    fn set_usage(&mut self, usage : hir::TypingUseInfo) {
+        self.usage = usage;
+    }
+
+    fn id_from_idx(idx : usize) -> hir::SymbolId {
+        EnumId(idx).into()
+    }
+}
+
+impl TypeUsage for TraitDef {
+    fn set_usage(&mut self, usage : hir::TypingUseInfo) {
+        self.usage = usage;
+    }
+
+    fn id_from_idx(idx : usize) -> hir::SymbolId {
+        TraitId(idx).into()
+    }
+}
+
 impl Display for Param<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Param::Input(s) = *self {
@@ -337,6 +392,7 @@ impl TypeContext {
             errors,
             attr_validator,
             cfg,
+            type_usage: HashMap::new(),
         };
 
         let out_structs = ctx.lower_all_out_structs(ast_out_structs.into_iter());
@@ -347,7 +403,14 @@ impl TypeContext {
         let functions = ctx.lower_all_functions(ast_functions.into_iter());
 
         match (out_structs, structs, opaques, enums, functions, traits) {
-            (Ok(out_structs), Ok(structs), Ok(opaques), Ok(enums), Ok(functions), Ok(traits)) => {
+            (Ok(mut out_structs), Ok(mut structs), Ok(mut opaques), Ok(mut enums), Ok(functions), Ok(mut traits)) => {
+                // After lowering, now we update with usage information:
+                ctx.update_usage(&mut out_structs);
+                ctx.update_usage(&mut structs);
+                ctx.update_usage(&mut opaques);
+                ctx.update_usage(&mut enums);
+                ctx.update_usage(&mut traits);
+
                 let res = Self {
                     out_structs,
                     structs,
