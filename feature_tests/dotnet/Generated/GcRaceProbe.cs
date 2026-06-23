@@ -8,10 +8,10 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RenamedDeprecatedOpaque: IDisposable
+public partial class GcRaceProbe: IDisposable
 {
     /// <summary>
-    /// Owns the native <c>Raw.RenamedDeprecatedOpaque*</c> handle. Deriving from
+    /// Owns the native <c>Raw.GcRaceProbe*</c> handle. Deriving from
     /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
     /// finalizer) gives a once-only, thread-safe release and — through its
     /// critical finalizer — prevents the GC from freeing the pointer while a
@@ -26,11 +26,11 @@ public partial class RenamedDeprecatedOpaque: IDisposable
     /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
     /// </para>
     /// </summary>
-    internal sealed unsafe class RenamedDeprecatedOpaqueHandle : SafeHandle
+    internal sealed unsafe class GcRaceProbeHandle : SafeHandle
     {
-        public RenamedDeprecatedOpaqueHandle() : base(IntPtr.Zero, true) { }
+        public GcRaceProbeHandle() : base(IntPtr.Zero, true) { }
 
-        public RenamedDeprecatedOpaqueHandle(Raw.RenamedDeprecatedOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        public GcRaceProbeHandle(Raw.GcRaceProbe* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
         {
             SetHandle((IntPtr)h);
         }
@@ -39,15 +39,15 @@ public partial class RenamedDeprecatedOpaque: IDisposable
 
         protected override bool ReleaseHandle()
         {
-            Raw.RenamedDeprecatedOpaque.Destroy((Raw.RenamedDeprecatedOpaque*)handle);
+            Raw.GcRaceProbe.Destroy((Raw.GcRaceProbe*)handle);
             return true;
         }
     }
 
-    private readonly RenamedDeprecatedOpaqueHandle _handle;
+    private readonly GcRaceProbeHandle _handle;
 
     /// <summary>
-    /// Creates a managed <c>RenamedDeprecatedOpaque</c> from a raw handle.
+    /// Creates a managed <c>GcRaceProbe</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -55,17 +55,41 @@ public partial class RenamedDeprecatedOpaque: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe RenamedDeprecatedOpaque(Raw.RenamedDeprecatedOpaque* handle)
+    internal unsafe GcRaceProbe(Raw.GcRaceProbe* handle)
     {
-        _handle = new RenamedDeprecatedOpaqueHandle(handle, ownsHandle: true);
+        _handle = new GcRaceProbeHandle(handle, ownsHandle: true);
+    }
+    /// <returns>
+    /// A <c>GcRaceProbe</c> allocated on Rust side.
+    /// </returns>
+    public static GcRaceProbe Create()
+    {
+        unsafe
+        {
+            Raw.GcRaceProbe* result = Raw.GcRaceProbe.Create();
+            return new GcRaceProbe(result);
+        }
+    }
+    public ulong DropsDuringSpin(ulong millis)
+    {
+        unsafe
+        {
+            if (_handle.IsInvalid || _handle.IsClosed)
+            {
+                throw new ObjectDisposedException("GcRaceProbe");
+            }
+            var result = Raw.GcRaceProbe.DropsDuringSpin(AsFFI(), millis);
+            GC.KeepAlive(this);
+            return result;
+        }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.RenamedDeprecatedOpaque* AsFFI()
+    internal unsafe Raw.GcRaceProbe* AsFFI()
     {
-        return (Raw.RenamedDeprecatedOpaque*)_handle.DangerousGetHandle();
+        return (Raw.GcRaceProbe*)_handle.DangerousGetHandle();
     }
 
     /// <summary>

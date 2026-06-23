@@ -16,6 +16,15 @@ public partial class OpaqueThinVec: IDisposable
     /// finalizer) gives a once-only, thread-safe release and — through its
     /// critical finalizer — prevents the GC from freeing the pointer while a
     /// native call that reads it is still in flight.
+    /// <para>
+    /// A raw pointer field + a hand-written finalizer hits the GC
+    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
+    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
+    /// begins — because the object is no longer referenced once its pointer
+    /// has been read. See
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
+    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
+    /// </para>
     /// </summary>
     internal sealed unsafe class OpaqueThinVecHandle : SafeHandle
     {

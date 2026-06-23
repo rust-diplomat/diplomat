@@ -385,6 +385,38 @@ pub mod ffi {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
     }
+
+    // GC-race probe for the SafeHandle test. `drops_during_spin` is an
+    // instance method that sleeps WITHOUT touching `self` again, then reports
+    // how many `GcRaceProbe`s were dropped during the call. If the managed
+    // receiver is finalized (-> Destroy -> drop) while this call is in flight,
+    // the count is >= 1 — the use-after-free the SafeHandle migration fixes.
+    #[diplomat::opaque]
+    pub struct GcRaceProbe(u64);
+
+    impl GcRaceProbe {
+        pub fn create() -> Box<Self> {
+            Box::new(GcRaceProbe(0))
+        }
+
+        pub fn drops_during_spin(&self, millis: u64) -> u64 {
+            let before = super::PROBE_DROPS.load(super::Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_millis(millis));
+            super::PROBE_DROPS.load(super::Ordering::SeqCst) - before
+        }
+    }
+}
+
+// Bumped by `GcRaceProbe`'s destructor (the generated `Destroy` extern drops
+// the `Box`). Lives outside the bridge module so the macro doesn't see it.
+pub(crate) static PROBE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) use std::sync::atomic::Ordering;
+
+impl Drop for ffi::GcRaceProbe {
+    fn drop(&mut self) {
+        PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
+    }
 }
 
 #[derive(Copy, Clone)]
