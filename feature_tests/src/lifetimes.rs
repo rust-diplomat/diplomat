@@ -389,9 +389,12 @@ pub mod ffi {
     // .NET borrow-soundness fixture: a constructible parent and a child opaque
     // that borrows it (`Box<BorrowChild<'a>>` carries `'a` tied to the parent).
     // `get()` reads back the parent's value so a use-after-free is observable.
+    // .NET-only: keep it out of the other backends' generated output.
+    #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
     pub struct BorrowParent(u32);
 
+    #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
     pub struct BorrowChild<'a>(&'a BorrowParent);
 

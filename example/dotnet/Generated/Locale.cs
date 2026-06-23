@@ -10,7 +10,40 @@ namespace Somelib;
 
 public partial class Locale: IDisposable
 {
-    private unsafe Raw.Locale* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Locale*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// </summary>
+    internal sealed unsafe class LocaleHandle : SafeHandle
+    {
+        public LocaleHandle() : base(IntPtr.Zero, true) { }
+
+        public LocaleHandle(Raw.Locale* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Locale.Destroy((Raw.Locale*)handle);
+            return true;
+        }
+    }
+
+    private readonly LocaleHandle _handle;
+
+    /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here prevents the GC from collecting
+    /// (and finalizing -> Destroy) a borrowed-from parent while this value is
+    /// still alive. Empty for values that borrow from nothing.
+    /// </summary>
+    private object[] _edges;
 
     /// <summary>
     /// Creates a managed <c>Locale</c> from a raw handle.
@@ -23,7 +56,24 @@ public partial class Locale: IDisposable
     /// </remarks>
     internal unsafe Locale(Raw.Locale* handle)
     {
-        _inner = handle;
+        _handle = new LocaleHandle(handle, ownsHandle: true);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>Locale</c> from a raw handle, retaining
+    /// strong references to the wrappers it borrows from (its keep-alive
+    /// edges) so they outlive this value.
+    /// </summary>
+    /// <remarks>
+    /// Still owns the raw box (<c>ownsHandle: true</c>); the edges only keep
+    /// the borrowed-from objects GC-reachable so they are not collected and
+    /// finalized (-> Destroy) while this value is alive.
+    /// </remarks>
+    internal unsafe Locale(Raw.Locale* handle, object[] edges)
+    {
+        _handle = new LocaleHandle(handle, ownsHandle: true);
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Locale</c> allocated on Rust side.
@@ -47,30 +97,27 @@ public partial class Locale: IDisposable
     /// </summary>
     internal unsafe Raw.Locale* AsFFI()
     {
-        return _inner;
+        // Null once disposed (the SafeHandle is closed) so a caller's null
+        // check surfaces a clean ObjectDisposedException rather than handing
+        // a freed pointer to native code.
+        return (_handle.IsClosed || _handle.IsInvalid)
+            ? null
+            : (Raw.Locale*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Locale.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Locale()
-    {
-        Dispose();
+        _handle.Dispose();
+        // Stop rooting the borrowed-from wrappers once we're disposed; they
+        // no longer need to outlive this value.
+        _edges = System.Array.Empty<object>();
     }
 }
