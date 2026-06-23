@@ -1724,11 +1724,14 @@ mod tests {
                 impl Opaque {
                     pub fn used_in_option(u : Option<&UsedInOptionOpaque>) {}
                     
-                    pub fn used_in_slice<'a>() -> &'a [UsedInSlice] {}
+                    pub fn used_in_slice<'a>(op: &'a [&'a UsedInSliceOpaque]) -> &'a [UsedInSlice] {}
                 }
 
                 #[diplomat::opaque]
                 pub struct UsedInOptionOpaque(i32);
+
+                #[diplomat::opaque]
+                pub struct UsedInSliceOpaque(i32);
 
                 pub struct UsedInSlice {
                     a : i32
@@ -1747,6 +1750,7 @@ mod tests {
 
         let mut backend = crate::hir::BasicAttributeValidator::new("test-backend");
         backend.support.static_slices = true;
+        backend.support.opaque_slices = true;
 
         let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend).unwrap();
 

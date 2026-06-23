@@ -230,7 +230,74 @@ TypeContext {
                         num_lifetimes: 1,
                     },
                     param_self: None,
-                    params: [],
+                    params: [
+                        Param {
+                            name: "op",
+                            ty: Slice(
+                                Opaque(
+                                    Borrow(
+                                        Borrow {
+                                            lifetime: NonStatic(
+                                                Lifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                            mutability: Immutable,
+                                        },
+                                    ),
+                                    OpaquePath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        optional: Optional(
+                                            false,
+                                        ),
+                                        owner: Borrow {
+                                            lifetime: NonStatic(
+                                                Lifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                            mutability: Immutable,
+                                        },
+                                        tcx_id: OpaqueId(
+                                            2,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            attrs: Attrs {
+                                disable: false,
+                                deprecated: None,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                custom_errors: false,
+                                default: false,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    custom_func: None,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                        default_value: "",
+                                    },
+                                },
+                                generate_mocking_interface: false,
+                                abi_compatible: false,
+                                mut_struct_ref: false,
+                                tuple: false,
+                                custom_extra_code: {},
+                                default_value: None,
+                            },
+                        },
+                    ],
                     output: Infallible(
                         OutType(
                             Slice(
@@ -389,6 +456,59 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: true,
+            },
+        },
+        OpaqueDef {
+            docs: Docs {
+                lines: "",
+                rust_links: [],
+            },
+            name: "UsedInSliceOpaque",
+            methods: [],
+            attrs: Attrs {
+                disable: false,
+                deprecated: None,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                custom_errors: false,
+                default: false,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    custom_func: None,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                        default_value: "",
+                    },
+                },
+                generate_mocking_interface: false,
+                abi_compatible: false,
+                mut_struct_ref: false,
+                tuple: false,
+                custom_extra_code: {},
+                default_value: None,
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [],
+                num_lifetimes: 0,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                optional_comparator: false,
+                iterator: None,
+                iterable: None,
+            },
+            dtor_abi_name: "UsedInSliceOpaque_destroy",
+            usage: TypingUseInfo {
+                sliced: true,
+                optioned: false,
             },
         },
     ],
