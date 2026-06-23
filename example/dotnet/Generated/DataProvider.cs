@@ -10,7 +10,41 @@ namespace Somelib;
 
 public partial class DataProvider: IDisposable
 {
-    private unsafe Raw.DataProvider* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.DataProvider*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// <para>
+    /// A raw pointer field + a hand-written finalizer hits the GC
+    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
+    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
+    /// begins — because the object is no longer referenced once its pointer
+    /// has been read. See
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
+    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
+    /// </para>
+    /// </summary>
+    internal sealed unsafe class DataProviderHandle : SafeHandle
+    {
+        public DataProviderHandle() : base(IntPtr.Zero, true) { }
+
+        public DataProviderHandle(Raw.DataProvider* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.DataProvider.Destroy((Raw.DataProvider*)handle);
+            return true;
+        }
+    }
+
+    private readonly DataProviderHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>DataProvider</c> from a raw handle.
@@ -23,7 +57,7 @@ public partial class DataProvider: IDisposable
     /// </remarks>
     internal unsafe DataProvider(Raw.DataProvider* handle)
     {
-        _inner = handle;
+        _handle = new DataProviderHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>DataProvider</c> allocated on Rust side.
@@ -55,30 +89,19 @@ public partial class DataProvider: IDisposable
     /// </summary>
     internal unsafe Raw.DataProvider* AsFFI()
     {
-        return _inner;
+        return (Raw.DataProvider*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.DataProvider.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~DataProvider()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

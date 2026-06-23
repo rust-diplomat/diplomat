@@ -10,7 +10,41 @@ namespace Somelib;
 
 public partial class FixedDecimal: IDisposable
 {
-    private unsafe Raw.FixedDecimal* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.FixedDecimal*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// <para>
+    /// A raw pointer field + a hand-written finalizer hits the GC
+    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
+    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
+    /// begins — because the object is no longer referenced once its pointer
+    /// has been read. See
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
+    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
+    /// </para>
+    /// </summary>
+    internal sealed unsafe class FixedDecimalHandle : SafeHandle
+    {
+        public FixedDecimalHandle() : base(IntPtr.Zero, true) { }
+
+        public FixedDecimalHandle(Raw.FixedDecimal* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.FixedDecimal.Destroy((Raw.FixedDecimal*)handle);
+            return true;
+        }
+    }
+
+    private readonly FixedDecimalHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>FixedDecimal</c> from a raw handle.
@@ -23,7 +57,7 @@ public partial class FixedDecimal: IDisposable
     /// </remarks>
     internal unsafe FixedDecimal(Raw.FixedDecimal* handle)
     {
-        _inner = handle;
+        _handle = new FixedDecimalHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>FixedDecimal</c> allocated on Rust side.
@@ -40,11 +74,12 @@ public partial class FixedDecimal: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("FixedDecimal");
             }
-            Raw.FixedDecimal.MultiplyPow10(_inner, power);
+            Raw.FixedDecimal.MultiplyPow10(AsFFI(), power);
+            GC.KeepAlive(this);
         }
     }
     /// <exception cref="InvalidOperationException"></exception>
@@ -52,14 +87,15 @@ public partial class FixedDecimal: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("FixedDecimal");
             }
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                var result = Raw.FixedDecimal.ToString(_inner, &writeable);
+                var result = Raw.FixedDecimal.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 if (!result.IsOk)
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");
@@ -78,30 +114,19 @@ public partial class FixedDecimal: IDisposable
     /// </summary>
     internal unsafe Raw.FixedDecimal* AsFFI()
     {
-        return _inner;
+        return (Raw.FixedDecimal*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.FixedDecimal.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~FixedDecimal()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

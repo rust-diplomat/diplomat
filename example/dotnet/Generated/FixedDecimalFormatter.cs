@@ -10,7 +10,41 @@ namespace Somelib;
 
 public partial class FixedDecimalFormatter: IDisposable
 {
-    private unsafe Raw.FixedDecimalFormatter* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.FixedDecimalFormatter*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// <para>
+    /// A raw pointer field + a hand-written finalizer hits the GC
+    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
+    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
+    /// begins — because the object is no longer referenced once its pointer
+    /// has been read. See
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
+    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
+    /// </para>
+    /// </summary>
+    internal sealed unsafe class FixedDecimalFormatterHandle : SafeHandle
+    {
+        public FixedDecimalFormatterHandle() : base(IntPtr.Zero, true) { }
+
+        public FixedDecimalFormatterHandle(Raw.FixedDecimalFormatter* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.FixedDecimalFormatter.Destroy((Raw.FixedDecimalFormatter*)handle);
+            return true;
+        }
+    }
+
+    private readonly FixedDecimalFormatterHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>FixedDecimalFormatter</c> from a raw handle.
@@ -23,7 +57,7 @@ public partial class FixedDecimalFormatter: IDisposable
     /// </remarks>
     internal unsafe FixedDecimalFormatter(Raw.FixedDecimalFormatter* handle)
     {
-        _inner = handle;
+        _handle = new FixedDecimalFormatterHandle(handle, ownsHandle: true);
     }
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
@@ -40,6 +74,8 @@ public partial class FixedDecimalFormatter: IDisposable
             Raw.DataProvider* providerRaw = provider.AsFFI();
             if (providerRaw == null) throw new ObjectDisposedException(nameof(DataProvider));
             var result = Raw.FixedDecimalFormatter.TryNew(localeRaw, providerRaw, options.AsFFI());
+            GC.KeepAlive(locale);
+            GC.KeepAlive(provider);
             if (!result.IsOk)
             {
                 throw new InvalidOperationException("FFI function failed with unit error");
@@ -51,7 +87,7 @@ public partial class FixedDecimalFormatter: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_handle.IsInvalid || _handle.IsClosed)
             {
                 throw new ObjectDisposedException("FixedDecimalFormatter");
             }
@@ -61,7 +97,9 @@ public partial class FixedDecimalFormatter: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.FixedDecimalFormatter.FormatWrite(_inner, valueRaw, &writeable);
+                Raw.FixedDecimalFormatter.FormatWrite(AsFFI(), valueRaw, &writeable);
+                GC.KeepAlive(this);
+                GC.KeepAlive(value);
                 return writeable.ToUnicode();
             }
             finally
@@ -76,30 +114,19 @@ public partial class FixedDecimalFormatter: IDisposable
     /// </summary>
     internal unsafe Raw.FixedDecimalFormatter* AsFFI()
     {
-        return _inner;
+        return (Raw.FixedDecimalFormatter*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.FixedDecimalFormatter.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~FixedDecimalFormatter()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }

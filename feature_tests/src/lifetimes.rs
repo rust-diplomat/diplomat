@@ -391,6 +391,9 @@ pub mod ffi {
     // how many `GcRaceProbe`s were dropped during the call. If the managed
     // receiver is finalized (-> Destroy -> drop) while this call is in flight,
     // the count is >= 1 — the use-after-free the SafeHandle migration fixes.
+    // .NET-only fixture (GcRaceTests): keep it out of the other backends'
+    // generated output so it doesn't churn them.
+    #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
     pub struct GcRaceProbe(u64);
 
@@ -409,8 +412,7 @@ pub mod ffi {
 
 // Bumped by `GcRaceProbe`'s destructor (the generated `Destroy` extern drops
 // the `Box`). Lives outside the bridge module so the macro doesn't see it.
-pub(crate) static PROBE_DROPS: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static PROBE_DROPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
 pub(crate) use std::sync::atomic::Ordering;
 
 impl Drop for ffi::GcRaceProbe {

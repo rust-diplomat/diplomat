@@ -10,7 +10,41 @@ namespace Somelib;
 
 public partial class Locale: IDisposable
 {
-    private unsafe Raw.Locale* _inner;
+    /// <summary>
+    /// Owns the native <c>Raw.Locale*</c> handle. Deriving from
+    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
+    /// finalizer) gives a once-only, thread-safe release and — through its
+    /// critical finalizer — prevents the GC from freeing the pointer while a
+    /// native call that reads it is still in flight.
+    /// <para>
+    /// A raw pointer field + a hand-written finalizer hits the GC
+    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
+    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
+    /// begins — because the object is no longer referenced once its pointer
+    /// has been read. See
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
+    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
+    /// </para>
+    /// </summary>
+    internal sealed unsafe class LocaleHandle : SafeHandle
+    {
+        public LocaleHandle() : base(IntPtr.Zero, true) { }
+
+        public LocaleHandle(Raw.Locale* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
+        {
+            SetHandle((IntPtr)h);
+        }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Raw.Locale.Destroy((Raw.Locale*)handle);
+            return true;
+        }
+    }
+
+    private readonly LocaleHandle _handle;
 
     /// <summary>
     /// Creates a managed <c>Locale</c> from a raw handle.
@@ -23,7 +57,7 @@ public partial class Locale: IDisposable
     /// </remarks>
     internal unsafe Locale(Raw.Locale* handle)
     {
-        _inner = handle;
+        _handle = new LocaleHandle(handle, ownsHandle: true);
     }
     /// <returns>
     /// A <c>Locale</c> allocated on Rust side.
@@ -47,30 +81,19 @@ public partial class Locale: IDisposable
     /// </summary>
     internal unsafe Raw.Locale* AsFFI()
     {
-        return _inner;
+        return (Raw.Locale*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>
+    /// <remarks>
+    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
+    /// release and suppresses its own finalizer — so no hand-written
+    /// finalizer is needed here.
+    /// </remarks>
     public void Dispose()
     {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.Locale.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-        }
-    }
-
-    ~Locale()
-    {
-        Dispose();
+        _handle.Dispose();
     }
 }
