@@ -1043,6 +1043,8 @@ impl<'ast> LoweringContext<'ast> {
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
+                                
+                                self.usage_get_or_insert::<P>(tcx_id.into()).optioned = true;
 
                                 Ok(Type::Opaque(OpaquePath::new(
                                     lifetimes,
@@ -1474,6 +1476,8 @@ impl<'ast> LoweringContext<'ast> {
                                 let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
+                        
+                                self.usage_get_or_insert::<super::OutputOnly>(tcx_id.into()).optioned = true;
 
                                 Ok(OutType::Opaque(OpaquePath::new(
                                     lifetimes,
