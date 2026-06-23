@@ -763,6 +763,22 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
+        // Edges are attached only to the success wrapper. For a fallible
+        // method, edges computed from the whole `Result` output can't be
+        // soundly split across arms here, and the exception/error wrapper is
+        // built without edges — so a borrowing error arm would dangle. Reject
+        // borrowing fallible returns until edges are threaded per-arm.
+        if !keep_alive_edges.is_empty() && error_info.is_some() {
+            self.errors.push_error(
+                "[.NET backend] a fallible method returning a borrowing value is not yet \
+                 supported — keep-alive edges are not threaded into the error/exception arm. \
+                 Make it infallible, return an owned (non-borrowing) value, or disable this \
+                 API for .NET."
+                    .to_string(),
+            );
+            return None;
+        }
+
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
             name: method_name,

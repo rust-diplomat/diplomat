@@ -43,7 +43,7 @@ public partial class MethodOverloading: IDisposable
     /// (and finalizing -> Destroy) a borrowed-from parent while this value is
     /// still alive. Empty for values that borrow from nothing.
     /// </summary>
-    private readonly object[] _edges;
+    private object[] _edges;
 
     /// <summary>
     /// Creates a managed <c>MethodOverloading</c> from a raw handle.
@@ -114,7 +114,12 @@ public partial class MethodOverloading: IDisposable
     /// </summary>
     internal unsafe Raw.MethodOverloading* AsFFI()
     {
-        return (Raw.MethodOverloading*)_handle.DangerousGetHandle();
+        // Null once disposed (the SafeHandle is closed) so a caller's null
+        // check surfaces a clean ObjectDisposedException rather than handing
+        // a freed pointer to native code.
+        return (_handle.IsClosed || _handle.IsInvalid)
+            ? null
+            : (Raw.MethodOverloading*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
@@ -128,5 +133,8 @@ public partial class MethodOverloading: IDisposable
     public void Dispose()
     {
         _handle.Dispose();
+        // Stop rooting the borrowed-from wrappers once we're disposed; they
+        // no longer need to outlive this value.
+        _edges = System.Array.Empty<object>();
     }
 }
