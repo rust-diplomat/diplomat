@@ -11,20 +11,13 @@ namespace Somelib;
 public partial class RefListParameter: IDisposable
 {
     /// <summary>
-    /// Owns the native <c>Raw.RefListParameter*</c> handle. Deriving from
-    /// <c>SafeHandle</c> (instead of holding a raw pointer + a hand-written
-    /// finalizer) gives a once-only, thread-safe release and — through its
-    /// critical finalizer — prevents the GC from freeing the pointer while a
-    /// native call that reads it is still in flight.
-    /// <para>
-    /// A raw pointer field + a hand-written finalizer hits the GC
-    /// object-lifetime pitfall documented by Microsoft: the GC can finalize
-    /// the wrapper (running <c>Destroy</c>) mid-call — even before the call
-    /// begins — because the object is no longer referenced once its pointer
-    /// has been read. See
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
-    /// (section "Assumptions about object lifetimes (finalizers, GC.KeepAlive)").
-    /// </para>
+    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
+    /// The native call takes a bare pointer the marshaller can't root, so the
+    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
+    /// the GC freeing it mid-call (MS object-lifetime pitfall:
+    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
+    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
+    /// problem, as with any <c>IDisposable</c>.
     /// </summary>
     internal sealed unsafe class RefListParameterHandle : SafeHandle
     {
@@ -61,21 +54,21 @@ public partial class RefListParameter: IDisposable
     }
 
     /// <summary>
-    /// Returns the underlying raw handle.
+    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
+    /// pointer, so callers gate on null to throw rather than use freed memory.
     /// </summary>
     internal unsafe Raw.RefListParameter* AsFFI()
     {
+        if (_handle.IsClosed || _handle.IsInvalid)
+        {
+            return null;
+        }
         return (Raw.RefListParameter*)_handle.DangerousGetHandle();
     }
 
     /// <summary>
-    /// Destroys the underlying object immediately.
+    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
     /// </summary>
-    /// <remarks>
-    /// Delegated to the <c>SafeHandle</c>, which guarantees a once-only
-    /// release and suppresses its own finalizer — so no hand-written
-    /// finalizer is needed here.
-    /// </remarks>
     public void Dispose()
     {
         _handle.Dispose();

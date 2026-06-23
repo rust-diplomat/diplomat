@@ -351,11 +351,8 @@ struct InputLowering {
     to_bytes_statement: Option<String>,
     idiomatic_param_type: Option<String>,
 
-    /// Idiomatic identifier to `GC.KeepAlive(...)` after the raw call. `Some`
-    /// for opaque self (`"this"`) and opaque params (`"name"`) — their native
-    /// pointer is read via a `SafeHandle`, and without an explicit keep-alive
-    /// the GC could finalize the wrapper (freeing the pointer) while the raw
-    /// call is still in flight. `None` for everything else.
+    /// Wrapper to `GC.KeepAlive` after the raw call — else the GC may free its
+    /// pointer mid-call. `Some` for opaque self/params, `None` otherwise.
     keep_alive_target: Option<String>,
 }
 
@@ -376,8 +373,7 @@ pub(super) struct DotnetInputs {
     pub(super) to_bytes_statements: Vec<String>,
     pub(super) first_param_type: Option<String>,
     pub(super) param_count: usize,
-    /// `GC.KeepAlive(...)` targets (opaque self + opaque params), in raw-call
-    /// argument order. Rendered after the raw call in `method_body.cs.jinja`.
+    /// Keep-alive targets (opaque self + params), in raw-call arg order.
     pub(super) keep_alive_targets: Vec<String>,
 }
 
@@ -566,17 +562,14 @@ impl MethodInfo<'_> {
         format!("return {};", self.raw_call_expr(owner_name))
     }
 
-    /// Whether this method passes any opaque pointer (self and/or opaque
-    /// params) through the raw call. When true the body must `GC.KeepAlive`
-    /// each such wrapper after the call (see [`Self::keep_alive_targets`]),
-    /// so a direct `return Raw...(...)` is rewritten to capture-then-return.
+    /// True if any opaque pointer crosses the raw call — then a direct
+    /// `return Raw...(...)` must capture-then-return so the keep-alive runs.
     pub(super) fn has_keep_alive(&self) -> bool {
         !self.inputs.keep_alive_targets.is_empty()
     }
 
-    /// `GC.KeepAlive(x);` statements to emit immediately after the raw call,
-    /// one per opaque wrapper whose pointer the call read. Empty when no
-    /// opaque pointers cross the boundary.
+    /// `GC.KeepAlive(x);` lines to emit after the raw call, one per opaque
+    /// wrapper. Empty when none cross the boundary.
     pub(super) fn keep_alive_statements(&self) -> Vec<String> {
         self.inputs
             .keep_alive_targets
@@ -600,11 +593,8 @@ impl MethodInfo<'_> {
             .as_ref()
             .and_then(|option| option.raw_option_type.as_ref())
             .is_some();
-        // Primitive / enum returns have no `Raw.` mirror type — the raw call
-        // already yields the idiomatic C# value. `var` lets the same general
-        // body shape cover the keep-alive case (where a direct
-        // `return Raw...(...)` would skip the post-call `GC.KeepAlive`), without
-        // emitting an invalid `Raw.bool` / `Raw.nint` local declaration.
+        // `var`, not `Raw.<T>`: primitive/enum returns have no `Raw.` mirror,
+        // so capturing the result for the keep-alive case stays valid C#.
         if uses_tagged_option || self.can_return_raw_call_directly() {
             format!("var result = {raw_call};")
         } else {
@@ -1055,9 +1045,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 InputLowering {
                     raw_param: format!("{name}* handle"),
                     idiomatic_param: String::new(),
-                    // `AsFFI()` reads the pointer out of the `SafeHandle`.
-                    // The matching `GC.KeepAlive(this)` after the call keeps
-                    // the handle (and thus the pointer) alive across it.
+                    // `GC.KeepAlive(this)` after the call keeps the pointer
+                    // alive across it.
                     raw_call_arg: "AsFFI()".into(),
                     keep_alive_target: Some("this".into()),
                     ..Default::default()
@@ -1158,8 +1147,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     raw_call_arg,
                     validation_statement,
                     idiomatic_param_type: Some(idiomatic_ty),
-                    // `{arg}Raw` reads the pointer out of the param's
-                    // `SafeHandle`; keep the wrapper alive across the call.
+                    // Keep the param's wrapper alive across the call.
                     keep_alive_target: Some(arg_name.to_string()),
                     ..Default::default()
                 }

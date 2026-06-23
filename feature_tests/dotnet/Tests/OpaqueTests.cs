@@ -1,3 +1,4 @@
+using System;
 using Somelib;
 using Xunit;
 
@@ -51,5 +52,14 @@ public class OpaqueTests
         Opaque o = Opaque.New();
         o.Dispose();
         o.Dispose(); // second Dispose is a no-op, must not double-free
+    }
+
+    [Fact]
+    public void DisposedOpaqueArgument_ThrowsObjectDisposedException()
+    {
+        OptionOpaque arg = OptionOpaque.New(5)!;
+        arg.Dispose();
+        // Disposed arg must throw, not feed a freed pointer to native (UAF).
+        Assert.Throws<ObjectDisposedException>(() => OptionOpaque.OptionOpaqueArgument(arg));
     }
 }
