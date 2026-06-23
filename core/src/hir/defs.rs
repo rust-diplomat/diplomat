@@ -100,13 +100,21 @@ pub struct StructField<P: TyPosition = Everywhere> {
     pub attrs: Attrs,
 }
 
+#[derive(Debug, Clone)]
+pub struct ResultUsageInfo {
+    ok : Type<OutputOnly>,
+    err : Type<OutputOnly>,
+}
+
 /// Information on how a [`TypeDef`] is used across the HIR.
 #[derive(Debug, Clone, Default)]
 pub struct TypingUseInfo {
     /// If the given type is ever used in a slice.
     pub sliced : bool,
     /// If the given type is ever used in an option.
-    pub optioned : bool
+    pub optioned : bool,
+    /// The results that this type is used in.
+    pub results : Vec<ResultUsageInfo>,
 }
 
 pub(super) trait TypeUsage {
