@@ -17,14 +17,14 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   // maintain borrow validity.
   OptionOpaqueChar._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_OptionOpaqueChar_destroy(this, _ffi.cast());
+      _OptionOpaqueChar_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_OptionOpaqueChar_destroy(OptionOpaqueChar cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _OptionOpaqueChar_destroy(OptionOpaqueChar cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaqueChar_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OptionOpaqueChar_destroy));
 
   void assertChar(Rune ch) {
     _OptionOpaqueChar_assert_char(_ffi, ch);
@@ -35,7 +35,7 @@ final class OptionOpaqueChar implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaqueChar_destroy')
 // ignore: non_constant_identifier_names
-external void _OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Uint32)>(isLeaf: true, symbol: 'OptionOpaqueChar_assert_char')

@@ -62,16 +62,12 @@ pub(crate) fn run<'cx>(
 
     let mut directives = BTreeSet::default();
     let mut helper_classes = BTreeMap::default();
-    let mut symbols = BTreeSet::default();
-    symbols.insert("diplomat_alloc".to_string());
-    symbols.insert("diplomat_free".to_string());
 
     let mut context = ItemGenContext {
         tcx,
         errors: &errors,
         helper_classes: &mut helper_classes,
         formatter: &formatter,
-        symbols: &mut symbols,
     };
 
     for (id, ty) in tcx.all_types() {
@@ -114,16 +110,13 @@ pub(crate) fn run<'cx>(
     // For slices
     directives.insert(formatter.fmt_import("dart:typed_data", None, Some("unused_import")));
 
-    let mut init_dart_content = include_str!("../../templates/dart/init.dart").to_string();
-    init_dart_content.push_str("\nconst core.Map<core.String, core.String> symbolMapping = {\n");
-    for symbol in &symbols {
-        init_dart_content.push_str(&format!("  '_{symbol}': '{symbol}',\n"));
-    }
-    init_dart_content.push_str("};\n");
-
     files.add_file(
         formatter.fmt_file_name("lib"),
-        render_class(init_dart_content, directives, helper_classes),
+        render_class(
+            include_str!("../../templates/dart/init.dart").into(),
+            directives,
+            helper_classes,
+        ),
     );
 
     (files, errors)
@@ -165,7 +158,6 @@ struct ItemGenContext<'a, 'cx> {
     formatter: &'a DartFormatter<'cx>,
     errors: &'a ErrorStore<'cx, String>,
     helper_classes: &'a mut BTreeMap<String, String>,
-    symbols: &'a mut BTreeSet<String>,
 }
 
 impl<'cx> ItemGenContext<'_, 'cx> {
@@ -231,7 +223,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = &ty.dtor_abi_name;
-        self.symbols.insert(destructor.to_string());
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
@@ -485,9 +476,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
-        let mut abi_name = method.abi_name.as_str();
-        abi_name = abi_name.strip_prefix("$d").unwrap_or(abi_name);
-        self.symbols.insert(abi_name.to_string());
+        let abi_name = method.abi_name.as_str();
 
         let mut param_decls_dart_required = Vec::new();
         let mut param_decls_dart_optional = Vec::new();
@@ -609,13 +598,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 "write".into(),
                 include_str!("../../templates/dart/write.dart").into(),
             );
-            self.symbols
-                .insert("diplomat_buffer_write_create".to_string());
-            self.symbols.insert("diplomat_buffer_write_len".to_string());
-            self.symbols
-                .insert("diplomat_buffer_write_get_bytes".to_string());
-            self.symbols
-                .insert("diplomat_buffer_write_destroy".to_string());
         }
 
         let return_ty = self.gen_return_type_name(&method.output);

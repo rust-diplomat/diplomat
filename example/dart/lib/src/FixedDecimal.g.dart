@@ -18,14 +18,14 @@ final class FixedDecimal implements ffi.Finalizable {
   // maintain borrow validity.
   FixedDecimal._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_icu4x_FixedDecimal_destroy_mv1(this, _ffi.cast());
+      _icu4x_FixedDecimal_destroy_mv1(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_icu4x_FixedDecimal_destroy_mv1(FixedDecimal cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _icu4x_FixedDecimal_destroy_mv1(FixedDecimal cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimal_destroy_mv1));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_icu4x_FixedDecimal_destroy_mv1));
 
   /// Construct an [FixedDecimal] from an integer.
   factory FixedDecimal(int v) {
@@ -57,7 +57,7 @@ final class FixedDecimal implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
+external void _internal_icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_new_mv1')

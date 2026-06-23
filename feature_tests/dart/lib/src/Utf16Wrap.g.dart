@@ -17,14 +17,14 @@ final class Utf16Wrap implements ffi.Finalizable {
   // maintain borrow validity.
   Utf16Wrap._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_Utf16Wrap_destroy(this, _ffi.cast());
+      _Utf16Wrap_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_Utf16Wrap_destroy(Utf16Wrap cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _Utf16Wrap_destroy(Utf16Wrap cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Utf16Wrap_destroy));
 
   factory Utf16Wrap(String input) {
     final temp = _FinalizedArena();
@@ -50,7 +50,7 @@ final class Utf16Wrap implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Utf16Wrap_destroy')
 // ignore: non_constant_identifier_names
-external void _Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf16)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')

@@ -17,14 +17,14 @@ final class MyString implements ffi.Finalizable {
   // maintain borrow validity.
   MyString._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_MyString_destroy(this, _ffi.cast());
+      _MyString_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_MyString_destroy(MyString cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _MyString_destroy(MyString cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_MyString_destroy));
 
   factory MyString(String v) {
     final temp = _FinalizedArena();
@@ -90,7 +90,7 @@ final class MyString implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyString_destroy')
 // ignore: non_constant_identifier_names
-external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_MyString_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new')

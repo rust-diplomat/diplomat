@@ -99,28 +99,6 @@ class _FinalizedArena {
   }
 }
 
-const core.Map<core.String, core.String> symbolMapping = {
-  '_diplomat_alloc': 'diplomat_alloc',
-  '_diplomat_buffer_write_create': 'diplomat_buffer_write_create',
-  '_diplomat_buffer_write_destroy': 'diplomat_buffer_write_destroy',
-  '_diplomat_buffer_write_get_bytes': 'diplomat_buffer_write_get_bytes',
-  '_diplomat_buffer_write_len': 'diplomat_buffer_write_len',
-  '_diplomat_free': 'diplomat_free',
-  '_icu4x_DataProvider_destroy_mv1': 'icu4x_DataProvider_destroy_mv1',
-  '_icu4x_DataProvider_new_static_mv1': 'icu4x_DataProvider_new_static_mv1',
-  '_icu4x_DataProvider_returns_result_mv1': 'icu4x_DataProvider_returns_result_mv1',
-  '_icu4x_FixedDecimalFormatterOptions_default_mv1': 'icu4x_FixedDecimalFormatterOptions_default_mv1',
-  '_icu4x_FixedDecimalFormatter_destroy_mv1': 'icu4x_FixedDecimalFormatter_destroy_mv1',
-  '_icu4x_FixedDecimalFormatter_format_write_mv1': 'icu4x_FixedDecimalFormatter_format_write_mv1',
-  '_icu4x_FixedDecimalFormatter_try_new_mv1': 'icu4x_FixedDecimalFormatter_try_new_mv1',
-  '_icu4x_FixedDecimal_destroy_mv1': 'icu4x_FixedDecimal_destroy_mv1',
-  '_icu4x_FixedDecimal_multiply_pow10_mv1': 'icu4x_FixedDecimal_multiply_pow10_mv1',
-  '_icu4x_FixedDecimal_new_mv1': 'icu4x_FixedDecimal_new_mv1',
-  '_icu4x_FixedDecimal_to_string_mv1': 'icu4x_FixedDecimal_to_string_mv1',
-  '_icu4x_Locale_destroy_mv1': 'icu4x_Locale_destroy_mv1',
-  '_icu4x_Locale_new_mv1': 'icu4x_Locale_new_mv1',
-};
-
 final class _ResultOpaqueVoidUnion extends ffi.Union {
   external ffi.Pointer<ffi.Opaque> ok;
 

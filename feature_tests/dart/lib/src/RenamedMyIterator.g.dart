@@ -19,14 +19,14 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
   // maintain borrow validity.
   RenamedMyIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      $d_namespace_MyIterator_destroy(this, _ffi.cast());
+      _namespace_MyIterator_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_namespace_MyIterator_destroy(RenamedMyIterator cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _namespace_MyIterator_destroy(RenamedMyIterator cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterator_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_MyIterator_destroy));
 
   int? _current;
 
@@ -52,7 +52,7 @@ final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIterator_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_MyIterator_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_MyIterator_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<_ResultUint8Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MyIterator_next')

@@ -17,14 +17,14 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
   // maintain borrow validity.
   RenamedComparable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_namespace_Comparable_destroy(this, _ffi.cast());
+      _namespace_Comparable_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_namespace_Comparable_destroy(RenamedComparable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _namespace_Comparable_destroy(RenamedComparable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Comparable_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_Comparable_destroy));
 
   static RenamedComparable new_(int int) {
     final result = _namespace_Comparable_new(int);
@@ -47,7 +47,7 @@ final class RenamedComparable implements ffi.Finalizable, core.Comparable<Rename
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_Comparable_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_Comparable_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_Comparable_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Uint8)>(isLeaf: true, symbol: 'namespace_Comparable_new')

@@ -19,14 +19,14 @@ final class One implements ffi.Finalizable {
   // maintain borrow validity.
   One._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      $d_One_destroy(this, _ffi.cast());
+      _One_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_One_destroy(One cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _One_destroy(One cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_One_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_One_destroy));
 
   factory One.transitivity(One hold, One nohold) {
     // This lifetime edge depends on lifetimes: 'a, 'b, 'c, 'd, 'e
@@ -110,7 +110,7 @@ final class One implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'One_destroy')
 // ignore: non_constant_identifier_names
-external void _One_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_One_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'One_transitivity')

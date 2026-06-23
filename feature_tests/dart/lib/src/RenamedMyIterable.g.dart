@@ -17,14 +17,14 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
   // maintain borrow validity.
   RenamedMyIterable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_namespace_MyIterable_destroy(this, _ffi.cast());
+      _namespace_MyIterable_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_namespace_MyIterable_destroy(RenamedMyIterable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _namespace_MyIterable_destroy(RenamedMyIterable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIterable_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_MyIterable_destroy));
 
   factory RenamedMyIterable(core.List<int> x) {
     final temp = _FinalizedArena();
@@ -45,7 +45,7 @@ final class RenamedMyIterable with core.Iterable<int> implements ffi.Finalizable
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIterable_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_MyIterable_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_MyIterable_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUint8)>(isLeaf: true, symbol: 'namespace_MyIterable_new')

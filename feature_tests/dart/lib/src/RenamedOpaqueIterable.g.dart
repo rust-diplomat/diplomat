@@ -17,14 +17,14 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
   // maintain borrow validity.
   RenamedOpaqueIterable._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_namespace_OpaqueIterable_destroy(this, _ffi.cast());
+      _namespace_OpaqueIterable_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_namespace_OpaqueIterable_destroy(RenamedOpaqueIterable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _namespace_OpaqueIterable_destroy(RenamedOpaqueIterable cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterable_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_OpaqueIterable_destroy));
 
   factory RenamedOpaqueIterable(int size) {
     final result = _namespace_OpaqueIterable_new(size);
@@ -44,7 +44,7 @@ final class RenamedOpaqueIterable with core.Iterable<AttrOpaque1Renamed> impleme
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_OpaqueIterable_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_OpaqueIterable_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(isLeaf: true, symbol: 'namespace_OpaqueIterable_new')

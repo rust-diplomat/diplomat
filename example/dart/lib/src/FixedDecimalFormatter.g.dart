@@ -20,14 +20,14 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
   // maintain borrow validity.
   FixedDecimalFormatter._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_icu4x_FixedDecimalFormatter_destroy_mv1(this, _ffi.cast());
+      _icu4x_FixedDecimalFormatter_destroy_mv1(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimalFormatter_destroy_mv1));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_icu4x_FixedDecimalFormatter_destroy_mv1));
 
   /// Creates a new [FixedDecimalFormatter] from locale data.
   ///
@@ -55,7 +55,7 @@ final class FixedDecimalFormatter implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatter_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_FixedDecimalFormatter_destroy_mv1(ffi.Pointer<ffi.Void> self);
+external void _internal_icu4x_FixedDecimalFormatter_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<_ResultOpaqueVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>, _FixedDecimalFormatterOptionsFfi)>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatter_try_new_mv1')

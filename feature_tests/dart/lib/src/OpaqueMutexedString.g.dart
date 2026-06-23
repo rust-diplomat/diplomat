@@ -17,14 +17,14 @@ final class OpaqueMutexedString implements ffi.Finalizable {
   // maintain borrow validity.
   OpaqueMutexedString._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_OpaqueMutexedString_destroy(this, _ffi.cast());
+      _OpaqueMutexedString_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_OpaqueMutexedString_destroy(OpaqueMutexedString cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _OpaqueMutexedString_destroy(OpaqueMutexedString cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueMutexedString_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueMutexedString_destroy));
 
   static OpaqueMutexedString fromUsize(int number) {
     final result = _OpaqueMutexedString_from_usize(number);
@@ -83,7 +83,7 @@ final class OpaqueMutexedString implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueMutexedString_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueMutexedString_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueMutexedString_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Size)>(isLeaf: true, symbol: 'OpaqueMutexedString_from_usize')

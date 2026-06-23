@@ -21,14 +21,14 @@ final class Bar implements ffi.Finalizable {
   // maintain borrow validity.
   Bar._fromFfi(this._ffi, this._selfEdge, this._bEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      $d_Bar_destroy(this, _ffi.cast());
+      _Bar_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_Bar_destroy(Bar cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _Bar_destroy(Bar cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Bar_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Bar_destroy));
 
   Foo get foo {
     // This lifetime edge depends on lifetimes: 'b, 'a
@@ -44,7 +44,7 @@ final class Bar implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Bar_destroy')
 // ignore: non_constant_identifier_names
-external void _Bar_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Bar_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Bar_foo')

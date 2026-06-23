@@ -17,14 +17,14 @@ final class Opaque implements ffi.Finalizable {
   // maintain borrow validity.
   Opaque._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_Opaque_destroy(this, _ffi.cast());
+      _Opaque_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_Opaque_destroy(Opaque cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _Opaque_destroy(Opaque cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Opaque_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Opaque_destroy));
 
   factory Opaque() {
     final result = _Opaque_new();
@@ -79,7 +79,7 @@ final class Opaque implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Opaque_destroy')
 // ignore: non_constant_identifier_names
-external void _Opaque_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Opaque_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'Opaque_new')

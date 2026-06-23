@@ -17,14 +17,14 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
   // maintain borrow validity.
   OpaqueThinVec._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_OpaqueThinVec_destroy(this, _ffi.cast());
+      _OpaqueThinVec_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_OpaqueThinVec_destroy(OpaqueThinVec cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _OpaqueThinVec_destroy(OpaqueThinVec cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinVec_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueThinVec_destroy));
 
   factory OpaqueThinVec(core.List<int> a, core.List<double> b, String c) {
     final temp = _FinalizedArena();
@@ -64,7 +64,7 @@ final class OpaqueThinVec with core.Iterable<OpaqueThin> implements ffi.Finaliza
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueThinVec_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueThinVec_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueThinVec_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceInt32, _SliceFloat, _SliceUtf8)>(isLeaf: true, symbol: 'OpaqueThinVec_create')

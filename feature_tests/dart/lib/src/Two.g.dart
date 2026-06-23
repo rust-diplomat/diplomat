@@ -21,20 +21,20 @@ final class Two implements ffi.Finalizable {
   // maintain borrow validity.
   Two._fromFfi(this._ffi, this._selfEdge, this._aEdge, this._bEdge) {
     if (_selfEdge.isEmpty) {
-      $d_Two_destroy(this, _ffi.cast());
+      _Two_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_Two_destroy(Two cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _Two_destroy(Two cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Two_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Two_destroy));
 
 }
 
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Two_destroy')
 // ignore: non_constant_identifier_names
-external void _Two_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Two_destroy(ffi.Pointer<ffi.Void> self);
 
 // dart format on

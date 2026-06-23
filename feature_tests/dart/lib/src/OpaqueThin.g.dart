@@ -17,14 +17,14 @@ final class OpaqueThin implements ffi.Finalizable {
   // maintain borrow validity.
   OpaqueThin._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_OpaqueThin_destroy(this, _ffi.cast());
+      _OpaqueThin_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_OpaqueThin_destroy(OpaqueThin cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _OpaqueThin_destroy(OpaqueThin cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThin_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueThin_destroy));
 
   int get a {
     final result = _OpaqueThin_a(_ffi);
@@ -47,7 +47,7 @@ final class OpaqueThin implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueThin_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueThin_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueThin_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Int32 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_a')

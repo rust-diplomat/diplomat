@@ -17,14 +17,14 @@ final class RenamedMixinTest implements ffi.Finalizable {
   // maintain borrow validity.
   RenamedMixinTest._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      $d_namespace_MixinTest_destroy(this, _ffi.cast());
+      _namespace_MixinTest_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_namespace_MixinTest_destroy(RenamedMixinTest cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _namespace_MixinTest_destroy(RenamedMixinTest cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MixinTest_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_MixinTest_destroy));
 
   static String hello() {
     final write = _Write();
@@ -37,7 +37,7 @@ final class RenamedMixinTest implements ffi.Finalizable {
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MixinTest_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_MixinTest_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_MixinTest_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_MixinTest_hello')

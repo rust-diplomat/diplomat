@@ -19,14 +19,14 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
   // maintain borrow validity.
   OpaqueThinIter._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      $d_OpaqueThinIter_destroy(this, _ffi.cast());
+      _OpaqueThinIter_destroy(this, _ffi.cast());
     }
   }
 
   @meta.RecordUse()
-  static void $d_OpaqueThinIter_destroy(OpaqueThinIter cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+  static void _OpaqueThinIter_destroy(OpaqueThinIter cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThinIter_destroy));
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueThinIter_destroy));
 
   OpaqueThin? _current;
 
@@ -51,7 +51,7 @@ final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin>
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueThinIter_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueThinIter_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueThinIter_destroy(ffi.Pointer<ffi.Void> self);
 
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThinIter_next')
