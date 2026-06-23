@@ -1047,7 +1047,7 @@ impl<'ast> LoweringContext<'ast> {
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
 
-                                self.usage_get_or_insert::<P>(tcx_id.into()).optioned = true;
+                                self.usage_get_or_insert(tcx_id.into()).optioned = true;
 
                                 Ok(Type::Opaque(OpaquePath::new(
                                     lifetimes,
@@ -1084,7 +1084,7 @@ impl<'ast> LoweringContext<'ast> {
                                 }
                                 let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
                                 if let Some(i) = inner.id() {
-                                    self.usage_get_or_insert::<P>(i.into()).optioned = true;
+                                    self.usage_get_or_insert(i.into()).optioned = true;
                                 }
                                 Ok(Type::DiplomatOption(Box::new(inner)))
                             }
@@ -1218,7 +1218,7 @@ impl<'ast> LoweringContext<'ast> {
                 let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
                 match inner {
                     Type::Struct(st) => {
-                        self.usage_get_or_insert::<P>(st.tcx_id.into()).sliced = true;
+                        self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                     }
                     Type::Opaque(op) => {
@@ -1243,7 +1243,7 @@ impl<'ast> LoweringContext<'ast> {
                             )));
                         }
 
-                        self.usage_get_or_insert::<P>(op.tcx_id.into()).sliced = true;
+                        self.usage_get_or_insert(op.tcx_id.into()).sliced = true;
 
                         // Currently made simple since right now we don't support borrowing from opaque slices in output: rust-diplomat.github.io/diplomat/attrs/slices.html#opaques
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
@@ -1480,7 +1480,7 @@ impl<'ast> LoweringContext<'ast> {
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                                self.usage_get_or_insert::<super::OutputOnly>(tcx_id.into())
+                                self.usage_get_or_insert(tcx_id.into())
                                     .optioned = true;
 
                                 Ok(OutType::Opaque(OpaquePath::new(
@@ -1519,7 +1519,7 @@ impl<'ast> LoweringContext<'ast> {
                             }
                             let inner = self.lower_out_type(opt_ty, ltl, in_path, context, true)?;
                             if let Some(i) = inner.id() {
-                                self.usage_get_or_insert::<super::OutputOnly>(i.into())
+                                self.usage_get_or_insert(i.into())
                                     .optioned = true;
                             }
                             Ok(Type::DiplomatOption(Box::new(inner)))
@@ -1610,7 +1610,7 @@ impl<'ast> LoweringContext<'ast> {
                     self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
                 match inner {
                     Type::Struct(st) => {
-                        self.usage_get_or_insert::<super::OutputOnly>(st.id().into())
+                        self.usage_get_or_insert(st.id().into())
                             .sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                     }
@@ -2024,7 +2024,7 @@ impl<'ast> LoweringContext<'ast> {
                     (Ok(ok_ty), Ok(err_ty)) => {
                         match &ok_ty {
                             SuccessType::OutType(o) if let Some(i) = o.id() => {
-                                self.usage_get_or_insert::<super::OutputOnly>(i.into())
+                                self.usage_get_or_insert(i.into())
                                     .results
                                     .push(super::ResultUsage::Output(super::ResultUsageInfo {
                                         ok: ok_ty.clone(),
@@ -2034,7 +2034,7 @@ impl<'ast> LoweringContext<'ast> {
                             _ => {}
                         }
                         if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
-                            self.usage_get_or_insert::<super::OutputOnly>(id.into())
+                            self.usage_get_or_insert(id.into())
                                 .results
                                 .push(super::ResultUsage::Output(super::ResultUsageInfo {
                                     ok: ok_ty.clone(),
@@ -2068,7 +2068,7 @@ impl<'ast> LoweringContext<'ast> {
                     );
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
-                            self.usage_get_or_insert::<super::OutputOnly>(i.into())
+                            self.usage_get_or_insert(i.into())
                                 .optioned = true;
                         }
                     }
@@ -2116,7 +2116,7 @@ impl<'ast> LoweringContext<'ast> {
                     (Ok(ok_ty), Ok(err_ty)) => {
                         match &ok_ty {
                             SuccessType::OutType(o) if let Some(i) = o.id() => {
-                                self.usage_get_or_insert::<super::Everywhere>(i.into())
+                                self.usage_get_or_insert(i.into())
                                     .results
                                     .push(super::ResultUsage::Input(super::ResultUsageInfo {
                                         ok: ok_ty.clone(),
@@ -2126,7 +2126,7 @@ impl<'ast> LoweringContext<'ast> {
                             _ => {}
                         }
                         if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
-                            self.usage_get_or_insert::<super::Everywhere>(id.into())
+                            self.usage_get_or_insert(id.into())
                                 .results
                                 .push(super::ResultUsage::Input(super::ResultUsageInfo {
                                     ok: ok_ty.clone(),
@@ -2161,7 +2161,7 @@ impl<'ast> LoweringContext<'ast> {
                     let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path);
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
-                            self.usage_get_or_insert::<super::OutputOnly>(i.into())
+                            self.usage_get_or_insert(i.into())
                                 .optioned = true;
                         }
                     }
@@ -2205,10 +2205,7 @@ impl<'ast> LoweringContext<'ast> {
         Ok(LifetimeEnv::new(nodes, ast.nodes.len()))
     }
 
-    fn usage_get_or_insert<'a, P: TyPosition>(&'a mut self, id: SymbolId) -> &'a mut TypingUseInfo {
-        if !self.type_usage.contains_key(&id) {
-            self.type_usage.insert(id.clone(), TypingUseInfo::default());
-        }
-        self.type_usage.get_mut(&id).unwrap()
+    fn usage_get_or_insert<'a>(&'a mut self, id: SymbolId) -> &'a mut TypingUseInfo {
+        self.type_usage.entry(id).or_insert_with(TypingUseInfo::default)
     }
 }

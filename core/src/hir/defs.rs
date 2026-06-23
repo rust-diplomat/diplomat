@@ -101,6 +101,7 @@ pub struct StructField<P: TyPosition = Everywhere> {
 }
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub struct ResultUsageInfo<P: TyPosition> {
     pub ok: super::SuccessType<P>,
     pub err: Option<Type<P>>,
@@ -108,6 +109,7 @@ pub struct ResultUsageInfo<P: TyPosition> {
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
+#[allow(clippy::large_enum_variant)]
 pub enum ResultUsage {
     /// Result is used as the return of a callback:
     Input(ResultUsageInfo<super::InputOnly>),
@@ -117,6 +119,7 @@ pub enum ResultUsage {
 
 /// Information on how a [`TypeDef`] is used across the HIR.
 #[derive(Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct TypingUseInfo {
     /// If the given type is ever used in a slice.
     pub sliced: bool,
