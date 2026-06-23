@@ -1078,6 +1078,9 @@ impl<'ast> LoweringContext<'ast> {
                                     self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
                                 let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                                if let Some(i) = inner.id() {
+                                    self.usage_get_or_insert::<P>(i.into()).optioned = true;
+                                }
                                 Ok(Type::DiplomatOption(Box::new(inner)))
                             }
                         }
@@ -1507,6 +1510,9 @@ impl<'ast> LoweringContext<'ast> {
                                 self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
                             let inner = self.lower_out_type(opt_ty, ltl, in_path, context, true)?;
+                            if let Some(i) = inner.id() {
+                                self.usage_get_or_insert::<super::OutputOnly>(i.into()).optioned = true;
+                            }
                             Ok(Type::DiplomatOption(Box::new(inner)))
                         }
                     }
