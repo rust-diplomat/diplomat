@@ -35,8 +35,13 @@
 //!   borrow checker: explicitly `Dispose()`-ing (or `using`-scoping) a
 //!   borrowed-from wrapper while the borrower is still in use frees the native
 //!   memory early — a use-after-free the backend cannot statically prevent.
-//!   Borrows that flow into a non-opaque return (e.g. a by-value struct) are
-//!   rejected for now, since edges are only plumbed through opaque wrappers.
+//!   The same applies to a concurrent `Dispose()` from another thread racing
+//!   an in-flight call: like the rest of the generated surface, the wrappers
+//!   are not thread-safe against disposal. Closing these holds requires
+//!   runtime borrow-counting / `SafeHandle` ref-count leases (a future,
+//!   opt-in hardening), not just keep-alive edges. Borrows that flow into a
+//!   non-opaque return (e.g. a by-value struct) are rejected for now, since
+//!   edges are only plumbed through opaque wrappers.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
