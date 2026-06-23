@@ -47,7 +47,7 @@ final class BorrowingOptionStruct {
   // assuming that there are no `'other: a`. bounds. In case of such bounds,
   // the caller should take care to also call _fieldsForLifetimeOther
   // ignore: unused_element
-  core.List<Object> get _fieldsForLifetimeA => [if (a != null) a!];
+  core.List<Object> get _fieldsForLifetimeA => [?a];
 }
 
 // dart format on
