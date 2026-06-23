@@ -123,11 +123,7 @@ pub(crate) fn run<'cx>(
 
     files.add_file(
         formatter.fmt_file_name("lib"),
-        render_class(
-            init_dart_content,
-            directives,
-            helper_classes,
-        ),
+        render_class(init_dart_content, directives, helper_classes),
     );
 
     (files, errors)
@@ -613,10 +609,13 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 "write".into(),
                 include_str!("../../templates/dart/write.dart").into(),
             );
-            self.symbols.insert("diplomat_buffer_write_create".to_string());
+            self.symbols
+                .insert("diplomat_buffer_write_create".to_string());
             self.symbols.insert("diplomat_buffer_write_len".to_string());
-            self.symbols.insert("diplomat_buffer_write_get_bytes".to_string());
-            self.symbols.insert("diplomat_buffer_write_destroy".to_string());
+            self.symbols
+                .insert("diplomat_buffer_write_get_bytes".to_string());
+            self.symbols
+                .insert("diplomat_buffer_write_destroy".to_string());
         }
 
         let return_ty = self.gen_return_type_name(&method.output);
