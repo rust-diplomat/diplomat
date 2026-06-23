@@ -2015,7 +2015,22 @@ impl<'ast> LoweringContext<'ast> {
                 };
 
                 match (ok_ty, err_ty) {
-                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    (Ok(ok_ty), Ok(err_ty)) => {
+                        match &ok_ty {
+                            SuccessType::OutType(o) if let Some(i) = o.id() => {
+                                self.usage_get_or_insert::<super::OutputOnly>(i.into()).results.push(super::ResultUsage::Output(
+                                    super::ResultUsageInfo { ok: ok_ty.clone(), err: err_ty.clone() }
+                                ));
+                            }
+                            _ => {} 
+                        }
+                        if let Some(id) = err_ty.as_ref().and_then(|e| { e.id() }) {
+                            self.usage_get_or_insert::<super::OutputOnly>(id.into()).results.push(super::ResultUsage::Output(
+                                super::ResultUsageInfo { ok: ok_ty.clone(), err: err_ty.clone() }
+                            ));
+                        }
+                        Ok(ReturnType::Fallible(ok_ty, err_ty))
+                    },
                     _ => Err(()),
                 }
             }
@@ -2087,7 +2102,22 @@ impl<'ast> LoweringContext<'ast> {
                 };
 
                 match (ok_ty, err_ty) {
-                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    (Ok(ok_ty), Ok(err_ty)) => {
+                        match &ok_ty {
+                            SuccessType::OutType(o) if let Some(i) = o.id() => {
+                                self.usage_get_or_insert::<super::Everywhere>(i.into()).results.push(super::ResultUsage::Input(
+                                    super::ResultUsageInfo { ok: ok_ty.clone(), err: err_ty.clone() }
+                                ));
+                            }
+                            _ => {} 
+                        }
+                        if let Some(id) = err_ty.as_ref().and_then(|e| { e.id() }) {
+                            self.usage_get_or_insert::<super::Everywhere>(id.into()).results.push(super::ResultUsage::Input(
+                                super::ResultUsageInfo { ok: ok_ty.clone(), err: err_ty.clone() }
+                            ));
+                        }
+                        Ok(ReturnType::Fallible(ok_ty, err_ty))
+                    },
                     _ => Err(()),
                 }
             }

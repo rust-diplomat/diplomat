@@ -101,9 +101,18 @@ pub struct StructField<P: TyPosition = Everywhere> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ResultUsageInfo {
-    ok : Type<OutputOnly>,
-    err : Type<OutputOnly>,
+pub struct ResultUsageInfo<P: TyPosition> {
+    pub ok : super::SuccessType<P>,
+    pub err : Option<Type<P>>,
+}
+
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum ResultUsage {
+    /// Result is used as the return of a callback:
+    Input(ResultUsageInfo<super::InputOnly>),
+    /// Result is used as the return of a method:
+    Output(ResultUsageInfo<super::OutputOnly>),
 }
 
 /// Information on how a [`TypeDef`] is used across the HIR.
@@ -114,7 +123,7 @@ pub struct TypingUseInfo {
     /// If the given type is ever used in an option.
     pub optioned : bool,
     /// The results that this type is used in.
-    pub results : Vec<ResultUsageInfo>,
+    pub results : Vec<ResultUsage>,
 }
 
 pub(super) trait TypeUsage {
