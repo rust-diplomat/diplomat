@@ -108,6 +108,40 @@ pub struct TypingUseInfo {
     pub optioned : bool
 }
 
+pub(super) trait TypeUsage {
+    fn set_usage(&mut self, usage : super::TypingUseInfo);
+}
+
+impl TypeUsage for StructDef<super::Everywhere> {
+    fn set_usage(&mut self, usage : TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for StructDef<super::OutputOnly> {
+    fn set_usage(&mut self, usage : TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for OpaqueDef {
+    fn set_usage(&mut self, usage : TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for EnumDef {
+    fn set_usage(&mut self, usage : TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for TraitDef {
+    fn set_usage(&mut self, usage : TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
 /// A variant of an [`Enum`].
 #[derive(Debug)]
 #[non_exhaustive]

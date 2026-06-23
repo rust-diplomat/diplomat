@@ -83,61 +83,6 @@ enum Param<'a> {
     Return,
 }
 
-pub(super) trait TypeUsage {
-    fn set_usage(&mut self, usage : super::TypingUseInfo);
-    fn id_from_idx(idx : usize) -> super::SymbolId;
-}
-
-impl TypeUsage for StructDef<super::Everywhere> {
-    fn set_usage(&mut self, usage : super::TypingUseInfo) {
-        self.usage = usage;
-    }
-
-    fn id_from_idx(idx : usize) -> super::SymbolId {
-        StructId(idx).into()
-    }
-}
-
-impl TypeUsage for StructDef<super::OutputOnly> {
-    fn set_usage(&mut self, usage : super::TypingUseInfo) {
-        self.usage = usage;
-    }
-
-    fn id_from_idx(idx : usize) -> super::SymbolId {
-        OutStructId(idx).into()
-    }
-}
-
-impl TypeUsage for OpaqueDef {
-    fn set_usage(&mut self, usage : super::TypingUseInfo) {
-        self.usage = usage;
-    }
-
-    fn id_from_idx(idx : usize) -> super::SymbolId {
-        OpaqueId(idx).into()
-    }
-}
-
-impl TypeUsage for EnumDef {
-    fn set_usage(&mut self, usage : hir::TypingUseInfo) {
-        self.usage = usage;
-    }
-
-    fn id_from_idx(idx : usize) -> hir::SymbolId {
-        EnumId(idx).into()
-    }
-}
-
-impl TypeUsage for TraitDef {
-    fn set_usage(&mut self, usage : hir::TypingUseInfo) {
-        self.usage = usage;
-    }
-
-    fn id_from_idx(idx : usize) -> hir::SymbolId {
-        TraitId(idx).into()
-    }
-}
-
 impl Display for Param<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         if let Param::Input(s) = *self {
@@ -404,12 +349,12 @@ impl TypeContext {
 
         match (out_structs, structs, opaques, enums, functions, traits) {
             (Ok(mut out_structs), Ok(mut structs), Ok(mut opaques), Ok(mut enums), Ok(functions), Ok(mut traits)) => {
-                // After lowering, now we update with usage information:
-                ctx.update_usage(&mut out_structs);
-                ctx.update_usage(&mut structs);
-                ctx.update_usage(&mut opaques);
-                ctx.update_usage(&mut enums);
-                ctx.update_usage(&mut traits);
+                // After lowering, now we update with usage information (and proper indexing into the HashMap):
+                ctx.update_usage(out_structs.iter_mut().enumerate().map(|s| (OutStructId(s.0).into(), s.1)));
+                ctx.update_usage(structs.iter_mut().enumerate().map(|s| (StructId(s.0).into(), s.1)));
+                ctx.update_usage(opaques.iter_mut().enumerate().map(|s| (OpaqueId(s.0).into(), s.1)));
+                ctx.update_usage(enums.iter_mut().enumerate().map(|s| (EnumId(s.0).into(), s.1)));
+                ctx.update_usage(traits.iter_mut().enumerate().map(|s| (TraitId(s.0).into(), s.1)));
 
                 let res = Self {
                     out_structs,

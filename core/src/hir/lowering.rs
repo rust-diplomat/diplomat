@@ -208,9 +208,9 @@ impl<'ast> LoweringContext<'ast> {
         self.lower_all(ast_defs, Self::lower_function)
     }
 
-    pub(super) fn update_usage<Ast : super::TypeUsage>(&self, defs : &mut Vec<Ast>) {
-        for (idx, d) in defs.iter_mut().enumerate() {
-            if let Some(u) = self.type_usage.get(&Ast::id_from_idx(idx)) {
+    pub(super) fn update_usage<'a, Ast : super::TypeUsage + 'a>(&self, defs : impl ExactSizeIterator<Item = (SymbolId, &'a mut Ast)>) {
+        for (id, d) in defs {
+            if let Some(u) = self.type_usage.get(&id) {
                 d.set_usage(u.clone());
             }
         }
