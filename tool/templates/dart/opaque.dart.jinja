@@ -25,11 +25,13 @@ final class {{type_name}}
   // maintain borrow validity.
   {{type_name}}._fromFfi(this._ffi, this._selfEdge {%- for lifetime in lifetimes.all_lifetimes() -%} , this._{{lifetimes.fmt_lifetime(lifetime)}}Edge {%- endfor -%}) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      $d_{{destructor}}(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('{{destructor}}')
+  @meta.RecordUse()
+  static void $d_{{destructor}}({{type_name}} cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_{{destructor}}));
 
   {%- if let Some(it) = special.iterator %}
@@ -60,7 +62,7 @@ final class {{type_name}}
   {%- endif %}
 }
 
-@_DiplomatFfiUse('{{destructor}}')
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: '{{destructor}}')
 // ignore: non_constant_identifier_names
 external void _{{destructor}}(ffi.Pointer<ffi.Void> self);
