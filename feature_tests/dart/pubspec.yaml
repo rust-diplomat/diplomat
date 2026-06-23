@@ -8,7 +8,7 @@ environment:
 dependencies:
   code_assets: ^1.0.0
   ffi: ^2.0.0
-  hooks: ^1.0.0
+  hooks: ^2.0.2
   meta: ^1.12.0
 
 dev_dependencies:
