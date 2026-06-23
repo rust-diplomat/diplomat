@@ -239,6 +239,7 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: false,
+                results: [],
             },
         },
     ],
@@ -513,6 +514,7 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: false,
+                results: [],
             },
         },
     ],
@@ -574,6 +576,7 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: false,
+                results: [],
             },
         },
     ],
