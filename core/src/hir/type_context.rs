@@ -1722,11 +1722,18 @@ mod tests {
                 pub struct Opaque(i32);
 
                 impl Opaque {
-                    pub fn used_in_option(u : Option<&UsedOpaque>) {}
+                    pub fn used_in_option(u : Option<&UsedInOptionOpaque>) {}
+                    
+                    pub fn used_in_slice<'a>() -> &'a [UsedInSlice] {}
                 }
 
                 #[diplomat::opaque]
-                pub struct UsedOpaque(i32);
+                pub struct UsedInOptionOpaque(i32);
+
+                pub struct UsedInSlice {
+                    a : i32
+                }
+
             }
 
         }, true, None, &crate::ast::SpanLocation::None);

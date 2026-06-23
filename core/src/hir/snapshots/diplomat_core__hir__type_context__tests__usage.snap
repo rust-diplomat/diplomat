@@ -4,7 +4,104 @@ expression: tcx
 ---
 TypeContext {
     out_structs: [],
-    structs: [],
+    structs: [
+        StructDef {
+            docs: Docs {
+                lines: "",
+                rust_links: [],
+            },
+            name: "UsedInSlice",
+            fields: [
+                StructField {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "a",
+                    ty: Primitive(
+                        Int(
+                            I32,
+                        ),
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
+            ],
+            methods: [],
+            attrs: Attrs {
+                disable: false,
+                deprecated: None,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                custom_errors: false,
+                default: false,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    custom_func: None,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                        default_value: "",
+                    },
+                },
+                generate_mocking_interface: false,
+                abi_compatible: false,
+                mut_struct_ref: false,
+                tuple: false,
+                custom_extra_code: {},
+                default_value: None,
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [],
+                num_lifetimes: 0,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                optional_comparator: false,
+                iterator: None,
+                iterable: None,
+            },
+            usage: TypingUseInfo {
+                sliced: true,
+                optioned: false,
+            },
+        },
+    ],
     opaques: [
         OpaqueDef {
             docs: Docs {
@@ -115,6 +212,85 @@ TypeContext {
                         default_value: None,
                     },
                 },
+                Method {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "used_in_slice",
+                    abi_name: "Opaque_used_in_slice",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [
+                            BoundedLifetime {
+                                ident: "a",
+                                longer: [],
+                                shorter: [],
+                            },
+                        ],
+                        num_lifetimes: 1,
+                    },
+                    param_self: None,
+                    params: [],
+                    output: Infallible(
+                        OutType(
+                            Slice(
+                                Struct(
+                                    Borrow(
+                                        Borrow {
+                                            lifetime: NonStatic(
+                                                Lifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                            mutability: Immutable,
+                                        },
+                                    ),
+                                    Struct(
+                                        StructPath {
+                                            lifetimes: Lifetimes {
+                                                indices: [],
+                                            },
+                                            tcx_id: StructId(
+                                                0,
+                                            ),
+                                            owner: Own,
+                                        },
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
             ],
             attrs: Attrs {
                 disable: false,
@@ -167,7 +343,7 @@ TypeContext {
                 lines: "",
                 rust_links: [],
             },
-            name: "UsedOpaque",
+            name: "UsedInOptionOpaque",
             methods: [],
             attrs: Attrs {
                 disable: false,
@@ -209,7 +385,7 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
-            dtor_abi_name: "UsedOpaque_destroy",
+            dtor_abi_name: "UsedInOptionOpaque_destroy",
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: true,
