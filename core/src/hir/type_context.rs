@@ -1727,6 +1727,12 @@ mod tests {
                     pub fn used_in_slice<'a>(op: &'a [&'a UsedInSliceOpaque]) -> &'a [UsedInSlice] {}
                     
                     pub fn struct_option_ret() -> Option<StructOptionUsedInReturn> {}
+
+                    pub fn struct_result_ret() -> Result<UsedInSlice, i32> {}
+
+                    pub fn option_result_ret() -> Result<Box<UsedInOptionOpaque>, UsedInSlice> {}
+
+                    pub fn callback_result(f : impl Fn() -> Result<&UsedInOptionOpaque, UsedInSlice>) {}
                 }
 
                 #[diplomat::opaque]
@@ -1759,6 +1765,7 @@ mod tests {
 
         let mut backend = crate::hir::BasicAttributeValidator::new("test-backend");
         backend.support.static_slices = true;
+        backend.support.callbacks = true;
         backend.support.opaque_slices = true;
 
         let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend).unwrap();

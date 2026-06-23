@@ -196,7 +196,109 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: true,
                 optioned: false,
-                results: [],
+                results: [
+                    Output(
+                        ResultUsageInfo {
+                            ok: OutType(
+                                Struct(
+                                    Struct(
+                                        StructPath {
+                                            lifetimes: Lifetimes {
+                                                indices: [],
+                                            },
+                                            tcx_id: StructId(
+                                                1,
+                                            ),
+                                            owner: Own,
+                                        },
+                                    ),
+                                ),
+                            ),
+                            err: Some(
+                                Primitive(
+                                    Int(
+                                        I32,
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    Output(
+                        ResultUsageInfo {
+                            ok: OutType(
+                                Opaque(
+                                    OpaquePath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        optional: Optional(
+                                            false,
+                                        ),
+                                        owner: Own,
+                                        tcx_id: OpaqueId(
+                                            2,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            err: Some(
+                                Struct(
+                                    Struct(
+                                        StructPath {
+                                            lifetimes: Lifetimes {
+                                                indices: [],
+                                            },
+                                            tcx_id: StructId(
+                                                1,
+                                            ),
+                                            owner: Own,
+                                        },
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    Input(
+                        ResultUsageInfo {
+                            ok: OutType(
+                                Opaque(
+                                    OpaquePath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        optional: Optional(
+                                            false,
+                                        ),
+                                        owner: Borrow {
+                                            lifetime: NonStatic(
+                                                Lifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                            mutability: Immutable,
+                                        },
+                                        tcx_id: OpaqueId(
+                                            2,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            err: Some(
+                                Struct(
+                                    StructPath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        tcx_id: StructId(
+                                            1,
+                                        ),
+                                        owner: Own,
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                ],
             },
         },
     ],
@@ -532,6 +634,279 @@ TypeContext {
                         default_value: None,
                     },
                 },
+                Method {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "struct_result_ret",
+                    abi_name: "Opaque_struct_result_ret",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [],
+                        num_lifetimes: 0,
+                    },
+                    param_self: None,
+                    params: [],
+                    output: Fallible(
+                        OutType(
+                            Struct(
+                                Struct(
+                                    StructPath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        tcx_id: StructId(
+                                            1,
+                                        ),
+                                        owner: Own,
+                                    },
+                                ),
+                            ),
+                        ),
+                        Some(
+                            Primitive(
+                                Int(
+                                    I32,
+                                ),
+                            ),
+                        ),
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
+                Method {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "option_result_ret",
+                    abi_name: "Opaque_option_result_ret",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [],
+                        num_lifetimes: 0,
+                    },
+                    param_self: None,
+                    params: [],
+                    output: Fallible(
+                        OutType(
+                            Opaque(
+                                OpaquePath {
+                                    lifetimes: Lifetimes {
+                                        indices: [],
+                                    },
+                                    optional: Optional(
+                                        false,
+                                    ),
+                                    owner: Own,
+                                    tcx_id: OpaqueId(
+                                        2,
+                                    ),
+                                },
+                            ),
+                        ),
+                        Some(
+                            Struct(
+                                Struct(
+                                    StructPath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        tcx_id: StructId(
+                                            1,
+                                        ),
+                                        owner: Own,
+                                    },
+                                ),
+                            ),
+                        ),
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
+                Method {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "callback_result",
+                    abi_name: "Opaque_callback_result",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [],
+                        num_lifetimes: 1,
+                    },
+                    param_self: None,
+                    params: [
+                        Param {
+                            name: "f",
+                            ty: Callback(
+                                Callback {
+                                    param_self: None,
+                                    params: [],
+                                    output: Fallible(
+                                        OutType(
+                                            Opaque(
+                                                OpaquePath {
+                                                    lifetimes: Lifetimes {
+                                                        indices: [],
+                                                    },
+                                                    optional: Optional(
+                                                        false,
+                                                    ),
+                                                    owner: Borrow {
+                                                        lifetime: NonStatic(
+                                                            Lifetime(
+                                                                0,
+                                                            ),
+                                                        ),
+                                                        mutability: Immutable,
+                                                    },
+                                                    tcx_id: OpaqueId(
+                                                        2,
+                                                    ),
+                                                },
+                                            ),
+                                        ),
+                                        Some(
+                                            Struct(
+                                                StructPath {
+                                                    lifetimes: Lifetimes {
+                                                        indices: [],
+                                                    },
+                                                    tcx_id: StructId(
+                                                        1,
+                                                    ),
+                                                    owner: Own,
+                                                },
+                                            ),
+                                        ),
+                                    ),
+                                    name: None,
+                                    attrs: None,
+                                    docs: None,
+                                },
+                            ),
+                            attrs: Attrs {
+                                disable: false,
+                                deprecated: None,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                custom_errors: false,
+                                default: false,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    custom_func: None,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                        default_value: "",
+                                    },
+                                },
+                                generate_mocking_interface: false,
+                                abi_compatible: false,
+                                mut_struct_ref: false,
+                                tuple: false,
+                                custom_extra_code: {},
+                                default_value: None,
+                            },
+                        },
+                    ],
+                    output: Infallible(
+                        Unit,
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
             ],
             attrs: Attrs {
                 disable: false,
@@ -685,7 +1060,83 @@ TypeContext {
             usage: TypingUseInfo {
                 sliced: false,
                 optioned: true,
-                results: [],
+                results: [
+                    Output(
+                        ResultUsageInfo {
+                            ok: OutType(
+                                Opaque(
+                                    OpaquePath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        optional: Optional(
+                                            false,
+                                        ),
+                                        owner: Own,
+                                        tcx_id: OpaqueId(
+                                            2,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            err: Some(
+                                Struct(
+                                    Struct(
+                                        StructPath {
+                                            lifetimes: Lifetimes {
+                                                indices: [],
+                                            },
+                                            tcx_id: StructId(
+                                                1,
+                                            ),
+                                            owner: Own,
+                                        },
+                                    ),
+                                ),
+                            ),
+                        },
+                    ),
+                    Input(
+                        ResultUsageInfo {
+                            ok: OutType(
+                                Opaque(
+                                    OpaquePath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        optional: Optional(
+                                            false,
+                                        ),
+                                        owner: Borrow {
+                                            lifetime: NonStatic(
+                                                Lifetime(
+                                                    0,
+                                                ),
+                                            ),
+                                            mutability: Immutable,
+                                        },
+                                        tcx_id: OpaqueId(
+                                            2,
+                                        ),
+                                    },
+                                ),
+                            ),
+                            err: Some(
+                                Struct(
+                                    StructPath {
+                                        lifetimes: Lifetimes {
+                                            indices: [],
+                                        },
+                                        tcx_id: StructId(
+                                            1,
+                                        ),
+                                        owner: Own,
+                                    },
+                                ),
+                            ),
+                        },
+                    ),
+                ],
             },
         },
         OpaqueDef {
