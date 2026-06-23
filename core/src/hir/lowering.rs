@@ -2031,16 +2031,24 @@ impl<'ast> LoweringContext<'ast> {
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(write_or_unit)),
-                _ => self
+                _ => {
+                    let t = self
                     .lower_out_type(
                         value_ty,
                         &mut return_ltl,
                         in_path,
                         TypeLoweringContext::Method,
                         true,
-                    )
-                    .map(SuccessType::OutType)
-                    .map(ReturnType::Nullable),
+                    );
+                    if let Ok(t) = &t {
+                        if let Some(i) = t.id() {
+                            self.usage_get_or_insert::<super::OutputOnly>(i.into()).optioned = true;
+                        }
+                    }
+
+                    t.map(SuccessType::OutType)
+                    .map(ReturnType::Nullable)
+                },
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(write_or_unit)),
             ty => self
@@ -2102,10 +2110,17 @@ impl<'ast> LoweringContext<'ast> {
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
-                _ => self
-                    .lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path)
-                    .map(SuccessType::OutType)
-                    .map(ReturnType::Nullable),
+                _ => {
+                    let t = self
+                    .lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path);
+                    if let Ok(t) = &t {
+                        if let Some(i) = t.id() {
+                            self.usage_get_or_insert::<super::OutputOnly>(i.into()).optioned = true;
+                        }
+                    }
+                    t.map(SuccessType::OutType)
+                    .map(ReturnType::Nullable)
+                },
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
