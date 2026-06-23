@@ -31,7 +31,7 @@ pub struct TraitDef {
     pub methods: Vec<Callback>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
-    pub usage : TypingUseInfo,
+    pub usage: TypingUseInfo,
 }
 
 /// Structs that can only be returned from methods.
@@ -48,7 +48,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
     pub special_method_presence: SpecialMethodPresence,
-    pub usage : TypingUseInfo,
+    pub usage: TypingUseInfo,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -71,7 +71,7 @@ pub struct OpaqueDef {
 
     /// The ABI name of the generated destructor
     pub dtor_abi_name: IdentBuf,
-    pub usage : TypingUseInfo,
+    pub usage: TypingUseInfo,
 }
 
 /// The enum type.
@@ -84,7 +84,7 @@ pub struct EnumDef {
     pub methods: Vec<Method>,
     pub attrs: Attrs,
     pub special_method_presence: SpecialMethodPresence,
-    pub usage : TypingUseInfo,
+    pub usage: TypingUseInfo,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -102,8 +102,8 @@ pub struct StructField<P: TyPosition = Everywhere> {
 
 #[derive(Debug, Clone)]
 pub struct ResultUsageInfo<P: TyPosition> {
-    pub ok : super::SuccessType<P>,
-    pub err : Option<Type<P>>,
+    pub ok: super::SuccessType<P>,
+    pub err: Option<Type<P>>,
 }
 
 #[derive(Debug, Clone)]
@@ -119,43 +119,43 @@ pub enum ResultUsage {
 #[derive(Debug, Clone, Default)]
 pub struct TypingUseInfo {
     /// If the given type is ever used in a slice.
-    pub sliced : bool,
+    pub sliced: bool,
     /// If the given type is ever used in an option.
-    pub optioned : bool,
+    pub optioned: bool,
     /// The results that this type is used in.
-    pub results : Vec<ResultUsage>,
+    pub results: Vec<ResultUsage>,
 }
 
 pub(super) trait TypeUsage {
-    fn set_usage(&mut self, usage : super::TypingUseInfo);
+    fn set_usage(&mut self, usage: super::TypingUseInfo);
 }
 
 impl TypeUsage for StructDef<super::Everywhere> {
-    fn set_usage(&mut self, usage : TypingUseInfo) {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
         self.usage = usage;
     }
 }
 
 impl TypeUsage for StructDef<super::OutputOnly> {
-    fn set_usage(&mut self, usage : TypingUseInfo) {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
         self.usage = usage;
     }
 }
 
 impl TypeUsage for OpaqueDef {
-    fn set_usage(&mut self, usage : TypingUseInfo) {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
         self.usage = usage;
     }
 }
 
 impl TypeUsage for EnumDef {
-    fn set_usage(&mut self, usage : TypingUseInfo) {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
         self.usage = usage;
     }
 }
 
 impl TypeUsage for TraitDef {
-    fn set_usage(&mut self, usage : TypingUseInfo) {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
         self.usage = usage;
     }
 }

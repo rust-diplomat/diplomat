@@ -348,13 +348,45 @@ impl TypeContext {
         let functions = ctx.lower_all_functions(ast_functions.into_iter());
 
         match (out_structs, structs, opaques, enums, functions, traits) {
-            (Ok(mut out_structs), Ok(mut structs), Ok(mut opaques), Ok(mut enums), Ok(functions), Ok(mut traits)) => {
+            (
+                Ok(mut out_structs),
+                Ok(mut structs),
+                Ok(mut opaques),
+                Ok(mut enums),
+                Ok(functions),
+                Ok(mut traits),
+            ) => {
                 // After lowering, now we update with usage information (and proper indexing into the HashMap):
-                ctx.update_usage(out_structs.iter_mut().enumerate().map(|s| (OutStructId(s.0).into(), s.1)));
-                ctx.update_usage(structs.iter_mut().enumerate().map(|s| (StructId(s.0).into(), s.1)));
-                ctx.update_usage(opaques.iter_mut().enumerate().map(|s| (OpaqueId(s.0).into(), s.1)));
-                ctx.update_usage(enums.iter_mut().enumerate().map(|s| (EnumId(s.0).into(), s.1)));
-                ctx.update_usage(traits.iter_mut().enumerate().map(|s| (TraitId(s.0).into(), s.1)));
+                ctx.update_usage(
+                    out_structs
+                        .iter_mut()
+                        .enumerate()
+                        .map(|s| (OutStructId(s.0).into(), s.1)),
+                );
+                ctx.update_usage(
+                    structs
+                        .iter_mut()
+                        .enumerate()
+                        .map(|s| (StructId(s.0).into(), s.1)),
+                );
+                ctx.update_usage(
+                    opaques
+                        .iter_mut()
+                        .enumerate()
+                        .map(|s| (OpaqueId(s.0).into(), s.1)),
+                );
+                ctx.update_usage(
+                    enums
+                        .iter_mut()
+                        .enumerate()
+                        .map(|s| (EnumId(s.0).into(), s.1)),
+                );
+                ctx.update_usage(
+                    traits
+                        .iter_mut()
+                        .enumerate()
+                        .map(|s| (TraitId(s.0).into(), s.1)),
+                );
 
                 let res = Self {
                     out_structs,
@@ -1715,51 +1747,59 @@ mod tests {
 
     #[test]
     fn test_usage() {
-        let m = crate::ast::Module::from_syn(&syn::parse_quote! { 
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                pub struct Opaque(i32);
+        let m = crate::ast::Module::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    pub struct Opaque(i32);
 
-                impl Opaque {
-                    pub fn used_in_option(u : Option<&UsedInOptionOpaque>) -> Option<Box<OptionUsedInReturnOpaque>> {}
-                    
-                    pub fn used_in_slice<'a>(op: &'a [&'a UsedInSliceOpaque]) -> &'a [UsedInSlice] {}
-                    
-                    pub fn struct_option_ret() -> Option<StructOptionUsedInReturn> {}
+                    impl Opaque {
+                        pub fn used_in_option(u : Option<&UsedInOptionOpaque>) -> Option<Box<OptionUsedInReturnOpaque>> {}
 
-                    pub fn struct_result_ret() -> Result<UsedInSlice, i32> {}
+                        pub fn used_in_slice<'a>(op: &'a [&'a UsedInSliceOpaque]) -> &'a [UsedInSlice] {}
 
-                    pub fn option_result_ret() -> Result<Box<UsedInOptionOpaque>, UsedInSlice> {}
+                        pub fn struct_option_ret() -> Option<StructOptionUsedInReturn> {}
 
-                    pub fn callback_result(f : impl Fn() -> Result<&UsedInOptionOpaque, UsedInSlice>) {}
+                        pub fn struct_result_ret() -> Result<UsedInSlice, i32> {}
+
+                        pub fn option_result_ret() -> Result<Box<UsedInOptionOpaque>, UsedInSlice> {}
+
+                        pub fn callback_result(f : impl Fn() -> Result<&UsedInOptionOpaque, UsedInSlice>) {}
+                    }
+
+                    #[diplomat::opaque]
+                    pub struct UsedInOptionOpaque(i32);
+
+                    #[diplomat::opaque]
+                    pub struct UsedInSliceOpaque(i32);
+
+                    pub struct UsedInSlice {
+                        a : i32
+                    }
+
+                    #[diplomat::opaque]
+                    pub struct OptionUsedInReturnOpaque(i32);
+
+                    pub struct StructOptionUsedInReturn {
+                        a: i32
+                    }
+
                 }
 
-                #[diplomat::opaque]
-                pub struct UsedInOptionOpaque(i32);
-
-                #[diplomat::opaque]
-                pub struct UsedInSliceOpaque(i32);
-
-                pub struct UsedInSlice {
-                    a : i32
-                }
-
-                #[diplomat::opaque]
-                pub struct OptionUsedInReturnOpaque(i32);
-
-                pub struct StructOptionUsedInReturn {
-                    a: i32
-                }
-
-            }
-
-        }, true, None, &crate::ast::SpanLocation::None);
+            },
+            true,
+            None,
+            &crate::ast::SpanLocation::None,
+        );
         let mut env = crate::Env::default();
         let mut top_symbols = crate::ModuleEnv::new(Default::default());
 
         m.insert_all_types(crate::ast::Path::empty(), &mut env);
-        top_symbols.insert(m.name.clone(), crate::ast::ModSymbol::SubModule(m.name.clone()));
+        top_symbols.insert(
+            m.name.clone(),
+            crate::ast::ModSymbol::SubModule(m.name.clone()),
+        );
 
         env.insert(crate::ast::Path::empty(), top_symbols);
 
@@ -1768,7 +1808,9 @@ mod tests {
         backend.support.callbacks = true;
         backend.support.opaque_slices = true;
 
-        let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend).unwrap();
+        let (_, tcx) =
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+                .unwrap();
 
         insta::assert_debug_snapshot!(tcx);
     }
