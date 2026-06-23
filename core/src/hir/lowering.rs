@@ -2203,6 +2203,6 @@ impl<'ast> LoweringContext<'ast> {
     fn usage_get_or_insert<'a>(&'a mut self, id: SymbolId) -> &'a mut TypingUseInfo {
         self.type_usage
             .entry(id)
-            .or_insert_with(TypingUseInfo::default)
+            .or_default()
     }
 }
