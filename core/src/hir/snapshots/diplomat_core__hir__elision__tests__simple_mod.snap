@@ -236,6 +236,10 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
+            usage: TypingUseInfo {
+                sliced: false,
+                optioned: false,
+            },
         },
     ],
     structs: [
@@ -506,6 +510,10 @@ TypeContext {
                 iterator: None,
                 iterable: None,
             },
+            usage: TypingUseInfo {
+                sliced: false,
+                optioned: false,
+            },
         },
     ],
     opaques: [
@@ -563,6 +571,10 @@ TypeContext {
                 iterable: None,
             },
             dtor_abi_name: "Opaque_destroy",
+            usage: TypingUseInfo {
+                sliced: false,
+                optioned: false,
+            },
         },
     ],
     enums: [],
