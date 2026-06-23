@@ -1712,4 +1712,37 @@ mod tests {
         };
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
+
+    #[test]
+    fn test_usage() {
+        let m = crate::ast::Module::from_syn(&syn::parse_quote! { 
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Opaque(i32);
+
+                impl Opaque {
+                    pub fn used_in_option(u : Option<&UsedOpaque>) {}
+                }
+
+                #[diplomat::opaque]
+                pub struct UsedOpaque(i32);
+            }
+
+        }, true, None, &crate::ast::SpanLocation::None);
+        let mut env = crate::Env::default();
+        let mut top_symbols = crate::ModuleEnv::new(Default::default());
+
+        m.insert_all_types(crate::ast::Path::empty(), &mut env);
+        top_symbols.insert(m.name.clone(), crate::ast::ModSymbol::SubModule(m.name.clone()));
+
+        env.insert(crate::ast::Path::empty(), top_symbols);
+
+        let mut backend = crate::hir::BasicAttributeValidator::new("test-backend");
+        backend.support.static_slices = true;
+
+        let (_, tcx) = crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend).unwrap();
+
+        insta::assert_debug_snapshot!(tcx);
+    }
 }

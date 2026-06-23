@@ -103,8 +103,9 @@ pub struct StructField<P: TyPosition = Everywhere> {
 /// Information on how a [`TypeDef`] is used across the HIR.
 #[derive(Debug, Clone, Default)]
 pub struct TypingUseInfo {
-    /// If the given type is ever used as a slice.
+    /// If the given type is ever used in a slice.
     pub sliced : bool,
+    /// If the given type is ever used in an option.
     pub optioned : bool
 }
 

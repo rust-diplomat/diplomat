@@ -1,0 +1,222 @@
+---
+source: core/src/hir/type_context.rs
+expression: tcx
+---
+TypeContext {
+    out_structs: [],
+    structs: [],
+    opaques: [
+        OpaqueDef {
+            docs: Docs {
+                lines: "",
+                rust_links: [],
+            },
+            name: "Opaque",
+            methods: [
+                Method {
+                    docs: Docs {
+                        lines: "",
+                        rust_links: [],
+                    },
+                    name: "used_in_option",
+                    abi_name: "Opaque_used_in_option",
+                    lifetime_env: LifetimeEnv {
+                        nodes: [],
+                        num_lifetimes: 1,
+                    },
+                    param_self: None,
+                    params: [
+                        Param {
+                            name: "u",
+                            ty: Opaque(
+                                OpaquePath {
+                                    lifetimes: Lifetimes {
+                                        indices: [],
+                                    },
+                                    optional: Optional(
+                                        true,
+                                    ),
+                                    owner: Borrow {
+                                        lifetime: NonStatic(
+                                            Lifetime(
+                                                0,
+                                            ),
+                                        ),
+                                        mutability: Immutable,
+                                    },
+                                    tcx_id: OpaqueId(
+                                        1,
+                                    ),
+                                },
+                            ),
+                            attrs: Attrs {
+                                disable: false,
+                                deprecated: None,
+                                namespace: None,
+                                rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                abi_rename: RenameAttr {
+                                    pattern: None,
+                                },
+                                special_method: None,
+                                custom_errors: false,
+                                default: false,
+                                demo_attrs: DemoInfo {
+                                    generate: false,
+                                    default_constructor: false,
+                                    external: false,
+                                    custom_func: None,
+                                    input_cfg: DemoInputCFG {
+                                        label: "",
+                                        default_value: "",
+                                    },
+                                },
+                                generate_mocking_interface: false,
+                                abi_compatible: false,
+                                mut_struct_ref: false,
+                                tuple: false,
+                                custom_extra_code: {},
+                                default_value: None,
+                            },
+                        },
+                    ],
+                    output: Infallible(
+                        Unit,
+                    ),
+                    attrs: Attrs {
+                        disable: false,
+                        deprecated: None,
+                        namespace: None,
+                        rename: RenameAttr {
+                            pattern: None,
+                        },
+                        abi_rename: RenameAttr {
+                            pattern: None,
+                        },
+                        special_method: None,
+                        custom_errors: false,
+                        default: false,
+                        demo_attrs: DemoInfo {
+                            generate: false,
+                            default_constructor: false,
+                            external: false,
+                            custom_func: None,
+                            input_cfg: DemoInputCFG {
+                                label: "",
+                                default_value: "",
+                            },
+                        },
+                        generate_mocking_interface: false,
+                        abi_compatible: false,
+                        mut_struct_ref: false,
+                        tuple: false,
+                        custom_extra_code: {},
+                        default_value: None,
+                    },
+                },
+            ],
+            attrs: Attrs {
+                disable: false,
+                deprecated: None,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                custom_errors: false,
+                default: false,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    custom_func: None,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                        default_value: "",
+                    },
+                },
+                generate_mocking_interface: false,
+                abi_compatible: false,
+                mut_struct_ref: false,
+                tuple: false,
+                custom_extra_code: {},
+                default_value: None,
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [],
+                num_lifetimes: 0,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                optional_comparator: false,
+                iterator: None,
+                iterable: None,
+            },
+            dtor_abi_name: "Opaque_destroy",
+            usage: TypingUseInfo {
+                sliced: false,
+                optioned: false,
+            },
+        },
+        OpaqueDef {
+            docs: Docs {
+                lines: "",
+                rust_links: [],
+            },
+            name: "UsedOpaque",
+            methods: [],
+            attrs: Attrs {
+                disable: false,
+                deprecated: None,
+                namespace: None,
+                rename: RenameAttr {
+                    pattern: None,
+                },
+                abi_rename: RenameAttr {
+                    pattern: None,
+                },
+                special_method: None,
+                custom_errors: false,
+                default: false,
+                demo_attrs: DemoInfo {
+                    generate: false,
+                    default_constructor: false,
+                    external: false,
+                    custom_func: None,
+                    input_cfg: DemoInputCFG {
+                        label: "",
+                        default_value: "",
+                    },
+                },
+                generate_mocking_interface: false,
+                abi_compatible: false,
+                mut_struct_ref: false,
+                tuple: false,
+                custom_extra_code: {},
+                default_value: None,
+            },
+            lifetimes: LifetimeEnv {
+                nodes: [],
+                num_lifetimes: 0,
+            },
+            special_method_presence: SpecialMethodPresence {
+                comparator: false,
+                optional_comparator: false,
+                iterator: None,
+                iterable: None,
+            },
+            dtor_abi_name: "UsedOpaque_destroy",
+            usage: TypingUseInfo {
+                sliced: false,
+                optioned: true,
+            },
+        },
+    ],
+    enums: [],
+    traits: [],
+    functions: [],
+}
