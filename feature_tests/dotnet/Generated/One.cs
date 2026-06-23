@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class One: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class OneHandle : SafeHandle
-    {
-        public OneHandle() : base(IntPtr.Zero, true) { }
-
-        public OneHandle(Raw.One* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.One.Destroy((Raw.One*)handle);
-            return true;
-        }
-    }
-
-    private readonly OneHandle _handle;
+    private unsafe Raw.One* _inner;
 
     /// <summary>
     /// Creates a managed <c>One</c> from a raw handle.
@@ -50,7 +23,7 @@ public partial class One: IDisposable
     /// </remarks>
     internal unsafe One(Raw.One* handle)
     {
-        _handle = new OneHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
@@ -375,23 +348,34 @@ public partial class One: IDisposable
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.One* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.One*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.One.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~One()
+    {
+        Dispose();
     }
 }

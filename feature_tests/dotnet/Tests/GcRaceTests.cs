@@ -7,9 +7,9 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// GC object-lifetime regression for the SafeHandle migration. Once a native
-// call reads the receiver's pointer the GC may finalize it (-> Destroy ->
-// drop) mid-call — a UAF that the generated GC.KeepAlive(this) prevents. See
+// GC object-lifetime regression. Once a native call reads the receiver's
+// pointer the GC may finalize it (-> ~T() -> Destroy -> drop) mid-call — a
+// UAF that the generated GC.KeepAlive(this) prevents. See
 // https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices
 //
 // Needs optimized IL so the JIT drops the receiver at last use; the csproj

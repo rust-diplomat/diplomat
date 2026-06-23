@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class Unnamespaced: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class UnnamespacedHandle : SafeHandle
-    {
-        public UnnamespacedHandle() : base(IntPtr.Zero, true) { }
-
-        public UnnamespacedHandle(Raw.Unnamespaced* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.Unnamespaced.Destroy((Raw.Unnamespaced*)handle);
-            return true;
-        }
-    }
-
-    private readonly UnnamespacedHandle _handle;
+    private unsafe Raw.Unnamespaced* _inner;
 
     /// <summary>
     /// Creates a managed <c>Unnamespaced</c> from a raw handle.
@@ -50,7 +23,7 @@ public partial class Unnamespaced: IDisposable
     /// </remarks>
     internal unsafe Unnamespaced(Raw.Unnamespaced* handle)
     {
-        _handle = new UnnamespacedHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
     /// <returns>
     /// A <c>Unnamespaced</c> allocated on Rust side.
@@ -67,7 +40,7 @@ public partial class Unnamespaced: IDisposable
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("Unnamespaced");
             }
@@ -81,23 +54,34 @@ public partial class Unnamespaced: IDisposable
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.Unnamespaced* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.Unnamespaced*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.Unnamespaced.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~Unnamespaced()
+    {
+        Dispose();
     }
 }

@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class Foo: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class FooHandle : SafeHandle
-    {
-        public FooHandle() : base(IntPtr.Zero, true) { }
-
-        public FooHandle(Raw.Foo* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.Foo.Destroy((Raw.Foo*)handle);
-            return true;
-        }
-    }
-
-    private readonly FooHandle _handle;
+    private unsafe Raw.Foo* _inner;
 
     /// <summary>
     /// Creates a managed <c>Foo</c> from a raw handle.
@@ -50,7 +23,7 @@ public partial class Foo: IDisposable
     /// </remarks>
     internal unsafe Foo(Raw.Foo* handle)
     {
-        _handle = new FooHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
     /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
@@ -63,7 +36,7 @@ public partial class Foo: IDisposable
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("Foo");
             }
@@ -74,23 +47,34 @@ public partial class Foo: IDisposable
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.Foo* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.Foo*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.Foo.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~Foo()
+    {
+        Dispose();
     }
 }

@@ -386,7 +386,7 @@ pub mod ffi {
         }
     }
 
-    // GC-race probe for the SafeHandle test: `drops_during_spin` sleeps without
+    // GC-race probe for the GC.KeepAlive fix: `drops_during_spin` sleeps without
     // touching `self`, then reports drops during the call — >= 1 means the
     // receiver was finalized mid-call (the UAF). dotnet-only to avoid churning
     // other backends.

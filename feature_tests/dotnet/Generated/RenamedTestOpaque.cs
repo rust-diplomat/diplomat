@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class RenamedTestOpaque: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class RenamedTestOpaqueHandle : SafeHandle
-    {
-        public RenamedTestOpaqueHandle() : base(IntPtr.Zero, true) { }
-
-        public RenamedTestOpaqueHandle(Raw.RenamedTestOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.RenamedTestOpaque.Destroy((Raw.RenamedTestOpaque*)handle);
-            return true;
-        }
-    }
-
-    private readonly RenamedTestOpaqueHandle _handle;
+    private unsafe Raw.RenamedTestOpaque* _inner;
 
     /// <summary>
     /// Creates a managed <c>RenamedTestOpaque</c> from a raw handle.
@@ -50,27 +23,38 @@ public partial class RenamedTestOpaque: IDisposable
     /// </remarks>
     internal unsafe RenamedTestOpaque(Raw.RenamedTestOpaque* handle)
     {
-        _handle = new RenamedTestOpaqueHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.RenamedTestOpaque* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.RenamedTestOpaque*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.RenamedTestOpaque.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~RenamedTestOpaque()
+    {
+        Dispose();
     }
 }

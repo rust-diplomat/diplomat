@@ -10,34 +10,7 @@ namespace {{ namespace }};
 
 public partial class {{ name }}: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class {{ name }}Handle : SafeHandle
-    {
-        public {{ name }}Handle() : base(IntPtr.Zero, true) { }
-
-        public {{ name }}Handle(Raw.{{ name }}* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.{{ name }}.Destroy((Raw.{{ name }}*)handle);
-            return true;
-        }
-    }
-
-    private readonly {{ name }}Handle _handle;
+    private unsafe Raw.{{ name }}* _inner;
     {%- for property in properties %}
 
 {%- if property.lifetime_warning %}
@@ -74,7 +47,7 @@ public partial class {{ name }}: IDisposable
     /// </remarks>
     internal unsafe {{ name }}(Raw.{{ name }}* handle)
     {
-        _handle = new {{ name }}Handle(handle, ownsHandle: true);
+        _inner = handle;
     }
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
         methods surface as `string` — the writer is allocated, filled, and
@@ -100,7 +73,7 @@ public partial class {{ name }}: IDisposable
         unsafe
         {
 {%- if method.is_instance() %}
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("{{ name }}");
             }
@@ -111,23 +84,34 @@ public partial class {{ name }}: IDisposable
     {%- endfor %}
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.{{ name }}* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.{{ name }}*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.{{ name }}.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~{{ name }}()
+    {
+        Dispose();
     }
 }

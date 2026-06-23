@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class GcRaceProbe: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class GcRaceProbeHandle : SafeHandle
-    {
-        public GcRaceProbeHandle() : base(IntPtr.Zero, true) { }
-
-        public GcRaceProbeHandle(Raw.GcRaceProbe* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.GcRaceProbe.Destroy((Raw.GcRaceProbe*)handle);
-            return true;
-        }
-    }
-
-    private readonly GcRaceProbeHandle _handle;
+    private unsafe Raw.GcRaceProbe* _inner;
 
     /// <summary>
     /// Creates a managed <c>GcRaceProbe</c> from a raw handle.
@@ -50,7 +23,7 @@ public partial class GcRaceProbe: IDisposable
     /// </remarks>
     internal unsafe GcRaceProbe(Raw.GcRaceProbe* handle)
     {
-        _handle = new GcRaceProbeHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
     /// <returns>
     /// A <c>GcRaceProbe</c> allocated on Rust side.
@@ -67,7 +40,7 @@ public partial class GcRaceProbe: IDisposable
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("GcRaceProbe");
             }
@@ -78,23 +51,34 @@ public partial class GcRaceProbe: IDisposable
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.GcRaceProbe* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.GcRaceProbe*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.GcRaceProbe.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~GcRaceProbe()
+    {
+        Dispose();
     }
 }

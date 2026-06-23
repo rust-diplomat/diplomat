@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class RenamedDeprecatedOpaque: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class RenamedDeprecatedOpaqueHandle : SafeHandle
-    {
-        public RenamedDeprecatedOpaqueHandle() : base(IntPtr.Zero, true) { }
-
-        public RenamedDeprecatedOpaqueHandle(Raw.RenamedDeprecatedOpaque* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.RenamedDeprecatedOpaque.Destroy((Raw.RenamedDeprecatedOpaque*)handle);
-            return true;
-        }
-    }
-
-    private readonly RenamedDeprecatedOpaqueHandle _handle;
+    private unsafe Raw.RenamedDeprecatedOpaque* _inner;
 
     /// <summary>
     /// Creates a managed <c>RenamedDeprecatedOpaque</c> from a raw handle.
@@ -50,27 +23,38 @@ public partial class RenamedDeprecatedOpaque: IDisposable
     /// </remarks>
     internal unsafe RenamedDeprecatedOpaque(Raw.RenamedDeprecatedOpaque* handle)
     {
-        _handle = new RenamedDeprecatedOpaqueHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.RenamedDeprecatedOpaque* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.RenamedDeprecatedOpaque*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.RenamedDeprecatedOpaque.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~RenamedDeprecatedOpaque()
+    {
+        Dispose();
     }
 }

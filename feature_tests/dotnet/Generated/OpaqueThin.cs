@@ -10,34 +10,7 @@ namespace Somelib;
 
 public partial class OpaqueThin: IDisposable
 {
-    /// <summary>
-    /// SafeHandle, not raw pointer + finalizer, for robust once-only release.
-    /// The native call takes a bare pointer the marshaller can't root, so the
-    /// generated <c>GC.KeepAlive(this)</c> — not this finalizer — is what stops
-    /// the GC freeing it mid-call (MS object-lifetime pitfall:
-    /// https://learn.microsoft.com/dotnet/standard/unsafe-code/best-practices).
-    /// No per-call <c>DangerousAddRef</c>: concurrent Dispose stays the caller's
-    /// problem, as with any <c>IDisposable</c>.
-    /// </summary>
-    internal sealed unsafe class OpaqueThinHandle : SafeHandle
-    {
-        public OpaqueThinHandle() : base(IntPtr.Zero, true) { }
-
-        public OpaqueThinHandle(Raw.OpaqueThin* h, bool ownsHandle) : base(IntPtr.Zero, ownsHandle)
-        {
-            SetHandle((IntPtr)h);
-        }
-
-        public override bool IsInvalid => handle == IntPtr.Zero;
-
-        protected override bool ReleaseHandle()
-        {
-            Raw.OpaqueThin.Destroy((Raw.OpaqueThin*)handle);
-            return true;
-        }
-    }
-
-    private readonly OpaqueThinHandle _handle;
+    private unsafe Raw.OpaqueThin* _inner;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThin</c> from a raw handle.
@@ -50,13 +23,13 @@ public partial class OpaqueThin: IDisposable
     /// </remarks>
     internal unsafe OpaqueThin(Raw.OpaqueThin* handle)
     {
-        _handle = new OpaqueThinHandle(handle, ownsHandle: true);
+        _inner = handle;
     }
     public int A()
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -69,7 +42,7 @@ public partial class OpaqueThin: IDisposable
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -82,7 +55,7 @@ public partial class OpaqueThin: IDisposable
     {
         unsafe
         {
-            if (_handle.IsInvalid || _handle.IsClosed)
+            if (_inner == null)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -101,23 +74,34 @@ public partial class OpaqueThin: IDisposable
     }
 
     /// <summary>
-    /// Null when disposed: <c>DangerousGetHandle</c> would hand back a stale
-    /// pointer, so callers gate on null to throw rather than use freed memory.
+    /// Returns the underlying raw handle.
     /// </summary>
     internal unsafe Raw.OpaqueThin* AsFFI()
     {
-        if (_handle.IsClosed || _handle.IsInvalid)
-        {
-            return null;
-        }
-        return (Raw.OpaqueThin*)_handle.DangerousGetHandle();
+        return _inner;
     }
 
     /// <summary>
-    /// Delegates to <c>SafeHandle</c> for once-only release; no finalizer here.
+    /// Destroys the underlying object immediately.
     /// </summary>
     public void Dispose()
     {
-        _handle.Dispose();
+        unsafe
+        {
+            if (_inner == null)
+            {
+                return;
+            }
+
+            Raw.OpaqueThin.Destroy(_inner);
+            _inner = null;
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    ~OpaqueThin()
+    {
+        Dispose();
     }
 }
