@@ -1722,9 +1722,11 @@ mod tests {
                 pub struct Opaque(i32);
 
                 impl Opaque {
-                    pub fn used_in_option(u : Option<&UsedInOptionOpaque>) {}
+                    pub fn used_in_option(u : Option<&UsedInOptionOpaque>) -> Option<Box<OptionUsedInReturnOpaque>> {}
                     
                     pub fn used_in_slice<'a>(op: &'a [&'a UsedInSliceOpaque]) -> &'a [UsedInSlice] {}
+                    
+                    pub fn struct_option_ret() -> Option<StructOptionUsedInReturn> {}
                 }
 
                 #[diplomat::opaque]
@@ -1735,6 +1737,13 @@ mod tests {
 
                 pub struct UsedInSlice {
                     a : i32
+                }
+
+                #[diplomat::opaque]
+                pub struct OptionUsedInReturnOpaque(i32);
+
+                pub struct StructOptionUsedInReturn {
+                    a: i32
                 }
 
             }
