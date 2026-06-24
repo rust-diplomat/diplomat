@@ -2026,22 +2026,22 @@ impl<'ast> LoweringContext<'ast> {
                     (Ok(ok_ty), Ok(err_ty)) => {
                         match &ok_ty {
                             SuccessType::OutType(o) if let Some(i) = o.id() => {
-                                self.usage_get_or_insert(i.into()).results.push(
-                                    Box::new(super::ResultUsage::Output(super::ResultUsageInfo {
+                                self.usage_get_or_insert(i.into()).results.push(Box::new(
+                                    super::ResultUsage::Output(super::ResultUsageInfo {
                                         ok: ok_ty.clone(),
                                         err: err_ty.clone(),
-                                    })),
-                                );
+                                    }),
+                                ));
                             }
                             _ => {}
                         }
                         if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
-                            self.usage_get_or_insert(id.into()).results.push(
-                                Box::new(super::ResultUsage::Output(super::ResultUsageInfo {
+                            self.usage_get_or_insert(id.into()).results.push(Box::new(
+                                super::ResultUsage::Output(super::ResultUsageInfo {
                                     ok: ok_ty.clone(),
                                     err: err_ty.clone(),
-                                })),
-                            );
+                                }),
+                            ));
                         }
                         Ok(ReturnType::Fallible(ok_ty, err_ty))
                     }
@@ -2117,22 +2117,22 @@ impl<'ast> LoweringContext<'ast> {
                     (Ok(ok_ty), Ok(err_ty)) => {
                         match &ok_ty {
                             SuccessType::OutType(o) if let Some(i) = o.id() => {
-                                self.usage_get_or_insert(i.into()).results.push(
-                                    Box::new(super::ResultUsage::Input(super::ResultUsageInfo {
+                                self.usage_get_or_insert(i.into()).results.push(Box::new(
+                                    super::ResultUsage::Input(super::ResultUsageInfo {
                                         ok: ok_ty.clone(),
                                         err: err_ty.clone(),
-                                    })),
-                                );
+                                    }),
+                                ));
                             }
                             _ => {}
                         }
                         if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
-                            self.usage_get_or_insert(id.into()).results.push(
-                                Box::new(super::ResultUsage::Input(super::ResultUsageInfo {
+                            self.usage_get_or_insert(id.into()).results.push(Box::new(
+                                super::ResultUsage::Input(super::ResultUsageInfo {
                                     ok: ok_ty.clone(),
                                     err: err_ty.clone(),
-                                })),
-                            );
+                                }),
+                            ));
                         }
                         Ok(ReturnType::Fallible(ok_ty, err_ty))
                     }
