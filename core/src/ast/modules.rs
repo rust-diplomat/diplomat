@@ -12,7 +12,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::{AstReport, create_report, create_simple_report};
+use crate::ast::logging::{AstReport, ContextLocation, create_report, create_simple_report};
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -263,7 +263,7 @@ impl<'a> ModuleBuilder<'a> {
                     _ => {
                         create_report(AstReport::new(
                             "Self type not found".into(),
-                            imp.self_ty.span().spanned_into(self.module_location),
+                            Some(imp.self_ty.span().spanned_into(self.module_location)),
                             "Expected Path type".into(),
                             vec![]
                         ));
@@ -431,7 +431,7 @@ impl Module {
                 .insert(k.clone(), ModSymbol::CustomType(v.clone()))
                 .is_some()
             {
-                panic!("Two types were declared with the same name, this needs to be implemented (key: {k})");
+                create_simple_report(k.clone(), "Two types were declared with the same name (this is currently unsupported)".into(), "Duplicate type".into());
             }
         });
 
@@ -440,13 +440,13 @@ impl Module {
                 .insert(k.clone(), ModSymbol::Trait(v.clone()))
                 .is_some()
             {
-                panic!("Two traits were declared with the same name, this needs to be implemented (key: {k})");
+                create_simple_report(k.clone(), "Two traits were declared with the same name (this is currently unsupported)".into(), "Duplicate trait".into());
             }
         });
 
         self.declared_functions.iter().for_each(|(k, f)| {
             if mod_symbols.insert(k.clone(), ModSymbol::Function(f.clone())).is_some() {
-                panic!("Two functions were declared with the same name, this needs to be implemented (key: {k})")
+                create_simple_report(k.clone(), "Two functions were declared with the same name (this is currently unsupported)".into(), "Duplicate function".into());
             }
         });
 
