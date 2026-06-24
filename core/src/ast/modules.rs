@@ -4,6 +4,7 @@ use std::fmt::Write as _;
 
 use quote::ToTokens;
 use serde::Serialize;
+use syn::spanned::Spanned;
 use syn::{ImplItem, Item, ItemMod, UseTree, Visibility};
 
 use super::{
@@ -11,7 +12,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::create_simple_report;
+use crate::ast::logging::{AstReport, create_report, create_simple_report};
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -259,7 +260,14 @@ impl<'a> ModuleBuilder<'a> {
             Item::Impl(imp) if self.analyze_types && imp.trait_.is_none() => {
                 let self_path = match imp.self_ty.as_ref() {
                     syn::Type::Path(s) => PathType::spanned_from(s, self.module_location),
-                    _ => panic!("Self type not found"),
+                    _ => {
+                        create_report(AstReport::new(
+                            "Self type not found".into(),
+                            imp.self_ty.span().spanned_into(self.module_location),
+                            "Expected Path type".into(),
+                            vec![]
+                        ));
+                    },
                 };
                 let mut impl_attrs = self.impl_parent_attrs.clone();
                 impl_attrs.add_attrs(&imp.attrs);
