@@ -69,7 +69,9 @@ public partial class AttrOpaque1Renamed: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            return Raw.AttrOpaque1Renamed.method_renamed(_inner);
+            var result = Raw.AttrOpaque1Renamed.method_renamed(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public byte Abirenamed()
@@ -80,7 +82,9 @@ public partial class AttrOpaque1Renamed: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            return Raw.AttrOpaque1Renamed.Abirenamed(_inner);
+            var result = Raw.AttrOpaque1Renamed.Abirenamed(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public void UseUnnamespaced(Unnamespaced un)
@@ -94,7 +98,9 @@ public partial class AttrOpaque1Renamed: IDisposable
             if (un == null) throw new ArgumentNullException(nameof(un));
             Raw.Unnamespaced* unRaw = un.AsFFI();
             if (unRaw == null) throw new ObjectDisposedException(nameof(Unnamespaced));
-            Raw.AttrOpaque1Renamed.UseUnnamespaced(_inner, unRaw);
+            Raw.AttrOpaque1Renamed.UseUnnamespaced(AsFFI(), unRaw);
+            GC.KeepAlive(this);
+            GC.KeepAlive(un);
         }
     }
     public void UseNamespaced(RenamedAttrEnum n)
@@ -105,7 +111,8 @@ public partial class AttrOpaque1Renamed: IDisposable
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
-            Raw.AttrOpaque1Renamed.UseNamespaced(_inner, n);
+            Raw.AttrOpaque1Renamed.UseNamespaced(AsFFI(), n);
+            GC.KeepAlive(this);
         }
     }
 

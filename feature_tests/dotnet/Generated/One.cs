@@ -43,6 +43,8 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.Transitivity(holdRaw, noholdRaw);
+            GC.KeepAlive(hold);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -64,6 +66,8 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.Cycle(holdRaw, noholdRaw);
+            GC.KeepAlive(hold);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -94,6 +98,11 @@ public partial class One: IDisposable
             Raw.Two* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(Two));
             Raw.One* result = Raw.One.ManyDependents(aRaw, bRaw, cRaw, dRaw, noholdRaw);
+            GC.KeepAlive(a);
+            GC.KeepAlive(b);
+            GC.KeepAlive(c);
+            GC.KeepAlive(d);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -115,6 +124,8 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.ReturnOutlivesParam(holdRaw, noholdRaw);
+            GC.KeepAlive(hold);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -142,6 +153,10 @@ public partial class One: IDisposable
             Raw.One* bottomRaw = bottom.AsFFI();
             if (bottomRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.DiamondTop(topRaw, leftRaw, rightRaw, bottomRaw);
+            GC.KeepAlive(top);
+            GC.KeepAlive(left);
+            GC.KeepAlive(right);
+            GC.KeepAlive(bottom);
             return new One(result);
         }
     }
@@ -169,6 +184,10 @@ public partial class One: IDisposable
             Raw.One* bottomRaw = bottom.AsFFI();
             if (bottomRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.DiamondLeft(topRaw, leftRaw, rightRaw, bottomRaw);
+            GC.KeepAlive(top);
+            GC.KeepAlive(left);
+            GC.KeepAlive(right);
+            GC.KeepAlive(bottom);
             return new One(result);
         }
     }
@@ -196,6 +215,10 @@ public partial class One: IDisposable
             Raw.One* bottomRaw = bottom.AsFFI();
             if (bottomRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.DiamondRight(topRaw, leftRaw, rightRaw, bottomRaw);
+            GC.KeepAlive(top);
+            GC.KeepAlive(left);
+            GC.KeepAlive(right);
+            GC.KeepAlive(bottom);
             return new One(result);
         }
     }
@@ -223,6 +246,10 @@ public partial class One: IDisposable
             Raw.One* bottomRaw = bottom.AsFFI();
             if (bottomRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.DiamondBottom(topRaw, leftRaw, rightRaw, bottomRaw);
+            GC.KeepAlive(top);
+            GC.KeepAlive(left);
+            GC.KeepAlive(right);
+            GC.KeepAlive(bottom);
             return new One(result);
         }
     }
@@ -253,6 +280,11 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.DiamondAndNestedTypes(aRaw, bRaw, cRaw, dRaw, noholdRaw);
+            GC.KeepAlive(a);
+            GC.KeepAlive(b);
+            GC.KeepAlive(c);
+            GC.KeepAlive(d);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -277,6 +309,9 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.ImplicitBounds(explicitHoldRaw, implicitHoldRaw, noholdRaw);
+            GC.KeepAlive(explicitHold);
+            GC.KeepAlive(implicitHold);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }
@@ -304,6 +339,10 @@ public partial class One: IDisposable
             Raw.One* noholdRaw = nohold.AsFFI();
             if (noholdRaw == null) throw new ObjectDisposedException(nameof(One));
             Raw.One* result = Raw.One.ImplicitBoundsDeep(@explicitRaw, implicit1Raw, implicit2Raw, noholdRaw);
+            GC.KeepAlive(@explicit);
+            GC.KeepAlive(implicit1);
+            GC.KeepAlive(implicit2);
+            GC.KeepAlive(nohold);
             return new One(result);
         }
     }

@@ -33,7 +33,9 @@ public partial class OpaqueThin: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
-            return Raw.OpaqueThin.A(_inner);
+            var result = Raw.OpaqueThin.A(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public float B()
@@ -44,7 +46,9 @@ public partial class OpaqueThin: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
-            return Raw.OpaqueThin.B(_inner);
+            var result = Raw.OpaqueThin.B(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public string C()
@@ -58,7 +62,8 @@ public partial class OpaqueThin: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.OpaqueThin.C(_inner, &writeable);
+                Raw.OpaqueThin.C(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally

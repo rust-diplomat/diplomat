@@ -40,7 +40,8 @@ public partial class OpaqueThinVec: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
-            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(_inner);
+            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
+            GC.KeepAlive(this);
             return new OpaqueThinIter(result);
         }
     }
@@ -52,7 +53,9 @@ public partial class OpaqueThinVec: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
-            return Raw.OpaqueThinVec.Len(_inner);
+            var result = Raw.OpaqueThinVec.Len(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
 

@@ -51,12 +51,18 @@
 {{ bi }}{
     {%- if let Some(info) = method.error_info %}
 {{ bi }}    var result = Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
+    {%- for keep_alive in method.keep_alive_statements() %}
+{{ bi }}    {{ keep_alive }}
+    {%- endfor %}
 {{ bi }}    if (!result.IsOk)
 {{ bi }}    {
 {{ bi }}        {{ info.throw_statement("result.Err") }}
 {{ bi }}    }
     {%- else %}
 {{ bi }}    Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
+    {%- for keep_alive in method.keep_alive_statements() %}
+{{ bi }}    {{ keep_alive }}
+    {%- endfor %}
     {%- endif %}
 {{ bi }}    return writeable.ToUnicode();
 {{ bi }}}
@@ -66,6 +72,9 @@
 {{ bi }}}
 {%- else if let Some(info) = method.error_info %}
 {{ bi }}var result = {{ method.raw_call_expr(name) }};
+{%- for keep_alive in method.keep_alive_statements() %}
+{{ bi }}{{ keep_alive }}
+{%- endfor %}
 {{ bi }}if (!result.IsOk)
 {{ bi }}{
 {{ bi }}    {{ info.throw_statement("result.Err") }}
@@ -73,10 +82,16 @@
 {{ bi }}{{ method.success_return_statement("result.Ok") }}
 {%- else if method.return_type.is_void() %}
 {{ bi }}{{ method.raw_call_statement(name) }}
-{%- else if method.can_return_raw_call_directly() %}
+{%- for keep_alive in method.keep_alive_statements() %}
+{{ bi }}{{ keep_alive }}
+{%- endfor %}
+{%- else if method.can_return_raw_call_directly() && !method.has_keep_alive() %}
 {{ bi }}{{ method.direct_raw_return_statement(name) }}
 {%- else %}
 {{ bi }}{{ method.success_result_declaration(name) }}
+{%- for keep_alive in method.keep_alive_statements() %}
+{{ bi }}{{ keep_alive }}
+{%- endfor %}
 {{ bi }}{{ method.success_return_statement("result") }}
 {%- endif %}
 {%- if !method.inputs.fix_statements.is_empty() %}

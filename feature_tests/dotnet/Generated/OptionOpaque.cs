@@ -55,7 +55,8 @@ public partial class OptionOpaque: IDisposable
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionIsize(_inner);
+            var result = Raw.OptionOpaque.OptionIsize(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (nint?)null;
         }
     }
@@ -67,7 +68,8 @@ public partial class OptionOpaque: IDisposable
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionUsize(_inner);
+            var result = Raw.OptionOpaque.OptionUsize(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (nuint?)null;
         }
     }
@@ -79,7 +81,8 @@ public partial class OptionOpaque: IDisposable
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionI32(_inner);
+            var result = Raw.OptionOpaque.OptionI32(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (int?)null;
         }
     }
@@ -91,7 +94,8 @@ public partial class OptionOpaque: IDisposable
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            var result = Raw.OptionOpaque.OptionU32(_inner);
+            var result = Raw.OptionOpaque.OptionU32(AsFFI());
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (uint?)null;
         }
     }
@@ -103,7 +107,8 @@ public partial class OptionOpaque: IDisposable
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
-            Raw.OptionOpaque.AssertInteger(_inner, i);
+            Raw.OptionOpaque.AssertInteger(AsFFI(), i);
+            GC.KeepAlive(this);
         }
     }
     public static bool OptionOpaqueArgument(OptionOpaque? arg)
@@ -112,7 +117,9 @@ public partial class OptionOpaque: IDisposable
         {
             Raw.OptionOpaque* argRaw = arg == null ? null : arg.AsFFI();
             if (arg != null && argRaw == null) throw new ObjectDisposedException(nameof(OptionOpaque));
-            return Raw.OptionOpaque.OptionOpaqueArgument(argRaw);
+            var result = Raw.OptionOpaque.OptionOpaqueArgument(argRaw);
+            GC.KeepAlive(arg);
+            return result;
         }
     }
 

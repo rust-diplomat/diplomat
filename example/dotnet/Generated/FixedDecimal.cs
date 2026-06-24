@@ -44,7 +44,8 @@ public partial class FixedDecimal: IDisposable
             {
                 throw new ObjectDisposedException("FixedDecimal");
             }
-            Raw.FixedDecimal.MultiplyPow10(_inner, power);
+            Raw.FixedDecimal.MultiplyPow10(AsFFI(), power);
+            GC.KeepAlive(this);
         }
     }
     /// <exception cref="InvalidOperationException"></exception>
@@ -59,7 +60,8 @@ public partial class FixedDecimal: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                var result = Raw.FixedDecimal.ToString(_inner, &writeable);
+                var result = Raw.FixedDecimal.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 if (!result.IsOk)
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");

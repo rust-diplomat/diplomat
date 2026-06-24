@@ -53,7 +53,8 @@ public partial class OptionString: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                var result = Raw.OptionString.Write(_inner, &writeable);
+                var result = Raw.OptionString.Write(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 if (!result.IsOk)
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");

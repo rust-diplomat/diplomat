@@ -47,7 +47,8 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
             {
                 throw new ObjectDisposedException("RenamedOpaqueZSTIndexer");
             }
-            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(_inner, idx);
+            Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(AsFFI(), idx);
+            GC.KeepAlive(this);
             return result == null ? null : new RenamedOpaqueZSTIndexer(result);
         }
     }

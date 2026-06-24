@@ -44,7 +44,8 @@ public partial class OpaqueMutexedString: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            Raw.OpaqueMutexedString.Change(_inner, number);
+            Raw.OpaqueMutexedString.Change(AsFFI(), number);
+            GC.KeepAlive(this);
         }
     }
     public nuint GetLenAndAdd(nuint other)
@@ -55,7 +56,9 @@ public partial class OpaqueMutexedString: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            return Raw.OpaqueMutexedString.GetLenAndAdd(_inner, other);
+            var result = Raw.OpaqueMutexedString.GetLenAndAdd(AsFFI(), other);
+            GC.KeepAlive(this);
+            return result;
         }
     }
     /// <returns>
@@ -69,7 +72,8 @@ public partial class OpaqueMutexedString: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            Raw.Utf16Wrap* result = Raw.OpaqueMutexedString.Wrapper(_inner);
+            Raw.Utf16Wrap* result = Raw.OpaqueMutexedString.Wrapper(AsFFI());
+            GC.KeepAlive(this);
             return new Utf16Wrap(result);
         }
     }
@@ -81,7 +85,9 @@ public partial class OpaqueMutexedString: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueMutexedString");
             }
-            return Raw.OpaqueMutexedString.ToUnsignedFromUnsigned(_inner, input);
+            var result = Raw.OpaqueMutexedString.ToUnsignedFromUnsigned(AsFFI(), input);
+            GC.KeepAlive(this);
+            return result;
         }
     }
 

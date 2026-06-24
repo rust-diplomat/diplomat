@@ -40,7 +40,8 @@ public partial class Foo: IDisposable
             {
                 throw new ObjectDisposedException("Foo");
             }
-            Raw.Bar* result = Raw.Foo.GetBar(_inner);
+            Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
+            GC.KeepAlive(this);
             return new Bar(result);
         }
     }

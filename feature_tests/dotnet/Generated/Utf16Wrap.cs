@@ -36,7 +36,8 @@ public partial class Utf16Wrap: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Utf16Wrap.GetDebugStr(_inner, &writeable);
+                Raw.Utf16Wrap.GetDebugStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally

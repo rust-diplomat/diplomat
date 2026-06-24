@@ -79,7 +79,8 @@ public partial class Opaque: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Opaque.GetDebugStr(_inner, &writeable);
+                Raw.Opaque.GetDebugStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -96,7 +97,8 @@ public partial class Opaque: IDisposable
             {
                 throw new ObjectDisposedException("Opaque");
             }
-            Raw.Opaque.AssertStruct(_inner, s.AsFFI());
+            Raw.Opaque.AssertStruct(AsFFI(), s.AsFFI());
+            GC.KeepAlive(this);
         }
     }
     public static nuint ReturnsUsize()

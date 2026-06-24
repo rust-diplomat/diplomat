@@ -20,6 +20,13 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Optimized IL even in Debug: the GcRaceTests UAF reproducer relies on
+         the JIT's precise GC liveness (dropping the receiver at last use).
+         Optimize=false stamps [Debuggable(DisableOptimizations)], which roots
+         locals for their whole scope and hides the race — making the test a
+         no-op. With this on, the default `dotnet test` (what CI runs) catches
+         the regression. -->
+    <Optimize>true</Optimize>
     <IsPackable>false</IsPackable>
     <RollForward>Major</RollForward>
     <RootNamespace>Somelib.FeatureTests</RootNamespace>

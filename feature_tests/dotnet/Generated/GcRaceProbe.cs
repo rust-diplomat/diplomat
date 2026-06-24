@@ -8,12 +8,12 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OptionOpaqueChar: IDisposable
+public partial class GcRaceProbe: IDisposable
 {
-    private unsafe Raw.OptionOpaqueChar* _inner;
+    private unsafe Raw.GcRaceProbe* _inner;
 
     /// <summary>
-    /// Creates a managed <c>OptionOpaqueChar</c> from a raw handle.
+    /// Creates a managed <c>GcRaceProbe</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -21,27 +21,39 @@ public partial class OptionOpaqueChar: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe OptionOpaqueChar(Raw.OptionOpaqueChar* handle)
+    internal unsafe GcRaceProbe(Raw.GcRaceProbe* handle)
     {
         _inner = handle;
     }
-    public void AssertChar(uint ch)
+    /// <returns>
+    /// A <c>GcRaceProbe</c> allocated on Rust side.
+    /// </returns>
+    public static GcRaceProbe Create()
+    {
+        unsafe
+        {
+            Raw.GcRaceProbe* result = Raw.GcRaceProbe.Create();
+            return new GcRaceProbe(result);
+        }
+    }
+    public ulong DropsDuringSpin(ulong millis)
     {
         unsafe
         {
             if (_inner == null)
             {
-                throw new ObjectDisposedException("OptionOpaqueChar");
+                throw new ObjectDisposedException("GcRaceProbe");
             }
-            Raw.OptionOpaqueChar.AssertChar(AsFFI(), ch);
+            var result = Raw.GcRaceProbe.DropsDuringSpin(AsFFI(), millis);
             GC.KeepAlive(this);
+            return result;
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.OptionOpaqueChar* AsFFI()
+    internal unsafe Raw.GcRaceProbe* AsFFI()
     {
         return _inner;
     }
@@ -58,14 +70,14 @@ public partial class OptionOpaqueChar: IDisposable
                 return;
             }
 
-            Raw.OptionOpaqueChar.Destroy(_inner);
+            Raw.GcRaceProbe.Destroy(_inner);
             _inner = null;
 
             GC.SuppressFinalize(this);
         }
     }
 
-    ~OptionOpaqueChar()
+    ~GcRaceProbe()
     {
         Dispose();
     }

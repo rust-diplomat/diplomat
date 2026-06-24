@@ -350,6 +350,10 @@ struct InputLowering {
     /// For inputs that need to convert from string to pointer, basically the DiplomatStr only
     to_bytes_statement: Option<String>,
     idiomatic_param_type: Option<String>,
+
+    /// Wrapper to `GC.KeepAlive` after the raw call — else the GC may free its
+    /// pointer mid-call. `Some` for opaque self/params, `None` otherwise.
+    keep_alive_target: Option<String>,
 }
 
 /// All of a method's inputs, joined for template substitution.
@@ -369,6 +373,8 @@ pub(super) struct DotnetInputs {
     pub(super) to_bytes_statements: Vec<String>,
     pub(super) first_param_type: Option<String>,
     pub(super) param_count: usize,
+    /// Keep-alive targets (opaque self + params), in raw-call arg order.
+    pub(super) keep_alive_targets: Vec<String>,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -556,6 +562,22 @@ impl MethodInfo<'_> {
         format!("return {};", self.raw_call_expr(owner_name))
     }
 
+    /// True if any opaque pointer crosses the raw call — then a direct
+    /// `return Raw...(...)` must capture-then-return so the keep-alive runs.
+    pub(super) fn has_keep_alive(&self) -> bool {
+        !self.inputs.keep_alive_targets.is_empty()
+    }
+
+    /// `GC.KeepAlive(x);` lines to emit after the raw call, one per opaque
+    /// wrapper. Empty when none cross the boundary.
+    pub(super) fn keep_alive_statements(&self) -> Vec<String> {
+        self.inputs
+            .keep_alive_targets
+            .iter()
+            .map(|target| format!("GC.KeepAlive({target});"))
+            .collect()
+    }
+
     pub(super) fn can_return_raw_call_directly(&self) -> bool {
         self.option_info.is_none()
             && matches!(
@@ -571,7 +593,9 @@ impl MethodInfo<'_> {
             .as_ref()
             .and_then(|option| option.raw_option_type.as_ref())
             .is_some();
-        if uses_tagged_option {
+        // `var`, not `Raw.<T>`: primitive/enum returns have no `Raw.` mirror,
+        // so capturing the result for the keep-alive case stays valid C#.
+        if uses_tagged_option || self.can_return_raw_call_directly() {
             format!("var result = {raw_call};")
         } else {
             format!("Raw.{} result = {raw_call};", self.return_type.raw())
@@ -958,10 +982,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let mut to_bytes_statements = Vec::new();
         let mut first_param_type = None;
         let mut param_count = 0;
+        let mut keep_alive_targets = Vec::new();
 
         if let Some(s) = &self_lowering {
             raw_params.push(s.raw_param.as_str());
             call_args.push(s.raw_call_arg.as_str());
+            if let Some(target) = &s.keep_alive_target {
+                keep_alive_targets.push(target.clone());
+            }
             // self contributes nothing to the idiomatic decl — `this` is implicit.
         }
 
@@ -992,6 +1020,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             if let Some(to_bytes) = &p.to_bytes_statement {
                 to_bytes_statements.push(to_bytes.clone());
             }
+            if let Some(target) = &p.keep_alive_target {
+                keep_alive_targets.push(target.clone());
+            }
         }
 
         Some(DotnetInputs {
@@ -1003,6 +1034,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             to_bytes_statements,
             first_param_type,
             param_count,
+            keep_alive_targets,
         })
     }
 
@@ -1013,7 +1045,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 InputLowering {
                     raw_param: format!("{name}* handle"),
                     idiomatic_param: String::new(),
-                    raw_call_arg: "_inner".into(),
+                    // `GC.KeepAlive(this)` after the call keeps the pointer
+                    // alive across it.
+                    raw_call_arg: "AsFFI()".into(),
+                    keep_alive_target: Some("this".into()),
                     ..Default::default()
                 }
             }
@@ -1112,6 +1147,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     raw_call_arg,
                     validation_statement,
                     idiomatic_param_type: Some(idiomatic_ty),
+                    // Keep the param's wrapper alive across the call.
+                    keep_alive_target: Some(arg_name.to_string()),
                     ..Default::default()
                 }
             }
@@ -1176,6 +1213,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                     "fixed (byte* {ptr} = {bytes})"
                                 )),
                                 idiomatic_param_type: Some("string".to_string()),
+                                keep_alive_target: None,
                             }
                         }
                     },
@@ -1234,6 +1272,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
                             to_bytes_statement: None,
                             idiomatic_param_type: Some(format!("{element_type}[]")),
+                            keep_alive_target: None,
                         }
                     }
                     hir::PrimitiveType::Int(int_type) => {

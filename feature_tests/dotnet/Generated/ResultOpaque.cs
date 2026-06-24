@@ -152,7 +152,8 @@ public partial class ResultOpaque: IDisposable
             {
                 throw new ObjectDisposedException("ResultOpaque");
             }
-            Raw.ResultOpaque.AssertInteger(_inner, i);
+            Raw.ResultOpaque.AssertInteger(AsFFI(), i);
+            GC.KeepAlive(this);
         }
     }
 

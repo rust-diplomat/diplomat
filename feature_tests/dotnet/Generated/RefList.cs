@@ -40,6 +40,7 @@ public partial class RefList: IDisposable
             Raw.RefListParameter* dataRaw = data.AsFFI();
             if (dataRaw == null) throw new ObjectDisposedException(nameof(RefListParameter));
             Raw.RefList* result = Raw.RefList.Node(dataRaw);
+            GC.KeepAlive(data);
             return new RefList(result);
         }
     }

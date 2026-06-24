@@ -40,6 +40,8 @@ public partial class FixedDecimalFormatter: IDisposable
             Raw.DataProvider* providerRaw = provider.AsFFI();
             if (providerRaw == null) throw new ObjectDisposedException(nameof(DataProvider));
             var result = Raw.FixedDecimalFormatter.TryNew(localeRaw, providerRaw, options.AsFFI());
+            GC.KeepAlive(locale);
+            GC.KeepAlive(provider);
             if (!result.IsOk)
             {
                 throw new InvalidOperationException("FFI function failed with unit error");
@@ -61,7 +63,9 @@ public partial class FixedDecimalFormatter: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.FixedDecimalFormatter.FormatWrite(_inner, valueRaw, &writeable);
+                Raw.FixedDecimalFormatter.FormatWrite(AsFFI(), valueRaw, &writeable);
+                GC.KeepAlive(this);
+                GC.KeepAlive(value);
                 return writeable.ToUnicode();
             }
             finally

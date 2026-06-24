@@ -69,7 +69,8 @@ public partial class MyString: IDisposable
             byte[] newStrBytes = System.Text.Encoding.UTF8.GetBytes(newStr);
             fixed (byte* newStrPtr = newStrBytes)
             {
-                Raw.MyString.SetStr(_inner, new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStrBytes.Length });
+                Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStrBytes.Length });
+                GC.KeepAlive(this);
             }
         }
     }
@@ -84,7 +85,8 @@ public partial class MyString: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.MyString.GetStr(_inner, &writeable);
+                Raw.MyString.GetStr(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally

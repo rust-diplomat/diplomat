@@ -385,6 +385,36 @@ pub mod ffi {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
     }
+
+    // GC-race probe for the GC.KeepAlive fix: `drops_during_spin` sleeps without
+    // touching `self`, then reports drops during the call — >= 1 means the
+    // receiver was finalized mid-call (the UAF). dotnet-only to avoid churning
+    // other backends.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct GcRaceProbe(u64);
+
+    impl GcRaceProbe {
+        pub fn create() -> Box<Self> {
+            Box::new(GcRaceProbe(0))
+        }
+
+        pub fn drops_during_spin(&self, millis: u64) -> u64 {
+            let before = super::PROBE_DROPS.load(super::Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_millis(millis));
+            super::PROBE_DROPS.load(super::Ordering::SeqCst) - before
+        }
+    }
+}
+
+// Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
+pub(crate) static PROBE_DROPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub(crate) use std::sync::atomic::Ordering;
+
+impl Drop for ffi::GcRaceProbe {
+    fn drop(&mut self) {
+        PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
+    }
 }
 
 #[derive(Copy, Clone)]

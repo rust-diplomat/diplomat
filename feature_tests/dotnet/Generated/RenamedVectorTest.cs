@@ -44,7 +44,9 @@ public partial class RenamedVectorTest: IDisposable
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            return Raw.RenamedVectorTest.Len(_inner);
+            var result = Raw.RenamedVectorTest.Len(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
     public double? Get(nuint idx)
@@ -55,7 +57,8 @@ public partial class RenamedVectorTest: IDisposable
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            var result = Raw.RenamedVectorTest.Get(_inner, idx);
+            var result = Raw.RenamedVectorTest.Get(AsFFI(), idx);
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (double?)null;
         }
     }
@@ -67,7 +70,8 @@ public partial class RenamedVectorTest: IDisposable
             {
                 throw new ObjectDisposedException("RenamedVectorTest");
             }
-            Raw.RenamedVectorTest.Push(_inner, value);
+            Raw.RenamedVectorTest.Push(AsFFI(), value);
+            GC.KeepAlive(this);
         }
     }
 

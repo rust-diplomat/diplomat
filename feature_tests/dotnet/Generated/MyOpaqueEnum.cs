@@ -47,7 +47,8 @@ public partial class MyOpaqueEnum: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.MyOpaqueEnum.ToString(_inner, &writeable);
+                Raw.MyOpaqueEnum.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally

@@ -51,7 +51,8 @@ public partial class Float64Vec: IDisposable
             DiplomatWriteable writeable = new DiplomatWriteable();
             try
             {
-                Raw.Float64Vec.ToString(_inner, &writeable);
+                Raw.Float64Vec.ToString(AsFFI(), &writeable);
+                GC.KeepAlive(this);
                 return writeable.ToUnicode();
             }
             finally
@@ -68,7 +69,8 @@ public partial class Float64Vec: IDisposable
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
-            var result = Raw.Float64Vec.Get(_inner, i);
+            var result = Raw.Float64Vec.Get(AsFFI(), i);
+            GC.KeepAlive(this);
             return result.IsSome ? result.Value : (double?)null;
         }
     }

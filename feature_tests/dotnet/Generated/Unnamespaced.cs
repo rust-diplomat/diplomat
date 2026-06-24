@@ -47,7 +47,9 @@ public partial class Unnamespaced: IDisposable
             if (n == null) throw new ArgumentNullException(nameof(n));
             Raw.AttrOpaque1Renamed* nRaw = n.AsFFI();
             if (nRaw == null) throw new ObjectDisposedException(nameof(AttrOpaque1Renamed));
-            Raw.Unnamespaced.UseNamespaced(_inner, nRaw);
+            Raw.Unnamespaced.UseNamespaced(AsFFI(), nRaw);
+            GC.KeepAlive(this);
+            GC.KeepAlive(n);
         }
     }
 
