@@ -208,6 +208,11 @@ impl<'ast> LoweringContext<'ast> {
         self.lower_all(ast_defs, Self::lower_function)
     }
 
+    /// After lowering (when all types have been evaluated), we must then update those types
+    /// with their [`TypingUseInfo`].
+    ///
+    /// We're given an iterator of each [`super::TypeUsage`]-like type along with the associated ID of that type.
+    /// If we have typing usage info on that type, then we update that type in the array.
     pub(super) fn update_usage<'a, Ast: super::TypeUsage + 'a>(
         &self,
         defs: impl ExactSizeIterator<Item = (SymbolId, &'a mut Ast)>,
@@ -2200,6 +2205,7 @@ impl<'ast> LoweringContext<'ast> {
         Ok(LifetimeEnv::new(nodes, ast.nodes.len()))
     }
 
+    /// Grab a type's associated [`TypingUseInfo`] (or create an entry for it if it does not exist).
     fn usage_get_or_insert<'a>(&'a mut self, id: SymbolId) -> &'a mut TypingUseInfo {
         self.type_usage.entry(id).or_default()
     }

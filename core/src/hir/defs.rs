@@ -130,6 +130,7 @@ pub struct TypingUseInfo {
     pub results: Vec<ResultUsage>,
 }
 
+/// Used for setting a type's usage in [`super::LoweringContext::update_usage`]
 pub(super) trait TypeUsage {
     fn set_usage(&mut self, usage: super::TypingUseInfo);
 }
