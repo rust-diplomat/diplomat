@@ -33,13 +33,13 @@ pub(crate) struct AstReport {
 impl AstReport {
     pub fn new(
         title: String,
-        primary_loc: Span,
+        primary_loc: Option<Span>,
         primary_label: String,
         context_locations: Vec<ContextLocation>,
     ) -> Self {
         Self {
             title,
-            primary_loc: Some(primary_loc),
+            primary_loc,
             primary_label,
             context_locations,
         }

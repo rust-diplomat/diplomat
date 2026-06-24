@@ -164,7 +164,7 @@ impl LifetimeEnv {
         if let Some(lt) = trt.generics.lifetimes().next() {
             create_report(AstReport::new(
                 "Diplomat traits are not allowed to have any lifetime parameters.".into(),
-                trt.ident.span().spanned_into(module_location),
+                Some(trt.ident.span().spanned_into(module_location)),
                 "".into(),
                 vec![ContextLocation::new(
                     lt.span().spanned_into(module_location),
@@ -274,7 +274,7 @@ impl LifetimeEnv {
             syn::GenericParam::Type(_) => {
                 create_report(AstReport::new(
                     "Generic types are unsupported.".into(),
-                    generic.span().spanned_into(module_location),
+                    Some(generic.span().spanned_into(module_location)),
                     "Suggestion: Remove generic type.".into(),
                     vec![],
                 ));
@@ -283,7 +283,7 @@ impl LifetimeEnv {
             syn::GenericParam::Const(_) => {
                 create_report(AstReport::new(
                     "Const generics are unsupported.".into(),
-                    generic.span().spanned_into(module_location),
+                    Some(generic.span().spanned_into(module_location)),
                     "Suggestion: Remove const generic.".into(),
                     vec![],
                 ));
@@ -299,14 +299,14 @@ impl LifetimeEnv {
             self.extend_bounds(where_clause.predicates.iter().map(|pred| match pred {
                 syn::WherePredicate::Type(_) => create_report(AstReport::new(
                     "Trait bounds are unsupported.".into(),
-                    pred.span().spanned_into(module_location),
+                    Some(pred.span().spanned_into(module_location)),
                     "Suggestion: Remove type predicate.".into(),
                     vec![],
                 )),
                 syn::WherePredicate::Lifetime(pred) => (&pred.lifetime, &pred.bounds),
                 _ => create_report(AstReport::new(
                     "Unrecognized where predicate.".into(),
-                    pred.span().spanned_into(module_location),
+                    Some(pred.span().spanned_into(module_location)),
                     "".into(),
                     vec![],
                 )),
@@ -366,7 +366,7 @@ impl LifetimeEnv {
                 let lt = NamedLifetime::spanned_from(lifetime, module_location);
                 create_report(AstReport::new(
                     "Lifetime declared twice in the same scope".into(),
-                    lt.0.span().unwrap(),
+                    lt.0.span(),
                     format!("Lifetime {lt} already exists."),
                     context_locations,
                 ));

@@ -346,7 +346,7 @@ impl Param {
             _ => {
                 create_report(AstReport::new(
                     "Unexpected param type".into(),
-                t.pat.span().spanned_into(module_location),
+                Some(t.pat.span().spanned_into(module_location)),
                 "Expected ident".into(), vec![]));
             },
         };
