@@ -151,6 +151,8 @@ impl LifetimeEnv {
                 this.extend_implicit_lifetime_bounds(return_type, None);
             }
         } else {
+            // Currently this is impossible to reach,
+            // we only call from_trait_item when trait_fct_item is syn::TraitItem::Fn
             panic!(
                 "Diplomat traits can only have associated methods and no other associated items."
             )
