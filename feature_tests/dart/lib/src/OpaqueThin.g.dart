@@ -16,12 +16,16 @@ final class OpaqueThin implements ffi.Finalizable {
   // maintain borrow validity.
   OpaqueThin._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _OpaqueThin_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('OpaqueThin_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueThin_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _OpaqueThin_destroy(OpaqueThin cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueThin_destroy));
 
   int get a {
     final result = _OpaqueThin_a(_ffi);
@@ -41,22 +45,26 @@ final class OpaqueThin implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('OpaqueThin_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueThin_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueThin_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueThin_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('OpaqueThin_a')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Int32 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_a')
 // ignore: non_constant_identifier_names
 external int _OpaqueThin_a(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OpaqueThin_b')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Float Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_b')
 // ignore: non_constant_identifier_names
 external double _OpaqueThin_b(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OpaqueThin_c')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OpaqueThin_c')
 // ignore: non_constant_identifier_names
 external void _OpaqueThin_c(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);

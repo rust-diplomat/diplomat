@@ -18,12 +18,16 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
   // maintain borrow validity.
   RenamedOpaqueIterator._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _namespace_OpaqueIterator_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('namespace_OpaqueIterator_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueIterator_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _namespace_OpaqueIterator_destroy(RenamedOpaqueIterator cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_OpaqueIterator_destroy));
 
   AttrOpaque1Renamed? _current;
 
@@ -43,12 +47,14 @@ final class RenamedOpaqueIterator implements ffi.Finalizable, core.Iterator<Attr
 
 }
 
-@_DiplomatFfiUse('namespace_OpaqueIterator_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_OpaqueIterator_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_OpaqueIterator_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_OpaqueIterator_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('namespace_OpaqueIterator_next')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_OpaqueIterator_next')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_OpaqueIterator_next(ffi.Pointer<ffi.Opaque> self);

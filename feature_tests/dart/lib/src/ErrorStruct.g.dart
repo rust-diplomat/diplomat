@@ -59,7 +59,8 @@ final class ErrorStruct {
       ]);
 }
 
-@_DiplomatFfiUse('ErrorStruct_returns_result_option')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultResultErrorStructFfiVoidVoid Function(ffi.Bool)>(isLeaf: true, symbol: 'ErrorStruct_returns_result_option')
 // ignore: non_constant_identifier_names
 external _ResultResultErrorStructFfiVoidVoid _ErrorStruct_returns_result_option(bool isSome);

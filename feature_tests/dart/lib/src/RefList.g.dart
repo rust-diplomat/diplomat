@@ -18,12 +18,16 @@ final class RefList implements ffi.Finalizable {
   // maintain borrow validity.
   RefList._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _RefList_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('RefList_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_RefList_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _RefList_destroy(RefList cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_RefList_destroy));
 
   factory RefList.node(RefListParameter data) {
     // This lifetime edge depends on lifetimes: 'b
@@ -34,12 +38,14 @@ final class RefList implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('RefList_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'RefList_destroy')
 // ignore: non_constant_identifier_names
-external void _RefList_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_RefList_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('RefList_node')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'RefList_node')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _RefList_node(ffi.Pointer<ffi.Opaque> data);

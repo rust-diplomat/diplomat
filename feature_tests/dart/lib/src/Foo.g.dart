@@ -18,12 +18,16 @@ final class Foo implements ffi.Finalizable {
   // maintain borrow validity.
   Foo._fromFfi(this._ffi, this._selfEdge, this._aEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _Foo_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('Foo_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Foo_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _Foo_destroy(Foo cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Foo_destroy));
 
   factory Foo(String x) {
     final xArena = _FinalizedArena();
@@ -69,32 +73,38 @@ final class Foo implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('Foo_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Foo_destroy')
 // ignore: non_constant_identifier_names
-external void _Foo_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Foo_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('Foo_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
 
-@_DiplomatFfiUse('Foo_get_bar')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_get_bar')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_get_bar(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('Foo_as_returning')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_BorrowedFieldsReturningFfi Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Foo_as_returning')
 // ignore: non_constant_identifier_names
 external _BorrowedFieldsReturningFfi _Foo_as_returning(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('Foo_extract_from_fields')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsFfi)>(isLeaf: true, symbol: 'Foo_extract_from_fields')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_fields(_BorrowedFieldsFfi fields);
 
-@_DiplomatFfiUse('Foo_extract_from_bounds')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_BorrowedFieldsWithBoundsFfi, _SliceUtf8)>(isLeaf: true, symbol: 'Foo_extract_from_bounds')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_extract_from_bounds(_BorrowedFieldsWithBoundsFfi bounds, _SliceUtf8 anotherString);

@@ -16,12 +16,16 @@ final class MyOpaqueEnum implements ffi.Finalizable {
   // maintain borrow validity.
   MyOpaqueEnum._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _MyOpaqueEnum_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('MyOpaqueEnum_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyOpaqueEnum_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _MyOpaqueEnum_destroy(MyOpaqueEnum cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_MyOpaqueEnum_destroy));
 
   static MyOpaqueEnum new_() {
     final result = _MyOpaqueEnum_new();
@@ -37,17 +41,20 @@ final class MyOpaqueEnum implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('MyOpaqueEnum_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyOpaqueEnum_destroy')
 // ignore: non_constant_identifier_names
-external void _MyOpaqueEnum_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_MyOpaqueEnum_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('MyOpaqueEnum_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'MyOpaqueEnum_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyOpaqueEnum_new();
 
-@_DiplomatFfiUse('MyOpaqueEnum_to_string')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyOpaqueEnum_to_string')
 // ignore: non_constant_identifier_names
 external void _MyOpaqueEnum_to_string(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);

@@ -16,12 +16,16 @@ final class OptionOpaqueChar implements ffi.Finalizable {
   // maintain borrow validity.
   OptionOpaqueChar._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _OptionOpaqueChar_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('OptionOpaqueChar_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaqueChar_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _OptionOpaqueChar_destroy(OptionOpaqueChar cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OptionOpaqueChar_destroy));
 
   void assertChar(Rune ch) {
     _OptionOpaqueChar_assert_char(_ffi, ch);
@@ -29,12 +33,14 @@ final class OptionOpaqueChar implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('OptionOpaqueChar_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaqueChar_destroy')
 // ignore: non_constant_identifier_names
-external void _OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OptionOpaqueChar_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('OptionOpaqueChar_assert_char')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Uint32)>(isLeaf: true, symbol: 'OptionOpaqueChar_assert_char')
 // ignore: non_constant_identifier_names
 external void _OptionOpaqueChar_assert_char(ffi.Pointer<ffi.Opaque> self, Rune ch);

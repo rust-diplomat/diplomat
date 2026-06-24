@@ -16,12 +16,16 @@ final class RenamedOpaqueZSTIndexer implements ffi.Finalizable {
   // maintain borrow validity.
   RenamedOpaqueZSTIndexer._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _namespace_OpaqueZSTIndexer_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('namespace_OpaqueZSTIndexer_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_OpaqueZSTIndexer_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _namespace_OpaqueZSTIndexer_destroy(RenamedOpaqueZSTIndexer cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_OpaqueZSTIndexer_destroy));
 
   factory RenamedOpaqueZSTIndexer() {
     final result = _namespace_OpaqueZSTIndexer_new();
@@ -35,17 +39,20 @@ final class RenamedOpaqueZSTIndexer implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('namespace_OpaqueZSTIndexer_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_OpaqueZSTIndexer_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_OpaqueZSTIndexer_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_OpaqueZSTIndexer_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('namespace_OpaqueZSTIndexer_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_OpaqueZSTIndexer_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_OpaqueZSTIndexer_new();
 
-@_DiplomatFfiUse('namespace_OpaqueZSTIndexer_index')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_OpaqueZSTIndexer_index')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_OpaqueZSTIndexer_index(ffi.Pointer<ffi.Opaque> self, int idx);

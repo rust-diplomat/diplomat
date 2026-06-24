@@ -16,12 +16,16 @@ final class RenamedVectorTest implements ffi.Finalizable {
   // maintain borrow validity.
   RenamedVectorTest._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _namespace_VectorTest_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('namespace_VectorTest_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_VectorTest_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _namespace_VectorTest_destroy(RenamedVectorTest cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_VectorTest_destroy));
 
   factory RenamedVectorTest() {
     final result = _namespace_VectorTest_new();
@@ -47,27 +51,32 @@ final class RenamedVectorTest implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('namespace_VectorTest_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_VectorTest_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_VectorTest_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_VectorTest_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('namespace_VectorTest_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'namespace_VectorTest_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_VectorTest_new();
 
-@_DiplomatFfiUse('namespace_VectorTest_len')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_VectorTest_len')
 // ignore: non_constant_identifier_names
 external int _namespace_VectorTest_len(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('namespace_VectorTest_get')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultDoubleVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_VectorTest_get')
 // ignore: non_constant_identifier_names
 external _ResultDoubleVoid _namespace_VectorTest_get(ffi.Pointer<ffi.Opaque> self, int idx);
 
-@_DiplomatFfiUse('namespace_VectorTest_push')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Double)>(isLeaf: true, symbol: 'namespace_VectorTest_push')
 // ignore: non_constant_identifier_names
 external void _namespace_VectorTest_push(ffi.Pointer<ffi.Opaque> self, double value);

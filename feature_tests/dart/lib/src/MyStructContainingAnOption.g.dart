@@ -65,12 +65,14 @@ final class MyStructContainingAnOption {
       ]);
 }
 
-@_DiplomatFfiUse('MyStructContainingAnOption_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_MyStructContainingAnOptionFfi Function()>(isLeaf: true, symbol: 'MyStructContainingAnOption_new')
 // ignore: non_constant_identifier_names
 external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_new();
 
-@_DiplomatFfiUse('MyStructContainingAnOption_filled')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_MyStructContainingAnOptionFfi Function()>(isLeaf: true, symbol: 'MyStructContainingAnOption_filled')
 // ignore: non_constant_identifier_names
 external _MyStructContainingAnOptionFfi _MyStructContainingAnOption_filled();

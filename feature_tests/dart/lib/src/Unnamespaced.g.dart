@@ -16,12 +16,16 @@ final class Unnamespaced implements ffi.Finalizable {
   // maintain borrow validity.
   Unnamespaced._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _namespace_Unnamespaced_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('namespace_Unnamespaced_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_Unnamespaced_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _namespace_Unnamespaced_destroy(Unnamespaced cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_Unnamespaced_destroy));
 
   factory Unnamespaced.make(RenamedAttrEnum e) {
     final result = _namespace_Unnamespaced_make(e.index);
@@ -34,17 +38,20 @@ final class Unnamespaced implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('namespace_Unnamespaced_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_Unnamespaced_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_Unnamespaced_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_Unnamespaced_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('namespace_Unnamespaced_make')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'namespace_Unnamespaced_make')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_Unnamespaced_make(int e);
 
-@_DiplomatFfiUse('namespace_Unnamespaced_use_namespaced')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'namespace_Unnamespaced_use_namespaced')
 // ignore: non_constant_identifier_names
 external void _namespace_Unnamespaced_use_namespaced(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> n);

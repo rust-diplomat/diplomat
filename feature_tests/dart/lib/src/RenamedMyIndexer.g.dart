@@ -16,12 +16,16 @@ final class RenamedMyIndexer implements ffi.Finalizable {
   // maintain borrow validity.
   RenamedMyIndexer._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _namespace_MyIndexer_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('namespace_MyIndexer_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_namespace_MyIndexer_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _namespace_MyIndexer_destroy(RenamedMyIndexer cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_namespace_MyIndexer_destroy));
 
   factory RenamedMyIndexer(core.List<core.String> v) {
     final temp = _FinalizedArena();
@@ -41,17 +45,20 @@ final class RenamedMyIndexer implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('namespace_MyIndexer_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'namespace_MyIndexer_destroy')
 // ignore: non_constant_identifier_names
-external void _namespace_MyIndexer_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_namespace_MyIndexer_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('namespace_MyIndexer_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'namespace_MyIndexer_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _namespace_MyIndexer_new(_SliceSliceUtf8 v);
 
-@_DiplomatFfiUse('namespace_MyIndexer_get')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultSliceUtf8Void Function(ffi.Pointer<ffi.Opaque>, ffi.Size)>(isLeaf: true, symbol: 'namespace_MyIndexer_get')
 // ignore: non_constant_identifier_names
 external _ResultSliceUtf8Void _namespace_MyIndexer_get(ffi.Pointer<ffi.Opaque> self, int i);

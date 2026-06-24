@@ -55,12 +55,14 @@ final class CyclicStructC {
       ]);
 }
 
-@_DiplomatFfiUse('CyclicStructC_takes_nested_parameters')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_CyclicStructCFfi Function(_CyclicStructCFfi)>(isLeaf: true, symbol: 'CyclicStructC_takes_nested_parameters')
 // ignore: non_constant_identifier_names
 external _CyclicStructCFfi _CyclicStructC_takes_nested_parameters(_CyclicStructCFfi c);
 
-@_DiplomatFfiUse('CyclicStructC_cyclic_out')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(_CyclicStructCFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'CyclicStructC_cyclic_out')
 // ignore: non_constant_identifier_names
 external void _CyclicStructC_cyclic_out(_CyclicStructCFfi self, ffi.Pointer<ffi.Opaque> write);

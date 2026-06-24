@@ -17,12 +17,16 @@ final class FixedDecimal implements ffi.Finalizable {
   // maintain borrow validity.
   FixedDecimal._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _icu4x_FixedDecimal_destroy_mv1(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('icu4x_FixedDecimal_destroy_mv1')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_icu4x_FixedDecimal_destroy_mv1));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _icu4x_FixedDecimal_destroy_mv1(FixedDecimal cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_icu4x_FixedDecimal_destroy_mv1));
 
   /// Construct an [FixedDecimal] from an integer.
   factory FixedDecimal(int v) {
@@ -51,22 +55,26 @@ final class FixedDecimal implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('icu4x_FixedDecimal_destroy_mv1')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_destroy_mv1')
 // ignore: non_constant_identifier_names
-external void _icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
+external void _internal_icu4x_FixedDecimal_destroy_mv1(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('icu4x_FixedDecimal_new_mv1')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_new_mv1')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _icu4x_FixedDecimal_new_mv1(int v);
 
-@_DiplomatFfiUse('icu4x_FixedDecimal_multiply_pow10_mv1')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int16)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_multiply_pow10_mv1')
 // ignore: non_constant_identifier_names
 external void _icu4x_FixedDecimal_multiply_pow10_mv1(ffi.Pointer<ffi.Opaque> self, int power);
 
-@_DiplomatFfiUse('icu4x_FixedDecimal_to_string_mv1')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultVoidVoid Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'icu4x_FixedDecimal_to_string_mv1')
 // ignore: non_constant_identifier_names
 external _ResultVoidVoid _icu4x_FixedDecimal_to_string_mv1(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);

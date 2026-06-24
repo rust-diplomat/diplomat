@@ -55,7 +55,8 @@ final class FallibleOpaqueConstructor {
       ]);
 }
 
-@_DiplomatFfiUse('FallibleOpaqueConstructor_ctor')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultFallibleOpaqueConstructorFfiOpaque Function()>(isLeaf: true, symbol: 'FallibleOpaqueConstructor_ctor')
 // ignore: non_constant_identifier_names
 external _ResultFallibleOpaqueConstructorFfiOpaque _FallibleOpaqueConstructor_ctor();

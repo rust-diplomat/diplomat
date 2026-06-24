@@ -16,12 +16,16 @@ final class OptionOpaque implements ffi.Finalizable {
   // maintain borrow validity.
   OptionOpaque._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _OptionOpaque_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('OptionOpaque_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OptionOpaque_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _OptionOpaque_destroy(OptionOpaque cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OptionOpaque_destroy));
 
   static OptionOpaque? new_(int i) {
     final result = _OptionOpaque_new(i);
@@ -151,102 +155,122 @@ final class OptionOpaque implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('OptionOpaque_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OptionOpaque_destroy')
 // ignore: non_constant_identifier_names
-external void _OptionOpaque_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OptionOpaque_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('OptionOpaque_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Int32)>(isLeaf: true, symbol: 'OptionOpaque_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_new(int i);
 
-@_DiplomatFfiUse('OptionOpaque_new_none')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'OptionOpaque_new_none')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_new_none();
 
-@_DiplomatFfiUse('OptionOpaque_returns')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultOptionStructFfiVoid Function()>(isLeaf: true, symbol: 'OptionOpaque_returns')
 // ignore: non_constant_identifier_names
 external _ResultOptionStructFfiVoid _OptionOpaque_returns();
 
-@_DiplomatFfiUse('OptionOpaque_option_isize')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultIntPtrVoid Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_isize')
 // ignore: non_constant_identifier_names
 external _ResultIntPtrVoid _OptionOpaque_option_isize(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_option_usize')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultSizeVoid Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_usize')
 // ignore: non_constant_identifier_names
 external _ResultSizeVoid _OptionOpaque_option_usize(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_option_i32')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultInt32Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_i32')
 // ignore: non_constant_identifier_names
 external _ResultInt32Void _OptionOpaque_option_i32(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_option_u32')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultUint32Void Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_u32')
 // ignore: non_constant_identifier_names
 external _ResultUint32Void _OptionOpaque_option_u32(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_new_struct')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct')
 // ignore: non_constant_identifier_names
 external _OptionStructFfi _OptionOpaque_new_struct();
 
-@_DiplomatFfiUse('OptionOpaque_new_struct_nones')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_OptionStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_new_struct_nones')
 // ignore: non_constant_identifier_names
 external _OptionStructFfi _OptionOpaque_new_struct_nones();
 
-@_DiplomatFfiUse('OptionOpaque_returns_none_self')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_returns_none_self')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_returns_none_self(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_returns_some_self')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_returns_some_self')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OptionOpaque_returns_some_self(ffi.Pointer<ffi.Opaque> self);
 
-@_DiplomatFfiUse('OptionOpaque_assert_integer')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Int32)>(isLeaf: true, symbol: 'OptionOpaque_assert_integer')
 // ignore: non_constant_identifier_names
 external void _OptionOpaque_assert_integer(ffi.Pointer<ffi.Opaque> self, int i);
 
-@_DiplomatFfiUse('OptionOpaque_option_opaque_argument')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Bool Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'OptionOpaque_option_opaque_argument')
 // ignore: non_constant_identifier_names
 external bool _OptionOpaque_option_opaque_argument(ffi.Pointer<ffi.Opaque> arg);
 
-@_DiplomatFfiUse('OptionOpaque_accepts_option_u8')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultUint8Void Function(_ResultUint8Void, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_u8')
 // ignore: non_constant_identifier_names
 external _ResultUint8Void _OptionOpaque_accepts_option_u8(_ResultUint8Void arg, int sentinel);
 
-@_DiplomatFfiUse('OptionOpaque_accepts_option_enum')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultInt32Void Function(_ResultInt32Void, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_enum')
 // ignore: non_constant_identifier_names
 external _ResultInt32Void _OptionOpaque_accepts_option_enum(_ResultInt32Void arg, int sentinel);
 
-@_DiplomatFfiUse('OptionOpaque_accepts_borrowing_option_struct')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(_BorrowingOptionStructFfi)>(isLeaf: true, symbol: 'OptionOpaque_accepts_borrowing_option_struct')
 // ignore: non_constant_identifier_names
 external void _OptionOpaque_accepts_borrowing_option_struct(_BorrowingOptionStructFfi arg);
 
-@_DiplomatFfiUse('OptionOpaque_accepts_multiple_option_enum')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultInt32Void Function(ffi.Uint8, _ResultInt32Void, _ResultInt32Void, _ResultInt32Void, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_multiple_option_enum')
 // ignore: non_constant_identifier_names
 external _ResultInt32Void _OptionOpaque_accepts_multiple_option_enum(int sentinel1, _ResultInt32Void arg1, _ResultInt32Void arg2, _ResultInt32Void arg3, int sentinel2);
 
-@_DiplomatFfiUse('OptionOpaque_accepts_option_input_struct')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_ResultOptionInputStructFfiVoid Function(_ResultOptionInputStructFfiVoid, ffi.Uint8)>(isLeaf: true, symbol: 'OptionOpaque_accepts_option_input_struct')
 // ignore: non_constant_identifier_names
 external _ResultOptionInputStructFfiVoid _OptionOpaque_accepts_option_input_struct(_ResultOptionInputStructFfiVoid arg, int sentinel);
 
-@_DiplomatFfiUse('OptionOpaque_returns_option_input_struct')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_OptionInputStructFfi Function()>(isLeaf: true, symbol: 'OptionOpaque_returns_option_input_struct')
 // ignore: non_constant_identifier_names
 external _OptionInputStructFfi _OptionOpaque_returns_option_input_struct();

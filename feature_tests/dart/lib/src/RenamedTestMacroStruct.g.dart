@@ -54,12 +54,14 @@ final class RenamedTestMacroStruct {
       ]);
 }
 
-@_DiplomatFfiUse('namespace_TestMacroStruct_test_func')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Size Function()>(isLeaf: true, symbol: 'namespace_TestMacroStruct_test_func')
 // ignore: non_constant_identifier_names
 external int _namespace_TestMacroStruct_test_func();
 
-@_DiplomatFfiUse('namespace_TestMacroStruct_test_meta')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_RenamedTestMacroStructFfi Function()>(isLeaf: true, symbol: 'namespace_TestMacroStruct_test_meta')
 // ignore: non_constant_identifier_names
 external _RenamedTestMacroStructFfi _namespace_TestMacroStruct_test_meta();

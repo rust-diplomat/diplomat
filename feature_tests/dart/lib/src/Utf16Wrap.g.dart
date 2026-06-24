@@ -16,12 +16,16 @@ final class Utf16Wrap implements ffi.Finalizable {
   // maintain borrow validity.
   Utf16Wrap._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _Utf16Wrap_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('Utf16Wrap_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_Utf16Wrap_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _Utf16Wrap_destroy(Utf16Wrap cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_Utf16Wrap_destroy));
 
   factory Utf16Wrap(String input) {
     final temp = _FinalizedArena();
@@ -44,22 +48,26 @@ final class Utf16Wrap implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('Utf16Wrap_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'Utf16Wrap_destroy')
 // ignore: non_constant_identifier_names
-external void _Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_Utf16Wrap_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('Utf16Wrap_from_utf16')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf16)>(isLeaf: true, symbol: 'Utf16Wrap_from_utf16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Utf16Wrap_from_utf16(_SliceUtf16 input);
 
-@_DiplomatFfiUse('Utf16Wrap_get_debug_str')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_get_debug_str')
 // ignore: non_constant_identifier_names
 external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@_DiplomatFfiUse('Utf16Wrap_borrow_cont')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_borrow_cont')
 // ignore: non_constant_identifier_names
 external _SliceUtf16 _Utf16Wrap_borrow_cont(ffi.Pointer<ffi.Opaque> self);

@@ -63,12 +63,14 @@ final class RenamedStructWithAttrs {
       ]);
 }
 
-@_DiplomatFfiUse('namespace_StructWithAttrs_c')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Uint32 Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_c')
 // ignore: non_constant_identifier_names
 external int _namespace_StructWithAttrs_c(_RenamedStructWithAttrsFfi self);
 
-@_DiplomatFfiUse('namespace_StructWithAttrs_deprecated')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(_RenamedStructWithAttrsFfi)>(isLeaf: true, symbol: 'namespace_StructWithAttrs_deprecated')
 // ignore: non_constant_identifier_names
 external void _namespace_StructWithAttrs_deprecated(_RenamedStructWithAttrsFfi self);

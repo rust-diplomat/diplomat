@@ -16,12 +16,16 @@ final class MyString implements ffi.Finalizable {
   // maintain borrow validity.
   MyString._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _MyString_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('MyString_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_MyString_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _MyString_destroy(MyString cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_MyString_destroy));
 
   factory MyString(String v) {
     final temp = _FinalizedArena();
@@ -84,57 +88,68 @@ final class MyString implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('MyString_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'MyString_destroy')
 // ignore: non_constant_identifier_names
-external void _MyString_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_MyString_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('MyString_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new(_SliceUtf8 v);
 
-@_DiplomatFfiUse('MyString_new_unsafe')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_unsafe')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_unsafe(_SliceUtf8 v);
 
-@_DiplomatFfiUse('MyString_new_owned')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'MyString_new_owned')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_owned(_SliceUtf8 v);
 
-@_DiplomatFfiUse('MyString_new_from_first')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf8)>(isLeaf: true, symbol: 'MyString_new_from_first')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_from_first(_SliceSliceUtf8 v);
 
-@_DiplomatFfiUse('MyString_new_from_utf16')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceSliceUtf16)>(isLeaf: true, symbol: 'MyString_new_from_utf16')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _MyString_new_from_utf16(_SliceSliceUtf16 v);
 
-@_DiplomatFfiUse('MyString_set_str')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, _SliceUtf8)>(isLeaf: true, symbol: 'MyString_set_str')
 // ignore: non_constant_identifier_names
 external void _MyString_set_str(ffi.Pointer<ffi.Opaque> self, _SliceUtf8 newStr);
 
-@_DiplomatFfiUse('MyString_get_str')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_get_str')
 // ignore: non_constant_identifier_names
 external void _MyString_get_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
-@_DiplomatFfiUse('MyString_get_static_str')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_SliceUtf8 Function()>(isLeaf: true, symbol: 'MyString_get_static_str')
 // ignore: non_constant_identifier_names
 external _SliceUtf8 _MyString_get_static_str();
 
-@_DiplomatFfiUse('MyString_string_transform')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(_SliceUtf8, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_string_transform')
 // ignore: non_constant_identifier_names
 external void _MyString_string_transform(_SliceUtf8 foo, ffi.Pointer<ffi.Opaque> write);
 
-@_DiplomatFfiUse('MyString_borrow')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_SliceUtf8 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'MyString_borrow')
 // ignore: non_constant_identifier_names
 external _SliceUtf8 _MyString_borrow(ffi.Pointer<ffi.Opaque> self);

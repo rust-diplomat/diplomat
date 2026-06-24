@@ -63,7 +63,8 @@ final class StructWithSlices {
   core.List<Object> get _fieldsForLifetimeA => [first, second];
 }
 
-@_DiplomatFfiUse('StructWithSlices_return_last')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(_StructWithSlicesFfi, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'StructWithSlices_return_last')
 // ignore: non_constant_identifier_names
 external void _StructWithSlices_return_last(_StructWithSlicesFfi self, ffi.Pointer<ffi.Opaque> write);

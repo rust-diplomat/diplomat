@@ -16,12 +16,16 @@ final class OpaqueMut implements ffi.Finalizable {
   // maintain borrow validity.
   OpaqueMut._fromFfi(this._ffi, this._selfEdge) {
     if (_selfEdge.isEmpty) {
-      _finalizer.attach(this, _ffi.cast());
+      _OpaqueMut_destroy(this, _ffi.cast());
     }
   }
 
-  @_DiplomatFfiUse('OpaqueMut_destroy')
-  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_OpaqueMut_destroy));
+  // ignore: experimental_member_use
+  @meta.RecordUse()
+  // ignore: non_constant_identifier_names
+  static void _OpaqueMut_destroy(OpaqueMut cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
+
+  static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_OpaqueMut_destroy));
 
   factory OpaqueMut() {
     final result = _OpaqueMut_new();
@@ -30,12 +34,14 @@ final class OpaqueMut implements ffi.Finalizable {
 
 }
 
-@_DiplomatFfiUse('OpaqueMut_destroy')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: 'OpaqueMut_destroy')
 // ignore: non_constant_identifier_names
-external void _OpaqueMut_destroy(ffi.Pointer<ffi.Void> self);
+external void _internal_OpaqueMut_destroy(ffi.Pointer<ffi.Void> self);
 
-@_DiplomatFfiUse('OpaqueMut_new')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function()>(isLeaf: true, symbol: 'OpaqueMut_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _OpaqueMut_new();

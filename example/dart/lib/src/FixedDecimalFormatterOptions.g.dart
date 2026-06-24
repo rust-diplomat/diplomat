@@ -60,7 +60,8 @@ final class FixedDecimalFormatterOptions {
       ]);
 }
 
-@_DiplomatFfiUse('icu4x_FixedDecimalFormatterOptions_default_mv1')
+// ignore: experimental_member_use
+@meta.RecordUse()
 @ffi.Native<_FixedDecimalFormatterOptionsFfi Function()>(isLeaf: true, symbol: 'icu4x_FixedDecimalFormatterOptions_default_mv1')
 // ignore: non_constant_identifier_names
 external _FixedDecimalFormatterOptionsFfi _icu4x_FixedDecimalFormatterOptions_default_mv1();
