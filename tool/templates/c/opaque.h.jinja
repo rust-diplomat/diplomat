@@ -4,7 +4,9 @@ struct {{ ty_name }};
 typedef struct {{ ty_name }} {{ ty_name }};
 {% endif %}
 
+{%- if is_sliced %}
 typedef struct Diplomat{{ty_name}}View {
   const {{ty_name}}** data;
   size_t len;
 } Diplomat{{ty_name}}View;
+{% endif %}
