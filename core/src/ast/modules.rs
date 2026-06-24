@@ -330,7 +330,9 @@ impl<'a> ModuleBuilder<'a> {
                 }
 
                 match self.custom_types_by_name.get_mut(self_ident)
-                                                .unwrap_or_else(|| panic!("Diplomat currently requires impls to be in the same module as their self type ({self_ident})")) {
+                                                .unwrap_or_else(|| {
+                                                    create_simple_report(self_ident.clone(), "Diplomat requires impls to be in the same module as their type".into(), format!("{self_ident} should be defined in the same module."));
+                                                }) {
                         CustomType::Struct(strct) => {
                             strct.methods.append(&mut new_methods);
                         }
