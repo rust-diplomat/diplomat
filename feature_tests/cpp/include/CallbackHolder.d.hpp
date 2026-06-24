@@ -20,12 +20,6 @@ class CallbackHolder;
 namespace somelib {
 namespace capi {
     struct CallbackHolder;
-
-
-    typedef struct DiplomatCallbackHolderView {
-      const CallbackHolder** data;
-      size_t len;
-    } DiplomatCallbackHolderView;
 } // namespace capi
 } // namespace
 

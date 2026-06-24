@@ -24,12 +24,6 @@ class RenamedOpaqueZSTIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueZSTIterator;
-
-
-    typedef struct DiplomatRenamedOpaqueZSTIteratorView {
-      const RenamedOpaqueZSTIterator** data;
-      size_t len;
-    } DiplomatRenamedOpaqueZSTIteratorView;
 } // namespace capi
 } // namespace
 

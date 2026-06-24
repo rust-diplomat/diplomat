@@ -15,12 +15,6 @@
 namespace somelib::nested::ns2 {
 namespace capi {
     struct Nested;
-
-
-    typedef struct DiplomatNestedView {
-      const Nested** data;
-      size_t len;
-    } DiplomatNestedView;
 } // namespace capi
 } // namespace
 

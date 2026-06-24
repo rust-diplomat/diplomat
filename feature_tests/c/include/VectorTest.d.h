@@ -14,11 +14,6 @@
 typedef struct VectorTest VectorTest;
 
 
-typedef struct DiplomatVectorTestView {
-  const VectorTest** data;
-  size_t len;
-} DiplomatVectorTestView;
-
 
 
 #endif // VectorTest_D_H

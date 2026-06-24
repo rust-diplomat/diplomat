@@ -22,12 +22,6 @@ class Utf16Wrap;
 namespace somelib {
 namespace capi {
     struct OpaqueMutexedString;
-
-
-    typedef struct DiplomatOpaqueMutexedStringView {
-      const OpaqueMutexedString** data;
-      size_t len;
-    } DiplomatOpaqueMutexedStringView;
 } // namespace capi
 } // namespace
 

@@ -22,12 +22,6 @@ class ErrorEnum;
 namespace somelib {
 namespace capi {
     struct ResultOpaque;
-
-
-    typedef struct DiplomatResultOpaqueView {
-      const ResultOpaque** data;
-      size_t len;
-    } DiplomatResultOpaqueView;
 } // namespace capi
 } // namespace
 

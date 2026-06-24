@@ -22,12 +22,6 @@ class RenamedOpaqueZSTIndexer;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueZSTIndexer;
-
-
-    typedef struct DiplomatRenamedOpaqueZSTIndexerView {
-      const RenamedOpaqueZSTIndexer** data;
-      size_t len;
-    } DiplomatRenamedOpaqueZSTIndexerView;
 } // namespace capi
 } // namespace
 

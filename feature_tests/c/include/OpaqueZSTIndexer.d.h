@@ -14,11 +14,6 @@
 typedef struct OpaqueZSTIndexer OpaqueZSTIndexer;
 
 
-typedef struct DiplomatOpaqueZSTIndexerView {
-  const OpaqueZSTIndexer** data;
-  size_t len;
-} DiplomatOpaqueZSTIndexerView;
-
 
 
 #endif // OpaqueZSTIndexer_D_H

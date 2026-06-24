@@ -22,12 +22,6 @@ class RenamedStringList;
 namespace somelib::ns {
 namespace capi {
     struct RenamedStringList;
-
-
-    typedef struct DiplomatRenamedStringListView {
-      const RenamedStringList** data;
-      size_t len;
-    } DiplomatRenamedStringListView;
 } // namespace capi
 } // namespace
 

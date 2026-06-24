@@ -14,11 +14,6 @@
 typedef struct MyOpaqueEnum MyOpaqueEnum;
 
 
-typedef struct DiplomatMyOpaqueEnumView {
-  const MyOpaqueEnum** data;
-  size_t len;
-} DiplomatMyOpaqueEnumView;
-
 
 
 #endif // MyOpaqueEnum_D_H

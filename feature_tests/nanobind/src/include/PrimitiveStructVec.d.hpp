@@ -26,12 +26,6 @@ struct RenamedStructWithAttrs;
 namespace somelib {
 namespace capi {
     struct PrimitiveStructVec;
-
-
-    typedef struct DiplomatPrimitiveStructVecView {
-      const PrimitiveStructVec** data;
-      size_t len;
-    } DiplomatPrimitiveStructVecView;
 } // namespace capi
 } // namespace
 

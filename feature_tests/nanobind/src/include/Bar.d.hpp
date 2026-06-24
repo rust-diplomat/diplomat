@@ -20,12 +20,6 @@ class Foo;
 namespace somelib {
 namespace capi {
     struct Bar;
-
-
-    typedef struct DiplomatBarView {
-      const Bar** data;
-      size_t len;
-    } DiplomatBarView;
 } // namespace capi
 } // namespace
 

@@ -22,12 +22,6 @@ class RenamedMyIndexer;
 namespace somelib::ns {
 namespace capi {
     struct RenamedMyIndexer;
-
-
-    typedef struct DiplomatRenamedMyIndexerView {
-      const RenamedMyIndexer** data;
-      size_t len;
-    } DiplomatRenamedMyIndexerView;
 } // namespace capi
 } // namespace
 

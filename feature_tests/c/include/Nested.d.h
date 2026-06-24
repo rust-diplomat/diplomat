@@ -14,11 +14,6 @@
 typedef struct Nested Nested;
 
 
-typedef struct DiplomatNestedView {
-  const Nested** data;
-  size_t len;
-} DiplomatNestedView;
-
 
 
 #endif // Nested_D_H

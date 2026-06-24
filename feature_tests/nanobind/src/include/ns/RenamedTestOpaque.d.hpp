@@ -15,12 +15,6 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedTestOpaque;
-
-
-    typedef struct DiplomatRenamedTestOpaqueView {
-      const RenamedTestOpaque** data;
-      size_t len;
-    } DiplomatRenamedTestOpaqueView;
 } // namespace capi
 } // namespace
 

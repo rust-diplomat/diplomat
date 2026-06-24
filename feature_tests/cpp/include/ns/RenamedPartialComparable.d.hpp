@@ -22,12 +22,6 @@ class RenamedPartialComparable;
 namespace somelib::ns {
 namespace capi {
     struct RenamedPartialComparable;
-
-
-    typedef struct DiplomatRenamedPartialComparableView {
-      const RenamedPartialComparable** data;
-      size_t len;
-    } DiplomatRenamedPartialComparableView;
 } // namespace capi
 } // namespace
 

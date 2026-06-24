@@ -24,12 +24,6 @@ class RenamedOpaqueRefIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueRefIterable;
-
-
-    typedef struct DiplomatRenamedOpaqueRefIterableView {
-      const RenamedOpaqueRefIterable** data;
-      size_t len;
-    } DiplomatRenamedOpaqueRefIterableView;
 } // namespace capi
 } // namespace
 

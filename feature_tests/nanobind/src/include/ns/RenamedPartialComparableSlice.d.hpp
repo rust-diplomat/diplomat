@@ -25,15 +25,6 @@ namespace capi {
     };
 
     typedef struct RenamedPartialComparableSlice_option {union { RenamedPartialComparableSlice ok; }; bool is_ok; } RenamedPartialComparableSlice_option;
-    typedef struct DiplomatRenamedPartialComparableSliceView {
-      const RenamedPartialComparableSlice* data;
-      size_t len;
-    } DiplomatRenamedPartialComparableSliceView;
-
-    typedef struct DiplomatRenamedPartialComparableSliceViewMut {
-      RenamedPartialComparableSlice* data;
-      size_t len;
-    } DiplomatRenamedPartialComparableSliceViewMut;
 } // namespace capi
 } // namespace
 

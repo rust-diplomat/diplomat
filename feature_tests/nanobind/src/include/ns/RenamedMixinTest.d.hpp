@@ -15,12 +15,6 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedMixinTest;
-
-
-    typedef struct DiplomatRenamedMixinTestView {
-      const RenamedMixinTest** data;
-      size_t len;
-    } DiplomatRenamedMixinTestView;
 } // namespace capi
 } // namespace
 

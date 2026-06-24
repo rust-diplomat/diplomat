@@ -14,11 +14,6 @@
 typedef struct FixedDecimalFormatter FixedDecimalFormatter;
 
 
-typedef struct DiplomatFixedDecimalFormatterView {
-  const FixedDecimalFormatter** data;
-  size_t len;
-} DiplomatFixedDecimalFormatterView;
-
 
 
 #endif // FixedDecimalFormatter_D_H

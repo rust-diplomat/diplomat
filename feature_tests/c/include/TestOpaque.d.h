@@ -14,11 +14,6 @@
 typedef struct TestOpaque TestOpaque;
 
 
-typedef struct DiplomatTestOpaqueView {
-  const TestOpaque** data;
-  size_t len;
-} DiplomatTestOpaqueView;
-
 
 
 #endif // TestOpaque_D_H

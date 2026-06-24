@@ -14,11 +14,6 @@
 typedef struct OpaqueMut OpaqueMut;
 
 
-typedef struct DiplomatOpaqueMutView {
-  const OpaqueMut** data;
-  size_t len;
-} DiplomatOpaqueMutView;
-
 
 
 #endif // OpaqueMut_D_H
