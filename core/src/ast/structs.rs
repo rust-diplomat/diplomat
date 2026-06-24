@@ -1,6 +1,8 @@
 use serde::Serialize;
+use syn::spanned::Spanned;
 
 use crate::ast::idents::{IntoWithSpan, SpanLocation};
+use crate::ast::logging::{AstReport, ContextLocation, create_report};
 
 use super::docs::Docs;
 use super::{Attrs, Ident, LifetimeEnv, Method, PathType, TypeName};
@@ -31,17 +33,18 @@ impl Struct {
             .fields
             .iter()
             .map(|field| {
-                use quote::ToTokens;
                 // Non-opaque tuple structs will never be allowed
                 let name = field
                     .ident
                     .as_ref()
                     .map(|i| i.spanned_into(module_location))
                     .unwrap_or_else(|| {
-                        panic!(
-                            "non-opaque tuples structs are disallowed ({:?})",
-                            field.ty.to_token_stream().to_string()
-                        )
+                        create_report(AstReport::new(
+                            "Non-opaque tuple structs are disallowed".into(),
+                            Some(field.ty.span().spanned_into(module_location)),
+                            "If struct is not opaque, fields must have idents".into(),
+                            vec![ContextLocation::new(strct.ident.span().spanned_into(module_location), "Suggestion: mark with #[diplomat::opaque]".into())]
+                        ));
                     });
                 let type_name =
                     TypeName::from_syn(&field.ty, Some(self_path_type.clone()), module_location);
