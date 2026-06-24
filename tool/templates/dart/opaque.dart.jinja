@@ -30,6 +30,7 @@ final class {{type_name}}
   }
 
   @meta.RecordUse()
+  // ignore: non_constant_identifier_names
   static void _{{destructor}}({{type_name}} cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
 
   static final _finalizer = ffi.NativeFinalizer(ffi.Native.addressOf(_internal_{{destructor}}));
