@@ -286,6 +286,7 @@ mod tests {
         "macro_parse_error.rs",
         "macro_expansion_error.rs",
         "self_type.rs",
+        "param_invalid_type.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
