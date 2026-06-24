@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use syn::spanned::Spanned;
 use std::ops::ControlFlow;
+use syn::spanned::Spanned;
 
 use crate::ast::idents::IntoWithSpan;
+use crate::ast::logging::{create_report, AstReport};
 use crate::ast::SpanLocation;
-use crate::ast::logging::{AstReport, create_report};
 
 use super::docs::Docs;
 use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
@@ -346,9 +346,11 @@ impl Param {
             _ => {
                 create_report(AstReport::new(
                     "Unexpected param type".into(),
-                Some(t.pat.span().spanned_into(module_location)),
-                "Expected ident".into(), vec![]));
-            },
+                    Some(t.pat.span().spanned_into(module_location)),
+                    "Expected ident".into(),
+                    vec![],
+                ));
+            }
         };
 
         let attrs = Attrs::from_attrs(&t.attrs);

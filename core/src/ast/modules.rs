@@ -12,7 +12,7 @@ use super::{
     OpaqueType, Path, PathType, RustLink, Struct, Trait,
 };
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::{AstReport, ContextLocation, create_report, create_simple_report};
+use crate::ast::logging::{create_report, create_simple_report, AstReport};
 use crate::ast::{Function, SpanLocation};
 use crate::environment::*;
 
@@ -265,9 +265,9 @@ impl<'a> ModuleBuilder<'a> {
                             "Self type not found".into(),
                             Some(imp.self_ty.span().spanned_into(self.module_location)),
                             "Expected Path type".into(),
-                            vec![]
+                            vec![],
                         ));
-                    },
+                    }
                 };
                 let mut impl_attrs = self.impl_parent_attrs.clone();
                 impl_attrs.add_attrs(&imp.attrs);
@@ -329,20 +329,26 @@ impl<'a> ModuleBuilder<'a> {
                     return;
                 }
 
-                match self.custom_types_by_name.get_mut(self_ident)
-                                                .unwrap_or_else(|| {
-                                                    create_simple_report(self_ident.clone(), "Diplomat requires impls to be in the same module as their type".into(), format!("{self_ident} should be defined in the same module."));
-                                                }) {
-                        CustomType::Struct(strct) => {
-                            strct.methods.append(&mut new_methods);
-                        }
-                        CustomType::Opaque(strct) => {
-                            strct.methods.append(&mut new_methods);
-                        }
-                        CustomType::Enum(enm) => {
-                            enm.methods.append(&mut new_methods);
-                        }
+                match self
+                    .custom_types_by_name
+                    .get_mut(self_ident)
+                    .unwrap_or_else(|| {
+                        create_simple_report(
+                            self_ident.clone(),
+                            "Diplomat requires impls to be in the same module as their type".into(),
+                            format!("{self_ident} should be defined in the same module."),
+                        );
+                    }) {
+                    CustomType::Struct(strct) => {
+                        strct.methods.append(&mut new_methods);
                     }
+                    CustomType::Opaque(strct) => {
+                        strct.methods.append(&mut new_methods);
+                    }
+                    CustomType::Enum(enm) => {
+                        enm.methods.append(&mut new_methods);
+                    }
+                }
             }
             Item::Mod(item_mod) => {
                 self.sub_modules.push(Module::from_syn(
@@ -431,7 +437,12 @@ impl Module {
                 .insert(k.clone(), ModSymbol::CustomType(v.clone()))
                 .is_some()
             {
-                create_simple_report(k.clone(), "Two types were declared with the same name (this is currently unsupported)".into(), "Duplicate type".into());
+                create_simple_report(
+                    k.clone(),
+                    "Two types were declared with the same name (this is currently unsupported)"
+                        .into(),
+                    "Duplicate type".into(),
+                );
             }
         });
 
@@ -440,7 +451,12 @@ impl Module {
                 .insert(k.clone(), ModSymbol::Trait(v.clone()))
                 .is_some()
             {
-                create_simple_report(k.clone(), "Two traits were declared with the same name (this is currently unsupported)".into(), "Duplicate trait".into());
+                create_simple_report(
+                    k.clone(),
+                    "Two traits were declared with the same name (this is currently unsupported)"
+                        .into(),
+                    "Duplicate trait".into(),
+                );
             }
         });
 
