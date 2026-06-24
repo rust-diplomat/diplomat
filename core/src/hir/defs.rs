@@ -109,6 +109,7 @@ pub struct ResultUsageInfo<P: TyPosition> {
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
+// InputOnly allows for traits and callbacks, which creates a large byte difference (this type is > 900 bytes).
 #[allow(clippy::large_enum_variant)]
 pub enum ResultUsage {
     /// Result is used as the return of a callback:
