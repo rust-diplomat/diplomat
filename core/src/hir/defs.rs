@@ -127,7 +127,8 @@ pub struct TypingUseInfo {
     /// If the given type is ever used in an option.
     pub optioned: bool,
     /// The results that this type is used in.
-    pub results: Vec<ResultUsage>,
+    /// Boxed so large clones will be on the heap instead of the stack.
+    pub results: Vec<Box<ResultUsage>>,
 }
 
 /// Used for setting a type's usage in [`super::LoweringContext::update_usage`]
