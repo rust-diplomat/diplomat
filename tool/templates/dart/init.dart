@@ -40,6 +40,7 @@ final class _RustAlloc implements ffi.Allocator {
   }
 }
 
+// ignore: experimental_member_use
 @meta.RecordUse()
 @ffi.Native<ffi.Pointer<ffi.Void> Function(ffi.Size, ffi.Size)>(
   symbol: 'diplomat_alloc',
@@ -48,6 +49,7 @@ final class _RustAlloc implements ffi.Allocator {
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Void> _diplomat_alloc(int len, int align);
 
+// ignore: experimental_member_use
 @meta.RecordUse()
 @ffi.Native<ffi.Size Function(ffi.Pointer<ffi.Void>, ffi.Size, ffi.Size)>(
   symbol: 'diplomat_free',

@@ -29,6 +29,7 @@ final class {{type_name}}
     }
   }
 
+  // ignore: experimental_member_use
   @meta.RecordUse()
   // ignore: non_constant_identifier_names
   static void _{{destructor}}({{type_name}} cl, ffi.Pointer<ffi.Void> pointer) => _finalizer.attach(cl, pointer);
@@ -63,6 +64,7 @@ final class {{type_name}}
   {%- endif %}
 }
 
+// ignore: experimental_member_use
 @meta.RecordUse()
 @ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>(isLeaf: true, symbol: '{{destructor}}')
 // ignore: non_constant_identifier_names
