@@ -40,6 +40,7 @@ struct OpaqueImplTemplate<'ctx> {
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
     properties: Vec<PropertyInfo>,
+    has_edges: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,6 +73,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
+        has_edges: bool,
     ) -> String {
         let properties = method::collect_properties(&methods);
 
@@ -80,6 +82,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             namespace: self.namespace,
             methods,
             properties,
+            has_edges,
         }
         .render()
         .unwrap()

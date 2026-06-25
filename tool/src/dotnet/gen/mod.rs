@@ -153,7 +153,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
             .collect();
         let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, methods.clone());
-        let content = self.gen_opaque_impl(display_name, methods);
+        // Only lifetime-carrying opaques can be a borrowing return, so only
+        // they need keep-alive edge storage.
+        let has_edges = opaque_def.lifetimes.num_lifetimes() != 0;
+        let content = self.gen_opaque_impl(display_name, methods, has_edges);
         Some((Some(raw), content))
     }
 

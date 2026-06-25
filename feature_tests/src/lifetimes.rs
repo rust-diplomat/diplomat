@@ -406,10 +406,8 @@ pub mod ffi {
         }
     }
 
-    // .NET borrow-soundness fixture: a constructible parent and a child opaque
-    // that borrows it (`Box<BorrowChild<'a>>` carries `'a` tied to the parent).
-    // `get()` reads back the parent's value so a use-after-free is observable.
-    // .NET-only: keep it out of the other backends' generated output.
+    // Borrow-soundness fixture for the .NET keep-alive edges; not(dotnet) to
+    // keep it out of the other backends' generated output.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
     pub struct BorrowParent(u32);
@@ -427,10 +425,8 @@ pub mod ffi {
             Box::new(BorrowChild(self))
         }
 
-        // Regression for the `this`-named-parameter edge case: a Rust param
-        // literally named `this` must format to `@this` in the edge array, not
-        // collide with the receiver sentinel (which would emit a bare `this` —
-        // invalid in the generated static method, so it wouldn't even compile).
+        // Regression: a param named `this` must render `@this` in the edge
+        // array, not the receiver keyword (which wouldn't compile here).
         pub fn view_from<'a>(this: &'a BorrowParent) -> Box<BorrowChild<'a>> {
             Box::new(BorrowChild(this))
         }

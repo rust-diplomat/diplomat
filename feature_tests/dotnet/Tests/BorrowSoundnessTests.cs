@@ -5,9 +5,6 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// Borrow-soundness: BorrowParent.View() returns a BorrowChild that borrows the
-// parent (Box<BorrowChild<'a>>). A live child must keep its parent alive so the
-// parent is not collected/finalized (-> Destroy) while the child still reads it.
 public class BorrowSoundnessTests
 {
     [Fact]
@@ -38,9 +35,7 @@ public class BorrowSoundnessTests
         Assert.True(
             parentRef.IsAlive,
             "live BorrowChild must keep its borrowed-from BorrowParent alive");
-        // Prove the native pointer (not just the managed wrapper) survived:
-        // Get() reads back through the borrowed `&BorrowParent`, so a freed
-        // parent would surface as a use-after-free here.
+        // Get() reads through the borrow, proving the native pointer survived.
         Assert.Equal(42u, child.Get());
         GC.KeepAlive(child);
     }
@@ -53,11 +48,8 @@ public class BorrowSoundnessTests
         return (new WeakReference(parent), child);
     }
 
-    // Regression for the `this`-named-parameter edge case. ViewFrom borrows a
-    // Rust param named `this`; the edge must render `@this` (the C# param), not
-    // the receiver keyword `this` — bare `this` in this STATIC method wouldn't
-    // compile, so this test building at all guards the fix. The GC assertion
-    // then confirms the param-edge (not a receiver) roots the parent.
+    // Regression: a param named `this` must render `@this`, not the receiver
+    // keyword (which wouldn't compile in this static method — so building guards it).
     [Fact]
     public void ViewFrom_ParamNamedThis_KeepsParentAlive()
     {

@@ -13,10 +13,8 @@ public partial class Two: IDisposable
     private unsafe Raw.Two* _inner;
 
     /// <summary>
-    /// Strong references to the wrappers this value borrows from (its
-    /// keep-alive edges). Rooting them here keeps the GC from collecting (and
-    /// finalizing -> Destroy) a borrowed-from parent while this value is still
-    /// alive. Empty when this value borrows from nothing.
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
 
@@ -35,16 +33,10 @@ public partial class Two: IDisposable
         _edges = System.Array.Empty<object>();
     }
 
-    /// <summary>
-    /// Creates a managed <c>Two</c> from a raw handle, retaining strong
-    /// references to the wrappers it borrows from (its keep-alive edges) so the
-    /// GC cannot collect (and finalize -> Destroy) a borrowed-from parent while
-    /// this value is alive.
-    /// </summary>
     /// <remarks>
-    /// The edges only keep the borrowed-from objects GC-reachable. Explicitly
-    /// <c>Dispose</c>-ing a parent while a borrowing child is still in use is
-    /// still a use-after-free and remains the caller's responsibility.
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
     /// </remarks>
     internal unsafe Two(Raw.Two* handle, object[] edges)
     {
@@ -74,7 +66,6 @@ public partial class Two: IDisposable
 
             Raw.Two.Destroy(_inner);
             _inner = null;
-            // Stop rooting the borrowed-from wrappers once we're disposed.
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
