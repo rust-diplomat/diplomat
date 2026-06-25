@@ -405,42 +405,6 @@ pub mod ffi {
             super::PROBE_DROPS.load(super::Ordering::SeqCst) - before
         }
     }
-
-    // Borrow-soundness fixture for the .NET keep-alive edges; not(dotnet) to
-    // keep it out of the other backends' generated output.
-    #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque]
-    pub struct BorrowParent(u32);
-
-    #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque]
-    pub struct BorrowChild<'a>(&'a BorrowParent);
-
-    impl BorrowParent {
-        pub fn create(value: u32) -> Box<Self> {
-            Box::new(BorrowParent(value))
-        }
-
-        pub fn view<'a>(&'a self) -> Box<BorrowChild<'a>> {
-            Box::new(BorrowChild(self))
-        }
-
-        // Regression: a param named `this` must render `@this` in the edge
-        // array, not the receiver keyword (which wouldn't compile here).
-        pub fn view_from<'a>(this: &'a BorrowParent) -> Box<BorrowChild<'a>> {
-            Box::new(BorrowChild(this))
-        }
-
-        pub fn value(&self) -> u32 {
-            self.0
-        }
-    }
-
-    impl<'a> BorrowChild<'a> {
-        pub fn get(&self) -> u32 {
-            (self.0).0
-        }
-    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
