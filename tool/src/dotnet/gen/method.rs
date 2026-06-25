@@ -286,20 +286,29 @@ impl DotnetReturnType {
         }
     }
 
-    fn edge_arg_suffix(edges: &[String]) -> String {
-        if edges.is_empty() {
+    fn edge_arg_suffix(edges: &[String], owned: bool) -> String {
+        // Owned with no edges → the 1-arg ctor (which sets `_owned = true`).
+        // Anything else must pass `owned` explicitly, so a borrowed return
+        // with no edges (e.g. `&'static T`) can't fall back to the owning
+        // ctor and double-free.
+        if edges.is_empty() && owned {
             String::new()
         } else {
-            format!(", new object[] {{ {} }}", edges.join(", "))
+            let array = if edges.is_empty() {
+                "System.Array.Empty<object>()".to_string()
+            } else {
+                format!("new object[] {{ {} }}", edges.join(", "))
+            };
+            format!(", {array}, owned: {owned}")
         }
     }
 
     /// Convert a raw FFI value expression into the public C# value
     /// expression for this return type.
-    fn idiomatic_value_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
+    fn idiomatic_value_expr(&self, raw_expr: RawExpr, edges: &[String], owned: bool) -> String {
         match self {
             Self::Opaque(name) => {
-                format!("new {name}({raw_expr}{})", Self::edge_arg_suffix(edges))
+                format!("new {name}({raw_expr}{})", Self::edge_arg_suffix(edges, owned))
             }
             Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
             Self::Unit | Self::Write => String::new(),
@@ -315,20 +324,20 @@ impl DotnetReturnType {
         }
     }
 
-    fn tagged_option_expr(&self, option_expr: RawExpr, edges: &[String]) -> String {
+    fn tagged_option_expr(&self, option_expr: RawExpr, edges: &[String], owned: bool) -> String {
         format!(
             "{} ? {} : {}",
             option_expr.is_some_expr(),
-            self.idiomatic_value_expr(option_expr.option_value(), edges),
+            self.idiomatic_value_expr(option_expr.option_value(), edges, owned),
             self.option_none_expr()
         )
     }
 
-    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
+    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr, edges: &[String], owned: bool) -> String {
         match self {
             Self::Opaque(name) => format!(
                 "{raw_expr} == null ? null : new {name}({raw_expr}{})",
-                Self::edge_arg_suffix(edges)
+                Self::edge_arg_suffix(edges, owned)
             ),
             _ => unreachable!("nullable pointer options only lower from opaque returns"),
         }
@@ -405,6 +414,7 @@ pub(super) struct ReturnLowering {
     pub(super) return_type: DotnetReturnType,
     pub(super) error_info: Option<ErrorInfo>,
     pub(super) option_info: Option<OptionInfo>,
+    pub(super) owned_return: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -437,6 +447,9 @@ pub(super) struct MethodInfo<'ctx> {
     /// Rooted by the returned wrapper so the GC can't free a borrowed-from
     /// parent while the child lives. Cf. `keep_alive_targets` (per-call only).
     pub(super) keep_alive_edges: Vec<String>,
+    /// `false` for a borrowed opaque return — the wrapper is built non-owning
+    /// so it never frees a pointer Rust still owns.
+    pub(super) owned_return: bool,
     /// `Some` iff this method returns `Result<T, E>` with a concrete `E`.
     /// Templates branch on `{% if let Some(info) = method.error_info %}` —
     /// no separate `is_fallible()` predicate needed.
@@ -628,13 +641,14 @@ impl MethodInfo<'_> {
     {
         let raw_expr = raw_expr.try_into().unwrap_or_else(|err| panic!("{err}"));
         let edges = self.keep_alive_edges.as_slice();
+        let owned = self.owned_return;
 
         if let Some(option_info) = &self.option_info {
             let expr = if option_info.raw_option_type.is_some() {
-                self.return_type.tagged_option_expr(raw_expr, edges)
+                self.return_type.tagged_option_expr(raw_expr, edges, owned)
             } else {
                 self.return_type
-                    .nullable_pointer_option_expr(raw_expr, edges)
+                    .nullable_pointer_option_expr(raw_expr, edges, owned)
             };
             return format!("return {expr};");
         }
@@ -644,7 +658,7 @@ impl MethodInfo<'_> {
         } else {
             format!(
                 "return {};",
-                self.return_type.idiomatic_value_expr(raw_expr, edges)
+                self.return_type.idiomatic_value_expr(raw_expr, edges, owned)
             )
         }
     }
@@ -711,6 +725,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             error_info,
             option_info,
+            owned_return,
         } = self.lower_return(&method.output)?;
 
         let inputs = self.lower_inputs(method_context)?;
@@ -756,10 +771,36 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             lifetime_warning,
             keep_alive_edges,
+            owned_return,
             error_info,
             option_info,
             property_accessor,
         })
+    }
+
+    /// Opaque type names that some generated method returns *borrowed*
+    /// (`&T` / `Option<&T>`). Such a type needs the non-owning constructor
+    /// even when it carries no lifetime of its own (the borrow lives on the
+    /// `&`, not the type) — so it can't be gated on lifetime params alone.
+    pub(crate) fn borrowed_return_targets(&self) -> std::collections::HashSet<String> {
+        let mut targets = std::collections::HashSet::new();
+        for (_, ty) in self.tcx.all_types() {
+            if ty.attrs().disable {
+                continue;
+            }
+            for method in ty.methods() {
+                let success = match &method.output {
+                    hir::ReturnType::Infallible(s) | hir::ReturnType::Nullable(s) => s,
+                    hir::ReturnType::Fallible(s, _) => s,
+                };
+                if let hir::SuccessType::OutType(hir::Type::Opaque(p)) = success {
+                    if !p.is_owned() {
+                        targets.insert(self.opaque_name(p));
+                    }
+                }
+            }
+        }
+        targets
     }
 
     /// Sometimes a method hands back a value that's really just pointing into
@@ -935,6 +976,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         //    originally Option<Box<T>>" via the Optional marker on the
         //    opaque path — this is Path A (pointer-nullable) for Option.
         let mut pointer_nullable = false;
+        let mut owned_return = true;
         let return_type = match success {
             hir::SuccessType::Unit => DotnetReturnType::Unit,
             hir::SuccessType::Write => DotnetReturnType::Write,
@@ -942,24 +984,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 DotnetReturnType::Primitive(self.lower_primitive(p)?)
             }
             hir::SuccessType::OutType(hir::Type::Opaque(p)) => {
-                // Reject borrowed opaque returns. The idiomatic wrapper
-                // (`new T(ptr)`) and its `IDisposable.Dispose()` /
-                // finalizer unconditionally call `Raw.T.Destroy(_inner)`
-                // — wiring that to a pointer Rust still owns is a
-                // double-free / use-after-free. A proper fix needs a
-                // non-owning wrapper variant; until that lands, refuse
-                // codegen with a clear message rather than emitting
-                // unsafe code.
-                if !p.is_owned() {
-                    self.errors.push_error(
-                        "[.NET backend] borrowed opaque return (`&T` / `&mut T` / \
-                         `Option<&T>`) is not yet supported — the generated \
-                         IDisposable wrapper would double-free the Rust-owned \
-                         pointer. Return `Box<T>` or `Option<Box<T>>` instead."
-                            .to_string(),
-                    );
-                    return None;
-                }
+                // A borrowed return (`!is_owned`) is constructed non-owning
+                // (`owned: false`) so Dispose/finalizer skip Destroy — Rust
+                // still owns the pointer; the keep-alive edges hold the
+                // borrowed-from owner alive.
+                owned_return = p.is_owned();
                 if p.is_optional() {
                     pointer_nullable = true;
                 }
@@ -1027,6 +1056,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             error_info,
             option_info,
+            owned_return,
         })
     }
 

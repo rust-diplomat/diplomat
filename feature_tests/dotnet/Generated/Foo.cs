@@ -19,6 +19,11 @@ public partial class Foo: IDisposable
     private object[] _edges;
 
     /// <summary>
+    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
+    /// </summary>
+    private bool _owned;
+
+    /// <summary>
     /// Creates a managed <c>Foo</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -31,6 +36,7 @@ public partial class Foo: IDisposable
     {
         _inner = handle;
         _edges = System.Array.Empty<object>();
+        _owned = true;
     }
 
     /// <remarks>
@@ -38,10 +44,11 @@ public partial class Foo: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe Foo(Raw.Foo* handle, object[] edges)
+    internal unsafe Foo(Raw.Foo* handle, object[] edges, bool owned)
     {
         _inner = handle;
         _edges = edges;
+        _owned = owned;
     }
     /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
@@ -60,7 +67,7 @@ public partial class Foo: IDisposable
             }
             Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
             GC.KeepAlive(this);
-            return new Bar(result, new object[] { this });
+            return new Bar(result, new object[] { this }, owned: true);
         }
     }
 
@@ -84,7 +91,10 @@ public partial class Foo: IDisposable
                 return;
             }
 
-            Raw.Foo.Destroy(_inner);
+            if (_owned)
+            {
+                Raw.Foo.Destroy(_inner);
+            }
             _inner = null;
             _edges = System.Array.Empty<object>();
 

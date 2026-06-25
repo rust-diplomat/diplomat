@@ -135,7 +135,6 @@ pub mod ffi {
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         #[diplomat::attr(auto, getter)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
         }
@@ -380,7 +379,6 @@ pub mod ffi {
 
         #[diplomat::attr(auto, getter)]
         #[diplomat::attr(dart, rename = "firstelement")]
-        #[diplomat::attr(dotnet, disable)]
         pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }

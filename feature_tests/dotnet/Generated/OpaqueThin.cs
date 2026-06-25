@@ -13,6 +13,17 @@ public partial class OpaqueThin: IDisposable
     private unsafe Raw.OpaqueThin* _inner;
 
     /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
+    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
+    /// </summary>
+    private bool _owned;
+
+    /// <summary>
     /// Creates a managed <c>OpaqueThin</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +35,20 @@ public partial class OpaqueThin: IDisposable
     internal unsafe OpaqueThin(Raw.OpaqueThin* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+        _owned = true;
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OpaqueThin(Raw.OpaqueThin* handle, object[] edges, bool owned)
+    {
+        _inner = handle;
+        _edges = edges;
+        _owned = owned;
     }
     public int A()
     {
@@ -93,8 +118,12 @@ public partial class OpaqueThin: IDisposable
                 return;
             }
 
-            Raw.OpaqueThin.Destroy(_inner);
+            if (_owned)
+            {
+                Raw.OpaqueThin.Destroy(_inner);
+            }
             _inner = null;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

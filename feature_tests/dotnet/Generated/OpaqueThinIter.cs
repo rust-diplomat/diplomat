@@ -19,6 +19,11 @@ public partial class OpaqueThinIter: IDisposable
     private object[] _edges;
 
     /// <summary>
+    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
+    /// </summary>
+    private bool _owned;
+
+    /// <summary>
     /// Creates a managed <c>OpaqueThinIter</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -31,6 +36,7 @@ public partial class OpaqueThinIter: IDisposable
     {
         _inner = handle;
         _edges = System.Array.Empty<object>();
+        _owned = true;
     }
 
     /// <remarks>
@@ -38,10 +44,11 @@ public partial class OpaqueThinIter: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges)
+    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges, bool owned)
     {
         _inner = handle;
         _edges = edges;
+        _owned = owned;
     }
 
     /// <summary>
@@ -64,7 +71,10 @@ public partial class OpaqueThinIter: IDisposable
                 return;
             }
 
-            Raw.OpaqueThinIter.Destroy(_inner);
+            if (_owned)
+            {
+                Raw.OpaqueThinIter.Destroy(_inner);
+            }
             _inner = null;
             _edges = System.Array.Empty<object>();
 

@@ -18,6 +18,11 @@ public partial class {{ name }}: IDisposable
     /// (-> Destroy) a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
+
+    /// <summary>
+    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
+    /// </summary>
+    private bool _owned;
 {%- endif %}
     {%- for property in properties %}
 
@@ -58,6 +63,7 @@ public partial class {{ name }}: IDisposable
         _inner = handle;
 {%- if has_edges %}
         _edges = System.Array.Empty<object>();
+        _owned = true;
 {%- endif %}
     }
 {%- if has_edges %}
@@ -67,10 +73,11 @@ public partial class {{ name }}: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe {{ name }}(Raw.{{ name }}* handle, object[] edges)
+    internal unsafe {{ name }}(Raw.{{ name }}* handle, object[] edges, bool owned)
     {
         _inner = handle;
         _edges = edges;
+        _owned = owned;
     }
 {%- endif %}
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
@@ -126,8 +133,16 @@ public partial class {{ name }}: IDisposable
             {
                 return;
             }
+{%- if has_edges %}
+
+            if (_owned)
+            {
+                Raw.{{ name }}.Destroy(_inner);
+            }
+{%- else %}
 
             Raw.{{ name }}.Destroy(_inner);
+{%- endif %}
             _inner = null;
 {%- if has_edges %}
             _edges = System.Array.Empty<object>();

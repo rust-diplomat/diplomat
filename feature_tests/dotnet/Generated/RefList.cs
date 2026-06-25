@@ -19,6 +19,11 @@ public partial class RefList: IDisposable
     private object[] _edges;
 
     /// <summary>
+    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
+    /// </summary>
+    private bool _owned;
+
+    /// <summary>
     /// Creates a managed <c>RefList</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -31,6 +36,7 @@ public partial class RefList: IDisposable
     {
         _inner = handle;
         _edges = System.Array.Empty<object>();
+        _owned = true;
     }
 
     /// <remarks>
@@ -38,10 +44,11 @@ public partial class RefList: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe RefList(Raw.RefList* handle, object[] edges)
+    internal unsafe RefList(Raw.RefList* handle, object[] edges, bool owned)
     {
         _inner = handle;
         _edges = edges;
+        _owned = owned;
     }
     /// <returns>
     /// A <c>RefList</c> allocated on Rust side.
@@ -59,7 +66,7 @@ public partial class RefList: IDisposable
             if (dataRaw == null) throw new ObjectDisposedException(nameof(RefListParameter));
             Raw.RefList* result = Raw.RefList.Node(dataRaw);
             GC.KeepAlive(data);
-            return new RefList(result, new object[] { data });
+            return new RefList(result, new object[] { data }, owned: true);
         }
     }
 
@@ -83,7 +90,10 @@ public partial class RefList: IDisposable
                 return;
             }
 
-            Raw.RefList.Destroy(_inner);
+            if (_owned)
+            {
+                Raw.RefList.Destroy(_inner);
+            }
             _inner = null;
             _edges = System.Array.Empty<object>();
 

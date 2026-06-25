@@ -15,6 +15,9 @@ internal static unsafe extern OpaqueThinIter* Iter(OpaqueThinVec* handle);
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_len", CallingConvention = CallingConvention.Cdecl)]
 internal static unsafe extern nuint Len(OpaqueThinVec* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_first", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern OpaqueThin* First(OpaqueThinVec* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueThinVec* handle);
 }

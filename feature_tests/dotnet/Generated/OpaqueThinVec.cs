@@ -42,7 +42,7 @@ public partial class OpaqueThinVec: IDisposable
             }
             Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
             GC.KeepAlive(this);
-            return new OpaqueThinIter(result, new object[] { this });
+            return new OpaqueThinIter(result, new object[] { this }, owned: true);
         }
     }
     public nuint Len()
@@ -56,6 +56,26 @@ public partial class OpaqueThinVec: IDisposable
             var result = Raw.OpaqueThinVec.Len(AsFFI());
             GC.KeepAlive(this);
             return result;
+        }
+    }
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin? First()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThin* result = Raw.OpaqueThinVec.First(AsFFI());
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThin(result, new object[] { this }, owned: false);
         }
     }
 
