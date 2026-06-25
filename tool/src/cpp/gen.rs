@@ -449,7 +449,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             namespace: namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
             c_header,
-            is_sliceable: def.attrs.abi_compatible,
+            is_sliceable: def.attrs.abi_compatible && def.usage.sliced,
             docs: &self.formatter.fmt_docs(&def.docs, &def.attrs),
             deprecated: def.attrs.deprecated.as_deref(),
             extra_def_code,
