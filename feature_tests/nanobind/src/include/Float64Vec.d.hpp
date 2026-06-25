@@ -21,7 +21,6 @@ namespace somelib {
 namespace capi {
     struct Float64Vec;
 
-
     typedef struct DiplomatFloat64VecView {
       const Float64Vec** data;
       size_t len;

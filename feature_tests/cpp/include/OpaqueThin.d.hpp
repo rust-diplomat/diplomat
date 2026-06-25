@@ -15,12 +15,6 @@
 namespace somelib {
 namespace capi {
     struct OpaqueThin;
-
-
-    typedef struct DiplomatOpaqueThinView {
-      const OpaqueThin** data;
-      size_t len;
-    } DiplomatOpaqueThinView;
 } // namespace capi
 } // namespace
 

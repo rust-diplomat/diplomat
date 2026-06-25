@@ -20,12 +20,6 @@ class OpaqueMut;
 namespace somelib {
 namespace capi {
     struct OpaqueMut;
-
-
-    typedef struct DiplomatOpaqueMutView {
-      const OpaqueMut** data;
-      size_t len;
-    } DiplomatOpaqueMutView;
 } // namespace capi
 } // namespace
 

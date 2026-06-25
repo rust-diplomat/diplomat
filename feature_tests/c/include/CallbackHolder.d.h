@@ -14,11 +14,6 @@
 typedef struct CallbackHolder CallbackHolder;
 
 
-typedef struct DiplomatCallbackHolderView {
-  const CallbackHolder** data;
-  size_t len;
-} DiplomatCallbackHolderView;
-
 
 
 #endif // CallbackHolder_D_H

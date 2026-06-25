@@ -14,11 +14,6 @@
 typedef struct PrimitiveStructVec PrimitiveStructVec;
 
 
-typedef struct DiplomatPrimitiveStructVecView {
-  const PrimitiveStructVec** data;
-  size_t len;
-} DiplomatPrimitiveStructVecView;
-
 
 
 #endif // PrimitiveStructVec_D_H

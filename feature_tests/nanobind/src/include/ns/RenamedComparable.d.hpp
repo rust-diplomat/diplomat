@@ -22,12 +22,6 @@ class RenamedComparable;
 namespace somelib::ns {
 namespace capi {
     struct RenamedComparable;
-
-
-    typedef struct DiplomatRenamedComparableView {
-      const RenamedComparable** data;
-      size_t len;
-    } DiplomatRenamedComparableView;
 } // namespace capi
 } // namespace
 

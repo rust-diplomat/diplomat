@@ -27,12 +27,6 @@ struct FixedDecimalFormatterOptions;
 namespace icu4x {
 namespace capi {
     struct FixedDecimalFormatter;
-
-
-    typedef struct DiplomatFixedDecimalFormatterView {
-      const FixedDecimalFormatter** data;
-      size_t len;
-    } DiplomatFixedDecimalFormatterView;
 } // namespace capi
 } // namespace
 

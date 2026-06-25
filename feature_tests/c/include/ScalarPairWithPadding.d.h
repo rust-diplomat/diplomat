@@ -17,16 +17,6 @@ typedef struct ScalarPairWithPadding {
 } ScalarPairWithPadding;
 
 typedef struct ScalarPairWithPadding_option {union { ScalarPairWithPadding ok; }; bool is_ok; } ScalarPairWithPadding_option;
-typedef struct DiplomatScalarPairWithPaddingView {
-  const ScalarPairWithPadding* data;
-  size_t len;
-} DiplomatScalarPairWithPaddingView;
-
-typedef struct DiplomatScalarPairWithPaddingViewMut {
-  ScalarPairWithPadding* data;
-  size_t len;
-} DiplomatScalarPairWithPaddingViewMut;
-
 
 
 

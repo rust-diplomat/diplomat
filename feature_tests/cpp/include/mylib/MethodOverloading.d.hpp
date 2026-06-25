@@ -22,12 +22,6 @@ class MethodOverloading;
 namespace somelib::mylib {
 namespace capi {
     struct MethodOverloading;
-
-
-    typedef struct DiplomatMethodOverloadingView {
-      const MethodOverloading** data;
-      size_t len;
-    } DiplomatMethodOverloadingView;
 } // namespace capi
 } // namespace
 

@@ -14,11 +14,6 @@
 typedef struct AttrOpaque2 AttrOpaque2;
 
 
-typedef struct DiplomatAttrOpaque2View {
-  const AttrOpaque2** data;
-  size_t len;
-} DiplomatAttrOpaque2View;
-
 
 
 #endif // AttrOpaque2_D_H

@@ -13,11 +13,11 @@
 
 typedef struct MyString MyString;
 
-
 typedef struct DiplomatMyStringView {
   const MyString** data;
   size_t len;
 } DiplomatMyStringView;
+
 
 
 

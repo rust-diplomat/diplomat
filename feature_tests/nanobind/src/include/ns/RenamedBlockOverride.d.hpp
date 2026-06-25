@@ -15,12 +15,6 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedBlockOverride;
-
-
-    typedef struct DiplomatRenamedBlockOverrideView {
-      const RenamedBlockOverride** data;
-      size_t len;
-    } DiplomatRenamedBlockOverrideView;
 } // namespace capi
 } // namespace
 

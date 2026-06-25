@@ -41,6 +41,7 @@ struct TraitTemplate<'a> {
 struct OpaqueTemplate<'a> {
     ty_name: Cow<'a, str>,
     is_for_cpp: bool,
+    is_sliced: bool,
 }
 
 #[derive(Template, Default)]
@@ -106,6 +107,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         OpaqueTemplate {
             ty_name,
             is_for_cpp: self.is_for_cpp,
+            is_sliced: self.tcx.resolve_opaque(id).usage.sliced,
         }
         .render_into(&mut decl_header)
         .unwrap();
@@ -134,7 +136,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
             ty_name,
             fields,
             is_for_cpp: self.is_for_cpp,
-            is_sliceable: def.attrs.abi_compatible,
+            is_sliceable: def.attrs.abi_compatible && def.usage.sliced,
         }
         .render_into(&mut decl_header)
         .unwrap();

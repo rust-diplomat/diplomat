@@ -24,12 +24,6 @@ class OptionEnum;
 namespace somelib {
 namespace capi {
     struct OptionOpaque;
-
-
-    typedef struct DiplomatOptionOpaqueView {
-      const OptionOpaque** data;
-      size_t len;
-    } DiplomatOptionOpaqueView;
 } // namespace capi
 } // namespace
 

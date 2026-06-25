@@ -14,11 +14,6 @@
 typedef struct OpaqueMutexedString OpaqueMutexedString;
 
 
-typedef struct DiplomatOpaqueMutexedStringView {
-  const OpaqueMutexedString** data;
-  size_t len;
-} DiplomatOpaqueMutexedStringView;
-
 
 
 #endif // OpaqueMutexedString_D_H

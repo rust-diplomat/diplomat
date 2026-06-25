@@ -14,11 +14,6 @@
 typedef struct Two Two;
 
 
-typedef struct DiplomatTwoView {
-  const Two** data;
-  size_t len;
-} DiplomatTwoView;
-
 
 
 #endif // Two_D_H
