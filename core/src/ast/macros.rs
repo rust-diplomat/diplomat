@@ -566,7 +566,7 @@ impl MacroDef {
                         } else {
                             create_report(AstReport::new(
                                 "Expected ident when expanding macro argument.".to_string(),
-                                tt.span().spanned_into(group_location),
+                                Some(tt.span().spanned_into(group_location)),
                                 "Need ident after $ to replace with variable".into(),
                                 vec![],
                             ));
@@ -574,7 +574,7 @@ impl MacroDef {
                     } else {
                         create_report(AstReport::new(
                             "Expected token tree.".to_string(),
-                            next.span().spanned_into(group_location),
+                            Some(next.span().spanned_into(group_location)),
                             "".into(),
                             vec![],
                         ));
@@ -616,7 +616,7 @@ impl MacroDef {
                         } else {
                             create_report(AstReport::new(
                                 "Expected ident when expanding macro argument.".to_string(),
-                                tt.span().spanned_into(buf_location),
+                                Some(tt.span().spanned_into(buf_location)),
                                 "Need ident after $ to replace with variable".into(),
                                 vec![],
                             ));
@@ -624,7 +624,7 @@ impl MacroDef {
                     } else {
                         create_report(AstReport::new(
                             "Expected token tree.".to_string(),
-                            next.span().spanned_into(buf_location),
+                            Some(next.span().spanned_into(buf_location)),
                             "".into(),
                             vec![],
                         ));
@@ -658,7 +658,7 @@ impl MacroDef {
         let macro_use = MacroUse::parse(self, matched).unwrap_or_else(|e| {
             create_report(AstReport::new(
                 e.to_string(),
-                e.span().spanned_into(use_location),
+                Some(e.span().spanned_into(use_location)),
                 "Error parsing macro here".into(),
                 vec![],
             ));
@@ -673,7 +673,7 @@ impl MacroDef {
             let e = maybe_list.unwrap_err();
             create_report(AstReport::new(
                 e.to_string(),
-                e.span().spanned_into(use_location),
+                Some(e.span().spanned_into(use_location)),
                 "Error expanding macro here".into(),
                 vec![],
             ));

@@ -33,13 +33,13 @@ pub(crate) struct AstReport {
 impl AstReport {
     pub fn new(
         title: String,
-        primary_loc: Span,
+        primary_loc: Option<Span>,
         primary_label: String,
         context_locations: Vec<ContextLocation>,
     ) -> Self {
         Self {
             title,
-            primary_loc: Some(primary_loc),
+            primary_loc,
             primary_label,
             context_locations,
         }
@@ -285,6 +285,10 @@ mod tests {
         "undefined_macro.rs",
         "macro_parse_error.rs",
         "macro_expansion_error.rs",
+        "self_type.rs",
+        "param_invalid_type.rs",
+        "undefined_type.rs",
+        "non_opaque_tuple.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

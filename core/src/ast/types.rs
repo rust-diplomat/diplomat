@@ -201,24 +201,34 @@ impl PathType {
                         if i == local_path.elements.len() - 1 {
                             return (cur_path, t);
                         } else {
-                            panic!(
-                                "Unexpected custom type when resolving symbol {} in {}",
-                                o,
-                                cur_path.elements.join("::")
-                            )
+                            create_simple_report(
+                                elem.clone(),
+                                "Unexpected custom type found".into(),
+                                format!("Could not resolve {o}"),
+                            );
                         }
                     }
                     Some(ModSymbol::Trait(trt)) => {
-                        panic!("Found trait {} but expected a type", trt.name);
+                        create_simple_report(
+                            elem.clone(),
+                            "Found trait, but expected a type".into(),
+                            format!("Found trait {}", trt.name),
+                        );
                     }
                     Some(ModSymbol::Function(f)) => {
-                        panic!("Found function {} but expected a type", f.name);
+                        create_simple_report(
+                            elem.clone(),
+                            "Found function, but expected a type".into(),
+                            format!("Found function {}", f.name),
+                        );
                     }
-                    None => panic!(
-                        "Could not resolve symbol {} in {}",
-                        o,
-                        cur_path.elements.join("::")
-                    ),
+                    None => {
+                        create_simple_report(
+                            elem.clone(),
+                            "Could not resolve symbol".into(),
+                            format!("Could not resolve {o}"),
+                        );
+                    }
                 },
             }
         }

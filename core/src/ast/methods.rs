@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use std::ops::ControlFlow;
+use syn::spanned::Spanned;
 
 use crate::ast::idents::IntoWithSpan;
+use crate::ast::logging::{create_report, AstReport};
 use crate::ast::SpanLocation;
 
 use super::docs::Docs;
@@ -341,7 +343,14 @@ impl Param {
     ) -> Self {
         let ident = match t.pat.as_ref() {
             syn::Pat::Ident(ident) => ident,
-            _ => panic!("Unexpected param type"),
+            _ => {
+                create_report(AstReport::new(
+                    "Unexpected param type".into(),
+                    Some(t.pat.span().spanned_into(module_location)),
+                    "Expected ident".into(),
+                    vec![],
+                ));
+            }
         };
 
         let attrs = Attrs::from_attrs(&t.attrs);

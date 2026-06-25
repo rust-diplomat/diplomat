@@ -32,7 +32,7 @@ impl Function {
         if let Some(recv) = f.sig.receiver() {
             create_report(AstReport::new(
                 "Cannot use self parameter in free function.".into(),
-                f.sig.ident.span().spanned_into(module_location),
+                Some(f.sig.ident.span().spanned_into(module_location)),
                 "".into(),
                 vec![ContextLocation::new(
                     recv.self_token.span.spanned_into(module_location),
