@@ -13,6 +13,14 @@ public partial class OptionString: IDisposable
     private unsafe Raw.OptionString* _inner;
 
     /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here keeps the GC from collecting (and
+    /// finalizing -> Destroy) a borrowed-from parent while this value is still
+    /// alive. Empty when this value borrows from nothing.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>OptionString</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +32,24 @@ public partial class OptionString: IDisposable
     internal unsafe OptionString(Raw.OptionString* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>OptionString</c> from a raw handle, retaining strong
+    /// references to the wrappers it borrows from (its keep-alive edges) so the
+    /// GC cannot collect (and finalize -> Destroy) a borrowed-from parent while
+    /// this value is alive.
+    /// </summary>
+    /// <remarks>
+    /// The edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is still in use is
+    /// still a use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OptionString(Raw.OptionString* handle, object[] edges)
+    {
+        _inner = handle;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>OptionString</c> allocated on Rust side.
@@ -90,6 +116,8 @@ public partial class OptionString: IDisposable
 
             Raw.OptionString.Destroy(_inner);
             _inner = null;
+            // Stop rooting the borrowed-from wrappers once we're disposed.
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

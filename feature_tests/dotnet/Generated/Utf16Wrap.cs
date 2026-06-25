@@ -13,6 +13,14 @@ public partial class Utf16Wrap: IDisposable
     private unsafe Raw.Utf16Wrap* _inner;
 
     /// <summary>
+    /// Strong references to the wrappers this value borrows from (its
+    /// keep-alive edges). Rooting them here keeps the GC from collecting (and
+    /// finalizing -> Destroy) a borrowed-from parent while this value is still
+    /// alive. Empty when this value borrows from nothing.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>Utf16Wrap</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +32,24 @@ public partial class Utf16Wrap: IDisposable
     internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <summary>
+    /// Creates a managed <c>Utf16Wrap</c> from a raw handle, retaining strong
+    /// references to the wrappers it borrows from (its keep-alive edges) so the
+    /// GC cannot collect (and finalize -> Destroy) a borrowed-from parent while
+    /// this value is alive.
+    /// </summary>
+    /// <remarks>
+    /// The edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is still in use is
+    /// still a use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle, object[] edges)
+    {
+        _inner = handle;
+        _edges = edges;
     }
     public string GetDebugStr()
     {
@@ -69,6 +95,8 @@ public partial class Utf16Wrap: IDisposable
 
             Raw.Utf16Wrap.Destroy(_inner);
             _inner = null;
+            // Stop rooting the borrowed-from wrappers once we're disposed.
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

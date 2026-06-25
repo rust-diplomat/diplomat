@@ -8,9 +8,9 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Float64Vec: IDisposable
+public partial class BorrowChild: IDisposable
 {
-    private unsafe Raw.Float64Vec* _inner;
+    private unsafe Raw.BorrowChild* _inner;
 
     /// <summary>
     /// Strong references to the wrappers this value borrows from (its
@@ -21,7 +21,7 @@ public partial class Float64Vec: IDisposable
     private object[] _edges;
 
     /// <summary>
-    /// Creates a managed <c>Float64Vec</c> from a raw handle.
+    /// Creates a managed <c>BorrowChild</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -29,14 +29,14 @@ public partial class Float64Vec: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe Float64Vec(Raw.Float64Vec* handle)
+    internal unsafe BorrowChild(Raw.BorrowChild* handle)
     {
         _inner = handle;
         _edges = System.Array.Empty<object>();
     }
 
     /// <summary>
-    /// Creates a managed <c>Float64Vec</c> from a raw handle, retaining strong
+    /// Creates a managed <c>BorrowChild</c> from a raw handle, retaining strong
     /// references to the wrappers it borrows from (its keep-alive edges) so the
     /// GC cannot collect (and finalize -> Destroy) a borrowed-from parent while
     /// this value is alive.
@@ -46,65 +46,29 @@ public partial class Float64Vec: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is still in use is
     /// still a use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe Float64Vec(Raw.Float64Vec* handle, object[] edges)
+    internal unsafe BorrowChild(Raw.BorrowChild* handle, object[] edges)
     {
         _inner = handle;
         _edges = edges;
     }
-    /// <returns>
-    /// A <c>Float64Vec</c> allocated on Rust side.
-    /// </returns>
-    public static Float64Vec NewF64BeBytes(byte[] v)
-    {
-        unsafe
-        {
-            if (v == null) throw new ArgumentNullException(nameof(v));
-            fixed (byte* vPtr = v)
-            {
-                Raw.Float64Vec* result = Raw.Float64Vec.NewF64BeBytes(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)v.Length });
-                return new Float64Vec(result);
-            }
-        }
-    }
-    public override string ToString()
+    public uint Get()
     {
         unsafe
         {
             if (_inner == null)
             {
-                throw new ObjectDisposedException("Float64Vec");
+                throw new ObjectDisposedException("BorrowChild");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            try
-            {
-                Raw.Float64Vec.ToString(AsFFI(), &writeable);
-                GC.KeepAlive(this);
-                return writeable.ToUnicode();
-            }
-            finally
-            {
-                writeable.Dispose();
-            }
-        }
-    }
-    public double? Get(nuint i)
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("Float64Vec");
-            }
-            var result = Raw.Float64Vec.Get(AsFFI(), i);
+            var result = Raw.BorrowChild.Get(AsFFI());
             GC.KeepAlive(this);
-            return result.IsSome ? result.Value : (double?)null;
+            return result;
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.Float64Vec* AsFFI()
+    internal unsafe Raw.BorrowChild* AsFFI()
     {
         return _inner;
     }
@@ -121,7 +85,7 @@ public partial class Float64Vec: IDisposable
                 return;
             }
 
-            Raw.Float64Vec.Destroy(_inner);
+            Raw.BorrowChild.Destroy(_inner);
             _inner = null;
             // Stop rooting the borrowed-from wrappers once we're disposed.
             _edges = System.Array.Empty<object>();
@@ -130,7 +94,7 @@ public partial class Float64Vec: IDisposable
         }
     }
 
-    ~Float64Vec()
+    ~BorrowChild()
     {
         Dispose();
     }

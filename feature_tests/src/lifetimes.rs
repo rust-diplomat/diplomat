@@ -405,6 +405,46 @@ pub mod ffi {
             super::PROBE_DROPS.load(super::Ordering::SeqCst) - before
         }
     }
+
+    // .NET borrow-soundness fixture: a constructible parent and a child opaque
+    // that borrows it (`Box<BorrowChild<'a>>` carries `'a` tied to the parent).
+    // `get()` reads back the parent's value so a use-after-free is observable.
+    // .NET-only: keep it out of the other backends' generated output.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct BorrowParent(u32);
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct BorrowChild<'a>(&'a BorrowParent);
+
+    impl BorrowParent {
+        pub fn create(value: u32) -> Box<Self> {
+            Box::new(BorrowParent(value))
+        }
+
+        pub fn view<'a>(&'a self) -> Box<BorrowChild<'a>> {
+            Box::new(BorrowChild(self))
+        }
+
+        // Regression for the `this`-named-parameter edge case: a Rust param
+        // literally named `this` must format to `@this` in the edge array, not
+        // collide with the receiver sentinel (which would emit a bare `this` —
+        // invalid in the generated static method, so it wouldn't even compile).
+        pub fn view_from<'a>(this: &'a BorrowParent) -> Box<BorrowChild<'a>> {
+            Box::new(BorrowChild(this))
+        }
+
+        pub fn value(&self) -> u32 {
+            self.0
+        }
+    }
+
+    impl<'a> BorrowChild<'a> {
+        pub fn get(&self) -> u32 {
+            (self.0).0
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.

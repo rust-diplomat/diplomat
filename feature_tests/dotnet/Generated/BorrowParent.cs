@@ -8,9 +8,9 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Float64Vec: IDisposable
+public partial class BorrowParent: IDisposable
 {
-    private unsafe Raw.Float64Vec* _inner;
+    private unsafe Raw.BorrowParent* _inner;
 
     /// <summary>
     /// Strong references to the wrappers this value borrows from (its
@@ -21,7 +21,7 @@ public partial class Float64Vec: IDisposable
     private object[] _edges;
 
     /// <summary>
-    /// Creates a managed <c>Float64Vec</c> from a raw handle.
+    /// Creates a managed <c>BorrowParent</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -29,14 +29,14 @@ public partial class Float64Vec: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe Float64Vec(Raw.Float64Vec* handle)
+    internal unsafe BorrowParent(Raw.BorrowParent* handle)
     {
         _inner = handle;
         _edges = System.Array.Empty<object>();
     }
 
     /// <summary>
-    /// Creates a managed <c>Float64Vec</c> from a raw handle, retaining strong
+    /// Creates a managed <c>BorrowParent</c> from a raw handle, retaining strong
     /// references to the wrappers it borrows from (its keep-alive edges) so the
     /// GC cannot collect (and finalize -> Destroy) a borrowed-from parent while
     /// this value is alive.
@@ -46,65 +46,79 @@ public partial class Float64Vec: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is still in use is
     /// still a use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe Float64Vec(Raw.Float64Vec* handle, object[] edges)
+    internal unsafe BorrowParent(Raw.BorrowParent* handle, object[] edges)
     {
         _inner = handle;
         _edges = edges;
     }
     /// <returns>
-    /// A <c>Float64Vec</c> allocated on Rust side.
+    /// A <c>BorrowParent</c> allocated on Rust side.
     /// </returns>
-    public static Float64Vec NewF64BeBytes(byte[] v)
+    public static BorrowParent Create(uint value)
     {
         unsafe
         {
-            if (v == null) throw new ArgumentNullException(nameof(v));
-            fixed (byte* vPtr = v)
-            {
-                Raw.Float64Vec* result = Raw.Float64Vec.NewF64BeBytes(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)v.Length });
-                return new Float64Vec(result);
-            }
+            Raw.BorrowParent* result = Raw.BorrowParent.Create(value);
+            return new BorrowParent(result);
         }
     }
-    public override string ToString()
+    /// <returns>
+    /// A <c>BorrowChild</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public BorrowChild View()
     {
         unsafe
         {
             if (_inner == null)
             {
-                throw new ObjectDisposedException("Float64Vec");
+                throw new ObjectDisposedException("BorrowParent");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
-            try
-            {
-                Raw.Float64Vec.ToString(AsFFI(), &writeable);
-                GC.KeepAlive(this);
-                return writeable.ToUnicode();
-            }
-            finally
-            {
-                writeable.Dispose();
-            }
-        }
-    }
-    public double? Get(nuint i)
-    {
-        unsafe
-        {
-            if (_inner == null)
-            {
-                throw new ObjectDisposedException("Float64Vec");
-            }
-            var result = Raw.Float64Vec.Get(AsFFI(), i);
+            Raw.BorrowChild* result = Raw.BorrowParent.View(AsFFI());
             GC.KeepAlive(this);
-            return result.IsSome ? result.Value : (double?)null;
+            return new BorrowChild(result, new object[] { this });
+        }
+    }
+    /// <returns>
+    /// A <c>BorrowChild</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public static BorrowChild ViewFrom(BorrowParent @this)
+    {
+        unsafe
+        {
+            if (@this == null) throw new ArgumentNullException(nameof(@this));
+            Raw.BorrowParent* @thisRaw = @this.AsFFI();
+            if (@thisRaw == null) throw new ObjectDisposedException(nameof(BorrowParent));
+            Raw.BorrowChild* result = Raw.BorrowParent.ViewFrom(@thisRaw);
+            GC.KeepAlive(@this);
+            return new BorrowChild(result, new object[] { @this });
+        }
+    }
+    public uint Value()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("BorrowParent");
+            }
+            var result = Raw.BorrowParent.Value(AsFFI());
+            GC.KeepAlive(this);
+            return result;
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.Float64Vec* AsFFI()
+    internal unsafe Raw.BorrowParent* AsFFI()
     {
         return _inner;
     }
@@ -121,7 +135,7 @@ public partial class Float64Vec: IDisposable
                 return;
             }
 
-            Raw.Float64Vec.Destroy(_inner);
+            Raw.BorrowParent.Destroy(_inner);
             _inner = null;
             // Stop rooting the borrowed-from wrappers once we're disposed.
             _edges = System.Array.Empty<object>();
@@ -130,7 +144,7 @@ public partial class Float64Vec: IDisposable
         }
     }
 
-    ~Float64Vec()
+    ~BorrowParent()
     {
         Dispose();
     }
