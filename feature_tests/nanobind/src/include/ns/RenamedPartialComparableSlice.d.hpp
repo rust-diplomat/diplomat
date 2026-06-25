@@ -47,15 +47,4 @@ struct RenamedPartialComparableSlice {
 };
 
 } // namespace
-namespace somelib::diplomat {
-    template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::ns::RenamedPartialComparableSlice>>>> {
-        using type = somelib::ns::capi::DiplomatRenamedPartialComparableSliceView;
-    };
-
-    template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::ns::RenamedPartialComparableSlice>>>> {
-        using type = somelib::ns::capi::DiplomatRenamedPartialComparableSliceViewMut;
-};
-}
 #endif // SOMELIB_ns_RenamedPartialComparableSlice_D_HPP
