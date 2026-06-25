@@ -40,15 +40,4 @@ struct CyclicStructB {
 };
 
 } // namespace
-namespace somelib::diplomat {
-    template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::CyclicStructB>>>> {
-        using type = somelib::capi::DiplomatCyclicStructBView;
-    };
-
-    template<typename T>
-    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::CyclicStructB>>>> {
-        using type = somelib::capi::DiplomatCyclicStructBViewMut;
-};
-}
 #endif // SOMELIB_CyclicStructB_D_HPP
