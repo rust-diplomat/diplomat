@@ -308,7 +308,10 @@ impl DotnetReturnType {
     fn idiomatic_value_expr(&self, raw_expr: RawExpr, edges: &[String], owned: bool) -> String {
         match self {
             Self::Opaque(name) => {
-                format!("new {name}({raw_expr}{})", Self::edge_arg_suffix(edges, owned))
+                format!(
+                    "new {name}({raw_expr}{})",
+                    Self::edge_arg_suffix(edges, owned)
+                )
             }
             Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
             Self::Unit | Self::Write => String::new(),
@@ -333,7 +336,12 @@ impl DotnetReturnType {
         )
     }
 
-    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr, edges: &[String], owned: bool) -> String {
+    fn nullable_pointer_option_expr(
+        &self,
+        raw_expr: RawExpr,
+        edges: &[String],
+        owned: bool,
+    ) -> String {
         match self {
             Self::Opaque(name) => format!(
                 "{raw_expr} == null ? null : new {name}({raw_expr}{})",
@@ -658,7 +666,8 @@ impl MethodInfo<'_> {
         } else {
             format!(
                 "return {};",
-                self.return_type.idiomatic_value_expr(raw_expr, edges, owned)
+                self.return_type
+                    .idiomatic_value_expr(raw_expr, edges, owned)
             )
         }
     }
