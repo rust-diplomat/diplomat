@@ -31,6 +31,7 @@ pub struct TraitDef {
     pub methods: Vec<Callback>,
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
+    pub usage: TypingUseInfo,
 }
 
 /// Structs that can only be returned from methods.
@@ -47,6 +48,7 @@ pub struct StructDef<P: TyPosition = Everywhere> {
     pub attrs: Attrs,
     pub lifetimes: LifetimeEnv,
     pub special_method_presence: SpecialMethodPresence,
+    pub usage: TypingUseInfo,
 }
 
 /// A struct whose contents are opaque across the FFI boundary, and can only
@@ -69,6 +71,7 @@ pub struct OpaqueDef {
 
     /// The ABI name of the generated destructor
     pub dtor_abi_name: IdentBuf,
+    pub usage: TypingUseInfo,
 }
 
 /// The enum type.
@@ -81,6 +84,7 @@ pub struct EnumDef {
     pub methods: Vec<Method>,
     pub attrs: Attrs,
     pub special_method_presence: SpecialMethodPresence,
+    pub usage: TypingUseInfo,
 }
 
 /// A field on a [`OutStruct`]s.
@@ -94,6 +98,72 @@ pub struct StructField<P: TyPosition = Everywhere> {
     pub name: IdentBuf,
     pub ty: Type<P>,
     pub attrs: Attrs,
+}
+
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub struct ResultUsageInfo<P: TyPosition> {
+    pub ok: super::SuccessType<P>,
+    pub err: Option<Type<P>>,
+}
+
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+// InputOnly allows for traits and callbacks, which creates a large byte difference (this type is > 900 bytes).
+#[allow(clippy::large_enum_variant)]
+pub enum ResultUsage {
+    /// Result is used as the return of a callback:
+    Input(ResultUsageInfo<super::InputOnly>),
+    /// Result is used as the return of a method:
+    Output(ResultUsageInfo<super::OutputOnly>),
+}
+
+/// Information on how a [`TypeDef`] is used across the HIR.
+#[derive(Debug, Clone, Default)]
+#[non_exhaustive]
+pub struct TypingUseInfo {
+    /// If the given type is ever used in a slice.
+    pub sliced: bool,
+    /// If the given type is ever used in an option.
+    pub optioned: bool,
+    /// The results that this type is used in.
+    /// Boxed so large clones will be on the heap instead of the stack.
+    pub results: Vec<Box<ResultUsage>>,
+}
+
+/// Used for setting a type's usage in [`super::LoweringContext::update_usage`]
+pub(super) trait TypeUsage {
+    fn set_usage(&mut self, usage: super::TypingUseInfo);
+}
+
+impl TypeUsage for StructDef<super::Everywhere> {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for StructDef<super::OutputOnly> {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for OpaqueDef {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for EnumDef {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
+        self.usage = usage;
+    }
+}
+
+impl TypeUsage for TraitDef {
+    fn set_usage(&mut self, usage: TypingUseInfo) {
+        self.usage = usage;
+    }
 }
 
 /// A variant of an [`Enum`].
@@ -120,6 +190,7 @@ impl TraitDef {
             methods,
             attrs,
             lifetimes,
+            usage: Default::default(),
         }
     }
 }
@@ -142,6 +213,7 @@ impl<P: TyPosition> StructDef<P> {
             attrs,
             lifetimes,
             special_method_presence,
+            usage: TypingUseInfo::default(),
         }
     }
 }
@@ -164,6 +236,7 @@ impl OpaqueDef {
             lifetimes,
             special_method_presence,
             dtor_abi_name,
+            usage: Default::default(),
         }
     }
 }
@@ -184,6 +257,7 @@ impl EnumDef {
             methods,
             attrs,
             special_method_presence,
+            usage: Default::default(),
         }
     }
 }

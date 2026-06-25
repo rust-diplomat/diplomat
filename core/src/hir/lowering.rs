@@ -9,9 +9,10 @@ use super::{
     TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
-use crate::hir::Docs;
+use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
+use std::collections::HashMap;
 use strck::IntoCk;
 
 /// An error from lowering the AST to the HIR.
@@ -115,6 +116,7 @@ pub(super) struct LoweringContext<'ast> {
     pub env: &'ast Env,
     pub attr_validator: Box<dyn AttributeValidator>,
     pub cfg: super::LoweringConfig,
+    pub type_usage: HashMap<SymbolId, TypingUseInfo>,
 }
 
 /// An item and the info needed to
@@ -204,6 +206,22 @@ impl<'ast> LoweringContext<'ast> {
         ast_defs: impl ExactSizeIterator<Item = ItemAndInfo<'ast, ast::Function>>,
     ) -> Result<Vec<Method>, ()> {
         self.lower_all(ast_defs, Self::lower_function)
+    }
+
+    /// After lowering (when all types have been evaluated), we must then update those types
+    /// with their [`TypingUseInfo`].
+    ///
+    /// We're given an iterator of each [`super::TypeUsage`]-like type along with the associated ID of that type.
+    /// If we have typing usage info on that type, then we update that type in the array.
+    pub(super) fn update_usage<'a, Ast: super::TypeUsage + 'a>(
+        &self,
+        defs: impl ExactSizeIterator<Item = (SymbolId, &'a mut Ast)>,
+    ) {
+        for (id, d) in defs {
+            if let Some(u) = self.type_usage.get(&id) {
+                d.set_usage(u.clone());
+            }
+        }
     }
 
     fn lower_enum(&mut self, item: ItemAndInfo<'ast, ast::Enum>) -> Result<EnumDef, ()> {
@@ -1034,6 +1052,8 @@ impl<'ast> LoweringContext<'ast> {
                                     "can't find opaque in lookup map, which contains all opaques from env",
                                 );
 
+                                self.usage_get_or_insert(tcx_id.into()).optioned = true;
+
                                 Ok(Type::Opaque(OpaquePath::new(
                                     lifetimes,
                                     Optional(true),
@@ -1068,6 +1088,9 @@ impl<'ast> LoweringContext<'ast> {
                                     self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
                                 let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                                if let Some(i) = inner.id() {
+                                    self.usage_get_or_insert(i.into()).optioned = true;
+                                }
                                 Ok(Type::DiplomatOption(Box::new(inner)))
                             }
                         }
@@ -1199,7 +1222,10 @@ impl<'ast> LoweringContext<'ast> {
 
                 let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
                 match inner {
-                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
+                    Type::Struct(st) => {
+                        self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    }
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
@@ -1221,6 +1247,8 @@ impl<'ast> LoweringContext<'ast> {
                                 "Slice of opaque &[{type_name}] is unsupported by this backend."
                             )));
                         }
+
+                        self.usage_get_or_insert(op.tcx_id.into()).sliced = true;
 
                         // Currently made simple since right now we don't support borrowing from opaque slices in output: rust-diplomat.github.io/diplomat/attrs/slices.html#opaques
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
@@ -1457,6 +1485,8 @@ impl<'ast> LoweringContext<'ast> {
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
+                                self.usage_get_or_insert(tcx_id.into()).optioned = true;
+
                                 Ok(OutType::Opaque(OpaquePath::new(
                                     lifetimes,
                                     Optional(true),
@@ -1492,6 +1522,9 @@ impl<'ast> LoweringContext<'ast> {
                                 self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
                             let inner = self.lower_out_type(opt_ty, ltl, in_path, context, true)?;
+                            if let Some(i) = inner.id() {
+                                self.usage_get_or_insert(i.into()).optioned = true;
+                            }
                             Ok(Type::DiplomatOption(Box::new(inner)))
                         }
                     }
@@ -1579,7 +1612,10 @@ impl<'ast> LoweringContext<'ast> {
                 let inner =
                     self.lower_out_type(type_name, ltl, in_path, context, in_result_option)?;
                 match inner {
-                    Type::Struct(st) => Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st))),
+                    Type::Struct(st) => {
+                        self.usage_get_or_insert(st.id().into()).sliced = true;
+                        Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    }
                     Type::Opaque(..) => {
                         self.errors.push(LoweringError::Other(
                             "Opaque slices are currently disallowed as an output type.".to_string(),
@@ -1987,7 +2023,28 @@ impl<'ast> LoweringContext<'ast> {
                 };
 
                 match (ok_ty, err_ty) {
-                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    (Ok(ok_ty), Ok(err_ty)) => {
+                        match &ok_ty {
+                            SuccessType::OutType(o) if let Some(i) = o.id() => {
+                                self.usage_get_or_insert(i.into()).results.push(Box::new(
+                                    super::ResultUsage::Output(super::ResultUsageInfo {
+                                        ok: ok_ty.clone(),
+                                        err: err_ty.clone(),
+                                    }),
+                                ));
+                            }
+                            _ => {}
+                        }
+                        if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
+                            self.usage_get_or_insert(id.into()).results.push(Box::new(
+                                super::ResultUsage::Output(super::ResultUsageInfo {
+                                    ok: ok_ty.clone(),
+                                    err: err_ty.clone(),
+                                }),
+                            ));
+                        }
+                        Ok(ReturnType::Fallible(ok_ty, err_ty))
+                    }
                     _ => Err(()),
                 }
             }
@@ -2003,16 +2060,22 @@ impl<'ast> LoweringContext<'ast> {
                     .map(SuccessType::OutType)
                     .map(ReturnType::Infallible),
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(write_or_unit)),
-                _ => self
-                    .lower_out_type(
+                _ => {
+                    let t = self.lower_out_type(
                         value_ty,
                         &mut return_ltl,
                         in_path,
                         TypeLoweringContext::Method,
                         true,
-                    )
-                    .map(SuccessType::OutType)
-                    .map(ReturnType::Nullable),
+                    );
+                    if let Ok(t) = &t {
+                        if let Some(i) = t.id() {
+                            self.usage_get_or_insert(i.into()).optioned = true;
+                        }
+                    }
+
+                    t.map(SuccessType::OutType).map(ReturnType::Nullable)
+                }
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(write_or_unit)),
             ty => self
@@ -2051,7 +2114,28 @@ impl<'ast> LoweringContext<'ast> {
                 };
 
                 match (ok_ty, err_ty) {
-                    (Ok(ok_ty), Ok(err_ty)) => Ok(ReturnType::Fallible(ok_ty, err_ty)),
+                    (Ok(ok_ty), Ok(err_ty)) => {
+                        match &ok_ty {
+                            SuccessType::OutType(o) if let Some(i) = o.id() => {
+                                self.usage_get_or_insert(i.into()).results.push(Box::new(
+                                    super::ResultUsage::Input(super::ResultUsageInfo {
+                                        ok: ok_ty.clone(),
+                                        err: err_ty.clone(),
+                                    }),
+                                ));
+                            }
+                            _ => {}
+                        }
+                        if let Some(id) = err_ty.as_ref().and_then(|e| e.id()) {
+                            self.usage_get_or_insert(id.into()).results.push(Box::new(
+                                super::ResultUsage::Input(super::ResultUsageInfo {
+                                    ok: ok_ty.clone(),
+                                    err: err_ty.clone(),
+                                }),
+                            ));
+                        }
+                        Ok(ReturnType::Fallible(ok_ty, err_ty))
+                    }
                     _ => Err(()),
                 }
             }
@@ -2074,10 +2158,15 @@ impl<'ast> LoweringContext<'ast> {
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
-                _ => self
-                    .lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path)
-                    .map(SuccessType::OutType)
-                    .map(ReturnType::Nullable),
+                _ => {
+                    let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path);
+                    if let Ok(t) = &t {
+                        if let Some(i) = t.id() {
+                            self.usage_get_or_insert(i.into()).optioned = true;
+                        }
+                    }
+                    t.map(SuccessType::OutType).map(ReturnType::Nullable)
+                }
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
@@ -2114,5 +2203,10 @@ impl<'ast> LoweringContext<'ast> {
             .collect::<Result<_, ()>>()?;
 
         Ok(LifetimeEnv::new(nodes, ast.nodes.len()))
+    }
+
+    /// Grab a type's associated [`TypingUseInfo`] (or create an entry for it if it does not exist).
+    fn usage_get_or_insert<'a>(&'a mut self, id: SymbolId) -> &'a mut TypingUseInfo {
+        self.type_usage.entry(id).or_default()
     }
 }
