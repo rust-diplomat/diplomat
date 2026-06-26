@@ -930,7 +930,12 @@ impl TypeName {
                             {
                                 TypeName::PrimitiveSlice(None, p, StdlibOrDiplomat::Stdlib)
                             } else {
-                                panic!("Owned slices only support primitives.")
+                                create_report(AstReport::new(
+                                    "Owned slices only support primitives".into(),
+                                    Some(slice.elem.span().spanned_into(module_location)),
+                                    "".into(),
+                                    vec![])
+                                );
                             }
                         } else if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             if tpe.to_token_stream().to_string() == "DiplomatStr" {
