@@ -279,11 +279,7 @@ impl PathType {
                 if i == local_path.elements.len() - 1 {
                     return (cur_path, trt.clone());
                 } else {
-                    panic!(
-                        "Unexpected custom trait when resolving symbol {} in {}",
-                        trt.name,
-                        cur_path.elements.join("::")
-                    )
+                    create_simple_report(elem.clone(), format!("Found unexpected custom trait {} when resolving path", trt.name), "Trait appears before the end of the path.".into());
                 }
             }
         }
