@@ -1009,7 +1009,17 @@ impl TypeName {
                             ));
                         }
                     } else {
-                        panic!("Expected angle brackets for Option type")
+                        let suggestion = match &p.path.segments[0].arguments {
+                            syn::PathArguments::None => "add angle brackets",
+                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
+                            _ => unreachable!()
+                        };
+                        create_report(AstReport::new(
+                            "Expected angle brackets for Option type".into(),
+                            Some(p.path.segments[0].span().spanned_into(module_location)),
+                            format!("Suggestion: {suggestion}"),
+                            vec![]
+                        ));
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Self" {
                     if let Some(self_path_type) = self_path_type {
