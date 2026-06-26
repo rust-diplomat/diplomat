@@ -10,10 +10,10 @@ void add_MyEnum_binding(nb::module_ mod) {
         nb::enum_<somelib::MyEnum::Value> enumerator(e_class, "MyEnum");
         enumerator
             .value("A", somelib::MyEnum::A)
-            .value("B", somelib::MyEnum::B)
+            .value("B", somelib::MyEnum::B, ".. deprecated:: C is the new B\n")
             .value("C", somelib::MyEnum::C)
             .value("D", somelib::MyEnum::D)
-            .value("E", somelib::MyEnum::E)
+            .value("E", somelib::MyEnum::E, "EEEEEEE")
             .value("F", somelib::MyEnum::F)
             .export_values();
     

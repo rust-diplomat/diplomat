@@ -17,7 +17,7 @@ void add_RenamedStructWithAttrs_binding(nb::module_ mod) {
         .def_rw("b", &somelib::ns::RenamedStructWithAttrs::b)
         .def(nb::new_(&somelib::ns::RenamedStructWithAttrs::new_fallible), "a"_a, "b"_a)
         .def_prop_ro("c", &somelib::ns::RenamedStructWithAttrs::c)
-        .def("deprecated", &somelib::ns::RenamedStructWithAttrs::deprecated);
+        .def("deprecated", &somelib::ns::RenamedStructWithAttrs::deprecated, ".. deprecated:: use Foo\n");
 }
 
 } 

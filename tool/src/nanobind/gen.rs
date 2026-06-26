@@ -45,6 +45,8 @@ pub(super) struct MethodInfo<'a> {
     // Everything else is handled by the automatic behavior depending on return type.
     pub(super) lifetime_args: Option<Cow<'a, str>>,
     pub(super) overloads: Vec<OverloadInfo<'a>>,
+    /// A quoted, escaped C++ string literal for this method's docstring, if it has docs.
+    pub(super) docstring: Option<String>,
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
@@ -55,12 +57,21 @@ pub(super) struct NamedType<'a, P: hir::TyPosition> {
     pub(super) ty: &'a hir::Type<P>,
     /// Default value (for method params, but could eventually be for structs).
     pub(crate) default_value: Option<hir::DefaultArgValue>,
+    /// A quoted, escaped C++ string literal for this field's docstring, if it has docs.
+    /// Only set for struct fields; method params don't carry their own doc comments.
+    pub(super) docstring: Option<String>,
 }
 
 impl<'a, P: hir::TyPosition> NamedType<'a, P> {
     pub(super) fn default_value(&self) -> Option<&hir::DefaultArgValue> {
         self.default_value.as_ref()
     }
+}
+
+/// An enum variant's name plus its (optional, pre-escaped) docstring.
+pub(super) struct EnumVariantInfo<'a> {
+    pub(super) name: Cow<'a, str>,
+    pub(super) docstring: Option<String>,
 }
 
 /// Context for generating a particular type's impl
@@ -136,7 +147,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let values = ty
             .variants
             .iter()
-            .map(|e| self.formatter.cxx.fmt_enum_variant(e))
+            .map(|e| EnumVariantInfo {
+                name: self.formatter.cxx.fmt_enum_variant(e),
+                docstring: self.formatter.fmt_doc_literal(&e.docs, &e.attrs),
+            })
             .collect::<Vec<_>>();
 
         let extra_init_code = self.init_extra_code_from_attrs(&ty.attrs.custom_extra_code);
@@ -145,9 +159,10 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         #[template(path = "nanobind/enum_impl.cpp.jinja", escape = "none")]
         struct ImplTemplate<'a> {
             type_name: &'a str,
-            values: Vec<Cow<'a, str>>,
+            values: Vec<EnumVariantInfo<'a>>,
             type_name_unnamespaced: &'a str,
             extra_init_code: ExtraCode,
+            docs: Option<String>,
         }
 
         ImplTemplate {
@@ -155,6 +170,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             values,
             type_name_unnamespaced: &type_name_unnamespaced,
             extra_init_code,
+            docs: self.formatter.fmt_doc_literal(&ty.docs, &ty.attrs),
         }
         .render_into(out)
         .unwrap();
@@ -220,6 +236,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             methods: &'a [MethodInfo<'a>],
             type_name_unnamespaced: &'a str,
             extra_init_code: ExtraCode,
+            docs: Option<String>,
         }
 
         ImplTemplate {
@@ -227,6 +244,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             methods: methods.as_slice(),
             type_name_unnamespaced: &type_name_unnamespaced,
             extra_init_code,
+            docs: self.formatter.fmt_doc_literal(&ty.docs, &ty.attrs),
         }
         .render_into(out)
         .unwrap();
@@ -247,7 +265,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         let field_decls = def
             .fields
             .iter()
-            .map(|field| self.gen_field_ty_decl(&field.ty, field.name.as_str()))
+            .map(|field| {
+                self.gen_field_ty_decl(&field.ty, field.name.as_str(), &field.docs, &field.attrs)
+            })
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
@@ -268,6 +288,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             has_constructor: bool,
             is_sliceable: bool,
             extra_init_code: ExtraCode,
+            docs: Option<String>,
         }
 
         if def.attrs.abi_compatible {
@@ -294,6 +315,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             is_out: matches!(id, TypeId::OutStruct(..)),
             is_sliceable: def.attrs.abi_compatible,
             extra_init_code,
+            docs: self.formatter.fmt_doc_literal(&def.docs, &def.attrs),
         }
         .render_into(out)
         .unwrap();
@@ -334,6 +356,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                                 e.method = method;
                                 e.method_name = info.method_name.clone();
                                 e.cpp_method_name = info.cpp_method_name.clone();
+                                e.docstring = info.docstring.clone();
                             }
                             Some(hir::SpecialMethod::Setter(_)) => {
                                 assert!(
@@ -362,6 +385,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                                         };
                                         e.cpp_method_name = info.cpp_method_name.clone();
                                         e.param_decls = info.param_decls.clone();
+                                        e.docstring = info.docstring.clone();
                                         e.overloads.push(cpy);
                                     } else {
                                         e.overloads.push(OverloadInfo { parameters: info.param_decls.clone(), method_name: Some(info.cpp_method_name.to_string()) });
@@ -397,6 +421,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         &mut self,
         ty: &'a Type<P>,
         var_name: &'a str,
+        docs: &hir::Docs,
+        attrs: &hir::Attrs,
     ) -> NamedType<'a, P>
     where
         'ccx: 'a,
@@ -407,6 +433,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name: named_type_cpp.type_name,
             ty,
             default_value: None,
+            docstring: self.formatter.fmt_doc_literal(docs, attrs),
         }
     }
 
@@ -484,6 +511,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     type_name: self.cpp.gen_type_name(&p.ty),
                     ty: &p.ty,
                     default_value: p.attrs.default_value.clone(),
+                    docstring: None,
                 })
                 .collect(),
         };
@@ -583,6 +611,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                 Some(lifetime_args.join(", ").into())
             },
             overloads: vec![],
+            docstring: self.formatter.fmt_doc_literal(&method.docs, &method.attrs),
         })
     }
 }

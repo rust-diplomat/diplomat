@@ -57,6 +57,10 @@ def test_attrs():
     assert somelib.ns.RenamedStringList.return_new() == ["Test!", 'T', 'e', 's', 't', '!']
     assert somelib.ns.RenamedBlockOverride.special_function() == "This is a custom binding."
 
+def test_docs():
+    assert somelib.ns.AttrOpaque1Renamed.__doc__ == "Some example docs\nSome Nanobind/C++ example docs\nBack to all docs"
+    assert "More example docs" in somelib.ns.AttrOpaque1Renamed.__init__.__doc__
+
 def test_indexing():
     i = somelib.ns.RenamedMyIndexer(["This", "is", "a", "test"])
     assert i[0] == "This"

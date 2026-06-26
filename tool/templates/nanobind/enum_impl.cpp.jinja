@@ -2,12 +2,12 @@
 {% if !extra_init_code.pre.is_empty() %}
 {{extra_init_code.pre}}
 {% endif -%}
-    nb::class_<{{type_name}}> e_class(mod, "{{type_name_unnamespaced}}");
+    nb::class_<{{type_name}}> e_class(mod, "{{type_name_unnamespaced}}"{% if let Some(docs) = docs %}, {{docs}}{% endif %});
 
     nb::enum_<{{type_name}}::Value> enumerator(e_class, "{{type_name_unnamespaced}}");
     enumerator
         {%- for value in values %}
-        .value("{{value}}", {{type_name}}::{{value}})
+        .value("{{value.name}}", {{type_name}}::{{value.name}}{% if let Some(doc) = value.docstring %}, {{doc}}{% endif %})
         {%- endfor %}
         .export_values();
 

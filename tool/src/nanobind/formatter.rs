@@ -1,7 +1,10 @@
 //! This module contains functions for formatting types
 
 use crate::cpp::Cpp2Formatter;
-use diplomat_core::hir::{DocsUrlGenerator, Method, SymbolId, TypeContext, TypeId};
+use diplomat_core::hir::{
+    Attrs, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, Method, SymbolId, TypeContext, TypeId,
+};
+use std::fmt::Write;
 use std::{borrow::Cow, sync::LazyLock};
 
 /// This type mediates all formatting
@@ -15,6 +18,7 @@ use std::{borrow::Cow, sync::LazyLock};
 /// of C types and methods.
 pub(crate) struct PyFormatter<'tcx> {
     pub cxx: Cpp2Formatter<'tcx>,
+    docs_url_gen: &'tcx DocsUrlGenerator,
 }
 
 impl<'tcx> PyFormatter<'tcx> {
@@ -25,7 +29,48 @@ impl<'tcx> PyFormatter<'tcx> {
     ) -> Self {
         Self {
             cxx: Cpp2Formatter::new(tcx, config_for_cpp, docs_url_gen),
+            docs_url_gen,
         }
+    }
+
+    /// Renders doc comments as plain text suitable for a Python docstring.
+    pub fn fmt_docs(&self, docs: &Docs, attrs: &Attrs) -> String {
+        let mut docs = docs
+            .to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
+            .trim()
+            .to_string();
+        if let Some(deprecated) = attrs.deprecated.as_ref() {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            let _ = writeln!(&mut docs, ".. deprecated:: {deprecated}");
+        }
+        docs
+    }
+
+    /// Renders doc comments (plus an optional deprecation notice) as a quoted, escaped C++
+    /// string literal suitable for use as a nanobind docstring argument (e.g. as the trailing
+    /// argument to `.def(...)`, `nb::class_<T>(...)`, or `.def_prop_ro(...)`).
+    /// Returns `None` if there's no doc text to show, so call sites can omit the argument.
+    pub fn fmt_doc_literal(&self, docs: &Docs, attrs: &Attrs) -> Option<String> {
+        let docs = self.fmt_docs(docs, attrs);
+        if docs.is_empty() {
+            return None;
+        }
+        let mut literal = String::with_capacity(docs.len() + 2);
+        literal.push('"');
+        for c in docs.chars() {
+            match c {
+                '\\' => literal.push_str("\\\\"),
+                '"' => literal.push_str("\\\""),
+                '\n' => literal.push_str("\\n"),
+                '\r' => {}
+                _ => literal.push(c),
+            }
+        }
+        literal.push('"');
+        Some(literal)
     }
 
     pub fn fmt_binding_fn(&self, id: TypeId) -> String {

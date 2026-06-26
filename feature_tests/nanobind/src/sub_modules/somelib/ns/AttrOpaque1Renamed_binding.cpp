@@ -12,9 +12,9 @@ void add_AttrOpaque1Renamed_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::AttrOpaque1Renamed> opaque(mod, "AttrOpaque1Renamed", nb::type_slots(somelib_ns_AttrOpaque1Renamed_slots));
+    nb::class_<somelib::ns::AttrOpaque1Renamed> opaque(mod, "AttrOpaque1Renamed", nb::type_slots(somelib_ns_AttrOpaque1Renamed_slots), "Some example docs\nSome Nanobind/C++ example docs\nBack to all docs");
     opaque
-        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::AttrOpaque1Renamed::totally_not_new))))
+        .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::AttrOpaque1Renamed::totally_not_new))), "More example docs")
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::AttrOpaque1Renamed::new_overload))), "_i"_a)
         .def_prop_ro("abirenamed", &somelib::ns::AttrOpaque1Renamed::abirenamed)
         .def_static("hello", &somelib::ns::AttrOpaque1Renamed::hello)
