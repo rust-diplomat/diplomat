@@ -72,5 +72,22 @@ target_include_directories(somelib PUBLIC "src/include" "${nanobind_ROOT}/ext/ro
 target_compile_features(somelib PUBLIC cxx_std_20)
 target_link_libraries(somelib PUBLIC diplomat_feature_tests ${Python3_SABI_LIBRARY})
 
+# Generate .pyi type stubs for the compiled extension, including
+# its namespaced submodules, so that type checkers and editor
+# autocompletion (Pyright/mypy/etc.) can see real signatures.
+#
+# We can't use nanobind_add_stub() here: its CMake wrapper (as vendored, v2.4.0) doesn't
+# expose stubgen.py's -r/--recursive flag, so it only emits a stub for the top-level
+# module and silently drops every namespaced submodule. 
+set(NANOBIND_STUB_DIR ${CMAKE_CURRENT_BINARY_DIR}/stubs)
+add_custom_command(
+  TARGET somelib POST_BUILD
+  COMMAND "${Python_EXECUTABLE}" "${NB_DIR}/src/stubgen.py" -q -r
+          -i $<TARGET_FILE_DIR:somelib> -m somelib
+          -O "${NANOBIND_STUB_DIR}" -M "${NANOBIND_STUB_DIR}/py.typed"
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
 # Install directive for scikit-build-core
 install(TARGETS somelib LIBRARY DESTINATION somelib)
+install(DIRECTORY ${NANOBIND_STUB_DIR}/ DESTINATION somelib)
