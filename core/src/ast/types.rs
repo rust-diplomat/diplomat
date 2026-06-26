@@ -1025,6 +1025,7 @@ impl TypeName {
                     if let Some(self_path_type) = self_path_type {
                         TypeName::SelfType(self_path_type)
                     } else {
+                        // Note that this is currently unreachable, we never provide any value to `self_path_type` other than `Some`.
                         panic!("Cannot have `Self` type outside of a method");
                     }
                 } else if is_runtime_type(p, "DiplomatOwnedStrSlice")
