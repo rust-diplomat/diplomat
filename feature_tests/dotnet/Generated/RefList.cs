@@ -13,6 +13,12 @@ public partial class RefList: IDisposable
     private unsafe Raw.RefList* _inner;
 
     /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>RefList</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +30,18 @@ public partial class RefList: IDisposable
     internal unsafe RefList(Raw.RefList* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe RefList(Raw.RefList* handle, object[] edges)
+    {
+        _inner = handle;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>RefList</c> allocated on Rust side.
@@ -41,7 +59,7 @@ public partial class RefList: IDisposable
             if (dataRaw == null) throw new ObjectDisposedException(nameof(RefListParameter));
             Raw.RefList* result = Raw.RefList.Node(dataRaw);
             GC.KeepAlive(data);
-            return new RefList(result);
+            return new RefList(result, new object[] { data });
         }
     }
 
@@ -67,6 +85,7 @@ public partial class RefList: IDisposable
 
             Raw.RefList.Destroy(_inner);
             _inner = null;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

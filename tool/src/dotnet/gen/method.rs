@@ -286,11 +286,21 @@ impl DotnetReturnType {
         }
     }
 
+    fn edge_arg_suffix(edges: &[String]) -> String {
+        if edges.is_empty() {
+            String::new()
+        } else {
+            format!(", new object[] {{ {} }}", edges.join(", "))
+        }
+    }
+
     /// Convert a raw FFI value expression into the public C# value
     /// expression for this return type.
-    fn idiomatic_value_expr(&self, raw_expr: RawExpr) -> String {
+    fn idiomatic_value_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
         match self {
-            Self::Opaque(name) => format!("new {name}({raw_expr})"),
+            Self::Opaque(name) => {
+                format!("new {name}({raw_expr}{})", Self::edge_arg_suffix(edges))
+            }
             Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
             Self::Unit | Self::Write => String::new(),
             Self::Primitive(_) | Self::Enum(_) => raw_expr.to_string(),
@@ -305,18 +315,21 @@ impl DotnetReturnType {
         }
     }
 
-    fn tagged_option_expr(&self, option_expr: RawExpr) -> String {
+    fn tagged_option_expr(&self, option_expr: RawExpr, edges: &[String]) -> String {
         format!(
             "{} ? {} : {}",
             option_expr.is_some_expr(),
-            self.idiomatic_value_expr(option_expr.option_value()),
+            self.idiomatic_value_expr(option_expr.option_value(), edges),
             self.option_none_expr()
         )
     }
 
-    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr) -> String {
+    fn nullable_pointer_option_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
         match self {
-            Self::Opaque(name) => format!("{raw_expr} == null ? null : new {name}({raw_expr})"),
+            Self::Opaque(name) => format!(
+                "{raw_expr} == null ? null : new {name}({raw_expr}{})",
+                Self::edge_arg_suffix(edges)
+            ),
             _ => unreachable!("nullable pointer options only lower from opaque returns"),
         }
     }
@@ -421,6 +434,9 @@ pub(super) struct MethodInfo<'ctx> {
     pub(super) inputs: DotnetInputs,
     pub(super) return_type: DotnetReturnType,
     pub(super) lifetime_warning: bool,
+    /// Rooted by the returned wrapper so the GC can't free a borrowed-from
+    /// parent while the child lives. Cf. `keep_alive_targets` (per-call only).
+    pub(super) keep_alive_edges: Vec<String>,
     /// `Some` iff this method returns `Result<T, E>` with a concrete `E`.
     /// Templates branch on `{% if let Some(info) = method.error_info %}` —
     /// no separate `is_fallible()` predicate needed.
@@ -611,12 +627,14 @@ impl MethodInfo<'_> {
         R::Error: Display,
     {
         let raw_expr = raw_expr.try_into().unwrap_or_else(|err| panic!("{err}"));
+        let edges = self.keep_alive_edges.as_slice();
 
         if let Some(option_info) = &self.option_info {
             let expr = if option_info.raw_option_type.is_some() {
-                self.return_type.tagged_option_expr(raw_expr)
+                self.return_type.tagged_option_expr(raw_expr, edges)
             } else {
-                self.return_type.nullable_pointer_option_expr(raw_expr)
+                self.return_type
+                    .nullable_pointer_option_expr(raw_expr, edges)
             };
             return format!("return {expr};");
         }
@@ -626,7 +644,7 @@ impl MethodInfo<'_> {
         } else {
             format!(
                 "return {};",
-                self.return_type.idiomatic_value_expr(raw_expr)
+                self.return_type.idiomatic_value_expr(raw_expr, edges)
             )
         }
     }
@@ -703,7 +721,32 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
-        let lifetime_warning = self.borrowed_output_lifetime_warning(method)?;
+        let keep_alive_edges = self.borrowed_output_keep_alive_edges(method)?;
+        let lifetime_warning = !keep_alive_edges.is_empty();
+
+        // A non-opaque return drops edges silently in `idiomatic_value_expr`
+        // (no struct edge-plumbing yet) — a use-after-free; reject instead.
+        if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
+            self.errors.push_error(format!(
+                "[.NET backend] return value of type `{return_type}` borrows from the receiver \
+                 or an opaque parameter; keep-alive edges are only supported for opaque (`Box<T>`) \
+                 returns today. Return an opaque, or disable this API for .NET."
+            ));
+            return None;
+        }
+
+        // Edges aren't threaded into the error/exception arm, so a borrowing
+        // error would dangle; reject fallible borrowing returns.
+        if !keep_alive_edges.is_empty() && error_info.is_some() {
+            self.errors.push_error(
+                "[.NET backend] a fallible method returning a borrowing value is not yet \
+                 supported — keep-alive edges are not threaded into the error/exception arm. \
+                 Make it infallible, return an owned (non-borrowing) value, or disable this \
+                 API for .NET."
+                    .to_string(),
+            );
+            return None;
+        }
 
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
@@ -712,13 +755,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             inputs,
             return_type,
             lifetime_warning,
+            keep_alive_edges,
             error_info,
             option_info,
             property_accessor,
         })
     }
 
-    fn borrowed_output_lifetime_warning(&self, method: &'tcx Method) -> Option<bool> {
+    fn borrowed_output_keep_alive_edges(&self, method: &'tcx Method) -> Option<Vec<String>> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
         if let Some(param_self) = method.param_self.as_ref() {
@@ -726,36 +770,59 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         }
 
         for param in &method.params {
-            visitor.visit_param(&param.ty, param.name.as_str());
+            // Format here so a Rust param named `this` becomes `@this` and
+            // can't collide with the receiver sentinel "this".
+            let arg_name = self
+                .formatter
+                .fmt_param_name(param.name.as_str())
+                .into_owned();
+            visitor.visit_param(&param.ty, &arg_name);
         }
 
-        let mut has_borrowed_output_lifetime = false;
-        let mut slice_params = Vec::new();
+        let mut edges = Vec::new();
 
         for edge in visitor
             .borrow_map()
             .into_values()
             .flat_map(|borrow_info| borrow_info.incoming_edges)
         {
-            has_borrowed_output_lifetime = true;
-            if matches!(edge.kind, LifetimeEdgeKind::SliceParam) {
-                slice_params.push(edge.param_name);
+            match edge.kind {
+                LifetimeEdgeKind::OpaqueParam => {
+                    let expr = edge.param_name;
+                    if !edges.contains(&expr) {
+                        edges.push(expr);
+                    }
+                }
+                // Slice/string params are only pinned for the call, so a
+                // borrowing return would dangle.
+                LifetimeEdgeKind::SliceParam => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] return value borrows from slice/string parameter `{}`; \
+                         this is not supported because generated C# only pins or converts those \
+                         inputs for the duration of the call",
+                        edge.param_name
+                    ));
+                    return None;
+                }
+                // No struct edge-plumbing yet.
+                LifetimeEdgeKind::StructLifetime(..) => {
+                    self.errors.push_error(
+                        "[.NET backend] return value borrows through a struct lifetime; \
+                         keep-alive edges for struct-borrowed returns are not yet supported"
+                            .to_string(),
+                    );
+                    return None;
+                }
+                other => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] return value borrow kind not yet supported: {other:?}"
+                    ));
+                    return None;
+                }
             }
         }
 
-        if !slice_params.is_empty() {
-            slice_params.sort();
-            slice_params.dedup();
-            self.errors.push_error(format!(
-                "[.NET backend] return value borrows from slice/string parameter(s) `{}`; \
-                 this is not supported because generated C# only pins or converts those \
-                 inputs for the duration of the call",
-                slice_params.join("`, `")
-            ));
-            return None;
-        }
-
-        Some(has_borrowed_output_lifetime)
+        Some(edges)
     }
 
     fn property_accessor(

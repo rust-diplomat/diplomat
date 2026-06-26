@@ -13,6 +13,12 @@ public partial class OpaqueThinIter: IDisposable
     private unsafe Raw.OpaqueThinIter* _inner;
 
     /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>OpaqueThinIter</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +30,18 @@ public partial class OpaqueThinIter: IDisposable
     internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges)
+    {
+        _inner = handle;
+        _edges = edges;
     }
 
     /// <summary>
@@ -48,6 +66,7 @@ public partial class OpaqueThinIter: IDisposable
 
             Raw.OpaqueThinIter.Destroy(_inner);
             _inner = null;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

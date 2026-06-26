@@ -42,7 +42,7 @@ public partial class OpaqueThinVec: IDisposable
             }
             Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
             GC.KeepAlive(this);
-            return new OpaqueThinIter(result);
+            return new OpaqueThinIter(result, new object[] { this });
         }
     }
     public nuint Len()

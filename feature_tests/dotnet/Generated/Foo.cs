@@ -13,6 +13,12 @@ public partial class Foo: IDisposable
     private unsafe Raw.Foo* _inner;
 
     /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    /// <summary>
     /// Creates a managed <c>Foo</c> from a raw handle.
     /// </summary>
     /// <remarks>
@@ -24,6 +30,18 @@ public partial class Foo: IDisposable
     internal unsafe Foo(Raw.Foo* handle)
     {
         _inner = handle;
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Foo(Raw.Foo* handle, object[] edges)
+    {
+        _inner = handle;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
@@ -42,7 +60,7 @@ public partial class Foo: IDisposable
             }
             Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
             GC.KeepAlive(this);
-            return new Bar(result);
+            return new Bar(result, new object[] { this });
         }
     }
 
@@ -68,6 +86,7 @@ public partial class Foo: IDisposable
 
             Raw.Foo.Destroy(_inner);
             _inner = null;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }
