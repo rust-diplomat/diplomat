@@ -284,10 +284,18 @@ impl PathType {
             }
         }
 
-        panic!(
-            "Path {} does not point to a custom trait",
-            in_path.elements.join("::")
-        )
+        let sp = if let Some(f) = in_path.elements.last() {
+            f.span()
+        } else {
+            None
+        };
+        
+        create_report(AstReport::new(
+            "Path does not point to a custom trait".into(),
+            sp,
+            format!("{} must point to a custom type.", in_path.elements.join("::")),
+            vec![]
+        ));
     }
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
