@@ -829,7 +829,12 @@ impl TypeName {
                 let name = r.elem.to_token_stream().to_string();
                 if name.starts_with("DiplomatStr") || name == "str" {
                     if mutability.is_mutable() {
-                        panic!("mutable string references are disallowed");
+                        create_report(AstReport::new(
+                            "Mutable string references disallowed".into(),
+                            Some(r.elem.span().spanned_into(module_location)),
+                            "Suggestion: make reference immutable".into(),
+                            vec![]
+                        ));
                     }
                     if name == "DiplomatStr" {
                         return TypeName::StrReference(
