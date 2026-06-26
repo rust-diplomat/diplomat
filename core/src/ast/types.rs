@@ -964,7 +964,12 @@ impl TypeName {
                                 )))
                             }
                         } else {
-                            panic!("Expected first type argument for Box to be a type")
+                            create_report(AstReport::new(
+                                "Expected a type in Box type arg".into(),
+                                Some(type_args.span().spanned_into(module_location)),
+                                "Should be a type".into(),
+                                vec![]
+                            ));
                         }
                     } else {
                         panic!("Expected angle brackets for Box type")

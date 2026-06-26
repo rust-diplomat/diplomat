@@ -295,6 +295,7 @@ mod tests {
         "mut_string.rs",
         "slice_of_slice.rs",
         "owned_slice.rs",
+        "box_type_arg.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
