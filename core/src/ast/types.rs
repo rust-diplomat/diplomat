@@ -392,7 +392,16 @@ impl FromWithSpan<&syn::TraitBound> for PathType {
                                 syn::GenericArgument::Lifetime(lifetime) => {
                                     lifetime.spanned_into(module_location)
                                 }
-                                _ => panic!("generic type arguments are unsupported {other:?}"),
+                                _ => {
+                                    create_report(AstReport::new(
+                                        "Generic type arguments are unsupported".into(),
+                                        Some(other.span().spanned_into(module_location)),
+                                        "Trait bounds with generic arguments are unsupported".into(),
+                                        vec![ContextLocation::new(
+                                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments.".into()
+                                        )]
+                                    ));
+                                },
                             })
                             .collect(),
                     )
