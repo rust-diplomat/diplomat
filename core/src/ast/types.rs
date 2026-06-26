@@ -1001,7 +1001,12 @@ impl TypeName {
                                 stdlib,
                             )
                         } else {
-                            panic!("Expected first type argument for Option to be a type")
+                            create_report(AstReport::new(
+                                "Expected first argument for Option to be a type".into(),
+                                Some(type_args.span().spanned_into(module_location)),
+                                "Should be a type".into(),
+                                vec![]
+                            ));
                         }
                     } else {
                         panic!("Expected angle brackets for Option type")
