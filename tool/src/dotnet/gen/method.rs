@@ -784,18 +784,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
-        // Edges aren't threaded into the error/exception arm, so a borrowing
-        // error would dangle; reject fallible borrowing returns.
-        if !keep_alive_edges.is_empty() && error_info.is_some() {
-            self.errors.push_error(
-                "[.NET backend] a fallible method returning a borrowing value is not yet \
-                 supported — keep-alive edges are not threaded into the error/exception arm. \
-                 Make it infallible, return an owned (non-borrowing) value, or disable this \
-                 API for .NET."
-                    .to_string(),
-            );
-            return None;
-        }
+        // A fallible borrowing return is fine: the edges ride on the success
+        // (`result.Ok`) wrapper that `success_return_statement` builds, and the
+        // error arm only ever throws an *owned* error (borrowed errors are
+        // rejected separately), so nothing on the `Err` path can dangle.
 
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),

@@ -103,4 +103,55 @@ public class BorrowedReturnTests
         Assert.Equal("rooted", borrow.C());
         GC.KeepAlive(borrow);
     }
+
+    // Same liveness trap, but the borrow comes back through a
+    // `Result<&OpaqueThin, ()>` — the keep-alive edges must ride on the
+    // *success* (`result.Ok`) wrapper for a fallible return too.
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    private static OpaqueThin TryFirstAndDropOwner()
+    {
+        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryFirst(false);
+    }
+
+    [Fact]
+    public void FallibleBorrowedReturn_Ok_KeepsOwnerAliveAcrossGc()
+    {
+        OpaqueThin borrow = TryFirstAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        // The owner is referenced only through the Ok wrapper's edges; if those
+        // weren't wired, the Vec would be finalized and this would be a UAF.
+        Assert.Equal(42, borrow.A());
+        GC.KeepAlive(borrow);
+    }
+
+    [Fact]
+    public void FallibleBorrowedReturn_Err_Throws()
+    {
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        // The `Err(())` arm throws — and must not hand back a wrapper at all.
+        Assert.Throws<InvalidOperationException>(() => vec.TryFirst(true));
+    }
+
+    [Fact]
+    public void FallibleOptionalBorrowedReturn_Composes()
+    {
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+
+        // Result + Option + borrowing view: Ok(Some(_)) reads through the borrow.
+        using OpaqueThin at0 = vec.TryGet(0, false)!;
+        Assert.Equal(7, at0.A());
+
+        // Ok(None): out-of-range index is a null return, not a throw.
+        Assert.Null(vec.TryGet(5, false));
+
+        // Err(()): the failure arm still throws.
+        Assert.Throws<InvalidOperationException>(() => vec.TryGet(0, true));
+    }
 }

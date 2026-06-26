@@ -403,6 +403,33 @@ pub mod ffi {
         pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
+
+        // dotnet-only: a *fallible* borrowed return (`Result<&T, ()>`). The Ok
+        // value borrows from `self`, so its wrapper carries keep-alive edges
+        // while the error arm just throws. Reuses the existing `OpaqueThin`
+        // view; gated to .NET so no other backend regenerates.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_first<'a>(&'a self, fail: bool) -> Result<&'a OpaqueThin, ()> {
+            if fail {
+                Err(())
+            } else {
+                self.0
+                    .first()
+                    .map(OpaqueThin::transparent_convert)
+                    .ok_or(())
+            }
+        }
+
+        // dotnet-only: `Result<Option<&T>, ()>` — Result + Option + a borrow
+        // composed; the keep-alive edges still ride on the (optional) Ok wrapper.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_get<'a>(&'a self, idx: usize, fail: bool) -> Result<Option<&'a OpaqueThin>, ()> {
+            if fail {
+                Err(())
+            } else {
+                Ok(self.0.get(idx).map(OpaqueThin::transparent_convert))
+            }
+        }
     }
 
     // GC-race probe for the GC.KeepAlive fix: `drops_during_spin` sleeps without
