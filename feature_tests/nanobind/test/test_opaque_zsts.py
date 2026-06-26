@@ -43,7 +43,7 @@ class TestOpaqueZST(unittest.TestCase):
     
     def test_fail_result(self):
         c = somelib.ns.RenamedOpaqueZST.fail_zst(True)
-        assert(c)
+        assert c is None, "A unit Ok value is represented as None"
 
         with self.assertRaises(Exception) as a:
             somelib.ns.RenamedOpaqueZST.fail_zst(False)
