@@ -57,6 +57,26 @@ public partial class OpaqueThinIter: IDisposable
         _inner = inner;
         _edges = edges;
     }
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin? Next()
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinIter");
+            }
+            Raw.OpaqueThin* result = Raw.OpaqueThinIter.Next(AsFFI());
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
+        }
+    }
 
     /// <summary>
     /// Returns the underlying raw handle.

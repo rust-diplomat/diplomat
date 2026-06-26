@@ -154,4 +154,40 @@ public class BorrowedReturnTests
         // Err(()): the failure arm still throws.
         Assert.Throws<InvalidOperationException>(() => vec.TryGet(0, true));
     }
+
+    // `Result<Box<OpaqueThinIter<'a>>, ()>` — the Ok value is an *owned* Box
+    // (IronRDP's shape) that still borrows the Vec. Its keep-alive edges must
+    // root the now-unreferenced owner, so the owned-but-borrowing case works.
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    private static OpaqueThinIter TryIterAndDropOwner()
+    {
+        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryIter(false);
+    }
+
+    [Fact]
+    public void FallibleOwnedBorrowingBoxReturn_Ok_KeepsOwnerAliveAcrossGc()
+    {
+        OpaqueThinIter iter = TryIterAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        // Reading through the iterator touches the Vec; the only thing keeping
+        // that Vec alive is the owned iterator's edges. If they weren't wired,
+        // the Vec would be finalized and this a UAF.
+        using OpaqueThin first = iter.Next()!;
+        Assert.Equal(42, first.A());
+        GC.KeepAlive(iter);
+    }
+
+    [Fact]
+    public void FallibleOwnedBorrowingBoxReturn_Err_Throws()
+    {
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        Assert.Throws<InvalidOperationException>(() => vec.TryIter(true));
+    }
 }

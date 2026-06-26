@@ -333,7 +333,6 @@ pub mod ffi {
 
     impl<'a> OpaqueThinIter<'a> {
         #[diplomat::attr(auto, iterator)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn next(&'a mut self) -> Option<&'a OpaqueThin> {
             self.0.next().map(OpaqueThin::transparent_convert)
         }
@@ -428,6 +427,19 @@ pub mod ffi {
                 Err(())
             } else {
                 Ok(self.0.get(idx).map(OpaqueThin::transparent_convert))
+            }
+        }
+
+        // dotnet-only: `Result<Box<T<'a>>, ()>` — the Ok value is an *owned* Box
+        // that still borrows from `self` (an iterator over the Vec). This is
+        // IronRDP's shape: the keep-alive edges ride on the owned `result.Ok`
+        // wrapper. Reuses the existing `OpaqueThinIter`.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_iter<'a>(&'a self, fail: bool) -> Result<Box<OpaqueThinIter<'a>>, ()> {
+            if fail {
+                Err(())
+            } else {
+                Ok(Box::new(OpaqueThinIter(self.0.iter())))
             }
         }
     }
