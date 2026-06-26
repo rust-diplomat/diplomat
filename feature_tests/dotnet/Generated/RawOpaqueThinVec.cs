@@ -9,6 +9,15 @@ namespace Somelib.Raw;
 internal partial struct OpaqueThinVec
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_create_single", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern OpaqueThinVec* CreateSingle(int a, float b, DiplomatSliceU8 c);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_set_first_a", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern void SetFirstA(OpaqueThinVec* handle, int value);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_set_first_c", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern void SetFirstC(OpaqueThinVec* handle, DiplomatSliceU8 value);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_iter", CallingConvention = CallingConvention.Cdecl)]
 internal static unsafe extern OpaqueThinIter* Iter(OpaqueThinVec* handle);
 

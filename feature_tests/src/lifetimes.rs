@@ -339,7 +339,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
 
     impl OpaqueThinVec {
@@ -357,6 +357,36 @@ pub mod ffi {
                     })
                     .collect(),
             ))
+        }
+
+        // The .NET backend disables the slice-based `create`, so the dotnet
+        // borrowed-return tests need a constructor they can call from C# to get
+        // a real owner to borrow `First()`/`Get()` out of.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn create_single(a: i32, b: f32, c: &DiplomatStr) -> Box<Self> {
+            Box::new(Self(vec![crate::lifetimes::Internal {
+                a,
+                b,
+                c: String::from_utf8(c.to_vec()).unwrap(),
+            }]))
+        }
+
+        // dotnet-only: the borrowed-return aliasing test mutates the owner here
+        // and reads it back through `First()` to prove the borrow isn't a copy.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn set_first_a(&mut self, value: i32) {
+            if let Some(first) = self.0.first_mut() {
+                first.a = value;
+            }
+        }
+
+        // dotnet-only: same aliasing proof for the heap-backed `String` field —
+        // replacing it must still be observed through an outstanding borrow.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn set_first_c(&mut self, value: &DiplomatStr) {
+            if let Some(first) = self.0.first_mut() {
+                first.c = String::from_utf8(value.to_vec()).unwrap();
+            }
         }
 
         #[diplomat::attr(auto, iterable)]

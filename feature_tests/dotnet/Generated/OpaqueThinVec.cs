@@ -26,6 +26,51 @@ public partial class OpaqueThinVec: IDisposable
         _inner = handle;
     }
     /// <returns>
+    /// A <c>OpaqueThinVec</c> allocated on Rust side.
+    /// </returns>
+    public static OpaqueThinVec CreateSingle(int a, float b, string c)
+    {
+        unsafe
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            byte[] cBytes = System.Text.Encoding.UTF8.GetBytes(c);
+            fixed (byte* cPtr = cBytes)
+            {
+                Raw.OpaqueThinVec* result = Raw.OpaqueThinVec.CreateSingle(a, b, new DiplomatSliceU8 { Ptr = cPtr, Len = (nuint)cBytes.Length });
+                return new OpaqueThinVec(result);
+            }
+        }
+    }
+    public void SetFirstA(int value)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThinVec.SetFirstA(AsFFI(), value);
+            GC.KeepAlive(this);
+        }
+    }
+    public void SetFirstC(string value)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            byte[] valueBytes = System.Text.Encoding.UTF8.GetBytes(value);
+            fixed (byte* valuePtr = valueBytes)
+            {
+                Raw.OpaqueThinVec.SetFirstC(AsFFI(), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                GC.KeepAlive(this);
+            }
+        }
+    }
+    /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
     /// </returns>
     /// <remarks>
