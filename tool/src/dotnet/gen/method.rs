@@ -762,6 +762,17 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         })
     }
 
+    /// Sometimes a method hands back a value that's really just pointing into
+    /// another object instead of owning its own. If the garbage collector frees
+    /// that other object too early, the returned value is left pointing at freed
+    /// memory. So this figures out which objects we need to keep alive: `"this"`
+    /// if it borrows from the receiver, or the parameter's name if it borrows
+    /// from a parameter.
+    ///
+    /// If it's a kind of borrow we can't safely handle yet — from a string or
+    /// slice (we only pin those while the call runs), or through a struct — it
+    /// gives up and returns `None` with an error, instead of generating code
+    /// that could crash.
     fn borrowed_output_keep_alive_edges(&self, method: &'tcx Method) -> Option<Vec<String>> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
