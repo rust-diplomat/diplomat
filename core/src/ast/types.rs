@@ -356,7 +356,16 @@ impl FromWithSpan<&syn::Signature> for PathType {
             .iter()
             .map(|generic_arg| match generic_arg {
                 syn::GenericParam::Lifetime(lt) => (&lt.lifetime).spanned_into(module_location),
-                _ => panic!("generic type arguments are unsupported {other:?}"),
+                _ => {
+                    create_report(AstReport::new(
+                        "Generic type arguments are unsupported".into(),
+                        Some(other.ident.span().spanned_into(module_location)),
+                        "Functions with generic arguments are unsupported".into(),
+                        vec![ContextLocation::new(
+                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments.".into()
+                        )]
+                    ));
+                },
             })
             .collect();
 

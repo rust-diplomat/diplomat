@@ -290,6 +290,7 @@ mod tests {
         "undefined_type.rs",
         "non_opaque_tuple.rs",
         "generic_type.rs",
+        "free_func_generics.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
