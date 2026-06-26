@@ -96,6 +96,15 @@ struct NativeLibTemplate<'a> {
     dylib_name: &'a str,
 }
 
+/// `RustHandle<T>` — a pointer that carries its own free decision (owned
+/// runs the destructor, borrowed doesn't), so a borrow-returning wrapper
+/// doesn't need an ownership flag field.
+#[derive(Template)]
+#[template(path = "dotnet/RustHandle.cs.jinja", escape = "none")]
+struct RustHandleTemplate<'a> {
+    namespace: &'a str,
+}
+
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -429,6 +438,15 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("NativeLib template render failed"),
     );
+    add_cs_file(
+        &files,
+        "RustHandle.cs".to_string(),
+        RustHandleTemplate {
+            namespace: &namespace,
+        }
+        .render()
+        .expect("RustHandle template render failed"),
+    );
 
     (files, errors)
 }
@@ -553,12 +571,16 @@ mod test {
 
         let foo = files.get("Foo.cs").expect("expected Foo.cs output");
         assert!(
-            foo.contains("owned: false"),
-            "borrowed return should build a non-owning wrapper:\n{foo}"
+            foo.contains(".Borrowed("),
+            "borrowed return should build the wrapper via the non-owning Borrowed factory:\n{foo}"
         );
         assert!(
-            foo.contains("if (_owned)"),
-            "a borrow-target wrapper should gate Destroy on _owned:\n{foo}"
+            foo.contains("RustHandle<Raw.Foo>") && foo.contains("_inner.Release()"),
+            "a borrow-target wrapper should carry ownership in the handle and free via Release:\n{foo}"
+        );
+        assert!(
+            !foo.contains("_owned"),
+            "the ownership flag field should be gone — ownership lives in the handle:\n{foo}"
         );
     }
 

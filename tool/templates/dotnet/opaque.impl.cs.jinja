@@ -10,8 +10,8 @@ namespace {{ namespace }};
 
 public partial class {{ name }}: IDisposable
 {
-    private unsafe Raw.{{ name }}* _inner;
 {%- if has_edges %}
+    private unsafe RustHandle<Raw.{{ name }}> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
@@ -19,10 +19,9 @@ public partial class {{ name }}: IDisposable
     /// </summary>
     private object[] _edges;
 
-    /// <summary>
-    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
-    /// </summary>
-    private bool _owned;
+    private static readonly unsafe RustDestructor<Raw.{{ name }}> _destroy = Raw.{{ name }}.Destroy;
+{%- else %}
+    private unsafe Raw.{{ name }}* _inner;
 {%- endif %}
     {%- for property in properties %}
 
@@ -60,10 +59,11 @@ public partial class {{ name }}: IDisposable
     /// </remarks>
     internal unsafe {{ name }}(Raw.{{ name }}* handle)
     {
-        _inner = handle;
 {%- if has_edges %}
+        _inner = RustHandle<Raw.{{ name }}>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
-        _owned = true;
+{%- else %}
+        _inner = handle;
 {%- endif %}
     }
 {%- if has_edges %}
@@ -73,11 +73,22 @@ public partial class {{ name }}: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe {{ name }}(Raw.{{ name }}* handle, object[] edges, bool owned)
+    internal unsafe {{ name }}(Raw.{{ name }}* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.{{ name }}>.Owned(handle, _destroy);
         _edges = edges;
-        _owned = owned;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe {{ name }}(RustHandle<Raw.{{ name }}> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
 {%- endif %}
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
@@ -104,7 +115,7 @@ public partial class {{ name }}: IDisposable
         unsafe
         {
 {%- if method.is_instance() %}
-            if (_inner == null)
+            if ({% if has_edges %}_inner.IsNull{% else %}_inner == null{% endif %})
             {
                 throw new ObjectDisposedException("{{ name }}");
             }
@@ -119,7 +130,7 @@ public partial class {{ name }}: IDisposable
     /// </summary>
     internal unsafe Raw.{{ name }}* AsFFI()
     {
-        return _inner;
+        return {% if has_edges %}_inner.Ptr{% else %}_inner{% endif %};
     }
 
     /// <summary>
@@ -129,26 +140,28 @@ public partial class {{ name }}: IDisposable
     {
         unsafe
         {
+{%- if has_edges %}
+            if (_inner.IsNull)
+            {
+                return;
+            }
+
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
+
+            GC.SuppressFinalize(this);
+{%- else %}
             if (_inner == null)
             {
                 return;
             }
-{%- if has_edges %}
-
-            if (_owned)
-            {
-                Raw.{{ name }}.Destroy(_inner);
-            }
-{%- else %}
 
             Raw.{{ name }}.Destroy(_inner);
-{%- endif %}
             _inner = null;
-{%- if has_edges %}
-            _edges = System.Array.Empty<object>();
-{%- endif %}
 
             GC.SuppressFinalize(this);
+{%- endif %}
         }
     }
 

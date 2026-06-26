@@ -10,7 +10,7 @@ namespace Somelib;
 
 public partial class Foo: IDisposable
 {
-    private unsafe Raw.Foo* _inner;
+    private unsafe RustHandle<Raw.Foo> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
@@ -18,10 +18,7 @@ public partial class Foo: IDisposable
     /// </summary>
     private object[] _edges;
 
-    /// <summary>
-    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
-    /// </summary>
-    private bool _owned;
+    private static readonly unsafe RustDestructor<Raw.Foo> _destroy = Raw.Foo.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Foo</c> from a raw handle.
@@ -34,9 +31,8 @@ public partial class Foo: IDisposable
     /// </remarks>
     internal unsafe Foo(Raw.Foo* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Foo>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
-        _owned = true;
     }
 
     /// <remarks>
@@ -44,11 +40,22 @@ public partial class Foo: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe Foo(Raw.Foo* handle, object[] edges, bool owned)
+    internal unsafe Foo(Raw.Foo* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Foo>.Owned(handle, _destroy);
         _edges = edges;
-        _owned = owned;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Foo(RustHandle<Raw.Foo> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Bar</c> allocated on Rust side.
@@ -61,13 +68,13 @@ public partial class Foo: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("Foo");
             }
             Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
             GC.KeepAlive(this);
-            return new Bar(result, new object[] { this }, owned: true);
+            return new Bar(result, new object[] { this });
         }
     }
 
@@ -76,7 +83,7 @@ public partial class Foo: IDisposable
     /// </summary>
     internal unsafe Raw.Foo* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -86,16 +93,13 @@ public partial class Foo: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            if (_owned)
-            {
-                Raw.Foo.Destroy(_inner);
-            }
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);

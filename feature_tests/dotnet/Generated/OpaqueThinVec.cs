@@ -42,7 +42,7 @@ public partial class OpaqueThinVec: IDisposable
             }
             Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(AsFFI());
             GC.KeepAlive(this);
-            return new OpaqueThinIter(result, new object[] { this }, owned: true);
+            return new OpaqueThinIter(result, new object[] { this });
         }
     }
     public nuint Len()
@@ -75,7 +75,7 @@ public partial class OpaqueThinVec: IDisposable
             }
             Raw.OpaqueThin* result = Raw.OpaqueThinVec.First(AsFFI());
             GC.KeepAlive(this);
-            return result == null ? null : new OpaqueThin(result, new object[] { this }, owned: false);
+            return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
     }
 

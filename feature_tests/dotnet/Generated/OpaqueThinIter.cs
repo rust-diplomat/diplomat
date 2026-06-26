@@ -10,7 +10,7 @@ namespace Somelib;
 
 public partial class OpaqueThinIter: IDisposable
 {
-    private unsafe Raw.OpaqueThinIter* _inner;
+    private unsafe RustHandle<Raw.OpaqueThinIter> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
@@ -18,10 +18,7 @@ public partial class OpaqueThinIter: IDisposable
     /// </summary>
     private object[] _edges;
 
-    /// <summary>
-    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
-    /// </summary>
-    private bool _owned;
+    private static readonly unsafe RustDestructor<Raw.OpaqueThinIter> _destroy = Raw.OpaqueThinIter.Destroy;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThinIter</c> from a raw handle.
@@ -34,9 +31,8 @@ public partial class OpaqueThinIter: IDisposable
     /// </remarks>
     internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueThinIter>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
-        _owned = true;
     }
 
     /// <remarks>
@@ -44,11 +40,22 @@ public partial class OpaqueThinIter: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges, bool owned)
+    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueThinIter>.Owned(handle, _destroy);
         _edges = edges;
-        _owned = owned;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe OpaqueThinIter(RustHandle<Raw.OpaqueThinIter> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
 
     /// <summary>
@@ -56,7 +63,7 @@ public partial class OpaqueThinIter: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueThinIter* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -66,16 +73,13 @@ public partial class OpaqueThinIter: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            if (_owned)
-            {
-                Raw.OpaqueThinIter.Destroy(_inner);
-            }
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);

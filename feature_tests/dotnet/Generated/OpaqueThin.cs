@@ -10,7 +10,7 @@ namespace Somelib;
 
 public partial class OpaqueThin: IDisposable
 {
-    private unsafe Raw.OpaqueThin* _inner;
+    private unsafe RustHandle<Raw.OpaqueThin> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
@@ -18,10 +18,7 @@ public partial class OpaqueThin: IDisposable
     /// </summary>
     private object[] _edges;
 
-    /// <summary>
-    /// False for a borrowed return — Rust owns the pointer, so we must not free it.
-    /// </summary>
-    private bool _owned;
+    private static readonly unsafe RustDestructor<Raw.OpaqueThin> _destroy = Raw.OpaqueThin.Destroy;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThin</c> from a raw handle.
@@ -34,9 +31,8 @@ public partial class OpaqueThin: IDisposable
     /// </remarks>
     internal unsafe OpaqueThin(Raw.OpaqueThin* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueThin>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
-        _owned = true;
     }
 
     /// <remarks>
@@ -44,17 +40,28 @@ public partial class OpaqueThin: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe OpaqueThin(Raw.OpaqueThin* handle, object[] edges, bool owned)
+    internal unsafe OpaqueThin(Raw.OpaqueThin* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueThin>.Owned(handle, _destroy);
         _edges = edges;
-        _owned = owned;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe OpaqueThin(RustHandle<Raw.OpaqueThin> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     public int A()
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -67,7 +74,7 @@ public partial class OpaqueThin: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -80,7 +87,7 @@ public partial class OpaqueThin: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
@@ -103,7 +110,7 @@ public partial class OpaqueThin: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueThin* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -113,16 +120,13 @@ public partial class OpaqueThin: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            if (_owned)
-            {
-                Raw.OpaqueThin.Destroy(_inner);
-            }
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
