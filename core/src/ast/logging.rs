@@ -289,6 +289,7 @@ mod tests {
         "param_invalid_type.rs",
         "undefined_type.rs",
         "non_opaque_tuple.rs",
+        "generic_type.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

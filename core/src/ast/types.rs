@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use syn::Token;
+use syn::{Token, spanned::Spanned};
 
 use std::fmt;
 use std::ops::ControlFlow;
@@ -13,7 +13,7 @@ use super::{
 };
 use crate::{
     Env, ast::{
-        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, create_report, create_simple_report},
+        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, ContextLocation, create_report, create_simple_report},
     },
 };
 
@@ -322,7 +322,16 @@ impl FromWithSpan<&syn::TypePath> for PathType {
                             .iter()
                             .map(|generic_arg| match generic_arg {
                                 syn::GenericArgument::Lifetime(lifetime) => lifetime.spanned_into(module_location),
-                                _ => panic!("generic type arguments are unsupported (type: {other:?}, arg: {generic_arg:?})"),
+                                _ => {
+                                    create_report(AstReport::new(
+                                        "Generic type arguments are unsupported".into(),
+                                        Some(other.span().spanned_into(module_location)),
+                                        "Type paths with generic arguments are unsupported.".into(),
+                                        vec![ContextLocation::new(
+                                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments".into()
+                                        )]
+                                    ));
+                                },
                             })
                             .collect(),
                     )
