@@ -293,6 +293,7 @@ mod tests {
         "free_func_generics.rs",
         "trait_bound_generics.rs",
         "mut_string.rs",
+        "slice_of_slice.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

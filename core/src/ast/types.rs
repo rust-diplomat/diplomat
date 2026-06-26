@@ -877,7 +877,12 @@ impl TypeName {
                     ) = TypeName::from_syn(&slice.elem, self_path_type.clone(), module_location)
                     {
                         if is_stdlib_type == StdlibOrDiplomat::Stdlib {
-                            panic!("Slice-of-slice is only supported with DiplomatRuntime slice types (DiplomatStrSlice, DiplomatStr16Slice, DiplomatUtf8StrSlice)");
+                            create_report(AstReport::new(
+                                "String slice-of-slice is only supported with DiplomatRuntime slice types".into(),
+                                Some(slice.elem.span().spanned_into(module_location)),
+                                "Supported slice types: DiplomatStrSlice, DiplomatStr16Slice, DiplomatUtf8StrSlice.".into(),
+                                vec![]
+                            ));
                         }
                         return TypeName::StrSlice(encoding, StdlibOrDiplomat::Stdlib);
                     }
