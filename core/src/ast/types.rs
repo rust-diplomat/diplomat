@@ -972,7 +972,17 @@ impl TypeName {
                             ));
                         }
                     } else {
-                        panic!("Expected angle brackets for Box type")
+                        let suggestion = match &p.path.segments[0].arguments {
+                            syn::PathArguments::None => "add angle brackets",
+                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
+                            _ => unreachable!()
+                        };
+                        create_report(AstReport::new(
+                            "Expected angle brackets for Box type".into(),
+                            Some(p.path.segments[0].span().spanned_into(module_location)),
+                            format!("Suggestion: {suggestion}"),
+                            vec![]
+                        ));
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Option"
                     || is_runtime_type(p, "DiplomatOption")

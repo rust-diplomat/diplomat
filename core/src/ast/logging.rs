@@ -296,6 +296,7 @@ mod tests {
         "slice_of_slice.rs",
         "owned_slice.rs",
         "box_type_arg.rs",
+        "missing_angle_brackets.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
