@@ -26,19 +26,19 @@ public class BorrowedReturnTests
     }
 
     [Fact]
-    public void First_AliasesOwnerStorage_NotACopy()
+    public void Get_InRangeBorrows_OutOfRangeReturnsNull()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "x");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
 
-        // The borrow is taken BEFORE the mutation and never refreshed.
-        using OpaqueThin borrow = vec.First()!;
-        Assert.Equal(7, borrow.A());
+        // The indexer `get` is a borrowed return just like `First()`: an
+        // in-range index hands back a non-owning view into the Vec slot.
+        using OpaqueThin at0 = vec.Get(0)!;
+        Assert.Equal(7, at0.A());
+        Assert.Equal("hi", at0.C());
 
-        // Mutate the owner's element 0 in place. If `First()` had handed back a
-        // copy, the borrow would still read 7. Seeing 99 proves the borrow is an
-        // interior reference into the same Vec slot the owner just wrote.
-        vec.SetFirstA(99);
-        Assert.Equal(99, borrow.A());
+        // Out-of-range is Rust's `Option::None` path — a null return, not a
+        // throw and not a borrow of freed/garbage memory.
+        Assert.Null(vec.Get(1));
     }
 
     [Fact]
@@ -46,13 +46,15 @@ public class BorrowedReturnTests
     {
         using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "before");
 
+        // The borrow is taken BEFORE the mutation and never refreshed.
         using OpaqueThin borrow = vec.First()!;
         Assert.Equal("before", borrow.C());
 
-        // The heap-backed `String` aliases through the borrow exactly like the
-        // primitive `a`: replacing it on the owner (which drops the old buffer)
-        // is observed through the same outstanding borrow, which re-reads the
-        // field. So mutation IS visible for the string field, not just a/b.
+        // Replacing the heap-backed `String` on the owner (which drops the old
+        // buffer) is observed through the same outstanding borrow, which
+        // re-reads the field. If `First()` had handed back a copy, the borrow
+        // would still read "before"; seeing "after" proves it is an interior
+        // reference into the same Vec slot the owner just wrote.
         vec.SetFirstC("after");
         Assert.Equal("after", borrow.C());
     }
