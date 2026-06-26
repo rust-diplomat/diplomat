@@ -12,12 +12,9 @@ use super::{
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    ast::{
-        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
-        logging::create_simple_report,
-        Function,
+    Env, ast::{
+        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, create_report, create_simple_report},
     },
-    Env,
 };
 
 /// A type declared inside a Diplomat-annotated module.
@@ -233,10 +230,18 @@ impl PathType {
             }
         }
 
-        panic!(
-            "Path {} does not point to a custom type",
-            in_path.elements.join("::")
-        )
+        let sp = if let Some(f) = in_path.elements.last() {
+            f.span()
+        } else {
+            None
+        };
+        
+        create_report(AstReport::new(
+            "Path does not point to a custom type.".into(),
+            sp,
+            format!("{} must point to a custom type", in_path.elements.join("::")),
+            vec![]
+        ));
     }
 
     /// If this is a [`TypeName::Named`], grab the [`CustomType`] it points to from
