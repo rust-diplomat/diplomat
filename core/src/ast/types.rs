@@ -1109,7 +1109,12 @@ impl TypeName {
                             }
                         }
                     }
-                    panic!("Found DiplomatSlice/DiplomatSliceMut/DiplomatOwnedSlice without primitive or DiplomatStrSlice-like generic");
+                    create_report(AstReport::new(
+                        "Found DiplomatSlice without primitive or DiplomatSlice-like generic".into(),
+                        Some(ty.span().spanned_into(module_location)),
+                        "Must be a primitive or DiplomatSlice-like generic".into(),
+                        vec![]
+                    ));
                 } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
                 {
