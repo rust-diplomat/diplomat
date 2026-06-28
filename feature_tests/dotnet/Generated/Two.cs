@@ -10,13 +10,15 @@ namespace Somelib;
 
 public partial class Two: IDisposable
 {
-    private unsafe Raw.Two* _inner;
+    private unsafe RustHandle<Raw.Two> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
     /// (-> Destroy) a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Two> _destroy = Raw.Two.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Two</c> from a raw handle.
@@ -29,7 +31,7 @@ public partial class Two: IDisposable
     /// </remarks>
     internal unsafe Two(Raw.Two* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Two>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -40,7 +42,19 @@ public partial class Two: IDisposable
     /// </remarks>
     internal unsafe Two(Raw.Two* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Two>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Two(RustHandle<Raw.Two> inner, object[] edges)
+    {
+        _inner = inner;
         _edges = edges;
     }
 
@@ -49,7 +63,7 @@ public partial class Two: IDisposable
     /// </summary>
     internal unsafe Raw.Two* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -59,13 +73,13 @@ public partial class Two: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Two.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);

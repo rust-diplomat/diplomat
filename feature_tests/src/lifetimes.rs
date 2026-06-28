@@ -135,7 +135,6 @@ pub mod ffi {
     // FIXME(#191): This test breaks the C++ codegen
     impl<'b, 'a: 'b> Bar<'b, 'a> {
         #[diplomat::attr(auto, getter)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn foo(&'b self) -> &'b Foo<'a> {
             self.0
         }
@@ -340,7 +339,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
 
     impl OpaqueThinVec {
@@ -360,6 +359,28 @@ pub mod ffi {
             ))
         }
 
+        // The .NET backend disables the slice-based `create`, so the dotnet
+        // borrowed-return tests need a constructor they can call from C# to get
+        // a real owner to borrow `First()`/`Get()` out of.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn create_single(a: i32, b: f32, c: &DiplomatStr) -> Box<Self> {
+            Box::new(Self(vec![crate::lifetimes::Internal {
+                a,
+                b,
+                c: String::from_utf8(c.to_vec()).unwrap(),
+            }]))
+        }
+
+        // dotnet-only: the borrowed-return aliasing test replaces the owner's
+        // heap-backed `String` here and reads it back through `First()` to prove
+        // the borrow isn't a copy.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn set_first_c(&mut self, value: &DiplomatStr) {
+            if let Some(first) = self.0.first_mut() {
+                first.c = String::from_utf8(value.to_vec()).unwrap();
+            }
+        }
+
         #[diplomat::attr(auto, iterable)]
         #[allow(clippy::should_implement_trait)]
         pub fn iter<'a>(&'a self) -> Box<OpaqueThinIter<'a>> {
@@ -373,14 +394,12 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, indexer)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn get<'a>(&'a self, idx: usize) -> Option<&'a OpaqueThin> {
             self.0.get(idx).map(OpaqueThin::transparent_convert)
         }
 
         #[diplomat::attr(auto, getter)]
         #[diplomat::attr(dart, rename = "firstelement")]
-        #[diplomat::attr(dotnet, disable)]
         pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }

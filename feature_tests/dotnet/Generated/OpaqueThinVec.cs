@@ -26,6 +26,39 @@ public partial class OpaqueThinVec: IDisposable
         _inner = handle;
     }
     /// <returns>
+    /// A <c>OpaqueThinVec</c> allocated on Rust side.
+    /// </returns>
+    public static OpaqueThinVec CreateSingle(int a, float b, string c)
+    {
+        unsafe
+        {
+            if (c == null) throw new ArgumentNullException(nameof(c));
+            byte[] cBytes = System.Text.Encoding.UTF8.GetBytes(c);
+            fixed (byte* cPtr = cBytes)
+            {
+                Raw.OpaqueThinVec* result = Raw.OpaqueThinVec.CreateSingle(a, b, new DiplomatSliceU8 { Ptr = cPtr, Len = (nuint)cBytes.Length });
+                return new OpaqueThinVec(result);
+            }
+        }
+    }
+    public void SetFirstC(string value)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            byte[] valueBytes = System.Text.Encoding.UTF8.GetBytes(value);
+            fixed (byte* valuePtr = valueBytes)
+            {
+                Raw.OpaqueThinVec.SetFirstC(AsFFI(), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                GC.KeepAlive(this);
+            }
+        }
+    }
+    /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
     /// </returns>
     /// <remarks>
@@ -56,6 +89,46 @@ public partial class OpaqueThinVec: IDisposable
             var result = Raw.OpaqueThinVec.Len(AsFFI());
             GC.KeepAlive(this);
             return result;
+        }
+    }
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin? Get(nuint idx)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThin* result = Raw.OpaqueThinVec.Get(AsFFI(), idx);
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
+        }
+    }
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin? First()
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThin* result = Raw.OpaqueThinVec.First(AsFFI());
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
     }
 

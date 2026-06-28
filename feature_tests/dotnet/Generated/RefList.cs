@@ -10,13 +10,15 @@ namespace Somelib;
 
 public partial class RefList: IDisposable
 {
-    private unsafe Raw.RefList* _inner;
+    private unsafe RustHandle<Raw.RefList> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
     /// (-> Destroy) a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.RefList> _destroy = Raw.RefList.Destroy;
 
     /// <summary>
     /// Creates a managed <c>RefList</c> from a raw handle.
@@ -29,7 +31,7 @@ public partial class RefList: IDisposable
     /// </remarks>
     internal unsafe RefList(Raw.RefList* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.RefList>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -40,7 +42,19 @@ public partial class RefList: IDisposable
     /// </remarks>
     internal unsafe RefList(Raw.RefList* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.RefList>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe RefList(RustHandle<Raw.RefList> inner, object[] edges)
+    {
+        _inner = inner;
         _edges = edges;
     }
     /// <returns>
@@ -68,7 +82,7 @@ public partial class RefList: IDisposable
     /// </summary>
     internal unsafe Raw.RefList* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -78,13 +92,13 @@ public partial class RefList: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.RefList.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);

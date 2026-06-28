@@ -10,13 +10,15 @@ namespace Somelib;
 
 public partial class Bar: IDisposable
 {
-    private unsafe Raw.Bar* _inner;
+    private unsafe RustHandle<Raw.Bar> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC can't finalize
     /// (-> Destroy) a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Bar> _destroy = Raw.Bar.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Bar</c> from a raw handle.
@@ -29,7 +31,7 @@ public partial class Bar: IDisposable
     /// </remarks>
     internal unsafe Bar(Raw.Bar* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Bar>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -40,8 +42,40 @@ public partial class Bar: IDisposable
     /// </remarks>
     internal unsafe Bar(Raw.Bar* handle, object[] edges)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Bar>.Owned(handle, _destroy);
         _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Bar(RustHandle<Raw.Bar> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
+    }
+    /// <returns>
+    /// A <c>Foo</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public Foo Foo()
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("Bar");
+            }
+            Raw.Foo* result = Raw.Bar.Foo(AsFFI());
+            GC.KeepAlive(this);
+            return new Foo(RustHandle<Raw.Foo>.Borrowed(result), new object[] { this });
+        }
     }
 
     /// <summary>
@@ -49,7 +83,7 @@ public partial class Bar: IDisposable
     /// </summary>
     internal unsafe Raw.Bar* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -59,13 +93,13 @@ public partial class Bar: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Bar.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
             _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);

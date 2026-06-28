@@ -140,6 +140,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         display_name: String,
         opaque_def: &'tcx OpaqueDef,
+        borrowed_return_targets: &std::collections::HashSet<String>,
     ) -> Option<(Option<String>, String)> {
         // Lower every method exactly once, then hand the same `MethodInfo`s
         // to both the raw and idiomatic templates. Lowering twice (once per
@@ -153,9 +154,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
             .collect();
         let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, methods.clone());
-        // Only lifetime-carrying opaques can be a borrowing return, so only
-        // they need keep-alive edge storage.
-        let has_edges = opaque_def.lifetimes.num_lifetimes() != 0;
+        // Needs the edges/non-owning machinery if it can be a borrowing
+        // return: either an owned borrow (`Box<T<'a>>`, lifetime-carrying) or
+        // a borrowed return (`&T`, tracked by name since the borrow isn't a
+        // lifetime on the type itself).
+        let has_edges = opaque_def.lifetimes.num_lifetimes() != 0
+            || borrowed_return_targets.contains(&display_name);
         let content = self.gen_opaque_impl(display_name, methods, has_edges);
         Some((Some(raw), content))
     }

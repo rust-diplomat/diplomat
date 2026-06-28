@@ -96,6 +96,15 @@ struct NativeLibTemplate<'a> {
     dylib_name: &'a str,
 }
 
+/// `RustHandle<T>` — a pointer that carries its own free decision (owned
+/// runs the destructor, borrowed doesn't), so a borrow-returning wrapper
+/// doesn't need an ownership flag field.
+#[derive(Template)]
+#[template(path = "dotnet/RustHandle.cs.jinja", escape = "none")]
+struct RustHandleTemplate<'a> {
+    namespace: &'a str,
+}
+
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -272,6 +281,8 @@ pub(crate) fn run<'tcx>(
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
 
+    let borrowed_return_targets = ctx.borrowed_return_targets();
+
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
@@ -296,7 +307,7 @@ pub(crate) fn run<'tcx>(
             }
             diplomat_core::hir::TypeDef::OutStruct(struct_def) => ctx.gen_out_struct(struct_def),
             diplomat_core::hir::TypeDef::Opaque(opaque_def) => {
-                ctx.gen_opaque(display_name.clone(), opaque_def)
+                ctx.gen_opaque(display_name.clone(), opaque_def, &borrowed_return_targets)
             }
             diplomat_core::hir::TypeDef::Enum(enum_def) => {
                 ctx.gen_enum(display_name.clone(), enum_def)
@@ -427,6 +438,15 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("NativeLib template render failed"),
     );
+    add_cs_file(
+        &files,
+        "RustHandle.cs".to_string(),
+        RustHandleTemplate {
+            namespace: &namespace,
+        }
+        .render()
+        .expect("RustHandle template render failed"),
+    );
 
     (files, errors)
 }
@@ -527,7 +547,7 @@ mod test {
     }
 
     #[test]
-    fn borrowed_opaque_return_is_rejected() {
+    fn borrowed_opaque_return_generates_non_owning() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -542,12 +562,25 @@ mod test {
             }
         };
 
-        let (_files, errors) = run_dotnet(tk_stream);
-        assert_eq!(errors.len(), 1);
-        let error_str = errors.join("\n");
+        let (files, errors) = run_dotnet(tk_stream);
         assert!(
-            errors[0].contains("borrowed opaque return"),
-            "unexpected diagnostics: {error_str}"
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains(".Borrowed("),
+            "borrowed return should build the wrapper via the non-owning Borrowed factory:\n{foo}"
+        );
+        assert!(
+            foo.contains("RustHandle<Raw.Foo>") && foo.contains("_inner.Release()"),
+            "a borrow-target wrapper should carry ownership in the handle and free via Release:\n{foo}"
+        );
+        assert!(
+            !foo.contains("_owned"),
+            "the ownership flag field should be gone — ownership lives in the handle:\n{foo}"
         );
     }
 
