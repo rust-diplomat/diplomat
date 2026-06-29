@@ -5,11 +5,8 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// Borrowed opaque returns. `OpaqueThinVec` owns a `Vec<Internal>`; `First()`
-// hands back a *borrowed* `OpaqueThin` (`&T`) wrapped in a non-owning
-// RustHandle. These tests pin the three things that make that safe: the borrow
-// is readable, disposing it never frees Rust's memory (no double-free), and the
-// `_edges` root keeps the owner alive while a borrow is still outstanding.
+// .NET's GC can finalize the Vec owner while a borrowed handle is still reachable
+// if `_edges` doesn't root it — these tests verify that can't happen.
 public class BorrowedReturnTests
 {
     [Fact]
@@ -36,8 +33,6 @@ public class BorrowedReturnTests
         Assert.Equal(7, at0.A());
         Assert.Equal("hi", at0.C());
 
-        // Out-of-range is Rust's `Option::None` path — a null return, not a
-        // throw and not a borrow of freed/garbage memory.
         Assert.Null(vec.Get(1));
     }
 
@@ -128,6 +123,7 @@ public class BorrowedReturnTests
         // The owner is referenced only through the Ok wrapper's edges; if those
         // weren't wired, the Vec would be finalized and this would be a UAF.
         Assert.Equal(42, borrow.A());
+        Assert.Equal("rooted", borrow.C());
         GC.KeepAlive(borrow);
     }
 
@@ -153,6 +149,29 @@ public class BorrowedReturnTests
 
         // Err(()): the failure arm still throws.
         Assert.Throws<InvalidOperationException>(() => vec.TryGet(0, true));
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    private static OpaqueThin TryGetAndDropOwner()
+    {
+        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryGet(0, false)!;
+    }
+
+    [Fact]
+    public void FallibleOptionalBorrowedReturn_Ok_KeepsOwnerAliveAcrossGc()
+    {
+        OpaqueThin borrow = TryGetAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        Assert.Equal(42, borrow.A());
+        Assert.Equal("rooted", borrow.C());
+        GC.KeepAlive(borrow);
     }
 
     // `Result<Box<OpaqueThinIter<'a>>, ()>` — the Ok value is an *owned* Box
@@ -181,6 +200,7 @@ public class BorrowedReturnTests
         // the Vec would be finalized and this a UAF.
         using OpaqueThin first = iter.Next()!;
         Assert.Equal(42, first.A());
+        Assert.Null(iter.Next()); // single-element vec: exhausted after first Next()
         GC.KeepAlive(iter);
     }
 

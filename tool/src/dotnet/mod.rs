@@ -655,4 +655,35 @@ mod test {
             "unexpected lifetime warning in OwnedFoo.cs:\n{owned_foo}"
         );
     }
+
+    #[test]
+    fn fallible_borrowed_return_with_lifetime_carrying_error_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct BorrowingError<'a>(&'a Owner);
+
+                impl Owner {
+                    pub fn try_borrow<'a>(
+                        &'a self,
+                        fail: bool,
+                    ) -> Result<&'a Self, Box<BorrowingError<'a>>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1, "expected exactly one error, got: {:?}", errors);
+        assert!(
+            errors[0].contains("non-static lifetimes"),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+    }
 }

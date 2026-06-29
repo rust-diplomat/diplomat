@@ -403,10 +403,6 @@ pub mod ffi {
             self.0.get(0).map(OpaqueThin::transparent_convert)
         }
 
-        // dotnet-only: a *fallible* borrowed return (`Result<&T, ()>`). The Ok
-        // value borrows from `self`, so its wrapper carries keep-alive edges
-        // while the error arm just throws. Reuses the existing `OpaqueThin`
-        // view; gated to .NET so no other backend regenerates.
         #[diplomat::attr(not(dotnet), disable)]
         pub fn try_first<'a>(&'a self, fail: bool) -> Result<&'a OpaqueThin, ()> {
             if fail {
@@ -419,8 +415,6 @@ pub mod ffi {
             }
         }
 
-        // dotnet-only: `Result<Option<&T>, ()>` — Result + Option + a borrow
-        // composed; the keep-alive edges still ride on the (optional) Ok wrapper.
         #[diplomat::attr(not(dotnet), disable)]
         pub fn try_get<'a>(&'a self, idx: usize, fail: bool) -> Result<Option<&'a OpaqueThin>, ()> {
             if fail {
@@ -430,10 +424,6 @@ pub mod ffi {
             }
         }
 
-        // dotnet-only: `Result<Box<T<'a>>, ()>` — the Ok value is an *owned* Box
-        // that still borrows from `self` (an iterator over the Vec). This is
-        // IronRDP's shape: the keep-alive edges ride on the owned `result.Ok`
-        // wrapper. Reuses the existing `OpaqueThinIter`.
         #[diplomat::attr(not(dotnet), disable)]
         pub fn try_iter<'a>(&'a self, fail: bool) -> Result<Box<OpaqueThinIter<'a>>, ()> {
             if fail {

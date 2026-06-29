@@ -774,7 +774,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let lifetime_warning = !keep_alive_edges.is_empty();
 
         // A non-opaque return drops edges silently in `idiomatic_value_expr`
-        // (no struct edge-plumbing yet) — a use-after-free; reject instead.
+        // (no struct edge-plumbing yet) — would be a use-after-free.
         if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
             self.errors.push_error(format!(
                 "[.NET backend] return value of type `{return_type}` borrows from the receiver \
@@ -784,10 +784,28 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
-        // A fallible borrowing return is fine: the edges ride on the success
-        // (`result.Ok`) wrapper that `success_return_statement` builds, and the
-        // error arm only ever throws an *owned* error (borrowed errors are
-        // rejected separately), so nothing on the `Err` path can dangle.
+        // `Box<E<'a>>` with non-static lifetimes slips through `DotnetErrorType::new`'s
+        // `is_owned()` check — a caught exception would expose a dangling `E<'a>` after
+        // the owner is collected. Reject until error-path edge threading is implemented.
+        // `Fallible(_, None)` is unit/Infallible — no error payload, no lifetimes; safe to skip.
+        if !keep_alive_edges.is_empty() {
+            if let hir::ReturnType::Fallible(_, Some(err_ty)) = &method.output {
+                if err_ty
+                    .lifetimes()
+                    .any(|lt| matches!(lt, hir::MaybeStatic::NonStatic(_)))
+                {
+                    self.errors.push_error(
+                        "[.NET backend] fallible method has a borrowing Ok return \
+                         (`Result<&T, _>`) whose error type also carries non-static lifetimes; \
+                         keep-alive edges are only threaded onto the Ok wrapper, so a caught \
+                         exception would expose a dangling reference. Return a static error, \
+                         or disable this API for .NET."
+                            .to_string(),
+                    );
+                    return None;
+                }
+            }
+        }
 
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
