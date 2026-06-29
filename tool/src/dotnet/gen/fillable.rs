@@ -190,7 +190,7 @@ impl ErrorInfo {
             );
         }
 
-        let inner = self.error.exception_inner_expr(raw_expr);
+        let inner = self.error.exception_inner_expr(raw_expr, edges);
         if edges.is_empty() {
             format!("throw new {}({inner});", self.exception_name)
         } else {
@@ -290,6 +290,10 @@ impl DotnetErrorType {
         matches!(self, DotnetErrorType::Opaque(_))
     }
 
+    pub(crate) fn can_carry_borrow_edges(&self) -> bool {
+        matches!(self, DotnetErrorType::Opaque(_))
+    }
+
     /// Stable, variant-aware key for deduplicating exception emission.
     /// `Display` collapses Opaque/Enum/Struct/Primitive to bare names, so
     /// two distinct error types that happen to share a name (e.g. an
@@ -331,9 +335,15 @@ impl DotnetErrorType {
         format!("{name}Exception")
     }
 
-    fn exception_inner_expr(&self, raw_expr: RawExpr) -> String {
+    fn exception_inner_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
         match self {
-            DotnetErrorType::Opaque(name) => format!("new {name}({raw_expr})"),
+            DotnetErrorType::Opaque(name) if edges.is_empty() => format!("new {name}({raw_expr})"),
+            DotnetErrorType::Opaque(name) => {
+                format!(
+                    "new {name}({raw_expr}, new object[] {{ {} }})",
+                    edges.join(", ")
+                )
+            }
             DotnetErrorType::Struct { name, is_zst: true } => format!("new {name}()"),
             DotnetErrorType::Struct {
                 name,

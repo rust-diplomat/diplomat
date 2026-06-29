@@ -801,6 +801,21 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
+        if !error_keep_alive_edges.is_empty() {
+            if let Some(error_info) = &error_info {
+                if !error_info.error.can_carry_borrow_edges() {
+                    self.errors.push_error(format!(
+                        "[.NET backend] error value of type `{}` borrows from the receiver or an \
+                         opaque parameter; keep-alive edges are only supported for opaque (`Box<E>`) \
+                         errors today. Return an opaque error, make the error non-borrowing, or \
+                         disable this API for .NET.",
+                        error_info.error
+                    ));
+                    return None;
+                }
+            }
+        }
+
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
             name: method_name,
@@ -880,21 +895,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     // Slice/string params are only pinned for the call, so a
                     // borrowing return would dangle.
                     LifetimeEdgeKind::SliceParam => {
-                        if in_ok {
-                            self.errors.push_error(format!(
-                                "[.NET backend] return value borrows from slice/string parameter \
-                                 `{}`; this is not supported because generated C# only pins or \
-                                 converts those inputs for the duration of the call",
-                                edge.param_name
-                            ));
-                        } else {
-                            self.errors.push_error(format!(
-                                "[.NET backend] error return borrows from slice/string parameter \
-                                 `{}`; this is not supported because generated C# only pins or \
-                                 converts those inputs for the duration of the call",
-                                edge.param_name
-                            ));
-                        }
+                        let what = if in_ok { "return value" } else { "error return" };
+                        self.errors.push_error(format!(
+                            "[.NET backend] {what} borrows from slice/string parameter \
+                             `{}`; this is not supported because generated C# only pins or \
+                             converts those inputs for the duration of the call",
+                            edge.param_name
+                        ));
                         return None;
                     }
                     // No struct edge-plumbing yet.
