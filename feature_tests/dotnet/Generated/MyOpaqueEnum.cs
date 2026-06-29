@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class MyOpaqueEnum: IDisposable
 {
-    private unsafe Raw.MyOpaqueEnum* _inner;
+    private unsafe RustHandle<Raw.MyOpaqueEnum> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.MyOpaqueEnum> _destroy = Raw.MyOpaqueEnum.Destroy;
 
     /// <summary>
     /// Creates a managed <c>MyOpaqueEnum</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class MyOpaqueEnum: IDisposable
     /// </remarks>
     internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe MyOpaqueEnum(RustHandle<Raw.MyOpaqueEnum> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>MyOpaqueEnum</c> allocated on Rust side.
@@ -40,7 +72,7 @@ public partial class MyOpaqueEnum: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("MyOpaqueEnum");
             }
@@ -63,7 +95,7 @@ public partial class MyOpaqueEnum: IDisposable
     /// </summary>
     internal unsafe Raw.MyOpaqueEnum* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -73,13 +105,14 @@ public partial class MyOpaqueEnum: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.MyOpaqueEnum.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

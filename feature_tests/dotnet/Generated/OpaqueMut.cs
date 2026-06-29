@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class OpaqueMut: IDisposable
 {
-    private unsafe Raw.OpaqueMut* _inner;
+    private unsafe RustHandle<Raw.OpaqueMut> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.OpaqueMut> _destroy = Raw.OpaqueMut.Destroy;
 
     /// <summary>
     /// Creates a managed <c>OpaqueMut</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class OpaqueMut: IDisposable
     /// </remarks>
     internal unsafe OpaqueMut(Raw.OpaqueMut* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueMut>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OpaqueMut(Raw.OpaqueMut* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.OpaqueMut>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe OpaqueMut(RustHandle<Raw.OpaqueMut> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>OpaqueMut</c> allocated on Rust side.
@@ -42,7 +74,7 @@ public partial class OpaqueMut: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueMut* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -52,13 +84,14 @@ public partial class OpaqueMut: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.OpaqueMut.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

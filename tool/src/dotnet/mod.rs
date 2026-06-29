@@ -2,10 +2,9 @@
 //!
 //! Generates C# bindings that call into the Diplomat-generated C ABI via
 //! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
-//! Opaque Rust handles map to an `IDisposable` partial class holding the
-//! raw `Raw.T*` pointer (freed via the generated `Destroy` extern in
-//! `Dispose`/the finalizer); slices and strings copy across the boundary;
-//! callbacks are pinned via `GCHandle` on the managed side.
+//! Opaque Rust handles map to `IDisposable` partial classes backed by
+//! `RustHandle<T>`, which records whether C# or Rust owns the pointer. Slices
+//! and strings copy across the boundary; callbacks are pinned via `GCHandle`.
 //!
 //! This file is the entry point that the Diplomat CLI dispatches to. Codegen
 //! itself lives in [`gen`] and naming/type-formatting concerns live in
@@ -13,24 +12,22 @@
 //!
 //! ## Borrowing / lifetime model
 //!
-//! The backend does not encode Rust lifetimes in C# types. It supports
-//! call-scoped borrows — valid only for the duration of the single P/Invoke
-//! call — and uses HIR lifetime-edge analysis to decide which borrowed outputs
-//! can be documented and which must be rejected:
+//! The backend does not encode Rust lifetimes in C# types. It uses HIR
+//! lifetime-edge analysis to root supported borrowed outputs and reject the
+//! unsafe cases:
 //!
 //! * `&[u8]` / `&[u32]` / `&DiplomatStr` params are pinned with `fixed (...)`
 //!   (or copied into a pinned `byte[]`) for the call and unpinned immediately
 //!   after. If the Rust side stashes the pointer past the call, the C# GC may
 //!   move or free the backing buffer, so any returned value borrowing from
 //!   these temporary slice/string params is rejected with a diagnostic.
-//! * Borrowed opaque **returns** and **errors** (`&T`, `&mut T`, `Option<&T>`,
-//!   `Result<_, &E>`) are rejected outright with a diagnostic, because the
-//!   generated `IDisposable` wrapper would `Destroy` a pointer Rust still
-//!   owns (double-free). Return `Box<T>` / `Option<Box<T>>` instead.
-//! * Lifetime-carrying owned returns (`Box<T<'a>>`) that borrow from `self` or
-//!   another opaque wrapper are generated with XML lifetime remarks. C# cannot
-//!   enforce the relationship, so the caller must keep the borrowed-from wrapper
-//!   alive and undisposed while the returned value is used.
+//! * Borrowed opaque returns (`&T`, `&mut T`, `Option<&T>`) use non-owning
+//!   handles plus keep-alive edges.
+//! * Borrowed opaque errors (`Result<_, &E>`) are rejected; without a success
+//!   arm to carry keep-alive edges, `Dispose` would call `Destroy` on a pointer
+//!   Rust still owns (double-free).
+//! * Lifetime-carrying owned returns (`Box<T<'a>>`) from opaque wrappers get
+//!   XML lifetime remarks.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
@@ -281,8 +278,6 @@ pub(crate) fn run<'tcx>(
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
 
-    let borrowed_return_targets = ctx.borrowed_return_targets();
-
     for (id, ty) in tcx.all_types() {
         if ty.attrs().disable {
             continue;
@@ -307,7 +302,7 @@ pub(crate) fn run<'tcx>(
             }
             diplomat_core::hir::TypeDef::OutStruct(struct_def) => ctx.gen_out_struct(struct_def),
             diplomat_core::hir::TypeDef::Opaque(opaque_def) => {
-                ctx.gen_opaque(display_name.clone(), opaque_def, &borrowed_return_targets)
+                ctx.gen_opaque(display_name.clone(), opaque_def)
             }
             diplomat_core::hir::TypeDef::Enum(enum_def) => {
                 ctx.gen_enum(display_name.clone(), enum_def)

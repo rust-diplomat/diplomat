@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class OptionOpaque: IDisposable
 {
-    private unsafe Raw.OptionOpaque* _inner;
+    private unsafe RustHandle<Raw.OptionOpaque> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.OptionOpaque> _destroy = Raw.OptionOpaque.Destroy;
 
     /// <summary>
     /// Creates a managed <c>OptionOpaque</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class OptionOpaque: IDisposable
     /// </remarks>
     internal unsafe OptionOpaque(Raw.OptionOpaque* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OptionOpaque>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OptionOpaque(Raw.OptionOpaque* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.OptionOpaque>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe OptionOpaque(RustHandle<Raw.OptionOpaque> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
@@ -51,7 +83,7 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
@@ -64,7 +96,7 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
@@ -77,7 +109,7 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
@@ -90,7 +122,7 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
@@ -103,7 +135,7 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OptionOpaque");
             }
@@ -128,7 +160,7 @@ public partial class OptionOpaque: IDisposable
     /// </summary>
     internal unsafe Raw.OptionOpaque* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -138,13 +170,14 @@ public partial class OptionOpaque: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.OptionOpaque.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

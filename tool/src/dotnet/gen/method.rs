@@ -461,13 +461,9 @@ pub(super) struct ReturnLowering {
 /// idiomatic-layer render data — templates pick the side they want.
 ///
 /// TODO(dotnet): Model Rust lifetime relationships on the public C# surface.
-/// Today borrowed inputs are lowered as call-scoped borrows (pinned arrays,
-/// temporary slices, opaque handles), but the generated C# does not enforce
-/// Rust lifetime edges. Borrowed opaque returns/errors are rejected until the
-/// backend has a non-owning wrapper/lifetime strategy. Lifetime-carrying owned
-/// returns that borrow from temporary slice/string params are rejected; those
-/// that borrow from an opaque wrapper are documented so callers know they must
-/// preserve backing storage.
+/// Borrowed inputs are call-scoped. Borrowed opaque returns use non-owning
+/// handles and keep-alive edges; borrowed errors and temporary slice/string
+/// backed returns are rejected.
 #[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
@@ -816,31 +812,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         })
     }
 
-    /// Opaque type names that some generated method returns *borrowed*
-    /// (`&T` / `Option<&T>`). Such a type needs the non-owning constructor
-    /// even when it carries no lifetime of its own (the borrow lives on the
-    /// `&`, not the type) — so it can't be gated on lifetime params alone.
-    pub(crate) fn borrowed_return_targets(&self) -> std::collections::HashSet<String> {
-        let mut targets = std::collections::HashSet::new();
-        for (_, ty) in self.tcx.all_types() {
-            if ty.attrs().disable {
-                continue;
-            }
-            for method in ty.methods() {
-                let success = match &method.output {
-                    hir::ReturnType::Infallible(s) | hir::ReturnType::Nullable(s) => s,
-                    hir::ReturnType::Fallible(s, _) => s,
-                };
-                if let hir::SuccessType::OutType(hir::Type::Opaque(p)) = success {
-                    if !p.is_owned() {
-                        targets.insert(self.opaque_name(p));
-                    }
-                }
-            }
-        }
-        targets
-    }
-
     /// Sometimes a method hands back a value that's really just pointing into
     /// another object instead of owning its own. If the garbage collector frees
     /// that other object too early, the returned value is left pointing at freed
@@ -1022,10 +993,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 DotnetReturnType::Primitive(self.lower_primitive(p)?)
             }
             hir::SuccessType::OutType(hir::Type::Opaque(p)) => {
-                // A borrowed return (`!is_owned`) is constructed non-owning
-                // (`{name}.Borrowed(...)`) so Dispose/finalizer skip Destroy —
-                // Rust still owns the pointer; the keep-alive edges hold the
-                // borrowed-from owner alive.
+                // Borrowed opaque returns use a non-owning handle — Dispose/finalizer
+                // skip Destroy because Rust still owns the pointer.
                 ownership = if p.is_owned() {
                     Ownership::Owned
                 } else {

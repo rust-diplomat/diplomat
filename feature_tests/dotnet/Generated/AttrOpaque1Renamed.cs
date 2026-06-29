@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class AttrOpaque1Renamed: IDisposable
 {
-    private unsafe Raw.AttrOpaque1Renamed* _inner;
+    private unsafe RustHandle<Raw.AttrOpaque1Renamed> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.AttrOpaque1Renamed> _destroy = Raw.AttrOpaque1Renamed.Destroy;
 
     /// <summary>
     /// Creates a managed <c>AttrOpaque1Renamed</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class AttrOpaque1Renamed: IDisposable
     /// </remarks>
     internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe AttrOpaque1Renamed(RustHandle<Raw.AttrOpaque1Renamed> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>AttrOpaque1Renamed</c> allocated on Rust side.
@@ -65,7 +97,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
@@ -78,7 +110,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
@@ -91,7 +123,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
@@ -107,7 +139,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("AttrOpaque1Renamed");
             }
@@ -121,7 +153,7 @@ public partial class AttrOpaque1Renamed: IDisposable
     /// </summary>
     internal unsafe Raw.AttrOpaque1Renamed* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -131,13 +163,14 @@ public partial class AttrOpaque1Renamed: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.AttrOpaque1Renamed.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

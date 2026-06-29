@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class Unnamespaced: IDisposable
 {
-    private unsafe Raw.Unnamespaced* _inner;
+    private unsafe RustHandle<Raw.Unnamespaced> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Unnamespaced> _destroy = Raw.Unnamespaced.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Unnamespaced</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class Unnamespaced: IDisposable
     /// </remarks>
     internal unsafe Unnamespaced(Raw.Unnamespaced* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Unnamespaced>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Unnamespaced(Raw.Unnamespaced* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.Unnamespaced>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Unnamespaced(RustHandle<Raw.Unnamespaced> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Unnamespaced</c> allocated on Rust side.
@@ -40,7 +72,7 @@ public partial class Unnamespaced: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("Unnamespaced");
             }
@@ -58,7 +90,7 @@ public partial class Unnamespaced: IDisposable
     /// </summary>
     internal unsafe Raw.Unnamespaced* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -68,13 +100,14 @@ public partial class Unnamespaced: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Unnamespaced.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

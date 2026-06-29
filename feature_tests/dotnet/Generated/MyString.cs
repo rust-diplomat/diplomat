@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class MyString: IDisposable
 {
-    private unsafe Raw.MyString* _inner;
+    private unsafe RustHandle<Raw.MyString> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.MyString> _destroy = Raw.MyString.Destroy;
 
     /// <summary>
     /// Creates a managed <c>MyString</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class MyString: IDisposable
     /// </remarks>
     internal unsafe MyString(Raw.MyString* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.MyString>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe MyString(Raw.MyString* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.MyString>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe MyString(RustHandle<Raw.MyString> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
@@ -61,7 +93,7 @@ public partial class MyString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("MyString");
             }
@@ -78,7 +110,7 @@ public partial class MyString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("MyString");
             }
@@ -122,7 +154,7 @@ public partial class MyString: IDisposable
     /// </summary>
     internal unsafe Raw.MyString* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -132,13 +164,14 @@ public partial class MyString: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.MyString.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

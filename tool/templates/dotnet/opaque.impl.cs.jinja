@@ -10,19 +10,15 @@ namespace {{ namespace }};
 
 public partial class {{ name }}: IDisposable
 {
-{%- if has_edges %}
     private unsafe RustHandle<Raw.{{ name }}> _inner;
 
     /// <summary>
-    /// Roots the wrappers this value borrows from so the GC can't finalize
-    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// Roots the wrappers this value borrows from so the GC cannot finalize
+    /// a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
 
     private static readonly unsafe RustDestructor<Raw.{{ name }}> _destroy = Raw.{{ name }}.Destroy;
-{%- else %}
-    private unsafe Raw.{{ name }}* _inner;
-{%- endif %}
     {%- for property in properties %}
 
 {%- if property.lifetime_warning %}
@@ -59,14 +55,9 @@ public partial class {{ name }}: IDisposable
     /// </remarks>
     internal unsafe {{ name }}(Raw.{{ name }}* handle)
     {
-{%- if has_edges %}
         _inner = RustHandle<Raw.{{ name }}>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
-{%- else %}
-        _inner = handle;
-{%- endif %}
     }
-{%- if has_edges %}
 
     /// <remarks>
     /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
@@ -90,7 +81,6 @@ public partial class {{ name }}: IDisposable
         _inner = inner;
         _edges = edges;
     }
-{%- endif %}
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
         methods surface as `string` — the writer is allocated, filled, and
         disposed inside the generated body (see method_body.cs.jinja), so
@@ -115,7 +105,7 @@ public partial class {{ name }}: IDisposable
         unsafe
         {
 {%- if method.is_instance() %}
-            if ({% if has_edges %}_inner.IsNull{% else %}_inner == null{% endif %})
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("{{ name }}");
             }
@@ -130,7 +120,7 @@ public partial class {{ name }}: IDisposable
     /// </summary>
     internal unsafe Raw.{{ name }}* AsFFI()
     {
-        return {% if has_edges %}_inner.Ptr{% else %}_inner{% endif %};
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -140,7 +130,6 @@ public partial class {{ name }}: IDisposable
     {
         unsafe
         {
-{%- if has_edges %}
             if (_inner.IsNull)
             {
                 return;
@@ -148,20 +137,9 @@ public partial class {{ name }}: IDisposable
 
             _inner.Release();
             _inner = default;
-            _edges = System.Array.Empty<object>();
+            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);
-{%- else %}
-            if (_inner == null)
-            {
-                return;
-            }
-
-            Raw.{{ name }}.Destroy(_inner);
-            _inner = null;
-
-            GC.SuppressFinalize(this);
-{%- endif %}
         }
     }
 

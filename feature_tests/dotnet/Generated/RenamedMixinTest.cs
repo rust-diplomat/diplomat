@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class RenamedMixinTest: IDisposable
 {
-    private unsafe Raw.RenamedMixinTest* _inner;
+    private unsafe RustHandle<Raw.RenamedMixinTest> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.RenamedMixinTest> _destroy = Raw.RenamedMixinTest.Destroy;
 
     /// <summary>
     /// Creates a managed <c>RenamedMixinTest</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class RenamedMixinTest: IDisposable
     /// </remarks>
     internal unsafe RenamedMixinTest(Raw.RenamedMixinTest* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.RenamedMixinTest>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe RenamedMixinTest(Raw.RenamedMixinTest* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.RenamedMixinTest>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe RenamedMixinTest(RustHandle<Raw.RenamedMixinTest> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     public static string Hello()
     {
@@ -47,7 +79,7 @@ public partial class RenamedMixinTest: IDisposable
     /// </summary>
     internal unsafe Raw.RenamedMixinTest* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -57,13 +89,14 @@ public partial class RenamedMixinTest: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.RenamedMixinTest.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

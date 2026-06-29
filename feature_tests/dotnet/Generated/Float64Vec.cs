@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class Float64Vec: IDisposable
 {
-    private unsafe Raw.Float64Vec* _inner;
+    private unsafe RustHandle<Raw.Float64Vec> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Float64Vec> _destroy = Raw.Float64Vec.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Float64Vec</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class Float64Vec: IDisposable
     /// </remarks>
     internal unsafe Float64Vec(Raw.Float64Vec* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Float64Vec>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Float64Vec(Raw.Float64Vec* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.Float64Vec>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Float64Vec(RustHandle<Raw.Float64Vec> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Float64Vec</c> allocated on Rust side.
@@ -44,7 +76,7 @@ public partial class Float64Vec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
@@ -65,7 +97,7 @@ public partial class Float64Vec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
@@ -80,7 +112,7 @@ public partial class Float64Vec: IDisposable
     /// </summary>
     internal unsafe Raw.Float64Vec* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -90,13 +122,14 @@ public partial class Float64Vec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Float64Vec.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

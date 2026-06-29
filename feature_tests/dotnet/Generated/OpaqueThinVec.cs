@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class OpaqueThinVec: IDisposable
 {
-    private unsafe Raw.OpaqueThinVec* _inner;
+    private unsafe RustHandle<Raw.OpaqueThinVec> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.OpaqueThinVec> _destroy = Raw.OpaqueThinVec.Destroy;
 
     /// <summary>
     /// Creates a managed <c>OpaqueThinVec</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class OpaqueThinVec: IDisposable
     /// </remarks>
     internal unsafe OpaqueThinVec(Raw.OpaqueThinVec* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.OpaqueThinVec>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe OpaqueThinVec(Raw.OpaqueThinVec* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.OpaqueThinVec>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe OpaqueThinVec(RustHandle<Raw.OpaqueThinVec> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>OpaqueThinVec</c> allocated on Rust side.
@@ -45,7 +77,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -69,7 +101,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -82,7 +114,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -102,7 +134,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -122,7 +154,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -137,7 +169,7 @@ public partial class OpaqueThinVec: IDisposable
     /// </summary>
     internal unsafe Raw.OpaqueThinVec* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -147,13 +179,14 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.OpaqueThinVec.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }

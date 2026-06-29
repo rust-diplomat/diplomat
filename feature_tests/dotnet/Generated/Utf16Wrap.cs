@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class Utf16Wrap: IDisposable
 {
-    private unsafe Raw.Utf16Wrap* _inner;
+    private unsafe RustHandle<Raw.Utf16Wrap> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC can't finalize
+    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Utf16Wrap> _destroy = Raw.Utf16Wrap.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Utf16Wrap</c> from a raw handle.
@@ -23,13 +31,37 @@ public partial class Utf16Wrap: IDisposable
     /// </remarks>
     internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Utf16Wrap>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Utf16Wrap(Raw.Utf16Wrap* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.Utf16Wrap>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Utf16Wrap(RustHandle<Raw.Utf16Wrap> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     public string GetDebugStr()
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("Utf16Wrap");
             }
@@ -52,7 +84,7 @@ public partial class Utf16Wrap: IDisposable
     /// </summary>
     internal unsafe Raw.Utf16Wrap* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -62,13 +94,14 @@ public partial class Utf16Wrap: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Utf16Wrap.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>();
 
             GC.SuppressFinalize(this);
         }
