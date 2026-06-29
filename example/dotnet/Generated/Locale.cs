@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class Locale: IDisposable
 {
-    private unsafe Raw.Locale* _inner;
+    private unsafe RustHandle<Raw.Locale> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC cannot finalize
+    /// a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.Locale> _destroy = Raw.Locale.Destroy;
 
     /// <summary>
     /// Creates a managed <c>Locale</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class Locale: IDisposable
     /// </remarks>
     internal unsafe Locale(Raw.Locale* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.Locale>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe Locale(Raw.Locale* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.Locale>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe Locale(RustHandle<Raw.Locale> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>Locale</c> allocated on Rust side.
@@ -47,7 +79,7 @@ public partial class Locale: IDisposable
     /// </summary>
     internal unsafe Raw.Locale* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -57,13 +89,14 @@ public partial class Locale: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.Locale.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);
         }

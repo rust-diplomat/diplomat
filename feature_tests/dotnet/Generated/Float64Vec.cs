@@ -13,8 +13,8 @@ public partial class Float64Vec: IDisposable
     private unsafe RustHandle<Raw.Float64Vec> _inner;
 
     /// <summary>
-    /// Roots the wrappers this value borrows from so the GC can't finalize
-    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// Roots the wrappers this value borrows from so the GC cannot finalize
+    /// a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
 
@@ -129,7 +129,7 @@ public partial class Float64Vec: IDisposable
 
             _inner.Release();
             _inner = default;
-            _edges = System.Array.Empty<object>();
+            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);
         }

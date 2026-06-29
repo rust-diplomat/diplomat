@@ -13,8 +13,8 @@ public partial class OpaqueMut: IDisposable
     private unsafe RustHandle<Raw.OpaqueMut> _inner;
 
     /// <summary>
-    /// Roots the wrappers this value borrows from so the GC can't finalize
-    /// (-> Destroy) a borrowed-from parent while this value is alive.
+    /// Roots the wrappers this value borrows from so the GC cannot finalize
+    /// a borrowed-from parent while this value is alive.
     /// </summary>
     private object[] _edges;
 
@@ -91,7 +91,7 @@ public partial class OpaqueMut: IDisposable
 
             _inner.Release();
             _inner = default;
-            _edges = System.Array.Empty<object>();
+            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);
         }
