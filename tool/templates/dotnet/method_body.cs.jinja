@@ -56,7 +56,7 @@
     {%- endfor %}
 {{ bi }}    if (!result.IsOk)
 {{ bi }}    {
-{{ bi }}        {{ info.throw_statement("result.Err") }}
+{{ bi }}        {{ method.error_throw_statement() }}
 {{ bi }}    }
     {%- else %}
 {{ bi }}    Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
@@ -77,7 +77,7 @@
 {%- endfor %}
 {{ bi }}if (!result.IsOk)
 {{ bi }}{
-{{ bi }}    {{ info.throw_statement("result.Err") }}
+{{ bi }}    {{ method.error_throw_statement() }}
 {{ bi }}}
 {{ bi }}{{ method.success_return_statement("result.Ok") }}
 {%- else if method.return_type.is_void() %}

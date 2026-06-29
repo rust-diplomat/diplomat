@@ -176,7 +176,7 @@ pub(crate) struct ErrorInfo {
 }
 
 impl ErrorInfo {
-    pub(crate) fn throw_statement<R>(&self, raw_expr: R) -> String
+    pub(crate) fn throw_statement_with_edges<R>(&self, raw_expr: R, edges: &[String]) -> String
     where
         R: TryInto<RawExpr>,
         R::Error: Display,
@@ -191,7 +191,12 @@ impl ErrorInfo {
         }
 
         let inner = self.error.exception_inner_expr(raw_expr);
-        format!("throw new {}({inner});", self.exception_name)
+        if edges.is_empty() {
+            format!("throw new {}({inner});", self.exception_name)
+        } else {
+            let edges_str = edges.join(", ");
+            format!("throw new {}({inner}, {edges_str});", self.exception_name)
+        }
     }
 }
 

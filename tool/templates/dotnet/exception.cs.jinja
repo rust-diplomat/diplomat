@@ -5,8 +5,9 @@ namespace {{ namespace }};
 public class {{ exception_name }} : Exception
 {
     public {{ error }} Inner { get; }
+    private readonly object[] _edges;
 
-    public {{ exception_name }}({{ error }} inner) : base(
+    public {{ exception_name }}({{ error }} inner, params object[] edges) : base(
         {%- if error.is_opaque() %}
         {%- if let Some(method) = message_method %}
         inner.{{ method }}()
@@ -19,5 +20,6 @@ public class {{ exception_name }} : Exception
     )
     {
         Inner = inner;
+        _edges = edges;
     }
 }

@@ -18,7 +18,7 @@
 //! * [`MethodInfo`] — one method's render data; consumed by every template.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fmt::{self, Display},
 };
 
@@ -479,6 +479,11 @@ pub(super) struct MethodInfo<'ctx> {
     /// Rooted by the returned wrapper so the GC can't free a borrowed-from
     /// parent while the child lives. Cf. `keep_alive_targets` (per-call only).
     pub(super) keep_alive_edges: Vec<String>,
+    /// Same idea as `keep_alive_edges` but for the thrown exception when the
+    /// error type carries non-static lifetimes. Passed to the exception
+    /// constructor so the owning object(s) stay alive for at least as long as
+    /// the exception is reachable.
+    pub(super) error_keep_alive_edges: Vec<String>,
     /// `Borrowed` for a borrowed opaque return — the wrapper is built
     /// non-owning so it never frees a pointer Rust still owns.
     pub(super) ownership: Ownership,
@@ -696,6 +701,17 @@ impl MethodInfo<'_> {
             )
         }
     }
+
+    /// The `throw new …(result.Err, …);` statement for the error arm, with
+    /// `error_keep_alive_edges` threaded into the exception constructor so the
+    /// GC keeps the owner(s) alive for at least as long as the exception lives.
+    pub(super) fn error_throw_statement(&self) -> String {
+        let info = self
+            .error_info
+            .as_ref()
+            .expect("error_throw_statement called on a non-fallible method");
+        info.throw_statement_with_edges("result.Err", &self.error_keep_alive_edges)
+    }
 }
 
 pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo> {
@@ -770,10 +786,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
-        let keep_alive_edges = self.borrowed_output_keep_alive_edges(method)?;
+        let (keep_alive_edges, error_keep_alive_edges) =
+            self.borrowed_output_keep_alive_edges(method)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
-        // A non-opaque return drops edges silently in `idiomatic_value_expr`
+        // A non-opaque success return drops edges silently in `idiomatic_value_expr`
         // (no struct edge-plumbing yet) — would be a use-after-free.
         if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
             self.errors.push_error(format!(
@@ -784,29 +801,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
-        // `Box<E<'a>>` with non-static lifetimes slips through `DotnetErrorType::new`'s
-        // `is_owned()` check — a caught exception would expose a dangling `E<'a>` after
-        // the owner is collected. Reject until error-path edge threading is implemented.
-        // `Fallible(_, None)` is unit/Infallible — no error payload, no lifetimes; safe to skip.
-        if !keep_alive_edges.is_empty() {
-            if let hir::ReturnType::Fallible(_, Some(err_ty)) = &method.output {
-                if err_ty
-                    .lifetimes()
-                    .any(|lt| matches!(lt, hir::MaybeStatic::NonStatic(_)))
-                {
-                    self.errors.push_error(
-                        "[.NET backend] fallible method has a borrowing Ok return \
-                         (`Result<&T, _>`) whose error type also carries non-static lifetimes; \
-                         keep-alive edges are only threaded onto the Ok wrapper, so a caught \
-                         exception would expose a dangling reference. Return a static error, \
-                         or disable this API for .NET."
-                            .to_string(),
-                    );
-                    return None;
-                }
-            }
-        }
-
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
             name: method_name,
@@ -815,6 +809,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             lifetime_warning,
             keep_alive_edges,
+            error_keep_alive_edges,
             ownership,
             error_info,
             option_info,
@@ -833,7 +828,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// slice (we only pin those while the call runs), or through a struct — it
     /// gives up and returns `None` with an error, instead of generating code
     /// that could crash.
-    fn borrowed_output_keep_alive_edges(&self, method: &'tcx Method) -> Option<Vec<String>> {
+    ///
+    /// Returns `(ok_edges, err_edges)`: keep-alive objects for the success
+    /// return wrapper and for the thrown exception, respectively.
+    fn borrowed_output_keep_alive_edges(
+        &self,
+        method: &'tcx Method,
+    ) -> Option<(Vec<String>, Vec<String>)> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
         if let Some(param_self) = method.param_self.as_ref() {
@@ -850,50 +851,73 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             visitor.visit_param(&param.ty, &arg_name);
         }
 
-        let mut edges = Vec::new();
+        // Determine which method lifetimes belong to the Ok arm and which to
+        // the Err arm so edges can be placed on the right wrapper.
+        let ok_lts = success_output_lifetimes(&method.output);
+        let err_lts = error_output_lifetimes(&method.output);
 
-        for edge in visitor
-            .borrow_map()
-            .into_values()
-            .flat_map(|borrow_info| borrow_info.incoming_edges)
-        {
-            match edge.kind {
-                LifetimeEdgeKind::OpaqueParam => {
-                    let expr = edge.param_name;
-                    if !edges.contains(&expr) {
-                        edges.push(expr);
+        let mut ok_edges: Vec<String> = Vec::new();
+        let mut err_edges: Vec<String> = Vec::new();
+
+        for (lt, borrow_info) in visitor.borrow_map() {
+            let in_ok = ok_lts.contains(&lt);
+            let in_err = err_lts.contains(&lt);
+
+            if !in_ok && !in_err {
+                continue;
+            }
+
+            for edge in borrow_info.incoming_edges {
+                match edge.kind {
+                    LifetimeEdgeKind::OpaqueParam => {
+                        if in_ok && !ok_edges.contains(&edge.param_name) {
+                            ok_edges.push(edge.param_name.clone());
+                        }
+                        if in_err && !err_edges.contains(&edge.param_name) {
+                            err_edges.push(edge.param_name.clone());
+                        }
                     }
-                }
-                // Slice/string params are only pinned for the call, so a
-                // borrowing return would dangle.
-                LifetimeEdgeKind::SliceParam => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] return value borrows from slice/string parameter `{}`; \
-                         this is not supported because generated C# only pins or converts those \
-                         inputs for the duration of the call",
-                        edge.param_name
-                    ));
-                    return None;
-                }
-                // No struct edge-plumbing yet.
-                LifetimeEdgeKind::StructLifetime(..) => {
-                    self.errors.push_error(
-                        "[.NET backend] return value borrows through a struct lifetime; \
-                         keep-alive edges for struct-borrowed returns are not yet supported"
-                            .to_string(),
-                    );
-                    return None;
-                }
-                other => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] return value borrow kind not yet supported: {other:?}"
-                    ));
-                    return None;
+                    // Slice/string params are only pinned for the call, so a
+                    // borrowing return would dangle.
+                    LifetimeEdgeKind::SliceParam => {
+                        if in_ok {
+                            self.errors.push_error(format!(
+                                "[.NET backend] return value borrows from slice/string parameter \
+                                 `{}`; this is not supported because generated C# only pins or \
+                                 converts those inputs for the duration of the call",
+                                edge.param_name
+                            ));
+                        } else {
+                            self.errors.push_error(format!(
+                                "[.NET backend] error return borrows from slice/string parameter \
+                                 `{}`; this is not supported because generated C# only pins or \
+                                 converts those inputs for the duration of the call",
+                                edge.param_name
+                            ));
+                        }
+                        return None;
+                    }
+                    // No struct edge-plumbing yet.
+                    LifetimeEdgeKind::StructLifetime(..) => {
+                        self.errors.push_error(
+                            "[.NET backend] return value or error value borrows through a struct \
+                             lifetime; keep-alive edges for struct-borrowed returns are not yet \
+                             supported"
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    other => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] return value borrow kind not yet supported: {other:?}"
+                        ));
+                        return None;
+                    }
                 }
             }
         }
 
-        Some(edges)
+        Some((ok_edges, err_edges))
     }
 
     fn property_accessor(
@@ -1575,6 +1599,40 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
         })
     }
+}
+
+/// Non-static lifetimes used by the success (`Ok` / `Infallible` / `Nullable`)
+/// arm of a method output that must be kept alive for the returned wrapper.
+fn success_output_lifetimes(output: &hir::ReturnType) -> BTreeSet<hir::Lifetime> {
+    let mut set = BTreeSet::new();
+    let add = |set: &mut BTreeSet<_>, ty: &hir::OutType| {
+        for lt in ty.lifetimes() {
+            if let hir::MaybeStatic::NonStatic(lt) = lt {
+                set.insert(lt);
+            }
+        }
+    };
+    match output {
+        hir::ReturnType::Infallible(hir::SuccessType::OutType(ty))
+        | hir::ReturnType::Nullable(hir::SuccessType::OutType(ty))
+        | hir::ReturnType::Fallible(hir::SuccessType::OutType(ty), _) => add(&mut set, ty),
+        _ => {}
+    }
+    set
+}
+
+/// Non-static lifetimes used by the error (`Err`) arm of a method output
+/// that must be kept alive for the thrown exception.
+fn error_output_lifetimes(output: &hir::ReturnType) -> BTreeSet<hir::Lifetime> {
+    let mut set = BTreeSet::new();
+    if let hir::ReturnType::Fallible(_, Some(err_ty)) = output {
+        for lt in err_ty.lifetimes() {
+            if let hir::MaybeStatic::NonStatic(lt) = lt {
+                set.insert(lt);
+            }
+        }
+    }
+    set
 }
 
 fn callback_idiomatic_type(param_types: &[String], return_type: &DotnetReturnType) -> String {
