@@ -238,6 +238,26 @@ public partial class OpaqueThinVec: IDisposable
             return new OpaqueThinIter(result.Ok, new object[] { this });
         }
     }
+    /// <returns>
+    /// A <c>OpaqueThinIter</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThinIter? OptionalIter(bool some)
+    {
+        unsafe
+        {
+            if (_inner == null)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.OptionalIter(AsFFI(), some);
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThinIter(result, new object[] { this });
+        }
+    }
 
     /// <summary>
     /// Returns the underlying raw handle.

@@ -432,6 +432,15 @@ pub mod ffi {
                 Ok(Box::new(OpaqueThinIter(self.0.iter())))
             }
         }
+
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn optional_iter<'a>(&'a self, some: bool) -> Option<Box<OpaqueThinIter<'a>>> {
+            if some {
+                Some(Box::new(OpaqueThinIter(self.0.iter())))
+            } else {
+                None
+            }
+        }
     }
 
     // GC-race probe for the GC.KeepAlive fix: `drops_during_spin` sleeps without

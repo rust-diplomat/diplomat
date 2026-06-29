@@ -210,4 +210,36 @@ public class BorrowedReturnTests
         using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
         Assert.Throws<InvalidOperationException>(() => vec.TryIter(true));
     }
+
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    private static OpaqueThinIter OptionalIterAndDropOwner()
+    {
+        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").OptionalIter(true)!;
+    }
+
+    [Fact]
+    public void OptionalOwnedBorrowingBoxReturn_Some_KeepsOwnerAliveAcrossGc()
+    {
+        OpaqueThinIter iter = OptionalIterAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        using OpaqueThin first = iter.Next()!;
+        Assert.Equal(42, first.A());
+        Assert.Equal("rooted", first.C());
+        Assert.Null(iter.Next());
+        GC.KeepAlive(iter);
+    }
+
+    [Fact]
+    public void OptionalOwnedBorrowingBoxReturn_None_ReturnsNull()
+    {
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        Assert.Null(vec.OptionalIter(false));
+    }
 }
