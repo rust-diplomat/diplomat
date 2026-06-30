@@ -18,11 +18,15 @@
 //! * [`MethodInfo`] — one method's render data; consumed by every template.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fmt::{self, Display},
 };
 
-use diplomat_core::hir::{self, borrowing_param::LifetimeEdgeKind, MaybeOwn, Method};
+use diplomat_core::hir::{
+    self,
+    borrowing_param::{BorrowedLifetimeInfo, LifetimeEdgeKind},
+    MaybeOwn, Method,
+};
 
 use crate::dotnet::r#gen::fillable::{
     DotnetErrorType, DotnetOption, DotnetResult, ErrorInfo, OptionInfo,
@@ -866,40 +870,64 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             visitor.visit_param(&param.ty, &arg_name);
         }
 
-        // Determine which method lifetimes belong to the Ok arm and which to
-        // the Err arm so edges can be placed on the right wrapper.
-        let ok_lts = method.output.success_lifetimes();
-        let err_lts = method.output.error_lifetimes();
+        let borrow_map = visitor.borrow_map();
 
-        let mut ok_edges: Vec<String> = Vec::new();
-        let mut err_edges: Vec<String> = Vec::new();
+        // The Ok value's keep-alive edges ride on the returned wrapper, the Err
+        // value's on the thrown exception — so compute each from where that
+        // output type borrows, rather than pre-splitting the method's lifetimes.
+        let (ok_ty, err_ty) = match &method.output {
+            hir::ReturnType::Infallible(s) | hir::ReturnType::Nullable(s) => (s.as_type(), None),
+            hir::ReturnType::Fallible(s, e) => (s.as_type(), e.as_ref()),
+        };
 
-        for (lt, borrow_info) in visitor.borrow_map() {
-            let in_ok = ok_lts.contains(&lt);
-            let in_err = err_lts.contains(&lt);
+        let ok_edges = match ok_ty {
+            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "return value")?,
+            None => Vec::new(),
+        };
+        let err_edges = match err_ty {
+            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "error return")?,
+            None => Vec::new(),
+        };
 
-            if !in_ok && !in_err {
+        Some((ok_edges, err_edges))
+    }
+
+    /// Keep-alive edges contributed by one output type: the receiver / opaque
+    /// parameters its non-static lifetimes borrow from, looked up in the
+    /// method's borrow map. This mirrors how the other backends derive lifetime
+    /// edges while handling an output type (e.g. Kotlin's return conversions),
+    /// instead of threading a separate per-arm lifetime set. `what` names the
+    /// arm for diagnostics; returns `None` (diagnostic pushed) for borrow kinds
+    /// the backend can't keep alive yet.
+    fn output_keep_alive_edges(
+        &self,
+        out_ty: &hir::OutType,
+        borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
+        what: &str,
+    ) -> Option<Vec<String>> {
+        let lifetimes: BTreeSet<hir::Lifetime> = out_ty
+            .lifetimes()
+            .filter_map(|lt| match lt {
+                hir::MaybeStatic::NonStatic(lt) => Some(lt),
+                hir::MaybeStatic::Static => None,
+            })
+            .collect();
+
+        let mut edges: Vec<String> = Vec::new();
+        for (lt, borrow_info) in borrow_map {
+            if !lifetimes.contains(lt) {
                 continue;
             }
-
-            for edge in borrow_info.incoming_edges {
-                match edge.kind {
+            for edge in &borrow_info.incoming_edges {
+                match &edge.kind {
                     LifetimeEdgeKind::OpaqueParam => {
-                        if in_ok && !ok_edges.contains(&edge.param_name) {
-                            ok_edges.push(edge.param_name.clone());
-                        }
-                        if in_err && !err_edges.contains(&edge.param_name) {
-                            err_edges.push(edge.param_name.clone());
+                        if !edges.contains(&edge.param_name) {
+                            edges.push(edge.param_name.clone());
                         }
                     }
                     // Slice/string params are only pinned for the call, so a
                     // borrowing return would dangle.
                     LifetimeEdgeKind::SliceParam => {
-                        let what = if in_ok {
-                            "return value"
-                        } else {
-                            "error return"
-                        };
                         self.errors.push_error(format!(
                             "[.NET backend] {what} borrows from slice/string parameter \
                              `{}`; this is not supported because generated C# only pins or \
@@ -910,20 +938,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     }
                     // No struct edge-plumbing yet.
                     LifetimeEdgeKind::StructLifetime(..) => {
-                        self.errors.push_error(
-                            "[.NET backend] return value or error value borrows through a struct \
-                             lifetime; keep-alive edges for struct-borrowed returns are not yet \
-                             supported"
-                                .to_string(),
-                        );
+                        self.errors.push_error(format!(
+                            "[.NET backend] {what} borrows through a struct lifetime; keep-alive \
+                             edges for struct-borrowed returns are not yet supported"
+                        ));
                         return None;
                     }
                     other => {
-                        let what = if in_ok {
-                            "return value"
-                        } else {
-                            "error return"
-                        };
                         self.errors.push_error(format!(
                             "[.NET backend] {what} borrow kind not yet supported: {other:?}"
                         ));
@@ -932,8 +953,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
             }
         }
-
-        Some((ok_edges, err_edges))
+        Some(edges)
     }
 
     fn property_accessor(
