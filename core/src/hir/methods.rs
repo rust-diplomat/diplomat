@@ -193,8 +193,30 @@ impl ReturnType {
     /// Most input lifetimes aren't actually used. An input lifetime is generated
     /// for each borrowing parameter but is only important if we use it in the return.
     pub fn used_method_lifetimes(&self) -> BTreeSet<Lifetime> {
-        let mut set = self.success_lifetimes();
-        set.extend(self.error_lifetimes());
+        let mut set = BTreeSet::new();
+
+        let mut add_to_set = |ty: &OutType| {
+            for lt in ty.lifetimes() {
+                if let MaybeStatic::NonStatic(lt) = lt {
+                    set.insert(lt);
+                }
+            }
+        };
+
+        match self {
+            ReturnType::Infallible(SuccessType::OutType(ref ty))
+            | ReturnType::Nullable(SuccessType::OutType(ref ty)) => add_to_set(ty),
+            ReturnType::Fallible(ref ok, ref err) => {
+                if let SuccessType::OutType(ref ty) = ok {
+                    add_to_set(ty)
+                }
+                if let Some(ref ty) = err {
+                    add_to_set(ty)
+                }
+            }
+            _ => (),
+        }
+
         set
     }
 
