@@ -12,8 +12,8 @@ internal partial struct RenamedTestMacroStruct
     public nuint A;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_TestMacroStruct_test_func", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern nuint TestFunc();
+    internal static unsafe extern nuint TestFunc();
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_TestMacroStruct_test_meta", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern RenamedTestMacroStruct TestMeta();
+    internal static unsafe extern RenamedTestMacroStruct TestMeta();
 }

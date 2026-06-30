@@ -10,7 +10,7 @@ internal partial struct OpaqueMut
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueMut_new", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern OpaqueMut* New();
+    internal static unsafe extern OpaqueMut* New();
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueMut_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueMut* handle);

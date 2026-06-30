@@ -14,5 +14,5 @@ internal partial struct FixedDecimalFormatterOptions
     public bool SomeOtherConfig;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "icu4x_FixedDecimalFormatterOptions_default_mv1", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern FixedDecimalFormatterOptions Default();
+    internal static unsafe extern FixedDecimalFormatterOptions Default();
 }

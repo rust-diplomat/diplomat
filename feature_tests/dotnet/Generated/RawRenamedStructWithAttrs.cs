@@ -14,11 +14,11 @@ internal partial struct RenamedStructWithAttrs
     public uint B;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_StructWithAttrs_new_fallible", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultRenamedStructWithAttrsUnit NewFallible([MarshalAs(UnmanagedType.U1)] bool a, uint b);
+    internal static unsafe extern DiplomatResultRenamedStructWithAttrsUnit NewFallible([MarshalAs(UnmanagedType.U1)] bool a, uint b);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_StructWithAttrs_c", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern uint C(RenamedStructWithAttrs self);
+    internal static unsafe extern uint C(RenamedStructWithAttrs self);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_StructWithAttrs_deprecated", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern void Deprecated(RenamedStructWithAttrs self);
+    internal static unsafe extern void Deprecated(RenamedStructWithAttrs self);
 }
