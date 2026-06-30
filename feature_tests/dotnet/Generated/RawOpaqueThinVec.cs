@@ -28,19 +28,19 @@ internal partial struct OpaqueThinVec
     internal static unsafe extern OpaqueThin* First(OpaqueThinVec* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_try_first", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultOpaqueThinUnit TryFirst(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
+    internal static unsafe extern DiplomatResultOpaqueThinUnit TryFirst(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_try_get", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultOpaqueThinUnit TryGet(OpaqueThinVec* handle, nuint idx, [MarshalAs(UnmanagedType.U1)] bool fail);
+    internal static unsafe extern DiplomatResultOpaqueThinUnit TryGet(OpaqueThinVec* handle, nuint idx, [MarshalAs(UnmanagedType.U1)] bool fail);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_try_iter", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultOpaqueThinIterUnit TryIter(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
+    internal static unsafe extern DiplomatResultOpaqueThinIterUnit TryIter(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_optional_iter", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern OpaqueThinIter* OptionalIter(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool some);
+    internal static unsafe extern OpaqueThinIter* OptionalIter(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool some);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_try_borrow", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultIntBorrowingError TryBorrow(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
+    internal static unsafe extern DiplomatResultIntBorrowingError TryBorrow(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueThinVec* handle);

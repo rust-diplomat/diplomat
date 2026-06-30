@@ -10,7 +10,7 @@ internal partial struct BorrowingError
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "BorrowingError_owner_first", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern OpaqueThin* OwnerFirst(BorrowingError* handle);
+    internal static unsafe extern OpaqueThin* OwnerFirst(BorrowingError* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "BorrowingError_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(BorrowingError* handle);

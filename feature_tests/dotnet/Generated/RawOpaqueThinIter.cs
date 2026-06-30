@@ -10,7 +10,7 @@ internal partial struct OpaqueThinIter
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinIter_next", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern OpaqueThin* Next(OpaqueThinIter* handle);
+    internal static unsafe extern OpaqueThin* Next(OpaqueThinIter* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinIter_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueThinIter* handle);
