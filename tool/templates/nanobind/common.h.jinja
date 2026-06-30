@@ -470,3 +470,24 @@ template<typename Func>
 maybe_op_unwrapper<Func>::result maybe_op_unwrap(Func&& f) {
     return maybe_op_unwrapper<Func>::get_bound_mapper((nanobind::detail::forward_t<Func>)f);
 }
+
+
+// Given a function reference, this creates a bound call to take callbacks which take l-value references as args,
+// and convert them to pointer args instead (so Nanobind can convert them).
+// See https://github.com/rust-diplomat/diplomat/issues/1197 for more
+template<typename FuncSwap, typename Func, typename... Args>
+FuncSwap swap_lvalue_wrap(Func&& f) {
+    // TODO: Args... here should be the converted typings of args (i.e., std::function<void(MyOpaque&)> becomes std::function<void(MyOpaque*)>)
+    return [f](Args... args) {
+        /*
+        // Is this a std::function?
+        // Create a new bound lambda that acts as the original callback:
+        auto new_f = [](FInner func, FArgs ...original_args) {
+            // Convert FArgs lvalue references to pointers:
+            // TODO
+            // Call the callback:
+            func();
+        };*/
+        return ((nanobind::detail::forward_t<Func>)f)(...args);
+    }
+}
