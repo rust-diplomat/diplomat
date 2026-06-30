@@ -92,3 +92,24 @@ def test_callback():
     holder = somelib.MutableCallbackHolder(lambda a: HasMutatingStatic.decrement(a))
     assert holder.call(5) == 75
     assert holder.call(5) == 70
+
+    # FIXME: https://github.com/rust-diplomat/diplomat/issues/1205
+    # sl = [1, 2, 3]
+    # somelib.CallbackWrapper.test_slice_conversion(lambda: sl)
+
+    st = somelib.MyString()
+    def cb_ctor(st):
+        return st
+    op_holder = somelib.OpaqueCallbacks(cb_ctor, st)
+
+    assert somelib.OpaqueCallbacks.ret_op(cb_ctor, st).str == st.str
+
+    assert op_holder.opaque_cb_mut_self(cb_ctor, st).str == st.str
+    assert op_holder.opaque_cb_self(cb_ctor, st).str == st.str
+
+    s = somelib.MyString("ABC123")
+
+    def cb_op(st):
+        st.str = "456"
+    somelib.CallbackWrapper.test_opaque_cb_arg(cb_op, s)
+    assert s.str == "456"
