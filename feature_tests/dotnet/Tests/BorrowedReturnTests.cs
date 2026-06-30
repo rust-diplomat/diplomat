@@ -204,6 +204,28 @@ public class BorrowedReturnTests
         GC.KeepAlive(iter);
     }
 
+    // Liveness probed with a real opaque *handle* rather than a marshaled
+    // primitive or copied-out string: advancing the iterator after the GC reads
+    // owner memory and yields a live `OpaqueThin` pointer. If the owned
+    // iterator's edges hadn't rooted the Vec, there'd be no element to hand back.
+    [Fact]
+    public void OwnedBorrowingIter_OpaquePointerProbe_KeepsOwnerAliveAcrossGc()
+    {
+        OpaqueThinIter iter = TryIterAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        using OpaqueThin view = iter.Next()!;
+        Assert.NotNull(view);
+        Assert.Null(iter.Next());
+        GC.KeepAlive(iter);
+    }
+
     [Fact]
     public void FallibleOwnedBorrowingBoxReturn_Err_Throws()
     {
@@ -241,5 +263,61 @@ public class BorrowedReturnTests
     {
         using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
         Assert.Null(vec.OptionalIter(false));
+    }
+
+    [Fact]
+    public void FallibleCustomBorrowingError_Throws_AndInnerExposesOwnerView()
+    {
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+
+        // The error is a custom opaque (`Box<BorrowingError<'a>>`) borrowing the
+        // Vec, not a `()` mapped to InvalidOperationException. It surfaces as a
+        // catchable typed exception whose `Inner` hands back a real non-owning
+        // view into the owner.
+        BorrowingErrorException ex =
+            Assert.Throws<BorrowingErrorException>(() => vec.TryBorrow(true));
+        using OpaqueThin view = ex.Inner.OwnerFirst()!;
+        Assert.Equal(7, view.A());
+        Assert.Equal("hi", view.C());
+    }
+
+    // The Ok arm of `try_borrow` is owned (`int`), so its edges are empty — the
+    // only thing that can root the owner for a caught exception is the edge
+    // threaded onto the exception (and its inner error). Drop every other
+    // reference to prove that edge alone holds the Vec.
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    private static BorrowingErrorException TryBorrowAndDropOwner()
+    {
+        try
+        {
+            OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryBorrow(true);
+            throw new InvalidOperationException("TryBorrow(true) was expected to throw");
+        }
+        catch (BorrowingErrorException ex)
+        {
+            return ex;
+        }
+    }
+
+    [Fact]
+    public void FallibleCustomBorrowingError_KeepsOwnerAliveAcrossGc()
+    {
+        BorrowingErrorException ex = TryBorrowAndDropOwner();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        // The owner is reachable only through the thrown exception's edges. Read
+        // through a real non-owning OpaqueThin view obtained from the caught
+        // error: if the edges weren't wired, the Vec (and its heap-backed
+        // String) would be finalized and `C()` here would be a use-after-free.
+        using OpaqueThin view = ex.Inner.OwnerFirst()!;
+        Assert.Equal(42, view.A());
+        Assert.Equal("rooted", view.C());
+        GC.KeepAlive(ex);
     }
 }

@@ -175,7 +175,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -200,7 +200,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -225,7 +225,7 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
@@ -249,13 +249,31 @@ public partial class OpaqueThinVec: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
             Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.OptionalIter(AsFFI(), some);
             GC.KeepAlive(this);
             return result == null ? null : new OpaqueThinIter(result, new object[] { this });
+        }
+    }
+    /// <exception cref="BorrowingErrorException"></exception>
+    public int TryBorrow(bool fail)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            var result = Raw.OpaqueThinVec.TryBorrow(AsFFI(), fail);
+            GC.KeepAlive(this);
+            if (!result.IsOk)
+            {
+                throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);
+            }
+            return result.Ok;
         }
     }
 

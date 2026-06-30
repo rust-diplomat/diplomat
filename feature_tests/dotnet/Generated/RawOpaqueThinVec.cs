@@ -39,6 +39,9 @@ internal static unsafe extern DiplomatResultOpaqueThinIterUnit TryIter(OpaqueThi
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_optional_iter", CallingConvention = CallingConvention.Cdecl)]
 internal static unsafe extern OpaqueThinIter* OptionalIter(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool some);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_try_borrow", CallingConvention = CallingConvention.Cdecl)]
+internal static unsafe extern DiplomatResultIntBorrowingError TryBorrow(OpaqueThinVec* handle, [MarshalAs(UnmanagedType.U1)] bool fail);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThinVec_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueThinVec* handle);
 }

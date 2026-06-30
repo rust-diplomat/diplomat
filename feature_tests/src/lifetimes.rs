@@ -441,6 +441,36 @@ pub mod ffi {
                 None
             }
         }
+
+        // The Ok arm is owned (no edges), so the error-arm keep-alive edges must
+        // ride on the thrown exception and its inner error alone — this is the
+        // fixture for that runtime path.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_borrow<'a>(&'a self, fail: bool) -> Result<i32, Box<BorrowingError<'a>>> {
+            if fail {
+                Err(Box::new(BorrowingError(self)))
+            } else {
+                Ok(i32::try_from(self.0.len()).unwrap())
+            }
+        }
+    }
+
+    // A borrowing opaque *error*: a non-owning reference to the Vec it came from,
+    // so a caught `BorrowingErrorException` must root that owner for the borrow
+    // read in `owner_first_a` to stay valid after the owner is dropped elsewhere.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct BorrowingError<'a>(&'a OpaqueThinVec);
+
+    impl<'a> BorrowingError<'a> {
+        // Hands back a real non-owning `OpaqueThin` view into the owner's
+        // storage — not a copied-out value — so the GC test holds a live borrow
+        // into the owner across collection; a finalized owner turns reading the
+        // view's heap `String` field into a use-after-free.
+        pub fn owner_first<'b>(&'b self) -> Option<&'b OpaqueThin> {
+            let owner = self.0;
+            owner.0.first().map(OpaqueThin::transparent_convert)
+        }
     }
 
     // GC-race probe for the GC.KeepAlive fix: `drops_during_spin` sleeps without
