@@ -15,21 +15,21 @@
         E>` returns a result struct on the wire, with the writer as an
         out-param appended via raw_params_with_writer. #}
     {%- if method.return_type.is_write() %}
-internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.raw_params_with_writer() }});
+    internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.raw_params_with_writer() }});
     {%- else %}
-internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.inputs.raw_params }});
+    internal static unsafe extern {{ info.raw_return_type }} {{ method.name }}({{ method.inputs.raw_params }});
     {%- endif %}
 {%- else if method.return_type.is_write() %}
-internal static unsafe extern void {{ method.name }}({{ method.raw_params_with_writer() }});
+    internal static unsafe extern void {{ method.name }}({{ method.raw_params_with_writer() }});
 {%- else if let Some(opt) = method.option_info %}
     {%- if let Some(opt_struct) = opt.raw_option_type %}
-internal static unsafe extern {{ opt_struct }} {{ method.name }}({{ method.inputs.raw_params }});
+    internal static unsafe extern {{ opt_struct }} {{ method.name }}({{ method.inputs.raw_params }});
     {%- else %}
-internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
+    internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
     {%- endif %}
 {%- else %}
-{%- if method.return_type.is_bool() %}
-[return: MarshalAs(UnmanagedType.U1)]
-{%- endif %}
-internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
+    {%- if method.return_type.is_bool() %}
+    [return: MarshalAs(UnmanagedType.U1)]
+    {%- endif %}
+    internal static unsafe extern {{ method.return_type.raw() }} {{ method.name }}({{ method.inputs.raw_params }});
 {%- endif %}

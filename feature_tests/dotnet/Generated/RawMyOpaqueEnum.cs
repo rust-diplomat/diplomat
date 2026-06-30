@@ -10,10 +10,10 @@ internal partial struct MyOpaqueEnum
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyOpaqueEnum_new", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern MyOpaqueEnum* New();
+    internal static unsafe extern MyOpaqueEnum* New();
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyOpaqueEnum_to_string", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern void ToString(MyOpaqueEnum* handle, DiplomatWriteable* writeable);
+    internal static unsafe extern void ToString(MyOpaqueEnum* handle, DiplomatWriteable* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyOpaqueEnum_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(MyOpaqueEnum* handle);

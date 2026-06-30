@@ -10,7 +10,7 @@ internal partial struct Foo
 {
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Foo_get_bar", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern Bar* GetBar(Foo* handle);
+    internal static unsafe extern Bar* GetBar(Foo* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Foo_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(Foo* handle);

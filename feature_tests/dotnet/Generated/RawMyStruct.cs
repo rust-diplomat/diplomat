@@ -19,17 +19,17 @@ internal partial struct MyStruct
     public MyEnum G;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyStruct_new", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern MyStruct New();
+    internal static unsafe extern MyStruct New();
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyStruct_new_overload", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern MyStruct NewOverload(int i);
+    internal static unsafe extern MyStruct NewOverload(int i);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyStruct_into_a", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern byte IntoA(MyStruct self);
+    internal static unsafe extern byte IntoA(MyStruct self);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyStruct_returns_zst_result", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultVoidMyZst ReturnsZstResult();
+    internal static unsafe extern DiplomatResultVoidMyZst ReturnsZstResult();
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyStruct_fails_zst_result", CallingConvention = CallingConvention.Cdecl)]
-internal static unsafe extern DiplomatResultVoidMyZst FailsZstResult();
+    internal static unsafe extern DiplomatResultVoidMyZst FailsZstResult();
 }
