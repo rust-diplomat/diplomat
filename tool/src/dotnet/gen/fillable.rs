@@ -290,6 +290,10 @@ impl DotnetErrorType {
         matches!(self, DotnetErrorType::Opaque(_))
     }
 
+    /// Only opaque (`Box<E>`) errors get a managed C# wrapper that can hold the
+    /// keep-alive edge array; primitive/enum/struct errors marshal by value, so
+    /// there's nowhere to root the borrowed-from owner. That's why this is
+    /// exactly `is_opaque` — not a coincidence a later edit should collapse.
     pub(crate) fn can_carry_borrow_edges(&self) -> bool {
         self.is_opaque()
     }

@@ -442,9 +442,8 @@ pub mod ffi {
             }
         }
 
-        // The Ok arm is owned (no edges), so the error-arm keep-alive edges must
-        // ride on the thrown exception and its inner error alone — this is the
-        // fixture for that runtime path.
+        // Ok is owned (no edges), so any keep-alive edges ride on the thrown
+        // exception and its inner error rather than on a success wrapper.
         #[diplomat::attr(not(dotnet), disable)]
         pub fn try_borrow<'a>(&'a self, fail: bool) -> Result<i32, Box<BorrowingError<'a>>> {
             if fail {
@@ -455,18 +454,16 @@ pub mod ffi {
         }
     }
 
-    // A borrowing opaque *error*: a non-owning reference to the Vec it came from,
-    // so a caught `BorrowingErrorException` must root that owner for the borrow
-    // read in `owner_first_a` to stay valid after the owner is dropped elsewhere.
+    // A borrowing opaque error: a non-owning reference into the Vec it came
+    // from, so a caught exception must root that owner or reads back through
+    // the borrow would dangle.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
     pub struct BorrowingError<'a>(&'a OpaqueThinVec);
 
     impl<'a> BorrowingError<'a> {
-        // Hands back a real non-owning `OpaqueThin` view into the owner's
-        // storage — not a copied-out value — so the GC test holds a live borrow
-        // into the owner across collection; a finalized owner turns reading the
-        // view's heap `String` field into a use-after-free.
+        // A real non-owning view into the owner's storage rather than a
+        // copied-out value, so reads go through the live borrow into the owner.
         pub fn owner_first<'b>(&'b self) -> Option<&'b OpaqueThin> {
             let owner = self.0;
             owner.0.first().map(OpaqueThin::transparent_convert)
