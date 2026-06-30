@@ -10,7 +10,15 @@ namespace Somelib;
 
 public partial class GcRaceProbe: IDisposable
 {
-    private unsafe Raw.GcRaceProbe* _inner;
+    private unsafe RustHandle<Raw.GcRaceProbe> _inner;
+
+    /// <summary>
+    /// Roots the wrappers this value borrows from so the GC cannot finalize
+    /// a borrowed-from parent while this value is alive.
+    /// </summary>
+    private object[] _edges;
+
+    private static readonly unsafe RustDestructor<Raw.GcRaceProbe> _destroy = Raw.GcRaceProbe.Destroy;
 
     /// <summary>
     /// Creates a managed <c>GcRaceProbe</c> from a raw handle.
@@ -23,7 +31,31 @@ public partial class GcRaceProbe: IDisposable
     /// </remarks>
     internal unsafe GcRaceProbe(Raw.GcRaceProbe* handle)
     {
-        _inner = handle;
+        _inner = RustHandle<Raw.GcRaceProbe>.Owned(handle, _destroy);
+        _edges = System.Array.Empty<object>();
+    }
+
+    /// <remarks>
+    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
+    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
+    /// use-after-free and remains the caller's responsibility.
+    /// </remarks>
+    internal unsafe GcRaceProbe(Raw.GcRaceProbe* handle, object[] edges)
+    {
+        _inner = RustHandle<Raw.GcRaceProbe>.Owned(handle, _destroy);
+        _edges = edges;
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
+    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
+    /// while this view is in use.
+    /// </summary>
+    internal unsafe GcRaceProbe(RustHandle<Raw.GcRaceProbe> inner, object[] edges)
+    {
+        _inner = inner;
+        _edges = edges;
     }
     /// <returns>
     /// A <c>GcRaceProbe</c> allocated on Rust side.
@@ -40,7 +72,7 @@ public partial class GcRaceProbe: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 throw new ObjectDisposedException("GcRaceProbe");
             }
@@ -55,7 +87,7 @@ public partial class GcRaceProbe: IDisposable
     /// </summary>
     internal unsafe Raw.GcRaceProbe* AsFFI()
     {
-        return _inner;
+        return _inner.Ptr;
     }
 
     /// <summary>
@@ -65,13 +97,14 @@ public partial class GcRaceProbe: IDisposable
     {
         unsafe
         {
-            if (_inner == null)
+            if (_inner.IsNull)
             {
                 return;
             }
 
-            Raw.GcRaceProbe.Destroy(_inner);
-            _inner = null;
+            _inner.Release();
+            _inner = default;
+            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);
         }
