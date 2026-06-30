@@ -193,30 +193,34 @@ impl ReturnType {
     /// Most input lifetimes aren't actually used. An input lifetime is generated
     /// for each borrowing parameter but is only important if we use it in the return.
     pub fn used_method_lifetimes(&self) -> BTreeSet<Lifetime> {
+        let mut set = self.success_lifetimes();
+        set.extend(self.error_lifetimes());
+        set
+    }
+
+    /// Non-static method lifetimes used by the success arm of the return — the
+    /// `Infallible` / `Nullable` value, or the `Ok` payload of a `Fallible`.
+    /// These must outlive the returned value.
+    pub fn success_lifetimes(&self) -> BTreeSet<Lifetime> {
         let mut set = BTreeSet::new();
-
-        let mut add_to_set = |ty: &OutType| {
-            for lt in ty.lifetimes() {
-                if let MaybeStatic::NonStatic(lt) = lt {
-                    set.insert(lt);
-                }
-            }
-        };
-
         match self {
             ReturnType::Infallible(SuccessType::OutType(ref ty))
-            | ReturnType::Nullable(SuccessType::OutType(ref ty)) => add_to_set(ty),
-            ReturnType::Fallible(ref ok, ref err) => {
-                if let SuccessType::OutType(ref ty) = ok {
-                    add_to_set(ty)
-                }
-                if let Some(ref ty) = err {
-                    add_to_set(ty)
-                }
+            | ReturnType::Nullable(SuccessType::OutType(ref ty))
+            | ReturnType::Fallible(SuccessType::OutType(ref ty), _) => {
+                add_nonstatic_lifetimes(ty, &mut set)
             }
             _ => (),
         }
+        set
+    }
 
+    /// Non-static method lifetimes used by the error arm — the `Err` payload of
+    /// a `Fallible`. These must outlive an error value surfaced to the caller.
+    pub fn error_lifetimes(&self) -> BTreeSet<Lifetime> {
+        let mut set = BTreeSet::new();
+        if let ReturnType::Fallible(_, Some(ref ty)) = self {
+            add_nonstatic_lifetimes(ty, &mut set);
+        }
         set
     }
 
@@ -231,6 +235,15 @@ impl ReturnType {
             }
             Self::Fallible(_, Some(o)) => f(o),
             _ => (),
+        }
+    }
+}
+
+/// Collect the non-static lifetimes appearing in `ty` into `set`.
+fn add_nonstatic_lifetimes(ty: &OutType, set: &mut BTreeSet<Lifetime>) {
+    for lt in ty.lifetimes() {
+        if let MaybeStatic::NonStatic(lt) = lt {
+            set.insert(lt);
         }
     }
 }

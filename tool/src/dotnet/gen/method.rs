@@ -18,7 +18,7 @@
 //! * [`MethodInfo`] — one method's render data; consumed by every template.
 
 use std::{
-    collections::{BTreeMap, BTreeSet},
+    collections::BTreeMap,
     fmt::{self, Display},
 };
 
@@ -868,8 +868,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
 
         // Determine which method lifetimes belong to the Ok arm and which to
         // the Err arm so edges can be placed on the right wrapper.
-        let ok_lts = success_output_lifetimes(&method.output);
-        let err_lts = error_output_lifetimes(&method.output);
+        let ok_lts = method.output.success_lifetimes();
+        let err_lts = method.output.error_lifetimes();
 
         let mut ok_edges: Vec<String> = Vec::new();
         let mut err_edges: Vec<String> = Vec::new();
@@ -1615,40 +1615,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
         })
     }
-}
-
-/// Non-static lifetimes used by the success (`Ok` / `Infallible` / `Nullable`)
-/// arm of a method output that must be kept alive for the returned wrapper.
-fn success_output_lifetimes(output: &hir::ReturnType) -> BTreeSet<hir::Lifetime> {
-    let mut set = BTreeSet::new();
-    let add = |set: &mut BTreeSet<_>, ty: &hir::OutType| {
-        for lt in ty.lifetimes() {
-            if let hir::MaybeStatic::NonStatic(lt) = lt {
-                set.insert(lt);
-            }
-        }
-    };
-    match output {
-        hir::ReturnType::Infallible(hir::SuccessType::OutType(ty))
-        | hir::ReturnType::Nullable(hir::SuccessType::OutType(ty))
-        | hir::ReturnType::Fallible(hir::SuccessType::OutType(ty), _) => add(&mut set, ty),
-        _ => {}
-    }
-    set
-}
-
-/// Non-static lifetimes used by the error (`Err`) arm of a method output
-/// that must be kept alive for the thrown exception.
-fn error_output_lifetimes(output: &hir::ReturnType) -> BTreeSet<hir::Lifetime> {
-    let mut set = BTreeSet::new();
-    if let hir::ReturnType::Fallible(_, Some(err_ty)) = output {
-        for lt in err_ty.lifetimes() {
-            if let hir::MaybeStatic::NonStatic(lt) = lt {
-                set.insert(lt);
-            }
-        }
-    }
-    set
 }
 
 fn callback_idiomatic_type(param_types: &[String], return_type: &DotnetReturnType) -> String {
