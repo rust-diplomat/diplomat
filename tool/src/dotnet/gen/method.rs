@@ -895,7 +895,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     // Slice/string params are only pinned for the call, so a
                     // borrowing return would dangle.
                     LifetimeEdgeKind::SliceParam => {
-                        let what = if in_ok { "return value" } else { "error return" };
+                        let what = if in_ok {
+                            "return value"
+                        } else {
+                            "error return"
+                        };
                         self.errors.push_error(format!(
                             "[.NET backend] {what} borrows from slice/string parameter \
                              `{}`; this is not supported because generated C# only pins or \
@@ -915,8 +919,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         return None;
                     }
                     other => {
+                        let what = if in_ok {
+                            "return value"
+                        } else {
+                            "error return"
+                        };
                         self.errors.push_error(format!(
-                            "[.NET backend] return value borrow kind not yet supported: {other:?}"
+                            "[.NET backend] {what} borrow kind not yet supported: {other:?}"
                         ));
                         return None;
                     }

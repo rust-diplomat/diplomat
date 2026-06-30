@@ -291,7 +291,7 @@ impl DotnetErrorType {
     }
 
     pub(crate) fn can_carry_borrow_edges(&self) -> bool {
-        matches!(self, DotnetErrorType::Opaque(_))
+        self.is_opaque()
     }
 
     /// Stable, variant-aware key for deduplicating exception emission.

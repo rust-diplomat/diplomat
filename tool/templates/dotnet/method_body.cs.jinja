@@ -49,7 +49,7 @@
 {{ bi }}DiplomatWriteable writeable = new DiplomatWriteable();
 {{ bi }}try
 {{ bi }}{
-    {%- if let Some(info) = method.error_info %}
+    {%- if method.error_info.is_some() %}
 {{ bi }}    var result = Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
     {%- for keep_alive in method.keep_alive_statements() %}
 {{ bi }}    {{ keep_alive }}
@@ -70,7 +70,7 @@
 {{ bi }}{
 {{ bi }}    writeable.Dispose();
 {{ bi }}}
-{%- else if let Some(info) = method.error_info %}
+{%- else if method.error_info.is_some() %}
 {{ bi }}var result = {{ method.raw_call_expr(name) }};
 {%- for keep_alive in method.keep_alive_statements() %}
 {{ bi }}{{ keep_alive }}

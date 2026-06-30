@@ -5,9 +5,11 @@ namespace {{ namespace }};
 public class {{ exception_name }} : Exception
 {
     public {{ error }} Inner { get; }
+    {%- if error.can_carry_borrow_edges() %}
     private readonly object[] _edges;
+    {%- endif %}
 
-    public {{ exception_name }}({{ error }} inner, params object[] edges) : base(
+    public {{ exception_name }}({{ error }} inner{%- if error.can_carry_borrow_edges() %}, params object[] edges{%- endif %}) : base(
         {%- if error.is_opaque() %}
         {%- if let Some(method) = message_method %}
         inner.{{ method }}()
@@ -20,6 +22,8 @@ public class {{ exception_name }} : Exception
     )
     {
         Inner = inner;
+        {%- if error.can_carry_borrow_edges() %}
         _edges = edges;
+        {%- endif %}
     }
 }
