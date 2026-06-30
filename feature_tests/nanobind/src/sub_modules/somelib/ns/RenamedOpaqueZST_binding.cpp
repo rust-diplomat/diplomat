@@ -10,7 +10,7 @@ void add_RenamedOpaqueZST_binding(nb::module_ mod) {
         {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
         {0, nullptr}};
     
-    nb::class_<somelib::ns::RenamedOpaqueZST> opaque(mod, "RenamedOpaqueZST", nb::type_slots(somelib_ns_RenamedOpaqueZST_slots));
+    nb::class_<somelib::ns::RenamedOpaqueZST> opaque(mod, "RenamedOpaqueZST", nb::type_slots(somelib_ns_RenamedOpaqueZST_slots), "Tests for https://github.com/rust-diplomat/diplomat/issues/1050.\nC++ generates unique_ptrs for Opaque ZSTs, and Nanobind\nexpects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.\nThis is not the case, as in Rust pointers to ZSTs are always the same address.");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::ctor))))
         .def("__add__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator+)), nb::is_operator())

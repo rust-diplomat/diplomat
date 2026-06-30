@@ -1,12 +1,12 @@
 {%- extends "function_base.cpp.jinja" -%}
 {%- import "method_params.cpp.jinja" as method_params -%}
 {%- macro original_cpp_method() -%}&{{- type_name }}::{{m.cpp_method_name}}{%- endmacro -%}
-{%- macro operator(name) %}("__{{name}}__", {% call method_name_cpp() %}{{original_cpp_method()}}{% endcall %}, nb::is_operator()){%- endmacro -%}
+{%- macro operator(name) %}("__{{name}}__", {% call method_name_cpp() %}{{original_cpp_method()}}{% endcall %}, nb::is_operator(){% if let Some(doc) = m.docstring %}, {{doc}}{% endif %}){%- endmacro -%}
 
 
-{%- macro gen_constructor_body(method_name, params, is_overload=false) -%}
+{%- macro gen_constructor_body(method_name, params, docstring=Option::<String>::None, is_overload=false) -%}
         (nb::new_({%- call method_name_cpp() %}&{{- type_name}}::{{ method_name -}} {%- endcall -%})
-    {{- method_params::params(params, m.lifetime_args) }})
+    {{- method_params::params(params, m.lifetime_args) }}{% if let Some(doc) = docstring %}, {{doc}}{% endif %})
 {%- endmacro -%}
 
 {%- block pre_cpp_method_name  -%}{{- type_name }}::{%- endblock -%}
@@ -23,18 +23,18 @@
         {{- operator("truediv") -}}
     {%- when crate::hir::SpecialMethod::AddAssign | crate::hir::SpecialMethod::SubAssign |
             crate::hir::SpecialMethod::MulAssign | crate::hir::SpecialMethod::DivAssign -%}
-        (nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none)
+        (nb::self {{special_method.operator_str().unwrap()}} nb::self, nb::rv_policy::none{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when crate::hir::SpecialMethod::Comparison(_) -%}
-        (nb::self == nb::self)
-        .def(nb::self != nb::self)
-        .def(nb::self <= nb::self)
-        .def(nb::self >= nb::self)
-        .def(nb::self < nb::self)
-        .def(nb::self > nb::self)
+        (nb::self == nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
+        .def(nb::self != nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
+        .def(nb::self <= nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
+        .def(nb::self >= nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
+        .def(nb::self < nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
+        .def(nb::self > nb::self{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when crate::hir::SpecialMethod::Stringifier -%}
-        ("__str__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
+        ("__str__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when crate::hir::SpecialMethod::Iterable -%}
-        ("__iter__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
+        ("__iter__", {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when crate::hir::SpecialMethod::Iterator -%}
         ("__next__", []({{- type_name }}& self){
             auto next = {% call method_name_cpp("map_inner(", ")") %}self.{{m.cpp_method_name}}(){% endcall %};
@@ -42,7 +42,7 @@
                 throw nb::stop_iteration();
             }
             return next_inner_extractor<decltype(next)>::get(std::move(next));
-        }{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %})
+        }{% if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
         .def("__iter__", [](nb::handle self) { return self; })
     {%- when crate::hir::SpecialMethod::Getter(_) -%}
         ("{{m.prop_name.as_ref().unwrap()}}", 
@@ -59,11 +59,12 @@
                     {%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.name}}{%- endfor -%}); }
             {%- endif -%}
             {{- method_params::params(m.method.params, m.lifetime_args) }}
-        {%- endif -%})
+        {%- endif -%}
+        {%- if let Some(doc) = m.docstring %}, {{doc}}{% endif -%})
     {%- when crate::hir::SpecialMethod::Constructor -%}
-        {{- gen_constructor_body(m.cpp_method_name, m.param_decls.params.clone()) -}}
+        {{- gen_constructor_body(m.cpp_method_name, m.param_decls.params.clone(), m.docstring.clone()) -}}
         {%- for o in m.overloads %}
-    .def{{- gen_constructor_body(o.method_name.clone().unwrap_or(m.cpp_method_name.to_string()), o.parameters.params.clone(), true) -}}
+    .def{{- gen_constructor_body(o.method_name.clone().unwrap_or(m.cpp_method_name.to_string()), o.parameters.params.clone(), Option::<String>::None, true) -}}
         {%- endfor -%}
     {%- when crate::hir::SpecialMethod::NamedConstructor(_) -%}
         ("{{m.method_name}}", {% if m.overloads.len() > 0 -%}
@@ -71,7 +72,7 @@
         {%- else -%}
             {% call method_name_cpp() %}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}
         {%- endif -%}
-        {{- method_params::params(m.method.params, m.lifetime_args) }})
+        {{- method_params::params(m.method.params, m.lifetime_args) }}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when crate::hir::SpecialMethod::Indexer -%}
         ("__getitem__", {% match m.method.output -%}
         {%- when crate::hir::ReturnType::Nullable(..) | crate::hir::ReturnType::Fallible(..) -%}
@@ -109,7 +110,7 @@
         static_assert(false, "Non-optional types are unsupported by Nanobind backend.");
         {%- endmatch -%}
 
-        {{- method_params::params(m.method.params, m.lifetime_args) }})
+        {{- method_params::params(m.method.params, m.lifetime_args) }}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- when _ -%}
         ("{{m.method_name}}", {% call method_name_cpp()-%}&{{- type_name }}::{{ m.cpp_method_name -}}{% endcall %}
         {{- method_params::params(m.method.params, m.lifetime_args) }} ) // unsupported special method {{format!("{special_method:?}")}}

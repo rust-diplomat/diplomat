@@ -51,7 +51,7 @@ nb::overload_cast<{% for p in &overload_params -%} {{- p.type_name -}} {%- if !l
     {%- call method_name_cpp()-%}
     {{-overload_method_name_cpp(main_overload_params, m.method.param_self.is_some() && m.method.param_self.as_ref().unwrap().get_mutability().is_immutable())-}}
     {%- endcall -%}
-    {{- method_params::params(m.method.params, m.lifetime_args) -}})
+    {{- method_params::params(m.method.params, m.lifetime_args) -}}{% if let Some(doc) = m.docstring %}, {{doc}}{% endif %})
     {%- endif -%}
 
     {%- if m.overloads.len() > 0 %}

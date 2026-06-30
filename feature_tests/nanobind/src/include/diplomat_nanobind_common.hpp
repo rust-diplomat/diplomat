@@ -134,12 +134,22 @@ namespace nanobind::detail
         bool is_ok;
         Py_ssize_t size;
         using Caster = make_caster<U>;
-        static constexpr auto Name = Caster::Name;
+        static constexpr auto Name = []() constexpr {
+            if constexpr (std::is_same_v<U, std::monostate>) {
+                return const_name("None");
+            } else {
+                return Caster::Name;
+            }
+        }();
 
         static handle from_cpp(somelib::diplomat::result<T, E> value, rv_policy p, cleanup_list *cl) noexcept
         {
             if (value.is_ok()) {
-                return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+                if constexpr (std::is_same_v<U, std::monostate>) {
+                    return none().release();
+                } else {
+                    return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+                }
             }
 
             set_py_error(std::move(value).err().value(), p, cl);

@@ -23,7 +23,7 @@ void add_ResultOpaque_binding(nb::module_ mod) {
         .def_static("new_in_err", std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_in_err)), "i"_a)
         .def_static("new_int", &somelib::ResultOpaque::new_int, "i"_a)
         .def("__str__", &somelib::ResultOpaque::stringify_error, nb::rv_policy::reference_internal)
-        .def("takes_str", &somelib::ResultOpaque::takes_str, "_v"_a, nb::rv_policy::reference_internal);
+        .def("takes_str", &somelib::ResultOpaque::takes_str, "_v"_a, nb::rv_policy::reference_internal, "When we take &str, the return type becomes a Result\nTest that this interacts gracefully with returning a reference type");
 }
 
 } 

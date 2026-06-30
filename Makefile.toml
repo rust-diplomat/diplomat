@@ -581,17 +581,22 @@ generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/ma
 
 [tasks.gen-nanobind-feature]
 category = "Code generation"
+dependencies = ["fetch-nanobind"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests nanobind src/cpp 
-mv nanobind/src/cpp/somelib_ext.cpp nanobind/src/somelib_ext.cpp
-rm -rf nanobind/src/include
-mv nanobind/src/cpp/include nanobind/src/
-rm -fr nanobind/src/sub_modules
-mv nanobind/src/cpp/sub_modules nanobind/src/
-rm -rf nanobind/src/cpp/
+rm -rf nanobind/src
+
+generate_generic feature_tests nanobind src
+
+# Build nanobind and generate stubs
+cd nanobind
+exec --fail-on-error cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+exec --fail-on-error cmake --build build --target somelib --config Debug
+
+writefile src/somelib/__init__.py "from .somelib import *"
+exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build -i build/Debug -i build/Release -O src/somelib -M src/somelib/py.typed
 '''
 # Build deps
 

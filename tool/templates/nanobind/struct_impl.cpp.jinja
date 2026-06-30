@@ -11,7 +11,7 @@ nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slic
 {{extra_init_code.pre}}
 {% endif -%}
 
-nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}");
+nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}"{% if let Some(docs) = docs %}, {{docs}}{% endif %});
 st
     {%- if !has_constructor && !is_out %}
     .def(nb::init<>())
@@ -37,13 +37,14 @@ st
 
     {%- for f in fields %}
     {%- if !f.type_name.starts_with("std::unique_ptr") %}
-    .def_{{prop_type}}("{{f.name}}", &{{type_name}}::{{f.name}})
+    .def_{{prop_type}}("{{f.name}}", &{{type_name}}::{{f.name}}{% if let Some(doc) = f.docstring %}, {{doc}}{% endif %})
     {%- else %}
     .def_prop_{{prop_type}}("{{f.name}}",
         [](const {{type_name}}& self) { return self.{{f.name}}.get(); }
     {%- if !is_out %},
         []({{type_name}}& self, {{f.type_name}}&& v) { self.{{f.name}} = std::move(v); }
     {%- endif %}
+    {%- if let Some(doc) = f.docstring %}, {{doc}}{% endif %}
     )
     {%- endif -%}
     {%- endfor %}
