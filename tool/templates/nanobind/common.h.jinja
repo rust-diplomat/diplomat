@@ -488,6 +488,6 @@ FuncSwap swap_lvalue_wrap(Func&& f) {
             // Call the callback:
             func();
         };*/
-        return ((nanobind::detail::forward_t<Func>)f)(...args);
+        return ((nanobind::detail::forward_t<Func>)f)(args...);
     }
 }
