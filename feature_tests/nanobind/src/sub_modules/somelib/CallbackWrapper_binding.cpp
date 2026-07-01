@@ -23,7 +23,7 @@ void add_CallbackWrapper_binding(nb::module_ mod) {
         .def_static("test_multi_arg_callback", &somelib::CallbackWrapper::test_multi_arg_callback, "f"_a, "x"_a)
         .def_static("test_multiple_cb_args", &somelib::CallbackWrapper::test_multiple_cb_args, "f"_a, "g"_a)
         .def_static("test_no_args", &somelib::CallbackWrapper::test_no_args, "h"_a)
-        .def_static("test_opaque_cb_arg", &somelib::CallbackWrapper::test_opaque_cb_arg, "cb"_a, "a"_a)
+        .def_static("test_opaque_cb_arg", swap_lvalue_wrap(&somelib::CallbackWrapper::test_opaque_cb_arg), "cb"_a, "a"_a)
         .def_static("test_opaque_result_error", &somelib::CallbackWrapper::test_opaque_result_error, "t"_a)
         .def_static("test_option_opaque", &somelib::CallbackWrapper::test_option_opaque, "t"_a)
         .def_static("test_option_output", &somelib::CallbackWrapper::test_option_output, "t"_a)
