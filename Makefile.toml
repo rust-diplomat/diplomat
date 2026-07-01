@@ -581,23 +581,39 @@ generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/ma
 
 [tasks.gen-nanobind-feature]
 category = "Code generation"
+dependencies = ["gen-nanobind-bindings", "gen-nanobind-stubs"]
+
+[tasks.gen-nanobind-bindings]
+category = "Code generation"
 dependencies = ["fetch-nanobind"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-rm -rf nanobind/src
 
 generate_generic feature_tests nanobind src
+'''
 
-# Build nanobind and generate stubs
-cd nanobind
+[tasks.gen-nanobind-stubs]
+category = "Code generation"
+dependencies = ["fetch-nanobind"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+
+rm -r feature_tests/nanobind/src/somelib
+
+cd feature_tests/nanobind
+
+# Build the lib so that Nanobind can read `__nb_signature__`
 exec --fail-on-error cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 exec --fail-on-error cmake --build build --target somelib --config Debug
 
+# Generate stubs
 writefile src/somelib/__init__.py "from .somelib import *"
-exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build -i build/Debug -i build/Release -O src/somelib -M src/somelib/py.typed
+exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build/Debug -O src/somelib -M src/somelib/py.typed
 '''
+
 # Build deps
 
 [tasks.build-tool]
