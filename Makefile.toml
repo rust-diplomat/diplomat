@@ -611,7 +611,7 @@ exec --fail-on-error cmake --build build --target somelib --config Debug
 
 # Generate stubs
 writefile src/somelib/__init__.py "from .somelib import *"
-exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build/Debug -O src/somelib -M src/somelib/py.typed
+exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build -i build/Debug -O src/somelib -M src/somelib/py.typed
 '''
 
 # Build deps
