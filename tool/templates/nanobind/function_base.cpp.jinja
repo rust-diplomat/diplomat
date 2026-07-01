@@ -30,10 +30,23 @@ nb::overload_cast<{% for p in &overload_params -%} {{- p.type_name -}} {%- if !l
     {%- endif -%}
 
     {%- if success_owned_op || failure_owned_op -%}
-    {{-pre_call-}}{{- caller() -}}{{- post_call -}}
-    {%- else -%}
-    {{- caller() -}}
+    {{-pre_call-}}
     {%- endif -%}
+
+    {%- if m.has_op_cb -%}
+    swap_lvalue_wrap(
+    {%- endif -%}
+
+    {{- caller() -}}
+
+    {%- if m.has_op_cb -%}
+    )
+    {%- endif -%}
+
+    {%- if success_owned_op || failure_owned_op -%}
+    {{-post_call-}}
+    {%- endif -%}
+
 {%- endmacro -%}
 {% import "method_params.cpp.jinja" as method_params %}
     .{{m.def}}

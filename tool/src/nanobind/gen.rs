@@ -47,6 +47,9 @@ pub(super) struct MethodInfo<'a> {
     pub(super) overloads: Vec<OverloadInfo<'a>>,
     /// A quoted, escaped C++ string literal for this method's docstring, if it has docs.
     pub(super) docstring: Option<String>,
+    /// If this has a callback which takes an Opaque& reference (so we can swap them out with pointers.)
+    /// See https://github.com/rust-diplomat/diplomat/issues/1197 for more.
+    pub(super) has_op_cb: bool,
 }
 
 /// A type name with a corresponding variable name, such as a struct field or a function parameter.
@@ -502,16 +505,29 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             def_qualifiers.extend(["static"]);
         }
 
+        let mut has_op_cb = false;
+
         let param_decls = ParamInfo {
             params: method
                 .params
                 .iter()
-                .map(|p| NamedType {
-                    name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                    type_name: self.cpp.gen_type_name(&p.ty),
-                    ty: &p.ty,
-                    default_value: p.attrs.default_value.clone(),
-                    docstring: None,
+                .map(|p| {
+                    if let hir::Type::Callback(cb) = &p.ty {
+                        has_op_cb |= cb.params.iter().any(|p| {
+                            if let hir::Type::Opaque(op) = &p.ty {
+                                !op.is_owned()
+                            } else {
+                                false
+                            }
+                        });
+                    }
+                    NamedType {
+                        name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
+                        type_name: self.cpp.gen_type_name(&p.ty),
+                        ty: &p.ty,
+                        default_value: p.attrs.default_value.clone(),
+                        docstring: None,
+                    }
                 })
                 .collect(),
         };
@@ -612,6 +628,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             },
             overloads: vec![],
             docstring: self.formatter.fmt_doc_literal(&method.docs, &method.attrs),
+            has_op_cb,
         })
     }
 }
