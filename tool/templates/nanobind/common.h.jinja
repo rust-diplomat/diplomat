@@ -471,27 +471,61 @@ maybe_op_unwrapper<Func>::result maybe_op_unwrap(Func&& f) {
     return maybe_op_unwrapper<Func>::get_bound_mapper((nanobind::detail::forward_t<Func>)f);
 }
 
+template<typename T>
+struct lvalue_to_ptr {
+    typedef T Type;
+    static Type get_value(Type v) {
+        return v;
+    }
+};
+
+template<typename T>
+struct lvalue_to_ptr<T&> {
+    typedef T* Type;
+    static Type get_value(T& v) {
+        return &v;
+    }
+};
+
+template<typename T>
+struct get_cb_with_lvalue_arg {
+    typedef T Type;
+    
+    static Type get_arg(Type a) {
+        return a;
+    }
+};
+
+template<typename Return, typename... Args>
+struct get_cb_with_lvalue_arg<std::function<Return(Args...)>> {
+    typedef std::function<Return(typename lvalue_to_ptr<Args>::Type ...)> Type;
+    
+    // Nanobind provides us with a callback that accepts Opaque pointers.
+    // C++ will call the returned function with Opaque l-values.
+    static std::function<Return(Args...)> get_arg(Type f) {
+        return [f](Args... args) {
+            // Given the Opaque l-values, convert them to pointers that Nanobind will accept.
+            f(lvalue_to_ptr<Args>::get_value(args)...);
+        };
+    }
+};
+
 template<typename Func>
 struct swap_lvalue_wrapper {};
 
 template<typename Return, typename... Args>
 struct swap_lvalue_wrapper<Return(*)(Args...)> {
+    // Our original C++ function:
     typedef Return(*original)(Args...);
-    // TODO: Args... here should be the converted typings of args (i.e., std::function<void(MyOpaque&)> becomes std::function<void(MyOpaque*)>)
-    typedef std::function<Return(Args...)> result;
+    // Our Nanobind function with the converted types:
+    typedef std::function<Return(typename get_cb_with_lvalue_arg<Args>::Type ...)> result;
 
+    // Return the new function that accepts the types Nanobind wants.
     static result get_converted_func(original f) {
-        return [f](Args... args) {
-            /*
-            // Is this a std::function?
-            // Create a new bound lambda that acts as the original callback:
-            auto new_f = [](FInner func, FArgs ...original_args) {
-                // Convert FArgs lvalue references to pointers:
-                // TODO
-                // Call the callback:
-                func();
-            };*/
-            return (f)(args...);
+        return [f](get_cb_with_lvalue_arg<Args>::Type... args) {
+            // Call the original C++ function,
+            // with the types converted from what Nanobind expects to what C++ expects:
+            return (f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
         };
     }
 };
