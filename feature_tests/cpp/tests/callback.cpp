@@ -6,6 +6,7 @@
 #include "../include/Opaque.hpp"
 #include "../include/MyStructContainingAnOption.hpp"
 #include "../include/PrimitiveStructVec.hpp"
+#include "../include/OpaqueCallbacks.hpp"
 #include "assert.hpp"
 
 using namespace somelib;
@@ -196,6 +197,15 @@ int main(int argc, char *argv[])
                 somelib::MyEnum::A
             }));
         });
+    }
+
+    {
+        auto st = MyString::new_();
+        std::function<const somelib::MyString&(const somelib::MyString&)> f = [](const MyString& i) -> const MyString& {
+            return std::move(i);
+        };
+        const somelib::MyString& call = std::forward<const MyString&>(OpaqueCallbacks::ret_op(f, std::move(*st.get())));
+        simple_assert_eq("Return Opaque ref in callback", call.get_str(), st->get_str());
     }
 
 }

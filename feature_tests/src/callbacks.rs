@@ -191,6 +191,17 @@ mod ffi {
         }
     }
 
+    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1204
+    #[diplomat::cfg(all(supports = "callbacks", not(kotlin)))]
+    #[diplomat::opaque]
+    pub struct OpaqueCallbacks;
+
+    impl OpaqueCallbacks {
+        pub fn ret_op<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> &'a MyString {
+            f(st)
+        }
+    }
+
     fn hidden_internal() {}
 
     #[diplomat::attr(not(supports = "callbacks"), disable)]
