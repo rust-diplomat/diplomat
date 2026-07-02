@@ -191,21 +191,14 @@ mod ffi {
         }
     }
 
+    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1204
+    #[diplomat::cfg(all(supports = "callbacks", not(kotlin)))]
     #[diplomat::opaque_mut]
-    pub struct OpaqueCallbackHolder {
-        held : Box<dyn Fn(&MyString) -> &MyString>,
-    }
+    pub struct OpaqueCallbacks;
 
-    impl OpaqueCallbackHolder {
-        #[diplomat::attr(auto, constructor)]
-        pub fn new(f : impl Fn(&MyString) -> &MyString + 'static) -> Box<Self> {
-            Box::new(Self {
-                held: Box::new(f),
-            })
-        }
-
-        pub fn call(&self, st : &MyString) {
-            (self.held)(st);
+    impl OpaqueCallbacks {
+        pub fn ret_op<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> &'a MyString {
+            f(st)
         }
         
         pub fn opaque_cb_self(&self, cb : impl Fn(&MyString), st : &MyString) {
@@ -214,17 +207,6 @@ mod ffi {
 
         pub fn opaque_cb_mut_self(&mut self, cb : impl Fn(&MyString), st : &MyString) {
             cb(st);
-        }
-    }
-
-    // FIXME: https://github.com/rust-diplomat/diplomat/issues/1204
-    #[diplomat::cfg(all(supports = "callbacks", not(kotlin)))]
-    #[diplomat::opaque]
-    pub struct OpaqueCallbacks;
-
-    impl OpaqueCallbacks {
-        pub fn ret_op<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> &'a MyString {
-            f(st)
         }
     }
 
