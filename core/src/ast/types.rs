@@ -1141,7 +1141,19 @@ impl TypeName {
                                 },
                             )
                         } else {
-                            panic!("Expected both type arguments for Result to be a type")
+                            let mut locations = vec![];
+                            if !matches!(&type_args.args[0], syn::GenericArgument::Type(..)) {
+                                locations.push(ContextLocation::new(type_args.args[0].span().spanned_into(module_location), "Must be a type arg".into()));
+                            }
+                            if !matches!(&type_args.args[1], syn::GenericArgument::Type(..)) {
+                                locations.push(ContextLocation::new(type_args.args[1].span().spanned_into(module_location), "Must be a type arg".into()));
+                            }
+                            create_report(AstReport::new(
+                                "Expected both type arguments for Result to be a type".into(),
+                                Some(type_args.span().spanned_into(module_location)),
+                                "".into(),
+                                locations
+                            ));
                         }
                     } else {
                         panic!("Expected angle brackets for Result type")

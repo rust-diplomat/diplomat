@@ -302,6 +302,7 @@ mod tests {
         "invalid_slice.rs",
         "tuples.rs",
         "multi_traits.rs",
+        "result_type_args.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
