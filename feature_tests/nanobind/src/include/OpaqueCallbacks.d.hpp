@@ -33,9 +33,9 @@ public:
 
   inline static std::unique_ptr<somelib::OpaqueCallbacks> ctor(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st);
 
-  inline void opaque_cb_self(std::function<void(const somelib::MyString&)> cb, const somelib::MyString& st) const;
+  inline const somelib::MyString& opaque_cb_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st) const;
 
-  inline void opaque_cb_mut_self(std::function<void(const somelib::MyString&)> cb, const somelib::MyString& st);
+  inline const somelib::MyString& opaque_cb_mut_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st);
 
     inline const somelib::capi::OpaqueCallbacks* AsFFI() const;
     inline somelib::capi::OpaqueCallbacks* AsFFI();
