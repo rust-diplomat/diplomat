@@ -1310,6 +1310,7 @@ impl TypeName {
                         }
                     }
                 }
+                // `.expect` currently unreachable, as we either error before this point or set ret_type to be Some.
                 ret_type.expect("No valid traits found")
             }
             other => {
