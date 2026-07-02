@@ -682,9 +682,29 @@ script = '''
 mkdir vendor
 cd vendor
 nanobind_exists = is_path_exists nanobind
-if not nanobind_exists
+if not ${nanobind_exists}
     exec git clone https://github.com/wjakob/nanobind.git --depth=1 -b "v2.4.0" --recurse-submodules -q
 end
+# Read Nanobind version:
+nanobind_hdr = readfile ./nanobind/pyproject.toml
+nanobind_split = split ${nanobind_hdr} "\n"
+len = array_length ${nanobind_split}
+
+version = set "unknown"
+for i in ${nanobind_split}
+    is_version = starts_with ${i} "version"
+    if ${is_version}
+        version = set ${i}
+        version = replace ${version} "version = \"" " "
+        version = replace ${version} "\"" ""
+        version = trim ${version}
+        goto :stop
+    end
+end
+
+:stop
+echo "Found Nanobind version ${version}"
+assert_eq ${version} "2.4.0"
 '''
 
 [tasks.bench-rust-example]
