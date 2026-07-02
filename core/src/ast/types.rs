@@ -1072,7 +1072,14 @@ impl TypeName {
                         Some((lt, mutability))
                     };
 
-                    let ty = get_ty_from_syn_path(p).expect("Expected type argument to DiplomatSlice/DiplomatSliceMut/DiplomatOwnedSlice");
+                    let ty = get_ty_from_syn_path(p).unwrap_or_else(|| {
+                        create_report(AstReport::new(
+                            "Expected type argument".into(),
+                            Some(p.span().spanned_into(module_location)),
+                            "Add slice type specification here".into(),
+                            vec![]
+                        ));
+                    });
 
                     if let syn::Type::Path(p) = &ty {
                         if let Some(ident) = p.path.get_ident() {

@@ -309,6 +309,7 @@ mod tests {
         "ns_lifetime.rs",
         "unsupported_bound.rs",
         "unsupported_type.rs",
+        "slice_no_type.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
