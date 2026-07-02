@@ -66,6 +66,27 @@ public class PinnedSliceTests
         Assert.Equal(15u, view.Sum());
     }
 
+    // ParseStrict errs on a NON-empty buffer, so a real GCHandle is pinned and
+    // must be disposed on the throw path (the empty-buffer case pins nothing).
+    // If the catch leaked the handle or disposed a bad one, GC churn afterwards
+    // would corrupt the heap; a healthy subsequent Parse proves it didn't.
+    [Fact]
+    public void ParseStrict_PinnedBufferThatErrors_DisposesPinAndSurvives()
+    {
+        Assert.Throws<SliceParseErrorException>(
+            () => OpaqueSliceView.ParseStrict(new byte[] { 0, 1, 2, 3 }));
+
+        for (int i = 0; i < 10; i++)
+        {
+            _ = new byte[256 * 1024];
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        using OpaqueSliceView view = OpaqueSliceView.ParseStrict(new byte[] { 4, 5, 6 });
+        Assert.Equal(15u, view.Sum());
+    }
+
     [Fact]
     public void Dispose_MakesCallsThrow_AndDoubleDisposeIsSafe()
     {

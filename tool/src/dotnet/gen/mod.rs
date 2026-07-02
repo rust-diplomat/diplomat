@@ -198,10 +198,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             if ty.attrs().disable {
                 continue;
             }
-            // One formatted name flows into file names, declaration sites, and
-            // type references. Any diagnostic pushed while lowering this type
-            // is attributed to it; the guard is restored on scope exit.
             let display_name = self.formatter.fmt_type_name(id).into_owned();
+            // Attribute any diagnostic pushed while lowering this type to it.
             let _guard = self.errors.set_context_ty(display_name.clone().into());
             // `None` means an unsupported shape (diagnostic already recorded);
             // the end-gate in `lib.rs` aborts before any file is written.

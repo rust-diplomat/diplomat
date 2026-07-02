@@ -414,9 +414,8 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("RustHandle template render failed"),
     );
-    // System.Buffers.MemoryHandle / ReadOnlyMemory need the System.Memory
-    // package on the netstandard2.0 floor, so only ship the helper when the
-    // run actually pins a slice.
+    // The helper pulls in System.Memory, which the netstandard2.0 floor lacks
+    // by default — so only ship it when the run actually pins a slice.
     if uses_pinned_memory {
         add_cs_file(
             &files,
@@ -763,9 +762,15 @@ mod test {
             foo.contains("new Foo(result, new object[] { dataPin })"),
             "infallible owned return should root the pin holder as an edge:\n{foo}"
         );
+        let release_at = foo
+            .find("_inner.Release();")
+            .expect("Dispose should release the Rust handle");
+        let unpin_at = foo
+            .find("(edge as DiplomatPinnedMemory)?.Dispose();")
+            .expect("Dispose should unpin holder edges");
         assert!(
-            foo.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
-            "Dispose should unpin holder edges after releasing the Rust handle:\n{foo}"
+            release_at < unpin_at,
+            "unpin must run AFTER Release() so Rust's Drop can still read the buffer:\n{foo}"
         );
     }
 
@@ -801,6 +806,88 @@ mod test {
         assert!(
             product.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
             "a type returned pinned from another type's method must sweep pin edges on Dispose:\n{product}"
+        );
+    }
+
+    // Two slice params borrowed by the same output lifetime must each get their
+    // own pin local, disposed independently on throw and rooted together.
+    #[test]
+    fn multiple_pinned_slices_each_get_a_distinct_pin() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Pair<'a>(&'a [u8], &'a [u8]);
+
+                impl<'a> Pair<'a> {
+                    pub fn combine(a: &'a [u8], b: &'a [u8]) -> Box<Pair<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let pair = files.get("Pair.cs").expect("expected Pair.cs output");
+        assert!(
+            pair.contains("DiplomatPinnedMemory? aPin = null;")
+                && pair.contains("DiplomatPinnedMemory? bPin = null;"),
+            "both pins should be declared nullable before the try:\n{pair}"
+        );
+        assert!(
+            pair.contains("aPin = DiplomatPinnedMemory.Pin(a);")
+                && pair.contains("bPin = DiplomatPinnedMemory.Pin(b);"),
+            "both pins should be assigned inside the try:\n{pair}"
+        );
+        assert!(
+            pair.contains("aPin?.Dispose();") && pair.contains("bPin?.Dispose();"),
+            "the catch should dispose both pins independently:\n{pair}"
+        );
+        assert!(
+            pair.contains("new Pair(result, new object[] { aPin, bPin })"),
+            "both distinct pin locals should be rooted on the returned wrapper:\n{pair}"
+        );
+    }
+
+    // The `&[u32]` element type surfaces as ReadOnlyMemory<uint> with a `uint*`
+    // pinned pointer — the whole contract, not just the `&[u8]` case.
+    #[test]
+    fn pinned_u32_slice_uses_readonly_memory_uint() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct View<'a>(&'a [u32]);
+
+                impl<'a> View<'a> {
+                    pub fn parse(data: &'a [u32]) -> Box<View<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let view = files.get("View.cs").expect("expected View.cs output");
+        assert!(
+            view.contains("public static View Parse(ReadOnlyMemory<uint> data)"),
+            "a &[u32] borrowed param should surface as ReadOnlyMemory<uint>:\n{view}"
+        );
+        assert!(
+            view.contains("Ptr = (uint*)dataPin.Pointer"),
+            "the raw call should pass the pinned pointer as uint*:\n{view}"
         );
     }
 

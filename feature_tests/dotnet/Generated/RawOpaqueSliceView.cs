@@ -12,6 +12,9 @@ internal partial struct OpaqueSliceView
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueSliceView_parse", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultOpaqueSliceViewSliceParseError Parse(DiplomatSliceU8 data);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueSliceView_parse_strict", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatResultOpaqueSliceViewSliceParseError ParseStrict(DiplomatSliceU8 data);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueSliceView_wrap", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern OpaqueSliceView* Wrap(DiplomatSliceU8 data);
 

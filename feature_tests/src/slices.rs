@@ -188,6 +188,18 @@ pub mod ffi {
             }
         }
 
+        // Errs on a NON-empty buffer (leading zero byte), so the .NET side
+        // pins a real GCHandle and then must dispose it on the throw path.
+        pub fn parse_strict(
+            data: &'a [u8],
+        ) -> Result<Box<OpaqueSliceView<'a>>, Box<SliceParseError>> {
+            if !data.is_empty() && data[0] == 0 {
+                Err(Box::new(SliceParseError))
+            } else {
+                Ok(Box::new(OpaqueSliceView(data)))
+            }
+        }
+
         pub fn wrap(data: &'a [u8]) -> Box<OpaqueSliceView<'a>> {
             Box::new(OpaqueSliceView(data))
         }

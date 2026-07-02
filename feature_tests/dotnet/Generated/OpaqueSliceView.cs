@@ -89,6 +89,38 @@ public partial class OpaqueSliceView: IDisposable
             }
         }
     }
+    /// <exception cref="SliceParseErrorException"></exception>
+    /// <returns>
+    /// A <c>OpaqueSliceView</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// <br/>
+    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+    /// </remarks>
+    public static OpaqueSliceView ParseStrict(ReadOnlyMemory<byte> data)
+    {
+        unsafe
+        {
+            DiplomatPinnedMemory? dataPin = null;
+            try
+            {
+                dataPin = DiplomatPinnedMemory.Pin(data);
+                var result = Raw.OpaqueSliceView.ParseStrict(new DiplomatSliceU8 { Ptr = (byte*)dataPin.Pointer, Len = (nuint)data.Length });
+                if (!result.IsOk)
+                {
+                    throw new SliceParseErrorException(new SliceParseError(result.Err));
+                }
+                return new OpaqueSliceView(result.Ok, new object[] { dataPin });
+            }
+            catch
+            {
+                dataPin?.Dispose();
+                throw;
+            }
+        }
+    }
     /// <returns>
     /// A <c>OpaqueSliceView</c> allocated on Rust side.
     /// </returns>

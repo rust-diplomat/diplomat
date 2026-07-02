@@ -992,10 +992,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::ReturnType::Fallible(s, e) => (s.as_type(), e.as_ref()),
         };
 
-        // A borrowed return builds a non-owning wrapper whose Dispose never
-        // runs Rust's destructor, so unpinning on that Dispose would free the
-        // buffer while Rust still holds the slice. Only an owned return may
-        // root a pin; otherwise fall through to the SliceParam rejection.
+        // A borrowed return's Dispose never runs Rust's destructor, so
+        // unpinning there would free the buffer while Rust still holds it.
         let ok_pins: &[SlicePin] = if ownership == Ownership::Owned {
             &inputs.borrowed_slice_pins
         } else {
