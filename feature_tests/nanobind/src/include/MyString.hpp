@@ -77,8 +77,10 @@ inline void somelib::MyString::set_str(std::string_view new_str) {
         {new_str.data(), new_str.size()});
 }
 
+#include <iostream>
 inline std::string somelib::MyString::get_str() const {
     std::string output;
+    std::cout << (size_t)this << std::endl;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     somelib::capi::MyString_get_str(this->AsFFI(),
         &write);

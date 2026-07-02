@@ -13,6 +13,8 @@
 namespace somelib {
 namespace capi { struct MyString; }
 class MyString;
+namespace capi { struct OpaqueCallbacks; }
+class OpaqueCallbacks;
 } // namespace somelib
 
 
@@ -28,6 +30,12 @@ class OpaqueCallbacks {
 public:
 
   inline static const somelib::MyString& ret_op(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st);
+
+  inline static std::unique_ptr<somelib::OpaqueCallbacks> ctor(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st);
+
+  inline const somelib::MyString& opaque_cb_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st) const;
+
+  inline const somelib::MyString& opaque_cb_mut_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st);
 
     inline const somelib::capi::OpaqueCallbacks* AsFFI() const;
     inline somelib::capi::OpaqueCallbacks* AsFFI();
