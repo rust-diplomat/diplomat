@@ -581,23 +581,41 @@ generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/ma
 
 [tasks.gen-nanobind-feature]
 category = "Code generation"
+run_task = [
+    { name = ["gen-nanobind-bindings", "gen-nanobind-stubs"] }
+]
+
+[tasks.gen-nanobind-bindings]
+category = "Code generation"
 dependencies = ["fetch-nanobind"]
 script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-rm -rf nanobind/src
 
 generate_generic feature_tests nanobind src
+'''
 
-# Build nanobind and generate stubs
-cd nanobind
+[tasks.gen-nanobind-stubs]
+category = "Code generation"
+dependencies = ["fetch-nanobind"]
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+
+rm -r feature_tests/nanobind/src/somelib
+
+cd feature_tests/nanobind
+
+# Build the lib so that Nanobind can read `__nb_signature__`
 exec --fail-on-error cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 exec --fail-on-error cmake --build build --target somelib --config Debug
 
+# Generate stubs
 writefile src/somelib/__init__.py "from .somelib import *"
-exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build -i build/Debug -i build/Release -O src/somelib -M src/somelib/py.typed
+exec --fail-on-error python ../../vendor/nanobind/src/stubgen.py -r -q -m somelib -i build -i build/Debug -O src/somelib -M src/somelib/py.typed
 '''
+
 # Build deps
 
 [tasks.build-tool]
@@ -665,10 +683,30 @@ script_runner = "@duckscript"
 script = '''
 mkdir vendor
 cd vendor
-nanobind_present = is_path_exists nanobind
-if !nanobind_present
+nanobind_exists = is_path_exists nanobind
+if not ${nanobind_exists}
     exec git clone https://github.com/wjakob/nanobind.git --depth=1 -b "v2.4.0" --recurse-submodules -q
 end
+# Read Nanobind version:
+nanobind_hdr = readfile ./nanobind/pyproject.toml
+nanobind_split = split ${nanobind_hdr} "\n"
+len = array_length ${nanobind_split}
+
+version = set "unknown"
+for i in ${nanobind_split}
+    is_version = starts_with ${i} "version"
+    if ${is_version}
+        version = set ${i}
+        version = replace ${version} "version = \"" " "
+        version = replace ${version} "\"" ""
+        version = trim ${version}
+        goto :stop
+    end
+end
+
+:stop
+echo "Found Nanobind version ${version}"
+assert_eq ${version} "2.4.0"
 '''
 
 [tasks.bench-rust-example]
