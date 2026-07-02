@@ -23,6 +23,11 @@ namespace capi {
         const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
         void (*destructor)(const void*);
     } DiplomatCallback_OpaqueCallbacks_ret_op_f;
+    typedef struct DiplomatCallback_OpaqueCallbacks_ctor_f {
+        const void* data;
+        const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
+        void (*destructor)(const void*);
+    } DiplomatCallback_OpaqueCallbacks_ctor_f;
     typedef struct DiplomatCallback_OpaqueCallbacks_opaque_cb_self_cb {
         const void* data;
         void (*run_callback)(const void*, const somelib::capi::MyString* );
@@ -35,6 +40,8 @@ namespace capi {
     } DiplomatCallback_OpaqueCallbacks_opaque_cb_mut_self_cb;
 
     const somelib::capi::MyString* OpaqueCallbacks_ret_op(DiplomatCallback_OpaqueCallbacks_ret_op_f f_cb_wrap, const somelib::capi::MyString* st);
+
+    somelib::capi::OpaqueCallbacks* OpaqueCallbacks_ctor(DiplomatCallback_OpaqueCallbacks_ctor_f f_cb_wrap, const somelib::capi::MyString* st);
 
     void OpaqueCallbacks_opaque_cb_self(const somelib::capi::OpaqueCallbacks* self, DiplomatCallback_OpaqueCallbacks_opaque_cb_self_cb cb_cb_wrap, const somelib::capi::MyString* st);
 
@@ -50,6 +57,12 @@ inline const somelib::MyString& somelib::OpaqueCallbacks::ret_op(std::function<c
     auto result = somelib::capi::OpaqueCallbacks_ret_op({new decltype(f)(std::move(f)), somelib::diplomat::fn_traits(f).template c_run_callback_diplomat_opaque<const somelib::capi::MyString*>, somelib::diplomat::fn_traits(f).c_delete},
         st.AsFFI());
     return *somelib::MyString::FromFFI(result);
+}
+
+inline std::unique_ptr<somelib::OpaqueCallbacks> somelib::OpaqueCallbacks::ctor(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st) {
+    auto result = somelib::capi::OpaqueCallbacks_ctor({new decltype(f)(std::move(f)), somelib::diplomat::fn_traits(f).template c_run_callback_diplomat_opaque<const somelib::capi::MyString*>, somelib::diplomat::fn_traits(f).c_delete},
+        st.AsFFI());
+    return std::unique_ptr<somelib::OpaqueCallbacks>(somelib::OpaqueCallbacks::FromFFI(result));
 }
 
 inline void somelib::OpaqueCallbacks::opaque_cb_self(std::function<void(const somelib::MyString&)> cb, const somelib::MyString& st) const {
