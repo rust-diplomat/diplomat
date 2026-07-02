@@ -1165,7 +1165,12 @@ impl TypeName {
                     match trait_bound {
                         syn::TypeParamBound::Trait(syn::TraitBound { path: p, .. }) => {
                             if ret_type.is_some() {
-                                todo!("Currently don't support implementing multiple traits");
+                                create_report(AstReport::new(
+                                    "Implementing multiple traits currently unsupported".into(),
+                                    Some(trait_bound.span().spanned_into(module_location)),
+                                    "Suggestion: remove extra trait bound".into(),
+                                    vec![]
+                                ));
                             }
                             let rel_segs = &p.segments;
                             let path_seg = &rel_segs[0];

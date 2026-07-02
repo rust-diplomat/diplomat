@@ -301,6 +301,7 @@ mod tests {
         "option_without_angle_brackets.rs",
         "invalid_slice.rs",
         "tuples.rs",
+        "multi_traits.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
