@@ -1305,7 +1305,14 @@ impl TypeName {
                 }
                 ret_type.expect("No valid traits found")
             }
-            other => panic!("Unsupported type: {}", other.to_token_stream()),
+            other => {
+                create_report(AstReport::new(
+                    "Found unsupported type".into(),
+                    Some(other.span().spanned_into(module_location)),
+                    "See a list of the types Diplomat supports: https://rust-diplomat.github.io/diplomat/types.html".into(),
+                    vec![]
+                ));
+        },
         }
     }
 
