@@ -487,12 +487,17 @@ struct lvalue_to_ptr<T&> {
     }
 };
 
+// Wrap std::forward, so we forward the type without copying it.
 template<typename T>
 struct get_cb_with_lvalue_arg {
     typedef T Type;
     
-    static Type get_arg(Type a) {
-        return a;
+    static Type&& get_arg(std::remove_reference_t<Type>&& a) {
+        return std::forward<Type>(a);
+    }
+    
+    static Type&& get_arg(std::remove_reference_t<Type>& a) {
+        return std::forward<Type>(a);
     }
 };
 
@@ -503,9 +508,9 @@ struct get_cb_with_lvalue_arg<std::function<Return(Args...)>> {
     // Nanobind provides us with a callback that accepts Opaque pointers.
     // C++ will call the returned function with Opaque l-values.
     static std::function<Return(Args...)> get_arg(Type f) {
-        return [f](Args... args) {
+        return [f](Args... args) -> Return {
             // Given the Opaque l-values, convert them to pointers that Nanobind will accept.
-            f(lvalue_to_ptr<Args>::get_value(args)...);
+            return f(lvalue_to_ptr<Args>::get_value(args)...);
         };
     }
 };
@@ -522,7 +527,7 @@ struct swap_lvalue_wrapper<Return(*)(Args...)> {
 
     // Return the new function that accepts the types Nanobind wants.
     static result get_converted_func(original f) {
-        return [f](get_cb_with_lvalue_arg<Args>::Type... args) {
+        return [f](get_cb_with_lvalue_arg<Args>::Type... args) -> Return {
             // Call the original C++ function,
             // with the types converted from what Nanobind expects to what C++ expects:
             return (f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
@@ -539,7 +544,7 @@ struct swap_lvalue_wrapper<Return(Class::*)(Args...)> {
 
     // Return the new function that accepts the types Nanobind wants.
     static result get_converted_func(original f) {
-        return [f](Class* c, get_cb_with_lvalue_arg<Args>::Type... args) {
+        return [f](Class* c, get_cb_with_lvalue_arg<Args>::Type... args) -> Return {
             // Call the original C++ function,
             // with the types converted from what Nanobind expects to what C++ expects:
             return (c->*f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
@@ -556,7 +561,7 @@ struct swap_lvalue_wrapper<Return(Class::*)(Args...) const> {
 
     // Return the new function that accepts the types Nanobind wants.
     static result get_converted_func(original f) {
-        return [f](const Class* c, get_cb_with_lvalue_arg<Args>::Type... args) {
+        return [f](const Class* c, get_cb_with_lvalue_arg<Args>::Type... args) -> Return {
             // Call the original C++ function,
             // with the types converted from what Nanobind expects to what C++ expects:
             return (c->*f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
