@@ -1264,7 +1264,12 @@ impl TypeName {
                                     ));
                                     continue;
                                 }
-                                panic!("Unsupported function type: {:?}", &path_seg.arguments);
+                                create_report(AstReport::new(
+                                    "Unsupported function type".into(),
+                                    Some(path_seg.span().spanned_into(module_location)),
+                                    "Expected parentheses".into(),
+                                    vec![]
+                                ));
                             } else {
                                 ret_type = Some(TypeName::ImplTrait(
                                     (&syn::TraitBound {
