@@ -92,6 +92,14 @@ def test_callback():
     holder = somelib.MutableCallbackHolder(lambda a: HasMutatingStatic.decrement(a))
     assert holder.call(5) == 75
     assert holder.call(5) == 70
+    
+    def cb_mut_self(st):
+        assert st.str == "123"
+    holder.opaque_cb_mut_self(cb_mut_self, somelib.MyString("123"))
+
+    def cb_self(st):
+        assert st.str == "456"
+    holder.opaque_cb_self(cb_self, somelib.MyString("456"))
 
     s = somelib.MyString("ABC123")
 
