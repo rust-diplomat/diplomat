@@ -303,6 +303,7 @@ mod tests {
         "tuples.rs",
         "multi_traits.rs",
         "result_type_args.rs",
+        "result_angle_brackets.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

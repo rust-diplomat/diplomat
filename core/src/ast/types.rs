@@ -1156,7 +1156,18 @@ impl TypeName {
                             ));
                         }
                     } else {
-                        panic!("Expected angle brackets for Result type")
+                        let args = &p.path.segments.last().unwrap().arguments;
+                        let suggestion = match args {
+                            syn::PathArguments::None => "add angle brackets",
+                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
+                            _ => unreachable!()
+                        };
+                        create_report(AstReport::new(
+                            "Expected angle brackets for Result type".into(),
+                            Some(p.path.segments.span().spanned_into(module_location)),
+                            format!("Suggestion: {suggestion}"),
+                            vec![]
+                        ));
                     }
                 } else if is_runtime_type(p, "DiplomatWrite") {
                     TypeName::Write
