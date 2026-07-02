@@ -201,6 +201,12 @@ mod ffi {
             f(st)
         }
         
+        #[diplomat::attr(auto, constructor)]
+        pub fn ctor<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> Box<Self> {
+            let _ = f(st);
+            Box::new(Self {})
+        }
+
         pub fn opaque_cb_self(&self, cb : impl Fn(&MyString), st : &MyString) {
             cb(st);
         }
