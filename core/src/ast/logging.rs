@@ -306,6 +306,7 @@ mod tests {
         "result_angle_brackets.rs",
         "lifetime_callback_param.rs",
         "unsupported_fn_type.rs",
+        "ns_lifetime.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

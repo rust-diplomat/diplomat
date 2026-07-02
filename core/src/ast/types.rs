@@ -1284,10 +1284,14 @@ impl TypeName {
                             }
                         }
                         syn::TypeParamBound::Lifetime(syn::Lifetime { ident, .. }) => {
-                            assert_eq!(
-                                ident, "static",
-                                "only 'static lifetimes are supported on trait objects for now"
-                            );
+                            if ident != "static" {
+                                create_report(AstReport::new(
+                                    "Found non-static lifetime on trait".into(),
+                                    Some(ident.span().spanned_into(module_location)),
+                                    "Only 'static lifetimes are supported on trait objects right now.".into(),
+                                    vec![]
+                                ));
+                            }
                         }
                         _ => {
                             panic!("Unsupported trait component: {trait_bound:?}");
