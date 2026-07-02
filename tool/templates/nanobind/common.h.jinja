@@ -569,6 +569,24 @@ struct swap_lvalue_wrapper<Return(Class::*)(Args...) const> {
     }
 };
 
+// Account for maybe_op_unwrap wrapped methods:
+template<typename Return, typename... Args>
+struct swap_lvalue_wrapper<std::function<Return(Args...)>> {
+    // Our original C++ function:
+    typedef std::function<Return(Args...)> original;
+    // Our Nanobind function with the converted types:
+    typedef std::function<Return(typename get_cb_with_lvalue_arg<Args>::Type ...)> result;
+
+    // Return the new function that accepts the types Nanobind wants.
+    static result get_converted_func(original f) {
+        return [f](get_cb_with_lvalue_arg<Args>::Type... args) -> Return {
+            // Call the original C++ function,
+            // with the types converted from what Nanobind expects to what C++ expects:
+            return (f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
+        };
+    }
+};
+
 
 // Given a function reference, this creates a bound call to take callbacks which take l-value references as args,
 // and convert them to pointer args instead (so Nanobind can convert them).
