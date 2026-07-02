@@ -23,7 +23,11 @@
 //!   `DiplomatPinnedMemory`, rooted as a keep-alive edge and unpinned after the
 //!   Rust destructor runs. String params and other borrow positions (borrowed
 //!   errors, Option-wrapped or non-opaque returns) are still rejected with a
-//!   diagnostic.
+//!   diagnostic. Because `ReadOnlyMemory` / `MemoryHandle` need the
+//!   `System.Memory` package on the netstandard2.0 / .NET Framework floor, the
+//!   `DiplomatPinnedMemory` helper and its `Dispose` sweep are emitted only when
+//!   a run actually pins (see `uses_pinned_memory`), so runs that never borrow a
+//!   slice don't inherit the dependency.
 //! * Borrowed opaque returns (`&T`, `&mut T`, `Option<&T>`) use non-owning
 //!   handles plus keep-alive edges.
 //! * Borrowed opaque errors (`Result<_, &E>`) are rejected; without a success

@@ -13,6 +13,14 @@ namespace Somelib.Diplomat;
 /// giving the holder its own would let it unpin ahead of the owning wrapper's
 /// finalizer in the same GC cycle.
 /// </summary>
+/// <remarks>
+/// This uses <c>System.ReadOnlyMemory&lt;T&gt;</c> and
+/// <c>System.Buffers.MemoryHandle</c>. Those are built in on .NET Core 2.1+ /
+/// .NET Standard 2.1+, but on .NET Standard 2.0 and .NET Framework they ship in
+/// the <c>System.Memory</c> NuGet package — if you target those and use a
+/// method that borrows a slice, add a reference to <c>System.Memory</c> or this
+/// file will not compile.
+/// </remarks>
 internal sealed unsafe class DiplomatPinnedMemory : IDisposable
 {
     private MemoryHandle _handle;
