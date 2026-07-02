@@ -169,6 +169,42 @@ pub mod ffi {
         }
     }
 
+    // Owned opaque returns borrowing a `&[u8]` param: on .NET the param becomes
+    // ReadOnlyMemory<u8> pinned for the returned view's lifetime (PR #1201).
+    #[diplomat::opaque]
+    #[diplomat::attr(not(dotnet), disable)]
+    pub struct OpaqueSliceView<'a>(&'a [u8]);
+
+    #[diplomat::opaque]
+    #[diplomat::attr(not(dotnet), disable)]
+    pub struct SliceParseError;
+
+    impl<'a> OpaqueSliceView<'a> {
+        pub fn parse(data: &'a [u8]) -> Result<Box<OpaqueSliceView<'a>>, Box<SliceParseError>> {
+            if data.is_empty() {
+                Err(Box::new(SliceParseError))
+            } else {
+                Ok(Box::new(OpaqueSliceView(data)))
+            }
+        }
+
+        pub fn wrap(data: &'a [u8]) -> Box<OpaqueSliceView<'a>> {
+            Box::new(OpaqueSliceView(data))
+        }
+
+        pub fn length(&self) -> u32 {
+            self.0.len() as u32
+        }
+
+        pub fn get(&self, index: u32) -> u8 {
+            self.0.get(index as usize).copied().unwrap_or(0)
+        }
+
+        pub fn sum(&self) -> u32 {
+            self.0.iter().fold(0u32, |acc, &b| acc.wrapping_add(b as u32))
+        }
+    }
+
     // For testing throwing IndexError:
     #[diplomat::opaque]
     #[diplomat::cfg(nanobind)]
