@@ -189,7 +189,25 @@ mod ffi {
         pub fn call(&mut self, a: i32) -> i32 {
             (self.held)(a)
         }
+    }
 
+    #[diplomat::opaque_mut]
+    pub struct OpaqueCallbackHolder {
+        held : Box<dyn Fn(&MyString) -> &MyString>,
+    }
+
+    impl OpaqueCallbackHolder {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(f : impl Fn(&MyString) -> &MyString + 'static) -> Box<Self> {
+            Box::new(Self {
+                held: Box::new(f),
+            })
+        }
+
+        pub fn call(&self, st : &MyString) {
+            (self.held)(st);
+        }
+        
         pub fn opaque_cb_self(&self, cb : impl Fn(&MyString), st : &MyString) {
             cb(st);
         }
