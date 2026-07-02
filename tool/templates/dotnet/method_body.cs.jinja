@@ -49,14 +49,14 @@
 {{ bi }}DiplomatWriteable writeable = new DiplomatWriteable();
 {{ bi }}try
 {{ bi }}{
-    {%- if let Some(info) = method.error_info %}
+    {%- if method.error_info.is_some() %}
 {{ bi }}    var result = Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
     {%- for keep_alive in method.keep_alive_statements() %}
 {{ bi }}    {{ keep_alive }}
     {%- endfor %}
 {{ bi }}    if (!result.IsOk)
 {{ bi }}    {
-{{ bi }}        {{ info.throw_statement("result.Err") }}
+{{ bi }}        {{ method.error_throw_statement() }}
 {{ bi }}    }
     {%- else %}
 {{ bi }}    Raw.{{ name }}.{{ method.name }}({{ method.raw_call_args_with_writer() }});
@@ -70,14 +70,14 @@
 {{ bi }}{
 {{ bi }}    writeable.Dispose();
 {{ bi }}}
-{%- else if let Some(info) = method.error_info %}
+{%- else if method.error_info.is_some() %}
 {{ bi }}var result = {{ method.raw_call_expr(name) }};
 {%- for keep_alive in method.keep_alive_statements() %}
 {{ bi }}{{ keep_alive }}
 {%- endfor %}
 {{ bi }}if (!result.IsOk)
 {{ bi }}{
-{{ bi }}    {{ info.throw_statement("result.Err") }}
+{{ bi }}    {{ method.error_throw_statement() }}
 {{ bi }}}
 {{ bi }}{{ method.success_return_statement("result.Ok") }}
 {%- else if method.return_type.is_void() %}

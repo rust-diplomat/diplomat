@@ -163,6 +163,119 @@ public partial class OpaqueThinVec: IDisposable
             return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
     }
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin TryFirst(bool fail)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            var result = Raw.OpaqueThinVec.TryFirst(AsFFI(), fail);
+            GC.KeepAlive(this);
+            if (!result.IsOk)
+            {
+                throw new InvalidOperationException("FFI function failed with unit error");
+            }
+            return new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result.Ok), new object[] { this });
+        }
+    }
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <returns>
+    /// A <c>OpaqueThin</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThin? TryGet(nuint idx, bool fail)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            var result = Raw.OpaqueThinVec.TryGet(AsFFI(), idx, fail);
+            GC.KeepAlive(this);
+            if (!result.IsOk)
+            {
+                throw new InvalidOperationException("FFI function failed with unit error");
+            }
+            return result.Ok == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result.Ok), new object[] { this });
+        }
+    }
+    /// <exception cref="InvalidOperationException"></exception>
+    /// <returns>
+    /// A <c>OpaqueThinIter</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThinIter TryIter(bool fail)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            var result = Raw.OpaqueThinVec.TryIter(AsFFI(), fail);
+            GC.KeepAlive(this);
+            if (!result.IsOk)
+            {
+                throw new InvalidOperationException("FFI function failed with unit error");
+            }
+            return new OpaqueThinIter(result.Ok, new object[] { this });
+        }
+    }
+    /// <returns>
+    /// A <c>OpaqueThinIter</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public OpaqueThinIter? OptionalIter(bool some)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.OptionalIter(AsFFI(), some);
+            GC.KeepAlive(this);
+            return result == null ? null : new OpaqueThinIter(result, new object[] { this });
+        }
+    }
+    /// <exception cref="BorrowingErrorException"></exception>
+    public int TryBorrow(bool fail)
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("OpaqueThinVec");
+            }
+            var result = Raw.OpaqueThinVec.TryBorrow(AsFFI(), fail);
+            GC.KeepAlive(this);
+            if (!result.IsOk)
+            {
+                throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);
+            }
+            return result.Ok;
+        }
+    }
 
     /// <summary>
     /// Returns the underlying raw handle.

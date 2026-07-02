@@ -8,9 +8,9 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OpaqueThinIter: IDisposable
+public partial class BorrowingError: IDisposable
 {
-    private unsafe RustHandle<Raw.OpaqueThinIter> _inner;
+    private unsafe RustHandle<Raw.BorrowingError> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC cannot finalize
@@ -18,10 +18,10 @@ public partial class OpaqueThinIter: IDisposable
     /// </summary>
     private object[] _edges;
 
-    private static readonly unsafe RustDestructor<Raw.OpaqueThinIter> _destroy = Raw.OpaqueThinIter.Destroy;
+    private static readonly unsafe RustDestructor<Raw.BorrowingError> _destroy = Raw.BorrowingError.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>OpaqueThinIter</c> from a raw handle.
+    /// Creates a managed <c>BorrowingError</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -29,9 +29,9 @@ public partial class OpaqueThinIter: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle)
+    internal unsafe BorrowingError(Raw.BorrowingError* handle)
     {
-        _inner = RustHandle<Raw.OpaqueThinIter>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.BorrowingError>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -40,9 +40,9 @@ public partial class OpaqueThinIter: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe OpaqueThinIter(Raw.OpaqueThinIter* handle, object[] edges)
+    internal unsafe BorrowingError(Raw.BorrowingError* handle, object[] edges)
     {
-        _inner = RustHandle<Raw.OpaqueThinIter>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.BorrowingError>.Owned(handle, _destroy);
         _edges = edges;
     }
 
@@ -52,7 +52,7 @@ public partial class OpaqueThinIter: IDisposable
     /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
     /// while this view is in use.
     /// </summary>
-    internal unsafe OpaqueThinIter(RustHandle<Raw.OpaqueThinIter> inner, object[] edges)
+    internal unsafe BorrowingError(RustHandle<Raw.BorrowingError> inner, object[] edges)
     {
         _inner = inner;
         _edges = edges;
@@ -64,15 +64,15 @@ public partial class OpaqueThinIter: IDisposable
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
     /// </remarks>
-    public OpaqueThin? Next()
+    public OpaqueThin? OwnerFirst()
     {
         unsafe
         {
             if (_inner.IsNull)
             {
-                throw new ObjectDisposedException("OpaqueThinIter");
+                throw new ObjectDisposedException("BorrowingError");
             }
-            Raw.OpaqueThin* result = Raw.OpaqueThinIter.Next(AsFFI());
+            Raw.OpaqueThin* result = Raw.BorrowingError.OwnerFirst(AsFFI());
             GC.KeepAlive(this);
             return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
@@ -81,7 +81,7 @@ public partial class OpaqueThinIter: IDisposable
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.OpaqueThinIter* AsFFI()
+    internal unsafe Raw.BorrowingError* AsFFI()
     {
         return _inner.Ptr;
     }
@@ -106,7 +106,7 @@ public partial class OpaqueThinIter: IDisposable
         }
     }
 
-    ~OpaqueThinIter()
+    ~BorrowingError()
     {
         Dispose();
     }

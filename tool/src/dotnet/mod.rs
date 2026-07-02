@@ -542,6 +542,36 @@ mod test {
     }
 
     #[test]
+    fn borrowing_struct_error_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                pub struct BorrowingStructError<'a> {
+                    owner: &'a Owner,
+                }
+
+                impl Owner {
+                    pub fn borrowed_struct_error<'a>(
+                        &'a self,
+                    ) -> Result<i32, BorrowingStructError<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("error value of type `BorrowingStructError` borrows"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    #[test]
     fn borrowed_opaque_return_generates_non_owning() {
         let tk_stream = quote! {
             #[diplomat::bridge]
@@ -653,6 +683,103 @@ mod test {
         assert!(
             !owned_foo.contains("Lifetime: the returned native-backed value may borrow"),
             "unexpected lifetime warning in OwnedFoo.cs:\n{owned_foo}"
+        );
+    }
+
+    // A borrowing error (`Box<BorrowingError<'a>>`) must thread the receiver edge onto
+    // both the Ok wrapper and the thrown exception, or the owner can be finalized while
+    // either is still live.
+    #[test]
+    fn fallible_borrowed_return_with_borrowing_error_threads_edges_to_exception() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct BorrowingError<'a>(&'a Owner);
+
+                impl Owner {
+                    pub fn try_borrow<'a>(
+                        &'a self,
+                        fail: bool,
+                    ) -> Result<&'a Self, Box<BorrowingError<'a>>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let owner = files.get("Owner.cs").expect("expected Owner.cs output");
+        assert!(
+            owner.contains(".Borrowed("),
+            "Ok path should use the non-owning Borrowed factory:\n{owner}"
+        );
+        assert!(
+            owner.contains(
+                "throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);"
+            ),
+            "error path should pass the receiver edge to the inner error and exception:\n{owner}"
+        );
+
+        let exc = files
+            .get("BorrowingErrorException.cs")
+            .expect("expected BorrowingErrorException.cs output");
+        assert!(
+            exc.contains("params object[] edges"),
+            "exception class should accept keep-alive edges in its constructor:\n{exc}"
+        );
+    }
+
+    #[test]
+    fn fallible_owned_return_with_borrowing_error_threads_edges_to_exception() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct BorrowingError<'a>(&'a Owner);
+
+                impl Owner {
+                    // Ok is i32 (owned, no edges), but the error borrows 'a from self.
+                    pub fn try_get<'a>(&'a self) -> Result<i32, Box<BorrowingError<'a>>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let owner = files.get("Owner.cs").expect("expected Owner.cs output");
+        assert!(
+            owner.contains(
+                "throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);"
+            ),
+            "error path should pass the receiver edge to the inner error and exception:\n{owner}"
+        );
+
+        let exc = files
+            .get("BorrowingErrorException.cs")
+            .expect("expected BorrowingErrorException.cs output");
+        assert!(
+            exc.contains("params object[] edges"),
+            "exception class should accept keep-alive edges in its constructor:\n{exc}"
         );
     }
 }

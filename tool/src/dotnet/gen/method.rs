@@ -18,11 +18,15 @@
 //! * [`MethodInfo`] — one method's render data; consumed by every template.
 
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fmt::{self, Display},
 };
 
-use diplomat_core::hir::{self, borrowing_param::LifetimeEdgeKind, MaybeOwn, Method};
+use diplomat_core::hir::{
+    self,
+    borrowing_param::{BorrowedLifetimeInfo, LifetimeEdgeKind},
+    MaybeOwn, Method,
+};
 
 use crate::dotnet::r#gen::fillable::{
     DotnetErrorType, DotnetOption, DotnetResult, ErrorInfo, OptionInfo,
@@ -479,6 +483,11 @@ pub(super) struct MethodInfo<'ctx> {
     /// Rooted by the returned wrapper so the GC can't free a borrowed-from
     /// parent while the child lives. Cf. `keep_alive_targets` (per-call only).
     pub(super) keep_alive_edges: Vec<String>,
+    /// Same idea as `keep_alive_edges` but for the thrown exception when the
+    /// error type carries non-static lifetimes. Passed to the exception
+    /// constructor so the owning object(s) stay alive for at least as long as
+    /// the exception is reachable.
+    pub(super) error_keep_alive_edges: Vec<String>,
     /// `Borrowed` for a borrowed opaque return — the wrapper is built
     /// non-owning so it never frees a pointer Rust still owns.
     pub(super) ownership: Ownership,
@@ -696,6 +705,17 @@ impl MethodInfo<'_> {
             )
         }
     }
+
+    /// The `throw new …(result.Err, …);` statement for the error arm, with
+    /// `error_keep_alive_edges` threaded into the exception constructor so the
+    /// GC keeps the owner(s) alive for at least as long as the exception lives.
+    pub(super) fn error_throw_statement(&self) -> String {
+        let info = self
+            .error_info
+            .as_ref()
+            .expect("error_throw_statement called on a non-fallible method");
+        info.throw_statement_with_edges("result.Err", &self.error_keep_alive_edges)
+    }
 }
 
 pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo> {
@@ -770,11 +790,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
-        let keep_alive_edges = self.borrowed_output_keep_alive_edges(method)?;
+        let (keep_alive_edges, error_keep_alive_edges) =
+            self.borrowed_output_keep_alive_edges(method)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
-        // A non-opaque return drops edges silently in `idiomatic_value_expr`
-        // (no struct edge-plumbing yet) — a use-after-free; reject instead.
+        // A non-opaque success return drops edges silently in `idiomatic_value_expr`
+        // (no struct edge-plumbing yet) — would be a use-after-free.
         if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
             self.errors.push_error(format!(
                 "[.NET backend] return value of type `{return_type}` borrows from the receiver \
@@ -784,17 +805,19 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
-        // Edges aren't threaded into the error/exception arm, so a borrowing
-        // error would dangle; reject fallible borrowing returns.
-        if !keep_alive_edges.is_empty() && error_info.is_some() {
-            self.errors.push_error(
-                "[.NET backend] a fallible method returning a borrowing value is not yet \
-                 supported — keep-alive edges are not threaded into the error/exception arm. \
-                 Make it infallible, return an owned (non-borrowing) value, or disable this \
-                 API for .NET."
-                    .to_string(),
-            );
-            return None;
+        if !error_keep_alive_edges.is_empty() {
+            if let Some(error_info) = &error_info {
+                if !error_info.error.can_carry_borrow_edges() {
+                    self.errors.push_error(format!(
+                        "[.NET backend] error value of type `{}` borrows from the receiver or an \
+                         opaque parameter; keep-alive edges are only supported for opaque (`Box<E>`) \
+                         errors today. Return an opaque error, make the error non-borrowing, or \
+                         disable this API for .NET.",
+                        error_info.error
+                    ));
+                    return None;
+                }
+            }
         }
 
         Some(MethodInfo {
@@ -805,6 +828,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return_type,
             lifetime_warning,
             keep_alive_edges,
+            error_keep_alive_edges,
             ownership,
             error_info,
             option_info,
@@ -823,7 +847,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// slice (we only pin those while the call runs), or through a struct — it
     /// gives up and returns `None` with an error, instead of generating code
     /// that could crash.
-    fn borrowed_output_keep_alive_edges(&self, method: &'tcx Method) -> Option<Vec<String>> {
+    ///
+    /// Returns `(ok_edges, err_edges)`: keep-alive objects for the success
+    /// return wrapper and for the thrown exception, respectively.
+    fn borrowed_output_keep_alive_edges(
+        &self,
+        method: &'tcx Method,
+    ) -> Option<(Vec<String>, Vec<String>)> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
         if let Some(param_self) = method.param_self.as_ref() {
@@ -840,49 +870,89 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             visitor.visit_param(&param.ty, &arg_name);
         }
 
-        let mut edges = Vec::new();
+        let borrow_map = visitor.borrow_map();
 
-        for edge in visitor
-            .borrow_map()
-            .into_values()
-            .flat_map(|borrow_info| borrow_info.incoming_edges)
-        {
-            match edge.kind {
-                LifetimeEdgeKind::OpaqueParam => {
-                    let expr = edge.param_name;
-                    if !edges.contains(&expr) {
-                        edges.push(expr);
+        // The Ok value's keep-alive edges ride on the returned wrapper, the Err
+        // value's on the thrown exception — so compute each from where that
+        // output type borrows, rather than pre-splitting the method's lifetimes.
+        let (ok_ty, err_ty) = match &method.output {
+            hir::ReturnType::Infallible(s) | hir::ReturnType::Nullable(s) => (s.as_type(), None),
+            hir::ReturnType::Fallible(s, e) => (s.as_type(), e.as_ref()),
+        };
+
+        let ok_edges = match ok_ty {
+            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "return value")?,
+            None => Vec::new(),
+        };
+        let err_edges = match err_ty {
+            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "error return")?,
+            None => Vec::new(),
+        };
+
+        Some((ok_edges, err_edges))
+    }
+
+    /// Keep-alive edges contributed by one output type: the receiver / opaque
+    /// parameters its non-static lifetimes borrow from, looked up in the
+    /// method's borrow map. This mirrors how the other backends derive lifetime
+    /// edges while handling an output type (e.g. Kotlin's return conversions),
+    /// instead of threading a separate per-arm lifetime set. `what` names the
+    /// arm for diagnostics; returns `None` (diagnostic pushed) for borrow kinds
+    /// the backend can't keep alive yet.
+    fn output_keep_alive_edges(
+        &self,
+        out_ty: &hir::OutType,
+        borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
+        what: &str,
+    ) -> Option<Vec<String>> {
+        let lifetimes: BTreeSet<hir::Lifetime> = out_ty
+            .lifetimes()
+            .filter_map(|lt| match lt {
+                hir::MaybeStatic::NonStatic(lt) => Some(lt),
+                hir::MaybeStatic::Static => None,
+            })
+            .collect();
+
+        let mut edges: Vec<String> = Vec::new();
+        for (lt, borrow_info) in borrow_map {
+            if !lifetimes.contains(lt) {
+                continue;
+            }
+            for edge in &borrow_info.incoming_edges {
+                match &edge.kind {
+                    LifetimeEdgeKind::OpaqueParam => {
+                        if !edges.contains(&edge.param_name) {
+                            edges.push(edge.param_name.clone());
+                        }
                     }
-                }
-                // Slice/string params are only pinned for the call, so a
-                // borrowing return would dangle.
-                LifetimeEdgeKind::SliceParam => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] return value borrows from slice/string parameter `{}`; \
-                         this is not supported because generated C# only pins or converts those \
-                         inputs for the duration of the call",
-                        edge.param_name
-                    ));
-                    return None;
-                }
-                // No struct edge-plumbing yet.
-                LifetimeEdgeKind::StructLifetime(..) => {
-                    self.errors.push_error(
-                        "[.NET backend] return value borrows through a struct lifetime; \
-                         keep-alive edges for struct-borrowed returns are not yet supported"
-                            .to_string(),
-                    );
-                    return None;
-                }
-                other => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] return value borrow kind not yet supported: {other:?}"
-                    ));
-                    return None;
+                    // Slice/string params are only pinned for the call, so a
+                    // borrowing return would dangle.
+                    LifetimeEdgeKind::SliceParam => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] {what} borrows from slice/string parameter \
+                             `{}`; this is not supported because generated C# only pins or \
+                             converts those inputs for the duration of the call",
+                            edge.param_name
+                        ));
+                        return None;
+                    }
+                    // No struct edge-plumbing yet.
+                    LifetimeEdgeKind::StructLifetime(..) => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] {what} borrows through a struct lifetime; keep-alive \
+                             edges for struct-borrowed returns are not yet supported"
+                        ));
+                        return None;
+                    }
+                    other => {
+                        self.errors.push_error(format!(
+                            "[.NET backend] {what} borrow kind not yet supported: {other:?}"
+                        ));
+                        return None;
+                    }
                 }
             }
         }
-
         Some(edges)
     }
 

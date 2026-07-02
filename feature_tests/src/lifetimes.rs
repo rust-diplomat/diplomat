@@ -333,7 +333,6 @@ pub mod ffi {
 
     impl<'a> OpaqueThinIter<'a> {
         #[diplomat::attr(auto, iterator)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn next(&'a mut self) -> Option<&'a OpaqueThin> {
             self.0.next().map(OpaqueThin::transparent_convert)
         }
@@ -402,6 +401,72 @@ pub mod ffi {
         #[diplomat::attr(dart, rename = "firstelement")]
         pub fn first<'a>(&'a self) -> Option<&'a OpaqueThin> {
             self.0.get(0).map(OpaqueThin::transparent_convert)
+        }
+
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_first<'a>(&'a self, fail: bool) -> Result<&'a OpaqueThin, ()> {
+            if fail {
+                Err(())
+            } else {
+                self.0
+                    .first()
+                    .map(OpaqueThin::transparent_convert)
+                    .ok_or(())
+            }
+        }
+
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_get<'a>(&'a self, idx: usize, fail: bool) -> Result<Option<&'a OpaqueThin>, ()> {
+            if fail {
+                Err(())
+            } else {
+                Ok(self.0.get(idx).map(OpaqueThin::transparent_convert))
+            }
+        }
+
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_iter<'a>(&'a self, fail: bool) -> Result<Box<OpaqueThinIter<'a>>, ()> {
+            if fail {
+                Err(())
+            } else {
+                Ok(Box::new(OpaqueThinIter(self.0.iter())))
+            }
+        }
+
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn optional_iter<'a>(&'a self, some: bool) -> Option<Box<OpaqueThinIter<'a>>> {
+            if some {
+                Some(Box::new(OpaqueThinIter(self.0.iter())))
+            } else {
+                None
+            }
+        }
+
+        // Ok is owned (no edges), so any keep-alive edges ride on the thrown
+        // exception and its inner error rather than on a success wrapper.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn try_borrow<'a>(&'a self, fail: bool) -> Result<i32, Box<BorrowingError<'a>>> {
+            if fail {
+                Err(Box::new(BorrowingError(self)))
+            } else {
+                Ok(i32::try_from(self.0.len()).unwrap())
+            }
+        }
+    }
+
+    // A borrowing opaque error: a non-owning reference into the Vec it came
+    // from, so a caught exception must root that owner or reads back through
+    // the borrow would dangle.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct BorrowingError<'a>(&'a OpaqueThinVec);
+
+    impl<'a> BorrowingError<'a> {
+        // A real non-owning view into the owner's storage rather than a
+        // copied-out value, so reads go through the live borrow into the owner.
+        pub fn owner_first<'b>(&'b self) -> Option<&'b OpaqueThin> {
+            let owner = self.0;
+            owner.0.first().map(OpaqueThin::transparent_convert)
         }
     }
 
