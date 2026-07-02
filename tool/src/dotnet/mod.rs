@@ -706,10 +706,8 @@ mod test {
         );
     }
 
-    // An owned opaque return borrowing from a `&[u8]` parameter. The input must
-    // be pinned for as long as the returned wrapper lives, so the generated
-    // method takes `ReadOnlyMemory<byte>`, pins it into a `DiplomatPinnedMemory`
-    // holder, and roots the holder as a keep-alive edge.
+    // An owned opaque return borrowing `&[u8]` must pin the input for the
+    // wrapper's whole lifetime: ReadOnlyMemory -> pinned holder -> edge.
     #[test]
     fn fallible_owned_return_borrowing_byte_slice_pins_input() {
         let tk_stream = quote! {
@@ -744,7 +742,8 @@ mod test {
             "borrowed slice param should surface as ReadOnlyMemory<byte>:\n{list}"
         );
         assert!(
-            list.contains("DiplomatPinnedMemory dataPin = DiplomatPinnedMemory.Pin(data);"),
+            list.contains("DiplomatPinnedMemory? dataPin = null;")
+                && list.contains("dataPin = DiplomatPinnedMemory.Pin(data);"),
             "borrowed slice should be pinned into a holder before the raw call:\n{list}"
         );
         assert!(
@@ -756,8 +755,11 @@ mod test {
             "the returned wrapper should root the pin holder as an edge:\n{list}"
         );
         assert!(
-            list.contains("dataPin.Dispose();"),
-            "the error arm should unpin before throwing (no wrapper owns the pin):\n{list}"
+            list.contains(
+                "            catch\n            {\n                dataPin?.Dispose();\n                throw;\n            }"
+            ),
+            "any exception before the wrapper owns the pin (P/Invoke failure, error-arm throw) \
+             must dispose the pin and rethrow:\n{list}"
         );
         assert!(
             files.contains_key("DiplomatPinnedMemory.cs"),
@@ -765,9 +767,8 @@ mod test {
         );
     }
 
-    // Dispose must run the Rust destructor FIRST (Drop may still read the
-    // borrowed buffer) and only then unpin — so the unpin lives in the
-    // wrapper's Dispose, after Release(), not in a holder finalizer.
+    // Rust's Drop may still read the buffer, so the unpin lives in the
+    // wrapper's Dispose after Release() — never in a holder finalizer.
     #[test]
     fn owned_return_borrowing_byte_slice_unpins_on_dispose() {
         let tk_stream = quote! {
@@ -802,9 +803,8 @@ mod test {
         );
     }
 
-    // The pin edge lands on the RETURNED type's wrapper, which may not be the
-    // type declaring the method — the sweep must exist on every opaque, not
-    // just those with pinning methods of their own (cf. PR #1194).
+    // The pin edge lands on the RETURNED type's wrapper, so the Dispose sweep
+    // must exist on every opaque, not just those with pinning methods (#1194).
     #[test]
     fn cross_type_pinned_return_unpins_on_dispose() {
         let tk_stream = quote! {
@@ -835,6 +835,46 @@ mod test {
         assert!(
             product.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
             "a type returned pinned from another type's method must sweep pin edges on Dispose:\n{product}"
+        );
+    }
+
+    // Struct methods share the pin lowering, so their docs need the same
+    // "stays pinned until disposed" remark the opaque template emits.
+    #[test]
+    fn struct_method_pinned_return_gets_pin_remark() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct BuilderOptions {
+                    pub flag: bool,
+                }
+
+                #[diplomat::opaque]
+                pub struct Built<'a>(&'a [u8]);
+
+                impl BuilderOptions {
+                    pub fn make<'a>(data: &'a [u8]) -> Box<Built<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let builder = files
+            .get("BuilderOptions.cs")
+            .expect("expected BuilderOptions.cs output");
+        assert!(
+            builder.contains(
+                "stays pinned until the returned value is disposed; do not mutate it"
+            ),
+            "struct methods with pinned inputs should carry the pin remark:\n{builder}"
         );
     }
 

@@ -71,14 +71,22 @@ public partial class OpaqueSliceView: IDisposable
     {
         unsafe
         {
-            DiplomatPinnedMemory dataPin = DiplomatPinnedMemory.Pin(data);
-            var result = Raw.OpaqueSliceView.Parse(new DiplomatSliceU8 { Ptr = (byte*)dataPin.Pointer, Len = (nuint)data.Length });
-            if (!result.IsOk)
+            DiplomatPinnedMemory? dataPin = null;
+            try
             {
-                dataPin.Dispose();
-                throw new SliceParseErrorException(new SliceParseError(result.Err));
+                dataPin = DiplomatPinnedMemory.Pin(data);
+                var result = Raw.OpaqueSliceView.Parse(new DiplomatSliceU8 { Ptr = (byte*)dataPin.Pointer, Len = (nuint)data.Length });
+                if (!result.IsOk)
+                {
+                    throw new SliceParseErrorException(new SliceParseError(result.Err));
+                }
+                return new OpaqueSliceView(result.Ok, new object[] { dataPin });
             }
-            return new OpaqueSliceView(result.Ok, new object[] { dataPin });
+            catch
+            {
+                dataPin?.Dispose();
+                throw;
+            }
         }
     }
     /// <returns>
@@ -94,9 +102,18 @@ public partial class OpaqueSliceView: IDisposable
     {
         unsafe
         {
-            DiplomatPinnedMemory dataPin = DiplomatPinnedMemory.Pin(data);
-            Raw.OpaqueSliceView* result = Raw.OpaqueSliceView.Wrap(new DiplomatSliceU8 { Ptr = (byte*)dataPin.Pointer, Len = (nuint)data.Length });
-            return new OpaqueSliceView(result, new object[] { dataPin });
+            DiplomatPinnedMemory? dataPin = null;
+            try
+            {
+                dataPin = DiplomatPinnedMemory.Pin(data);
+                Raw.OpaqueSliceView* result = Raw.OpaqueSliceView.Wrap(new DiplomatSliceU8 { Ptr = (byte*)dataPin.Pointer, Len = (nuint)data.Length });
+                return new OpaqueSliceView(result, new object[] { dataPin });
+            }
+            catch
+            {
+                dataPin?.Dispose();
+                throw;
+            }
         }
     }
     public uint Length()

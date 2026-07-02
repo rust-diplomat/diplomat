@@ -4,13 +4,17 @@
 
     Body indent comes from `method.body_indent()`:
       - 12 spaces normally (inside `unsafe { }` inside a class method)
-      - 16 spaces when the method has `fixed (...) { ... }` wrapping,
-        so the body reads as nested under the `fixed` line rather than
+      - +4 when the method has pinned inputs (`try { ... }` wrapping —
+        an exception between `Pin` and the returned wrapper taking
+        ownership must dispose the pins, or they leak permanently)
+      - +4 when the method has `fixed (...) { ... }` wrapping,
+        so the body reads as nested under the wrapping line rather than
         flush with it.
 
-    Validation / to-bytes / `fixed (...)` statements stay at the method-body
-    level (12 spaces) because they sit OUTSIDE the `fixed` block; only the
-    code inside the block uses `bi`.
+    Validation / to-bytes / pin-declaration statements stay at the
+    method-body level (12 spaces) because they sit OUTSIDE the try/fixed
+    blocks; `fixed (...)` lines use `method.fix_indent()` (12, or 16 when
+    nested in the pin try); only the code inside the blocks uses `bi`.
 
     Control tags below are indented to mirror C# nesting for readability.
     Every tag uses the `{%-` left-trim, which removes the tag's own leading
@@ -33,14 +37,21 @@
 {%- for statement in method.inputs.to_bytes_statements %}
             {{ statement }}
 {%- endfor %}
-{%- for statement in method.inputs.pin_statements %}
+{%- if method.has_pinned_inputs() %}
+{%- for statement in method.pin_declaration_statements() %}
             {{ statement }}
 {%- endfor %}
+            try
+            {
+{%- for statement in method.pin_assignment_statements() %}
+                {{ statement }}
+{%- endfor %}
+{%- endif %}
 {%- if !method.inputs.fix_statements.is_empty() %}
     {%- for statement in method.inputs.fix_statements %}
-            {{ statement }}
+{{ method.fix_indent() }}{{ statement }}
     {%- endfor %}
-            {
+{{ method.fix_indent() }}{
 {%- endif %}
 {%- if method.return_type.is_write() %}
     {#- Write methods return `string`. Allocate the writer in this frame,
@@ -80,9 +91,6 @@
 {%- endfor %}
 {{ bi }}if (!result.IsOk)
 {{ bi }}{
-{%- for statement in method.pin_dispose_statements() %}
-{{ bi }}    {{ statement }}
-{%- endfor %}
 {{ bi }}    {{ method.error_throw_statement() }}
 {{ bi }}}
 {{ bi }}{{ method.success_return_statement("result.Ok") }}
@@ -101,5 +109,18 @@
 {{ bi }}{{ method.success_return_statement("result") }}
 {%- endif %}
 {%- if !method.inputs.fix_statements.is_empty() %}
+{{ method.fix_indent() }}}
+{%- endif %}
+{#- The catch rethrows after disposing whatever was pinned — the success
+    path returned from inside the try, so reaching here means the wrapper
+    never took ownership of the pins. #}
+{%- if method.has_pinned_inputs() %}
+            }
+            catch
+            {
+{%- for statement in method.pin_dispose_statements() %}
+                {{ statement }}
+{%- endfor %}
+                throw;
             }
 {%- endif %}

@@ -417,13 +417,40 @@ struct InputLowering {
     /// pointer mid-call. `Some` for opaque self/params, `None` otherwise.
     keep_alive_target: Option<String>,
 
-    /// Statement that pins a `ReadOnlyMemory` param before the raw call, for a
-    /// slice the output borrows. `Some` only on that pinned-slice path.
-    pin_statement: Option<String>,
+    /// `Some` for a `ReadOnlyMemory` param the output borrows — pin statements
+    /// and the keep-alive edge both derive from it.
+    borrowed_slice_pin: Option<SlicePin>,
+}
 
-    /// `(arg_name, pin_local)` for a pinned borrowed slice — lets the output
-    /// keep-alive edges root the pin holder on the returned wrapper.
-    borrowed_slice_pin: Option<(String, String)>,
+/// A borrowed slice param pinned for the returned wrapper's lifetime: the
+/// C# argument name and the local holding its `DiplomatPinnedMemory`.
+#[derive(Debug, Clone)]
+pub(super) struct SlicePin {
+    arg_name: String,
+    pin_local: String,
+}
+
+/// Which output arm keep-alive edges are computed for. Only the Ok arm may
+/// root pins: a thrown exception has no owner to ever unpin the input buffer.
+enum OutputArm<'a> {
+    Ok(&'a [SlicePin]),
+    Err,
+}
+
+impl OutputArm<'_> {
+    fn what(&self) -> &'static str {
+        match self {
+            Self::Ok(_) => "return value",
+            Self::Err => "error return",
+        }
+    }
+
+    fn pin_for(&self, param_name: &str) -> Option<&SlicePin> {
+        match self {
+            Self::Ok(pins) => pins.iter().find(|pin| pin.arg_name == param_name),
+            Self::Err => None,
+        }
+    }
 }
 
 /// All of a method's inputs, joined for template substitution.
@@ -445,10 +472,8 @@ pub(super) struct DotnetInputs {
     pub(super) param_count: usize,
     /// Keep-alive targets (opaque self + params), in raw-call arg order.
     pub(super) keep_alive_targets: Vec<String>,
-    /// Statements pinning `ReadOnlyMemory` params the output borrows.
-    pub(super) pin_statements: Vec<String>,
-    /// `(arg_name, pin_local)` per pinned borrowed slice.
-    pub(super) borrowed_slice_pins: Vec<(String, String)>,
+    /// Pinned borrowed-slice params, in declaration order.
+    pub(super) borrowed_slice_pins: Vec<SlicePin>,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -553,12 +578,25 @@ impl MethodInfo<'_> {
     /// Base indent for the method body — every body line in
     /// `method_body.cs.jinja` is prefixed with this. The canonical
     /// position inside `unsafe { ... }` inside a class method is
-    /// 12 spaces; methods with `fixed (...) { ... }` wrapping
-    /// (string / slice params) get an extra 4 so the body inside the
-    /// fix block reads as nested rather than flush with the `fixed`
-    /// declaration line.
+    /// 12 spaces; the pin `try { ... }` wrap (pinned slice params) and the
+    /// `fixed (...) { ... }` wrap (string / temporary slice params) each
+    /// add 4 so the body reads as nested rather than flush with the
+    /// wrapping line.
     pub(super) fn body_indent(&self) -> &'static str {
-        if self.inputs.fix_statements.is_empty() {
+        match (
+            self.inputs.borrowed_slice_pins.is_empty(),
+            self.inputs.fix_statements.is_empty(),
+        ) {
+            (true, true) => "            ",
+            (false, false) => "                    ",
+            _ => "                ",
+        }
+    }
+
+    /// Indent for the `fixed (...)` lines — one level deeper when they sit
+    /// inside the pin `try { ... }` block.
+    pub(super) fn fix_indent(&self) -> &'static str {
+        if self.inputs.borrowed_slice_pins.is_empty() {
             "            "
         } else {
             "                "
@@ -662,13 +700,38 @@ impl MethodInfo<'_> {
             .collect()
     }
 
-    /// `{pin}.Dispose();` per pinned borrowed slice — emitted on the error arm,
-    /// where no returned wrapper exists to own (and later unpin) the holder.
+    /// Pin locals are declared nullable before the `try` so the `catch` can
+    /// dispose whatever was successfully pinned.
+    pub(super) fn pin_declaration_statements(&self) -> Vec<String> {
+        self.inputs
+            .borrowed_slice_pins
+            .iter()
+            .map(|pin| format!("DiplomatPinnedMemory? {} = null;", pin.pin_local))
+            .collect()
+    }
+
+    /// Pinning happens inside the `try` — anything thrown after the first
+    /// successful `Pin` funnels through the catch's dispose-and-rethrow.
+    pub(super) fn pin_assignment_statements(&self) -> Vec<String> {
+        self.inputs
+            .borrowed_slice_pins
+            .iter()
+            .map(|pin| {
+                format!(
+                    "{} = DiplomatPinnedMemory.Pin({});",
+                    pin.pin_local, pin.arg_name
+                )
+            })
+            .collect()
+    }
+
+    /// `{pin}?.Dispose();` per pinned borrowed slice, for the `catch` arm —
+    /// no wrapper exists yet to own (and later unpin) the holder there.
     pub(super) fn pin_dispose_statements(&self) -> Vec<String> {
         self.inputs
             .borrowed_slice_pins
             .iter()
-            .map(|(_, pin)| format!("{pin}.Dispose();"))
+            .map(|pin| format!("{}?.Dispose();", pin.pin_local))
             .collect()
     }
 
@@ -810,7 +873,29 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             ownership,
         } = self.lower_return(&method.output)?;
 
-        let inputs = self.lower_inputs(method_context)?;
+        // One visitor pass classifies every param AND yields the borrow map,
+        // so the pin<->edge name correlation holds by construction.
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
+        if let Some(param_self) = method.param_self.as_ref() {
+            visitor.visit_param(&param_self.ty.clone().into(), "this");
+        }
+        let param_borrows: Vec<(String, ParamBorrowInfo<'tcx>)> = method
+            .params
+            .iter()
+            .map(|param| {
+                // Format here so a Rust param named `this` becomes `@this` and
+                // can't collide with the receiver sentinel "this".
+                let arg_name = self
+                    .formatter
+                    .fmt_param_name(param.name.as_str())
+                    .into_owned();
+                let borrow_info = visitor.visit_param(&param.ty, &arg_name);
+                (arg_name, borrow_info)
+            })
+            .collect();
+        let borrow_map = visitor.borrow_map();
+
+        let inputs = self.lower_inputs(method_context, param_borrows)?;
 
         // A null result would return before any wrapper is built, leaving the
         // pinned buffer with no owner to unpin it.
@@ -831,7 +916,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
         let (keep_alive_edges, error_keep_alive_edges) =
-            self.borrowed_output_keep_alive_edges(method, &inputs)?;
+            self.borrowed_output_keep_alive_edges(method, &inputs, &borrow_map)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
         // A non-opaque success return drops edges silently in `idiomatic_value_expr`
@@ -883,10 +968,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// if it borrows from the receiver, or the parameter's name if it borrows
     /// from a parameter.
     ///
-    /// If it's a kind of borrow we can't safely handle yet — from a string or
-    /// slice (we only pin those while the call runs), or through a struct — it
-    /// gives up and returns `None` with an error, instead of generating code
-    /// that could crash.
+    /// A `&[u8]`/`&[u32]` param the success value borrows contributes its
+    /// pin holder instead of the param name. For borrows we can't safely
+    /// handle yet — strings (pinned only while the call runs), struct
+    /// lifetimes, or anything the error arm borrows from a slice — it gives
+    /// up and returns `None` with an error, instead of generating code that
+    /// could crash.
     ///
     /// Returns `(ok_edges, err_edges)`: keep-alive objects for the success
     /// return wrapper and for the thrown exception, respectively.
@@ -894,25 +981,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         method: &'tcx Method,
         inputs: &DotnetInputs,
+        borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
     ) -> Option<(Vec<String>, Vec<String>)> {
-        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
-
-        if let Some(param_self) = method.param_self.as_ref() {
-            visitor.visit_param(&param_self.ty.clone().into(), "this");
-        }
-
-        for param in &method.params {
-            // Format here so a Rust param named `this` becomes `@this` and
-            // can't collide with the receiver sentinel "this".
-            let arg_name = self
-                .formatter
-                .fmt_param_name(param.name.as_str())
-                .into_owned();
-            visitor.visit_param(&param.ty, &arg_name);
-        }
-
-        let borrow_map = visitor.borrow_map();
-
         // The Ok value's keep-alive edges ride on the returned wrapper, the Err
         // value's on the thrown exception — so compute each from where that
         // output type borrows, rather than pre-splitting the method's lifetimes.
@@ -924,14 +994,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let ok_edges = match ok_ty {
             Some(ty) => self.output_keep_alive_edges(
                 ty,
-                &borrow_map,
-                "return value",
-                Some(&inputs.borrowed_slice_pins),
+                borrow_map,
+                OutputArm::Ok(&inputs.borrowed_slice_pins),
             )?,
             None => Vec::new(),
         };
         let err_edges = match err_ty {
-            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "error return", None)?,
+            Some(ty) => self.output_keep_alive_edges(ty, borrow_map, OutputArm::Err)?,
             None => Vec::new(),
         };
 
@@ -942,16 +1011,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// parameters its non-static lifetimes borrow from, looked up in the
     /// method's borrow map. This mirrors how the other backends derive lifetime
     /// edges while handling an output type (e.g. Kotlin's return conversions),
-    /// instead of threading a separate per-arm lifetime set. `what` names the
-    /// arm for diagnostics; returns `None` (diagnostic pushed) for borrow kinds
-    /// the backend can't keep alive yet.
+    /// instead of threading a separate per-arm lifetime set. `arm` names the
+    /// arm for diagnostics and says whether pins may be rooted; returns `None`
+    /// (diagnostic pushed) for borrow kinds the backend can't keep alive yet.
     fn output_keep_alive_edges(
         &self,
         out_ty: &hir::OutType,
         borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
-        what: &str,
-        pins: Option<&[(String, String)]>,
+        arm: OutputArm<'_>,
     ) -> Option<Vec<String>> {
+        let what = arm.what();
         let lifetimes: BTreeSet<hir::Lifetime> = out_ty
             .lifetimes()
             .filter_map(|lt| match lt {
@@ -972,16 +1041,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             edges.push(edge.param_name.clone());
                         }
                     }
-                    // A pinned `&[u8]`/`&[u32]` param roots its holder here; any
-                    // other slice/string param is only call-scoped, so a
-                    // borrowing return would dangle.
+                    // A pinned param roots its holder; any other slice/string
+                    // param is call-scoped, so a borrowing return would dangle.
                     LifetimeEdgeKind::SliceParam => {
-                        match pins.and_then(|pins| {
-                            pins.iter().find(|(name, _)| name == &edge.param_name)
-                        }) {
-                            Some((_, pin)) => {
-                                if !edges.contains(pin) {
-                                    edges.push(pin.clone());
+                        match arm.pin_for(&edge.param_name) {
+                            Some(pin) => {
+                                if !edges.contains(&pin.pin_local) {
+                                    edges.push(pin.pin_local.clone());
                                 }
                             }
                             None => {
@@ -1202,25 +1268,24 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     }
 
     /// Lower `param_self` + user `params` into the joined-string surfaces
-    /// templates consume. `None` (with a recorded diagnostic) if any input
-    /// uses an unsupported shape.
+    /// templates consume. `param_borrows` pairs each param's formatter-escaped
+    /// name with its borrow classification, both from the caller's single
+    /// visitor pass. `None` (with a recorded diagnostic) if any input uses an
+    /// unsupported shape.
     pub(super) fn lower_inputs(
         &self,
         method_context: StructMethodContext<'tcx>,
+        param_borrows: Vec<(String, ParamBorrowInfo<'tcx>)>,
     ) -> Option<DotnetInputs> {
         let method = method_context.method();
         let self_lowering = match method.param_self.as_ref() {
             Some(s) => Some(self.lower_self(s)?),
             None => None,
         };
-        // Classify each param independently of self, mirroring
-        // `borrowed_output_keep_alive_edges` — a slice the output borrows must
-        // be pinned rather than call-scoped `fixed`.
-        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
         let mut param_lowerings: Vec<InputLowering> = Vec::with_capacity(method.params.len());
-        for (index, p) in method.params.iter().enumerate() {
-            let arg_name = self.formatter.fmt_param_name(p.name.as_str()).into_owned();
-            let borrow_info = visitor.visit_param(&p.ty, &arg_name);
+        for ((index, p), (arg_name, borrow_info)) in
+            method.params.iter().enumerate().zip(param_borrows)
+        {
             param_lowerings.push(self.lower_input(
                 MethodInputContext::new(method_context, index, p, arg_name),
                 borrow_info,
@@ -1236,7 +1301,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let mut first_param_type = None;
         let mut param_count = 0;
         let mut keep_alive_targets = Vec::new();
-        let mut pin_statements = Vec::new();
         let mut borrowed_slice_pins = Vec::new();
 
         if let Some(s) = &self_lowering {
@@ -1278,9 +1342,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             if let Some(target) = &p.keep_alive_target {
                 keep_alive_targets.push(target.clone());
             }
-            if let Some(pin) = &p.pin_statement {
-                pin_statements.push(pin.clone());
-            }
             if let Some(pin) = &p.borrowed_slice_pin {
                 borrowed_slice_pins.push(pin.clone());
             }
@@ -1296,7 +1357,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             first_param_type,
             param_count,
             keep_alive_targets,
-            pin_statements,
             borrowed_slice_pins,
         })
     }
@@ -1481,7 +1541,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 )),
                                 idiomatic_param_type: Some("string".to_string()),
                                 keep_alive_target: None,
-                                pin_statement: None,
                                 borrowed_slice_pin: None,
                             }
                         }
@@ -1535,10 +1594,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 raw_call_arg: format!(
                                     "new {immutable_class} {{ Ptr = ({ptr_type}*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
                                 ),
-                                pin_statement: Some(format!(
-                                    "DiplomatPinnedMemory {pin} = DiplomatPinnedMemory.Pin({arg_name});"
-                                )),
-                                borrowed_slice_pin: Some((arg_name.to_string(), pin)),
+                                borrowed_slice_pin: Some(SlicePin {
+                                    arg_name: arg_name.to_string(),
+                                    pin_local: pin,
+                                }),
                                 idiomatic_param_type: Some(format!("ReadOnlyMemory<{element_type}>")),
                                 ..Default::default()
                             }
@@ -1566,7 +1625,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 to_bytes_statement: None,
                                 idiomatic_param_type: Some(format!("{element_type}[]")),
                                 keep_alive_target: None,
-                                pin_statement: None,
                                 borrowed_slice_pin: None,
                             }
                         }
