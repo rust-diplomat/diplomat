@@ -25,7 +25,18 @@ internal sealed unsafe class DiplomatPinnedMemory : IDisposable
 
     public static DiplomatPinnedMemory Pin<T>(ReadOnlyMemory<T> memory)
     {
-        return new DiplomatPinnedMemory(memory.Pin());
+        // Dispose the handle if wrapping it throws (e.g. OOM), else the buffer
+        // would stay pinned with no holder for the caller to unpin.
+        MemoryHandle handle = memory.Pin();
+        try
+        {
+            return new DiplomatPinnedMemory(handle);
+        }
+        catch
+        {
+            handle.Dispose();
+            throw;
+        }
     }
 
     public void* Pointer => _handle.Pointer;
