@@ -13,8 +13,6 @@
 namespace somelib {
 namespace capi { struct MutableCallbackHolder; }
 class MutableCallbackHolder;
-namespace capi { struct MyString; }
-class MyString;
 } // namespace somelib
 
 
@@ -32,10 +30,6 @@ public:
   inline static std::unique_ptr<somelib::MutableCallbackHolder> new_(std::function<int32_t(int32_t)> func);
 
   inline int32_t call(int32_t a);
-
-  inline void opaque_cb_self(std::function<void(const somelib::MyString&)> cb, const somelib::MyString& st) const;
-
-  inline void opaque_cb_mut_self(std::function<void(const somelib::MyString&)> cb, const somelib::MyString& st);
 
     inline const somelib::capi::MutableCallbackHolder* AsFFI() const;
     inline somelib::capi::MutableCallbackHolder* AsFFI();
