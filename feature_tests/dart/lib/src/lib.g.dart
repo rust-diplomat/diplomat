@@ -28,6 +28,7 @@ part 'ErrorStruct.g.dart';
 part 'FallibleOpaqueConstructor.g.dart';
 part 'Float64Vec.g.dart';
 part 'Foo.g.dart';
+part 'ImmutableStructOfOpaque.g.dart';
 part 'ImportedStruct.g.dart';
 part 'MyEnum.g.dart';
 part 'MyOpaqueEnum.g.dart';

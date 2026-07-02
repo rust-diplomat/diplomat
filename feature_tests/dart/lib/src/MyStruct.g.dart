@@ -97,6 +97,12 @@ final class MyStruct {
     return result;
   }
 
+  int takeRefRet() {
+    final temp = _FinalizedArena();
+    final result = _MyStruct_take_ref_ret(() { final ptr = temp.arena<_MyStructFfi>(); ptr.ref = _toFfi(temp.arena); return ptr; }());
+    return result;
+  }
+
   ///
   ///
   /// Throws [MyZst] on failure.
@@ -152,6 +158,12 @@ external _MyStructFfi _MyStruct_new();
 @ffi.Native<ffi.Uint8 Function(_MyStructFfi)>(isLeaf: true, symbol: 'MyStruct_into_a')
 // ignore: non_constant_identifier_names
 external int _MyStruct_into_a(_MyStructFfi self);
+
+// ignore: experimental_member_use
+@meta.RecordUse()
+@ffi.Native<ffi.Uint8 Function(ffi.Pointer<_MyStructFfi>)>(isLeaf: true, symbol: 'MyStruct_take_ref_ret')
+// ignore: non_constant_identifier_names
+external int _MyStruct_take_ref_ret(ffi.Pointer<_MyStructFfi> self);
 
 // ignore: experimental_member_use
 @meta.RecordUse()
