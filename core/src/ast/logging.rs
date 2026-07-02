@@ -304,6 +304,7 @@ mod tests {
         "multi_traits.rs",
         "result_type_args.rs",
         "result_angle_brackets.rs",
+        "lifetime_callback_param.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {

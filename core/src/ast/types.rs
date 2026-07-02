@@ -1224,7 +1224,12 @@ impl TypeName {
                                             ..
                                         }) = input_type
                                         {
-                                            panic!("Lifetimes are not allowed on callback parameters: lifetime '{} on trait {} ", in_lifetime.ident, path_seg.ident);
+                                            create_report(AstReport::new(
+                                                "Lifetimes are not allowed on callback parameters".into(),
+                                                Some(in_lifetime.span().spanned_into(module_location)),
+                                                "Suggestion: remove lifetime".into(),
+                                                vec![ContextLocation::new(path_seg.span().spanned_into(module_location), "Defined on trait".into())]
+                                            ));
                                         }
                                     }
 
