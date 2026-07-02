@@ -98,6 +98,10 @@ public partial class {{ name }}: IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+{%- if method.has_pinned_inputs() %}
+    /// <br/>
+    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+{%- endif %}
     /// </remarks>
 {%- endif %}
     public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.name }}({{ method.inputs.idiomatic_params }})
@@ -137,6 +141,11 @@ public partial class {{ name }}: IDisposable
 
             _inner.Release();
             _inner = default;
+            // Unpin only after Release: Rust's Drop may still read the pinned buffer.
+            foreach (object edge in _edges)
+            {
+                (edge as DiplomatPinnedMemory)?.Dispose();
+            }
             _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);

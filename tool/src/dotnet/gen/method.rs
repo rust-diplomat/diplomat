@@ -24,7 +24,7 @@ use std::{
 
 use diplomat_core::hir::{
     self,
-    borrowing_param::{BorrowedLifetimeInfo, LifetimeEdgeKind},
+    borrowing_param::{BorrowedLifetimeInfo, LifetimeEdgeKind, ParamBorrowInfo},
     MaybeOwn, Method,
 };
 
@@ -416,6 +416,14 @@ struct InputLowering {
     /// Wrapper to `GC.KeepAlive` after the raw call — else the GC may free its
     /// pointer mid-call. `Some` for opaque self/params, `None` otherwise.
     keep_alive_target: Option<String>,
+
+    /// Statement that pins a `ReadOnlyMemory` param before the raw call, for a
+    /// slice the output borrows. `Some` only on that pinned-slice path.
+    pin_statement: Option<String>,
+
+    /// `(arg_name, pin_local)` for a pinned borrowed slice — lets the output
+    /// keep-alive edges root the pin holder on the returned wrapper.
+    borrowed_slice_pin: Option<(String, String)>,
 }
 
 /// All of a method's inputs, joined for template substitution.
@@ -437,6 +445,10 @@ pub(super) struct DotnetInputs {
     pub(super) param_count: usize,
     /// Keep-alive targets (opaque self + params), in raw-call arg order.
     pub(super) keep_alive_targets: Vec<String>,
+    /// Statements pinning `ReadOnlyMemory` params the output borrows.
+    pub(super) pin_statements: Vec<String>,
+    /// `(arg_name, pin_local)` per pinned borrowed slice.
+    pub(super) borrowed_slice_pins: Vec<(String, String)>,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -466,8 +478,10 @@ pub(super) struct ReturnLowering {
 ///
 /// TODO(dotnet): Model Rust lifetime relationships on the public C# surface.
 /// Borrowed inputs are call-scoped. Borrowed opaque returns use non-owning
-/// handles and keep-alive edges; borrowed errors and temporary slice/string
-/// backed returns are rejected.
+/// handles and keep-alive edges. An owned opaque success return borrowing a
+/// `&[u8]`/`&[u32]` param pins that param via `ReadOnlyMemory` +
+/// `DiplomatPinnedMemory` and roots the pin as an edge; borrowed errors and
+/// other slice/string borrow positions are still rejected.
 #[derive(Clone)]
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
@@ -648,6 +662,20 @@ impl MethodInfo<'_> {
             .collect()
     }
 
+    /// `{pin}.Dispose();` per pinned borrowed slice — emitted on the error arm,
+    /// where no returned wrapper exists to own (and later unpin) the holder.
+    pub(super) fn pin_dispose_statements(&self) -> Vec<String> {
+        self.inputs
+            .borrowed_slice_pins
+            .iter()
+            .map(|(_, pin)| format!("{pin}.Dispose();"))
+            .collect()
+    }
+
+    pub(super) fn has_pinned_inputs(&self) -> bool {
+        !self.inputs.borrowed_slice_pins.is_empty()
+    }
+
     pub(super) fn can_return_raw_call_directly(&self) -> bool {
         self.option_info.is_none()
             && matches!(
@@ -783,6 +811,18 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         } = self.lower_return(&method.output)?;
 
         let inputs = self.lower_inputs(method_context)?;
+
+        // A null result would return before any wrapper is built, leaving the
+        // pinned buffer with no owner to unpin it.
+        if option_info.is_some() && !inputs.borrowed_slice_pins.is_empty() {
+            self.errors.push_error(
+                "[.NET backend] Option-wrapped return borrowing from a slice parameter is not \
+                 supported: a null result would have no owner to unpin the input buffer."
+                    .to_string(),
+            );
+            return None;
+        }
+
         let return_type_name = if option_info.is_some() {
             format!("{return_type}?")
         } else {
@@ -791,7 +831,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
         let (keep_alive_edges, error_keep_alive_edges) =
-            self.borrowed_output_keep_alive_edges(method)?;
+            self.borrowed_output_keep_alive_edges(method, &inputs)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
         // A non-opaque success return drops edges silently in `idiomatic_value_expr`
@@ -853,6 +893,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     fn borrowed_output_keep_alive_edges(
         &self,
         method: &'tcx Method,
+        inputs: &DotnetInputs,
     ) -> Option<(Vec<String>, Vec<String>)> {
         let mut visitor = method.borrowing_param_visitor(self.tcx, false);
 
@@ -881,11 +922,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         };
 
         let ok_edges = match ok_ty {
-            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "return value")?,
+            Some(ty) => self.output_keep_alive_edges(
+                ty,
+                &borrow_map,
+                "return value",
+                Some(&inputs.borrowed_slice_pins),
+            )?,
             None => Vec::new(),
         };
         let err_edges = match err_ty {
-            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "error return")?,
+            Some(ty) => self.output_keep_alive_edges(ty, &borrow_map, "error return", None)?,
             None => Vec::new(),
         };
 
@@ -904,6 +950,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         out_ty: &hir::OutType,
         borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
         what: &str,
+        pins: Option<&[(String, String)]>,
     ) -> Option<Vec<String>> {
         let lifetimes: BTreeSet<hir::Lifetime> = out_ty
             .lifetimes()
@@ -925,16 +972,29 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             edges.push(edge.param_name.clone());
                         }
                     }
-                    // Slice/string params are only pinned for the call, so a
+                    // A pinned `&[u8]`/`&[u32]` param roots its holder here; any
+                    // other slice/string param is only call-scoped, so a
                     // borrowing return would dangle.
                     LifetimeEdgeKind::SliceParam => {
-                        self.errors.push_error(format!(
-                            "[.NET backend] {what} borrows from slice/string parameter \
-                             `{}`; this is not supported because generated C# only pins or \
-                             converts those inputs for the duration of the call",
-                            edge.param_name
-                        ));
-                        return None;
+                        match pins.and_then(|pins| {
+                            pins.iter().find(|(name, _)| name == &edge.param_name)
+                        }) {
+                            Some((_, pin)) => {
+                                if !edges.contains(pin) {
+                                    edges.push(pin.clone());
+                                }
+                            }
+                            None => {
+                                self.errors.push_error(format!(
+                                    "[.NET backend] {what} borrows from slice/string parameter \
+                                     `{}`; only owned opaque success returns borrowing from \
+                                     `&[u8]`/`&[u32]` parameters are supported — other slice/string \
+                                     borrow positions still pin only for the duration of the call",
+                                    edge.param_name
+                                ));
+                                return None;
+                            }
+                        }
                     }
                     // No struct edge-plumbing yet.
                     LifetimeEdgeKind::StructLifetime(..) => {
@@ -1153,15 +1213,19 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             Some(s) => Some(self.lower_self(s)?),
             None => None,
         };
-        let param_lowerings: Vec<InputLowering> = method
-            .params
-            .iter()
-            .enumerate()
-            .map(|(index, p)| {
-                let arg_name = self.formatter.fmt_param_name(p.name.as_str()).into_owned();
-                self.lower_input(MethodInputContext::new(method_context, index, p, arg_name))
-            })
-            .collect::<Option<Vec<_>>>()?;
+        // Classify each param independently of self, mirroring
+        // `borrowed_output_keep_alive_edges` — a slice the output borrows must
+        // be pinned rather than call-scoped `fixed`.
+        let mut visitor = method.borrowing_param_visitor(self.tcx, false);
+        let mut param_lowerings: Vec<InputLowering> = Vec::with_capacity(method.params.len());
+        for (index, p) in method.params.iter().enumerate() {
+            let arg_name = self.formatter.fmt_param_name(p.name.as_str()).into_owned();
+            let borrow_info = visitor.visit_param(&p.ty, &arg_name);
+            param_lowerings.push(self.lower_input(
+                MethodInputContext::new(method_context, index, p, arg_name),
+                borrow_info,
+            )?);
+        }
 
         let mut raw_params = Vec::new();
         let mut idiomatic_params = Vec::new();
@@ -1172,6 +1236,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let mut first_param_type = None;
         let mut param_count = 0;
         let mut keep_alive_targets = Vec::new();
+        let mut pin_statements = Vec::new();
+        let mut borrowed_slice_pins = Vec::new();
 
         if let Some(s) = &self_lowering {
             raw_params.push(s.raw_param.as_str());
@@ -1212,6 +1278,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             if let Some(target) = &p.keep_alive_target {
                 keep_alive_targets.push(target.clone());
             }
+            if let Some(pin) = &p.pin_statement {
+                pin_statements.push(pin.clone());
+            }
+            if let Some(pin) = &p.borrowed_slice_pin {
+                borrowed_slice_pins.push(pin.clone());
+            }
         }
 
         Some(DotnetInputs {
@@ -1224,6 +1296,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             first_param_type,
             param_count,
             keep_alive_targets,
+            pin_statements,
+            borrowed_slice_pins,
         })
     }
 
@@ -1278,7 +1352,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .into_owned()
     }
 
-    fn lower_input(&self, input_context: MethodInputContext<'tcx>) -> Option<InputLowering> {
+    fn lower_input(
+        &self,
+        input_context: MethodInputContext<'tcx>,
+        borrow_info: ParamBorrowInfo<'tcx>,
+    ) -> Option<InputLowering> {
         let arg_name = input_context.arg_name();
         Some(match &input_context.param().ty {
             hir::Type::Primitive(p) => {
@@ -1403,6 +1481,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 )),
                                 idiomatic_param_type: Some("string".to_string()),
                                 keep_alive_target: None,
+                                pin_statement: None,
+                                borrowed_slice_pin: None,
                             }
                         }
                     },
@@ -1439,29 +1519,56 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 _ => unreachable!(),
                             };
 
-                        let slice_class = match borrow.mutability {
-                            hir::Mutability::Mutable => mutable_class,
-                            hir::Mutability::Immutable => immutable_class,
-                        };
+                        if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+                            if matches!(borrow.mutability, hir::Mutability::Mutable) {
+                                self.errors.push_error(format!(
+                                    "[.NET backend] mutable slice parameter `{arg_name}` borrowed \
+                                     by the output is not yet supported; ReadOnlyMemory cannot hand \
+                                     Rust a mutable view"
+                                ));
+                                return None;
+                            }
+                            let pin = self.slice_local_name(input_context.param_ident(), "Pin");
+                            InputLowering {
+                                raw_param: format!("{immutable_class} {arg_name}"),
+                                idiomatic_param: format!("ReadOnlyMemory<{element_type}> {arg_name}"),
+                                raw_call_arg: format!(
+                                    "new {immutable_class} {{ Ptr = ({ptr_type}*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
+                                ),
+                                pin_statement: Some(format!(
+                                    "DiplomatPinnedMemory {pin} = DiplomatPinnedMemory.Pin({arg_name});"
+                                )),
+                                borrowed_slice_pin: Some((arg_name.to_string(), pin)),
+                                idiomatic_param_type: Some(format!("ReadOnlyMemory<{element_type}>")),
+                                ..Default::default()
+                            }
+                        } else {
+                            let slice_class = match borrow.mutability {
+                                hir::Mutability::Mutable => mutable_class,
+                                hir::Mutability::Immutable => immutable_class,
+                            };
 
-                        InputLowering {
-                            raw_param: format!("{slice_class} {arg_name}"),
-                            idiomatic_param: format!("{element_type}[] {arg_name}"),
-                            raw_call_arg: format!(
-                                "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
-                            ),
-                            // Non-optional slice param — null array is a
-                            // contract violation. Without this check the
-                            // `{arg_name}.Length` in the call arg throws a
-                            // bare `NullReferenceException` with no
-                            // parameter name.
-                            validation_statement: Some(format!(
-                                "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                            )),
-                            fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
-                            to_bytes_statement: None,
-                            idiomatic_param_type: Some(format!("{element_type}[]")),
-                            keep_alive_target: None,
+                            InputLowering {
+                                raw_param: format!("{slice_class} {arg_name}"),
+                                idiomatic_param: format!("{element_type}[] {arg_name}"),
+                                raw_call_arg: format!(
+                                    "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
+                                ),
+                                // Non-optional slice param — null array is a
+                                // contract violation. Without this check the
+                                // `{arg_name}.Length` in the call arg throws a
+                                // bare `NullReferenceException` with no
+                                // parameter name.
+                                validation_statement: Some(format!(
+                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                )),
+                                fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
+                                to_bytes_statement: None,
+                                idiomatic_param_type: Some(format!("{element_type}[]")),
+                                keep_alive_target: None,
+                                pin_statement: None,
+                                borrowed_slice_pin: None,
+                            }
                         }
                     }
                     hir::PrimitiveType::Int(int_type) => {

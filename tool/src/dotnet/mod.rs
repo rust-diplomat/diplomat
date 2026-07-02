@@ -18,9 +18,12 @@
 //!
 //! * `&[u8]` / `&[u32]` / `&DiplomatStr` params are pinned with `fixed (...)`
 //!   (or copied into a pinned `byte[]`) for the call and unpinned immediately
-//!   after. If the Rust side stashes the pointer past the call, the C# GC may
-//!   move or free the backing buffer, so any returned value borrowing from
-//!   these temporary slice/string params is rejected with a diagnostic.
+//!   after. When an owned opaque success return borrows a `&[u8]` / `&[u32]`
+//!   param, that param instead surfaces as `ReadOnlyMemory` and is pinned via
+//!   `DiplomatPinnedMemory`, rooted as a keep-alive edge and unpinned after the
+//!   Rust destructor runs. String params and other borrow positions (borrowed
+//!   errors, Option-wrapped or non-opaque returns) are still rejected with a
+//!   diagnostic.
 //! * Borrowed opaque returns (`&T`, `&mut T`, `Option<&T>`) use non-owning
 //!   handles plus keep-alive edges.
 //! * Borrowed opaque errors (`Result<_, &E>`) are rejected; without a success
@@ -99,6 +102,14 @@ struct NativeLibTemplate<'a> {
 #[derive(Template)]
 #[template(path = "dotnet/RustHandle.cs.jinja", escape = "none")]
 struct RustHandleTemplate<'a> {
+    namespace: &'a str,
+}
+
+/// `DiplomatPinnedMemory` — pins a caller `ReadOnlyMemory` buffer while a
+/// Rust value borrows it, and unpins when the borrowing wrapper is disposed.
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatPinnedMemory.cs.jinja", escape = "none")]
+struct DiplomatPinnedMemoryTemplate<'a> {
     namespace: &'a str,
 }
 
@@ -442,6 +453,15 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("RustHandle template render failed"),
     );
+    add_cs_file(
+        &files,
+        "DiplomatPinnedMemory.cs".to_string(),
+        DiplomatPinnedMemoryTemplate {
+            namespace: &namespace,
+        }
+        .render()
+        .expect("DiplomatPinnedMemory template render failed"),
+    );
 
     (files, errors)
 }
@@ -683,6 +703,256 @@ mod test {
         assert!(
             !owned_foo.contains("Lifetime: the returned native-backed value may borrow"),
             "unexpected lifetime warning in OwnedFoo.cs:\n{owned_foo}"
+        );
+    }
+
+    // An owned opaque return borrowing from a `&[u8]` parameter. The input must
+    // be pinned for as long as the returned wrapper lives, so the generated
+    // method takes `ReadOnlyMemory<byte>`, pins it into a `DiplomatPinnedMemory`
+    // holder, and roots the holder as a keep-alive edge.
+    #[test]
+    fn fallible_owned_return_borrowing_byte_slice_pins_input() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Parsed<'a>(&'a [u8]);
+
+                #[diplomat::opaque]
+                pub struct ParseError;
+
+                impl<'a> Parsed<'a> {
+                    pub fn parse(data: &'a [u8]) -> Result<Box<Parsed<'a>>, Box<ParseError>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let list = files
+            .get("Parsed.cs")
+            .expect("expected Parsed.cs output");
+        assert!(
+            list.contains("public static Parsed Parse(ReadOnlyMemory<byte> data)"),
+            "borrowed slice param should surface as ReadOnlyMemory<byte>:\n{list}"
+        );
+        assert!(
+            list.contains("DiplomatPinnedMemory dataPin = DiplomatPinnedMemory.Pin(data);"),
+            "borrowed slice should be pinned into a holder before the raw call:\n{list}"
+        );
+        assert!(
+            list.contains("Ptr = (byte*)dataPin.Pointer"),
+            "raw call should pass the pinned pointer:\n{list}"
+        );
+        assert!(
+            list.contains("new Parsed(result.Ok, new object[] { dataPin })"),
+            "the returned wrapper should root the pin holder as an edge:\n{list}"
+        );
+        assert!(
+            list.contains("dataPin.Dispose();"),
+            "the error arm should unpin before throwing (no wrapper owns the pin):\n{list}"
+        );
+        assert!(
+            files.contains_key("DiplomatPinnedMemory.cs"),
+            "the DiplomatPinnedMemory runtime helper should be emitted"
+        );
+    }
+
+    // Dispose must run the Rust destructor FIRST (Drop may still read the
+    // borrowed buffer) and only then unpin — so the unpin lives in the
+    // wrapper's Dispose, after Release(), not in a holder finalizer.
+    #[test]
+    fn owned_return_borrowing_byte_slice_unpins_on_dispose() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a [u8]);
+
+                impl<'a> Foo<'a> {
+                    pub fn new(data: &'a [u8]) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains("new Foo(result, new object[] { dataPin })"),
+            "infallible owned return should root the pin holder as an edge:\n{foo}"
+        );
+        assert!(
+            foo.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
+            "Dispose should unpin holder edges after releasing the Rust handle:\n{foo}"
+        );
+    }
+
+    // The pin edge lands on the RETURNED type's wrapper, which may not be the
+    // type declaring the method — the sweep must exist on every opaque, not
+    // just those with pinning methods of their own (cf. PR #1194).
+    #[test]
+    fn cross_type_pinned_return_unpins_on_dispose() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Factory;
+
+                #[diplomat::opaque]
+                pub struct Product<'a>(&'a [u8]);
+
+                impl Factory {
+                    pub fn build<'a>(data: &'a [u8]) -> Box<Product<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let product = files.get("Product.cs").expect("expected Product.cs output");
+        assert!(
+            product.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
+            "a type returned pinned from another type's method must sweep pin edges on Dispose:\n{product}"
+        );
+    }
+
+    // A slice whose lifetime is NOT used by the output keeps the cheap
+    // call-scoped `fixed` pinning — no ReadOnlyMemory, no holder.
+    #[test]
+    fn temporary_byte_slice_keeps_fixed_pinning() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Hasher;
+
+                impl Hasher {
+                    pub fn hash(data: &[u8]) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let hasher = files.get("Hasher.cs").expect("expected Hasher.cs output");
+        assert!(
+            hasher.contains("public static uint Hash(byte[] data)")
+                && hasher.contains("fixed (byte* dataPtr = data)"),
+            "temporary slice should keep the byte[] + fixed lowering:\n{hasher}"
+        );
+        assert!(
+            !hasher.contains("DiplomatPinnedMemory.Pin("),
+            "temporary slice method should not pin the input:\n{hasher}"
+        );
+    }
+
+    // If only the ERROR borrows the slice, the thrown exception would have to
+    // own the pin, but nothing ever disposes an exception — reject.
+    #[test]
+    fn error_borrowing_byte_slice_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Validator;
+
+                #[diplomat::opaque]
+                pub struct BadData<'a>(&'a [u8]);
+
+                impl Validator {
+                    pub fn check<'a>(data: &'a [u8]) -> Result<(), Box<BadData<'a>>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("error return borrows from slice/string parameter"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    // A `null` success would leave the pin holder with no owner to unpin it.
+    #[test]
+    fn optional_owned_return_borrowing_byte_slice_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Finder<'a>(&'a [u8]);
+
+                impl<'a> Finder<'a> {
+                    pub fn find(data: &'a [u8]) -> Option<Box<Finder<'a>>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("Option-wrapped return borrowing from a slice parameter"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    // ReadOnlyMemory can't hand Rust a `&mut [u8]` view; a borrowed mutable
+    // slice would need Memory<T> plumbing that doesn't exist yet.
+    #[test]
+    fn mutable_borrowed_byte_slice_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Wrapper<'a>(&'a mut [u8]);
+
+                impl<'a> Wrapper<'a> {
+                    pub fn wrap(data: &'a mut [u8]) -> Box<Wrapper<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("mutable slice parameter")
+                && error_str.contains("borrowed by the output"),
+            "unexpected diagnostics: {error_str}"
         );
     }
 

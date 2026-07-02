@@ -101,6 +101,11 @@ public partial class Utf16Wrap: IDisposable
 
             _inner.Release();
             _inner = default;
+            // Unpin only after Release: Rust's Drop may still read the pinned buffer.
+            foreach (object edge in _edges)
+            {
+                (edge as DiplomatPinnedMemory)?.Dispose();
+            }
             _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
 
             GC.SuppressFinalize(this);

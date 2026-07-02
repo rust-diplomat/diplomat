@@ -33,6 +33,9 @@
 {%- for statement in method.inputs.to_bytes_statements %}
             {{ statement }}
 {%- endfor %}
+{%- for statement in method.inputs.pin_statements %}
+            {{ statement }}
+{%- endfor %}
 {%- if !method.inputs.fix_statements.is_empty() %}
     {%- for statement in method.inputs.fix_statements %}
             {{ statement }}
@@ -77,6 +80,9 @@
 {%- endfor %}
 {{ bi }}if (!result.IsOk)
 {{ bi }}{
+{%- for statement in method.pin_dispose_statements() %}
+{{ bi }}    {{ statement }}
+{%- endfor %}
 {{ bi }}    {{ method.error_throw_statement() }}
 {{ bi }}}
 {{ bi }}{{ method.success_return_statement("result.Ok") }}
