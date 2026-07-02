@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
-use syn::{Token, spanned::Spanned};
+use syn::{spanned::Spanned, Token};
 
 use std::fmt;
 use std::ops::ControlFlow;
@@ -12,9 +12,12 @@ use super::{
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    Env, ast::{
-        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, ContextLocation, create_report, create_simple_report},
+    ast::{
+        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
+        logging::{create_report, create_simple_report, AstReport, ContextLocation},
+        Function,
     },
+    Env,
 };
 
 /// A type declared inside a Diplomat-annotated module.
@@ -235,12 +238,15 @@ impl PathType {
         } else {
             None
         };
-        
+
         create_report(AstReport::new(
             "Path does not point to a custom type.".into(),
             sp,
-            format!("{} must point to a custom type", in_path.elements.join("::")),
-            vec![]
+            format!(
+                "{} must point to a custom type",
+                in_path.elements.join("::")
+            ),
+            vec![],
         ));
     }
 
@@ -279,7 +285,14 @@ impl PathType {
                 if i == local_path.elements.len() - 1 {
                     return (cur_path, trt.clone());
                 } else {
-                    create_simple_report(elem.clone(), format!("Found unexpected custom trait {} when resolving path", trt.name), "Trait appears before the end of the path.".into());
+                    create_simple_report(
+                        elem.clone(),
+                        format!(
+                            "Found unexpected custom trait {} when resolving path",
+                            trt.name
+                        ),
+                        "Trait appears before the end of the path.".into(),
+                    );
                 }
             }
         }
@@ -289,12 +302,15 @@ impl PathType {
         } else {
             None
         };
-        
+
         create_report(AstReport::new(
             "Path does not point to a custom trait".into(),
             sp,
-            format!("{} must point to a custom type.", in_path.elements.join("::")),
-            vec![]
+            format!(
+                "{} must point to a custom type.",
+                in_path.elements.join("::")
+            ),
+            vec![],
         ));
     }
 
@@ -321,17 +337,20 @@ impl FromWithSpan<&syn::TypePath> for PathType {
                             .args
                             .iter()
                             .map(|generic_arg| match generic_arg {
-                                syn::GenericArgument::Lifetime(lifetime) => lifetime.spanned_into(module_location),
+                                syn::GenericArgument::Lifetime(lifetime) => {
+                                    lifetime.spanned_into(module_location)
+                                }
                                 _ => {
                                     create_report(AstReport::new(
                                         "Generic type arguments are unsupported".into(),
                                         Some(other.span().spanned_into(module_location)),
                                         "Type paths with generic arguments are unsupported.".into(),
                                         vec![ContextLocation::new(
-                                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments".into()
-                                        )]
+                                            generic_arg.span().spanned_into(module_location),
+                                            "Suggestion: remove generic type arguments".into(),
+                                        )],
                                     ));
-                                },
+                                }
                             })
                             .collect(),
                     )
@@ -362,10 +381,11 @@ impl FromWithSpan<&syn::Signature> for PathType {
                         Some(other.ident.span().spanned_into(module_location)),
                         "Functions with generic arguments are unsupported".into(),
                         vec![ContextLocation::new(
-                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments.".into()
-                        )]
+                            generic_arg.span().spanned_into(module_location),
+                            "Suggestion: remove generic type arguments.".into(),
+                        )],
                     ));
-                },
+                }
             })
             .collect();
 
@@ -396,12 +416,14 @@ impl FromWithSpan<&syn::TraitBound> for PathType {
                                     create_report(AstReport::new(
                                         "Generic type arguments are unsupported".into(),
                                         Some(other.span().spanned_into(module_location)),
-                                        "Trait bounds with generic arguments are unsupported".into(),
+                                        "Trait bounds with generic arguments are unsupported"
+                                            .into(),
                                         vec![ContextLocation::new(
-                                            generic_arg.span().spanned_into(module_location), "Suggestion: remove generic type arguments.".into()
-                                        )]
+                                            generic_arg.span().spanned_into(module_location),
+                                            "Suggestion: remove generic type arguments.".into(),
+                                        )],
                                     ));
-                                },
+                                }
                             })
                             .collect(),
                     )
@@ -833,7 +855,7 @@ impl TypeName {
                             "Mutable string references disallowed".into(),
                             Some(r.elem.span().spanned_into(module_location)),
                             "Suggestion: make reference immutable".into(),
-                            vec![]
+                            vec![],
                         ));
                     }
                     if name == "DiplomatStr" {
@@ -934,8 +956,8 @@ impl TypeName {
                                     "Owned slices only support primitives".into(),
                                     Some(slice.elem.span().spanned_into(module_location)),
                                     "".into(),
-                                    vec![])
-                                );
+                                    vec![],
+                                ));
                             }
                         } else if let syn::GenericArgument::Type(tpe) = &type_args.args[0] {
                             if tpe.to_token_stream().to_string() == "DiplomatStr" {
@@ -968,20 +990,22 @@ impl TypeName {
                                 "Expected a type in Box type arg".into(),
                                 Some(type_args.span().spanned_into(module_location)),
                                 "Should be a type".into(),
-                                vec![]
+                                vec![],
                             ));
                         }
                     } else {
                         let suggestion = match &p.path.segments[0].arguments {
                             syn::PathArguments::None => "add angle brackets",
-                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
-                            _ => unreachable!()
+                            syn::PathArguments::Parenthesized(..) => {
+                                "replace parentheses with angle brackets"
+                            }
+                            _ => unreachable!(),
                         };
                         create_report(AstReport::new(
                             "Expected angle brackets for Box type".into(),
                             Some(p.path.segments[0].span().spanned_into(module_location)),
                             format!("Suggestion: {suggestion}"),
-                            vec![]
+                            vec![],
                         ));
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Option"
@@ -1005,20 +1029,22 @@ impl TypeName {
                                 "Expected first argument for Option to be a type".into(),
                                 Some(type_args.span().spanned_into(module_location)),
                                 "Should be a type".into(),
-                                vec![]
+                                vec![],
                             ));
                         }
                     } else {
                         let suggestion = match &p.path.segments[0].arguments {
                             syn::PathArguments::None => "add angle brackets",
-                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
-                            _ => unreachable!()
+                            syn::PathArguments::Parenthesized(..) => {
+                                "replace parentheses with angle brackets"
+                            }
+                            _ => unreachable!(),
                         };
                         create_report(AstReport::new(
                             "Expected angle brackets for Option type".into(),
                             Some(p.path.segments[0].span().spanned_into(module_location)),
                             format!("Suggestion: {suggestion}"),
-                            vec![]
+                            vec![],
                         ));
                     }
                 } else if p_len == 1 && p.path.segments[0].ident == "Self" {
@@ -1077,7 +1103,7 @@ impl TypeName {
                             "Expected type argument".into(),
                             Some(p.span().spanned_into(module_location)),
                             "Add slice type specification here".into(),
-                            vec![]
+                            vec![],
                         ));
                     });
 
@@ -1117,10 +1143,11 @@ impl TypeName {
                         }
                     }
                     create_report(AstReport::new(
-                        "Found DiplomatSlice without primitive or DiplomatSlice-like generic".into(),
+                        "Found DiplomatSlice without primitive or DiplomatSlice-like generic"
+                            .into(),
                         Some(ty.span().spanned_into(module_location)),
                         "Must be a primitive or DiplomatSlice-like generic".into(),
-                        vec![]
+                        vec![],
                     ));
                 } else if p_len == 1 && p.path.segments[0].ident == "Result"
                     || is_runtime_type(p, "DiplomatResult")
@@ -1150,30 +1177,38 @@ impl TypeName {
                         } else {
                             let mut locations = vec![];
                             if !matches!(&type_args.args[0], syn::GenericArgument::Type(..)) {
-                                locations.push(ContextLocation::new(type_args.args[0].span().spanned_into(module_location), "Must be a type arg".into()));
+                                locations.push(ContextLocation::new(
+                                    type_args.args[0].span().spanned_into(module_location),
+                                    "Must be a type arg".into(),
+                                ));
                             }
                             if !matches!(&type_args.args[1], syn::GenericArgument::Type(..)) {
-                                locations.push(ContextLocation::new(type_args.args[1].span().spanned_into(module_location), "Must be a type arg".into()));
+                                locations.push(ContextLocation::new(
+                                    type_args.args[1].span().spanned_into(module_location),
+                                    "Must be a type arg".into(),
+                                ));
                             }
                             create_report(AstReport::new(
                                 "Expected both type arguments for Result to be a type".into(),
                                 Some(type_args.span().spanned_into(module_location)),
                                 "".into(),
-                                locations
+                                locations,
                             ));
                         }
                     } else {
                         let args = &p.path.segments.last().unwrap().arguments;
                         let suggestion = match args {
                             syn::PathArguments::None => "add angle brackets",
-                            syn::PathArguments::Parenthesized(..) => "replace parentheses with angle brackets",
-                            _ => unreachable!()
+                            syn::PathArguments::Parenthesized(..) => {
+                                "replace parentheses with angle brackets"
+                            }
+                            _ => unreachable!(),
                         };
                         create_report(AstReport::new(
                             "Expected angle brackets for Result type".into(),
                             Some(p.path.segments.span().spanned_into(module_location)),
                             format!("Suggestion: {suggestion}"),
-                            vec![]
+                            vec![],
                         ));
                     }
                 } else if is_runtime_type(p, "DiplomatWrite") {
@@ -1186,7 +1221,12 @@ impl TypeName {
                 if tup.elems.is_empty() {
                     TypeName::Unit
                 } else {
-                    create_report(AstReport::new("Tuples unsupported".into(), Some(tup.span().spanned_into(module_location)), "https://github.com/rust-diplomat/diplomat/issues/1142".into(), vec![]));
+                    create_report(AstReport::new(
+                        "Tuples unsupported".into(),
+                        Some(tup.span().spanned_into(module_location)),
+                        "https://github.com/rust-diplomat/diplomat/issues/1142".into(),
+                        vec![],
+                    ));
                 }
             }
             syn::Type::ImplTrait(tr) => {
@@ -1199,7 +1239,7 @@ impl TypeName {
                                     "Implementing multiple traits currently unsupported".into(),
                                     Some(trait_bound.span().spanned_into(module_location)),
                                     "Suggestion: remove extra trait bound".into(),
-                                    vec![]
+                                    vec![],
                                 ));
                             }
                             let rel_segs = &p.segments;
@@ -1232,10 +1272,18 @@ impl TypeName {
                                         }) = input_type
                                         {
                                             create_report(AstReport::new(
-                                                "Lifetimes are not allowed on callback parameters".into(),
-                                                Some(in_lifetime.span().spanned_into(module_location)),
+                                                "Lifetimes are not allowed on callback parameters"
+                                                    .into(),
+                                                Some(
+                                                    in_lifetime
+                                                        .span()
+                                                        .spanned_into(module_location),
+                                                ),
                                                 "Suggestion: remove lifetime".into(),
-                                                vec![ContextLocation::new(path_seg.span().spanned_into(module_location), "Defined on trait".into())]
+                                                vec![ContextLocation::new(
+                                                    path_seg.span().spanned_into(module_location),
+                                                    "Defined on trait".into(),
+                                                )],
                                             ));
                                         }
                                     }
@@ -1275,7 +1323,7 @@ impl TypeName {
                                     "Unsupported function type".into(),
                                     Some(path_seg.span().spanned_into(module_location)),
                                     "Expected parentheses".into(),
-                                    vec![]
+                                    vec![],
                                 ));
                             } else {
                                 ret_type = Some(TypeName::ImplTrait(
@@ -1305,7 +1353,7 @@ impl TypeName {
                                 "Unsupported trait bound".into(),
                                 Some(trait_bound.span().spanned_into(module_location)),
                                 "Expected lifetime or trait name.".into(),
-                                vec![]
+                                vec![],
                             ));
                         }
                     }
@@ -1320,7 +1368,7 @@ impl TypeName {
                     "See a list of the types Diplomat supports: https://rust-diplomat.github.io/diplomat/types.html".into(),
                     vec![]
                 ));
-        },
+            }
         }
     }
 
