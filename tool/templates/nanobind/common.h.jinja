@@ -529,7 +529,40 @@ struct swap_lvalue_wrapper<Return(*)(Args...)> {
         };
     }
 };
-// TODO: Create Class* and Class* const variants
+
+template<typename Class, typename Return, typename... Args>
+struct swap_lvalue_wrapper<Return(Class::*)(Args...)> {
+    // Our original C++ function:
+    typedef Return(Class::*original)(Args...);
+    // Our Nanobind function with the converted types:
+    typedef std::function<Return(Class*, typename get_cb_with_lvalue_arg<Args>::Type ...)> result;
+
+    // Return the new function that accepts the types Nanobind wants.
+    static result get_converted_func(original f) {
+        return [f](Class* c, get_cb_with_lvalue_arg<Args>::Type... args) {
+            // Call the original C++ function,
+            // with the types converted from what Nanobind expects to what C++ expects:
+            return (c->*f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
+        };
+    }
+};
+
+template<typename Class, typename Return, typename... Args>
+struct swap_lvalue_wrapper<Return(Class::*)(Args...) const> {
+    // Our original C++ function:
+    typedef Return(Class::*original)(Args...) const;
+    // Our Nanobind function with the converted types:
+    typedef std::function<Return(const Class*, typename get_cb_with_lvalue_arg<Args>::Type ...)> result;
+
+    // Return the new function that accepts the types Nanobind wants.
+    static result get_converted_func(original f) {
+        return [f](const Class* c, get_cb_with_lvalue_arg<Args>::Type... args) {
+            // Call the original C++ function,
+            // with the types converted from what Nanobind expects to what C++ expects:
+            return (c->*f)(get_cb_with_lvalue_arg<Args>::get_arg(args)...);
+        };
+    }
+};
 
 
 // Given a function reference, this creates a bound call to take callbacks which take l-value references as args,
