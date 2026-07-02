@@ -915,6 +915,10 @@ class Opaque:
     @staticmethod
     def try_from_utf8(input: str) -> Opaque: ...
 
+class OpaqueCallbacks:
+    @staticmethod
+    def ret_op(f: Callable[[MyString], MyString], st: MyString) -> MyString: ...
+
 class OpaqueMut:
     def __init__(self) -> None: ...
 

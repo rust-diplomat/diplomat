@@ -36,6 +36,7 @@ void add_OutTupleStruct_binding(nb::module_);
 void add_Unnamespaced_binding(nb::module_);
 void add_CallbackHolder_binding(nb::module_);
 void add_MutableCallbackHolder_binding(nb::module_);
+void add_OpaqueCallbacks_binding(nb::module_);
 void add_Bar_binding(nb::module_);
 void add_Foo_binding(nb::module_);
 void add_One_binding(nb::module_);
@@ -198,6 +199,7 @@ NB_MODULE(somelib, mod)
     add_Unnamespaced_binding(mod);
     add_CallbackHolder_binding(mod);
     add_MutableCallbackHolder_binding(mod);
+    add_OpaqueCallbacks_binding(mod);
     add_Bar_binding(mod);
     add_Foo_binding(mod);
     add_One_binding(mod);
