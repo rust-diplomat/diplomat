@@ -40,6 +40,10 @@ struct OpaqueImplTemplate<'ctx> {
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
     properties: Vec<PropertyInfo>,
+    /// Run-level: true iff any type in this generation run pins a slice. Gates
+    /// the `DiplomatPinnedMemory` Dispose sweep so a run with no pinned returns
+    /// emits nothing referencing the (System.Memory-dependent) helper.
+    uses_pinned_memory: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,6 +76,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
+        uses_pinned_memory: bool,
     ) -> String {
         let properties = method::collect_properties(&methods);
 
@@ -80,6 +85,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             namespace: self.namespace,
             methods,
             properties,
+            uses_pinned_memory,
         }
         .render()
         .unwrap()

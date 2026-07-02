@@ -24,7 +24,7 @@ use std::{
 
 use askama::Template;
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, EnumDef, OpaqueDef, OutStructDef, StructDef, TypeContext,
+    self, DocsUrlGenerator, EnumDef, OpaqueDef, OutStructDef, TypeContext,
 };
 
 use crate::dotnet::r#gen::callback::DotnetCallback;
@@ -39,6 +39,7 @@ mod lower;
 mod method;
 mod opaque;
 
+use self::impl_struct::StructField;
 use self::method::{MethodInfo, StructMethodContext};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +86,55 @@ struct EnumTemplate<'ctx> {
 struct EnumVariantInfo {
     name: String,
     discriminant: isize,
+}
+
+/// One rendered type: its display name and the optional raw + idiomatic C#.
+pub(super) struct RenderedType {
+    pub(super) display_name: String,
+    pub(super) raw: Option<String>,
+    pub(super) content: String,
+}
+
+/// A type whose render data is built but not yet emitted. The two-phase split
+/// (build all, then render all) lets the run compute whether ANY type pins a
+/// slice before rendering opaque Dispose sweeps that reference the pin helper.
+enum PreparedType<'tcx> {
+    /// No dependency on the run-level pin flag — already rendered (enums).
+    Prerendered {
+        display_name: String,
+        raw: Option<String>,
+        content: String,
+    },
+    Opaque {
+        display_name: String,
+        opaque_def: &'tcx OpaqueDef,
+        methods: Vec<MethodInfo<'tcx>>,
+    },
+    Struct {
+        display_name: String,
+        fields: Vec<StructField>,
+        methods: Vec<MethodInfo<'tcx>>,
+    },
+}
+
+impl PreparedType<'_> {
+    fn display_name(&self) -> &str {
+        match self {
+            Self::Prerendered { display_name, .. }
+            | Self::Opaque { display_name, .. }
+            | Self::Struct { display_name, .. } => display_name,
+        }
+    }
+
+    /// True iff any of this type's methods pins a borrowed slice.
+    fn uses_pinned_memory(&self) -> bool {
+        match self {
+            Self::Prerendered { .. } => false,
+            Self::Opaque { methods, .. } | Self::Struct { methods, .. } => {
+                methods.iter().any(|m| m.has_pinned_inputs())
+            }
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -136,44 +186,130 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         ))
     }
 
-    pub(crate) fn gen_opaque(
-        &self,
-        display_name: String,
-        opaque_def: &'tcx OpaqueDef,
-    ) -> Option<(Option<String>, String)> {
-        // Lower every method exactly once, then hand the same `MethodInfo`s
-        // to both the raw and idiomatic templates. Lowering twice (once per
-        // template) would push every unsupported-shape diagnostic twice.
-        // A method that uses an unsupported shape is dropped here (the
-        // diagnostic was recorded during lowering); the end-gate aborts the
-        // whole run before any file is written.
-        let methods: Vec<MethodInfo<'tcx>> = opaque_def
-            .methods
-            .iter()
-            .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
+    /// Render every non-disabled type to `(display_name, raw, content)`,
+    /// alongside the run-level `uses_pinned_memory` flag. Types are BUILT
+    /// first (each method lowered exactly once) so the flag is known before
+    /// the first opaque Dispose sweep — a pin edge lands on the RETURNED
+    /// type's wrapper, which may render before the method that pins into it.
+    pub(super) fn render_all_types(&self) -> (bool, Vec<RenderedType>) {
+        let mut prepared_types = Vec::new();
+        let mut uses_pinned_memory = false;
+        for (id, ty) in self.tcx.all_types() {
+            if ty.attrs().disable {
+                continue;
+            }
+            let display_name = self.formatter.fmt_type_name(id).into_owned();
+            // Attribute any diagnostic pushed while lowering this type to it.
+            let _guard = self.errors.set_context_ty(display_name.clone().into());
+            // `None` means an unsupported shape (diagnostic already recorded);
+            // the end-gate in `lib.rs` aborts before any file is written.
+            let Some(prepared) = self.prepare_type(display_name, ty) else {
+                continue;
+            };
+            uses_pinned_memory |= prepared.uses_pinned_memory();
+            prepared_types.push(prepared);
+        }
+
+        let rendered = prepared_types
+            .into_iter()
+            .map(|prepared| {
+                let display_name = prepared.display_name().to_string();
+                let (raw, content) = self.render_prepared(prepared, uses_pinned_memory);
+                RenderedType {
+                    display_name,
+                    raw,
+                    content,
+                }
+            })
             .collect();
-        let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, methods.clone());
-        let content = self.gen_opaque_impl(display_name, methods);
-        Some((Some(raw), content))
+        (uses_pinned_memory, rendered)
     }
 
-    pub(crate) fn gen_struct(
+    /// Build a type's render data without emitting any C#. `build_method_info`
+    /// runs exactly once per method here (it registers result/option structs
+    /// and pushes diagnostics — running it twice would double both), so the
+    /// run can learn whether ANY type pins a slice before rendering the first
+    /// one. `None` (diagnostic recorded) for an unsupported type shape.
+    fn prepare_type(
         &self,
         display_name: String,
-        struct_def: &'tcx StructDef,
-    ) -> Option<(Option<String>, String)> {
-        // An unsupported field type skips the whole struct — there's no
-        // partial struct to emit. Methods are lowered once and shared
-        // between the raw and idiomatic templates (see `gen_opaque`).
-        let fields = self.lower_fields(struct_def)?;
-        let methods: Vec<MethodInfo<'tcx>> = struct_def
-            .methods
+        ty: hir::TypeDef<'tcx>,
+    ) -> Option<PreparedType<'tcx>> {
+        Some(match ty {
+            hir::TypeDef::Struct(struct_def) => {
+                // An unsupported field type skips the whole struct — there's
+                // no partial struct to emit.
+                let fields = self.lower_fields(struct_def)?;
+                let methods = self.build_methods(&struct_def.methods);
+                PreparedType::Struct {
+                    display_name,
+                    fields,
+                    methods,
+                }
+            }
+            hir::TypeDef::OutStruct(out_struct_def) => {
+                self.gen_out_struct(out_struct_def);
+                return None;
+            }
+            hir::TypeDef::Opaque(opaque_def) => PreparedType::Opaque {
+                display_name,
+                opaque_def,
+                methods: self.build_methods(&opaque_def.methods),
+            },
+            hir::TypeDef::Enum(enum_def) => {
+                // Enums never reference the pin helper, so render eagerly.
+                let (raw, content) = self.gen_enum(display_name.clone(), enum_def)?;
+                PreparedType::Prerendered {
+                    display_name,
+                    raw,
+                    content,
+                }
+            }
+            _ => unreachable!("unexpected type variant"),
+        })
+    }
+
+    /// Render a prepared type to `(raw, content)`. `uses_pinned_memory` is the
+    /// run-level flag threaded into the opaque template's Dispose sweep.
+    fn render_prepared(
+        &self,
+        prepared: PreparedType<'tcx>,
+        uses_pinned_memory: bool,
+    ) -> (Option<String>, String) {
+        match prepared {
+            PreparedType::Prerendered { raw, content, .. } => (raw, content),
+            PreparedType::Opaque {
+                display_name,
+                opaque_def,
+                methods,
+            } => {
+                let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, methods.clone());
+                let content = self.gen_opaque_impl(display_name, methods, uses_pinned_memory);
+                (Some(raw), content)
+            }
+            PreparedType::Struct {
+                display_name,
+                fields,
+                methods,
+            } => {
+                let raw = self.gen_struct_raw(display_name.clone(), fields.clone(), methods.clone());
+                // Structs are value types with no Dispose, so no pin sweep —
+                // their only pin references live in per-method bodies.
+                let content = self.gen_struct_impl(display_name, fields, methods);
+                (Some(raw), content)
+            }
+        }
+    }
+
+    /// Lower each method exactly once, sharing the `MethodInfo`s across the raw
+    /// and idiomatic templates. A method with an unsupported shape is dropped
+    /// (its diagnostic was recorded during lowering); the end-gate aborts the
+    /// whole run before any file is written.
+    fn build_methods(&self, methods: &'tcx [hir::Method]) -> Vec<MethodInfo<'tcx>> {
+        methods
             .iter()
             .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
-            .collect();
-        let raw = self.gen_struct_raw(display_name.clone(), fields.clone(), methods.clone());
-        let content = self.gen_struct_impl(display_name, fields, methods);
-        Some((Some(raw), content))
+            .collect()
     }
 
     pub(crate) fn gen_out_struct(
