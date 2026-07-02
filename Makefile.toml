@@ -581,7 +581,9 @@ generate_generic example kotlin somelib "--config kotlin.scaffold=false" /src/ma
 
 [tasks.gen-nanobind-feature]
 category = "Code generation"
-dependencies = ["gen-nanobind-bindings", "gen-nanobind-stubs"]
+run_task = [
+    { name = ["gen-nanobind-bindings", "gen-nanobind-stubs"] }
+]
 
 [tasks.gen-nanobind-bindings]
 category = "Code generation"
