@@ -916,7 +916,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let property_accessor =
             self.property_accessor(method, &return_type, &return_type_name, &inputs);
         let (keep_alive_edges, error_keep_alive_edges) =
-            self.borrowed_output_keep_alive_edges(method, &inputs, &borrow_map)?;
+            self.borrowed_output_keep_alive_edges(method, &inputs, &borrow_map, ownership)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
         // A non-opaque success return drops edges silently in `idiomatic_value_expr`
@@ -982,6 +982,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         method: &'tcx Method,
         inputs: &DotnetInputs,
         borrow_map: &BTreeMap<hir::Lifetime, BorrowedLifetimeInfo<'tcx>>,
+        ownership: Ownership,
     ) -> Option<(Vec<String>, Vec<String>)> {
         // The Ok value's keep-alive edges ride on the returned wrapper, the Err
         // value's on the thrown exception — so compute each from where that
@@ -991,12 +992,17 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::ReturnType::Fallible(s, e) => (s.as_type(), e.as_ref()),
         };
 
+        // A borrowed return builds a non-owning wrapper whose Dispose never
+        // runs Rust's destructor, so unpinning on that Dispose would free the
+        // buffer while Rust still holds the slice. Only an owned return may
+        // root a pin; otherwise fall through to the SliceParam rejection.
+        let ok_pins: &[SlicePin] = if ownership == Ownership::Owned {
+            &inputs.borrowed_slice_pins
+        } else {
+            &[]
+        };
         let ok_edges = match ok_ty {
-            Some(ty) => self.output_keep_alive_edges(
-                ty,
-                borrow_map,
-                OutputArm::Ok(&inputs.borrowed_slice_pins),
-            )?,
+            Some(ty) => self.output_keep_alive_edges(ty, borrow_map, OutputArm::Ok(ok_pins))?,
             None => Vec::new(),
         };
         let err_edges = match err_ty {

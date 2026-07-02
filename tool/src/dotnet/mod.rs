@@ -289,57 +289,18 @@ pub(crate) fn run<'tcx>(
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
 
-    for (id, ty) in tcx.all_types() {
-        if ty.attrs().disable {
-            continue;
+    /*
+     * Raw represents the layer of C# that directly manipulates the C ABI. It is expected to be unsafe and low-level, and is not intended for direct consumption by end-users.
+     * The content layer represents the safe, idiomatic C# API that end-users will interact with.
+     * It may wrap or compose multiple raw items, and should prioritize usability and safety.
+     */
+    let (uses_pinned_memory, rendered_types) = ctx.render_all_types();
+    for rendered in rendered_types {
+        let file_name = format!("{}.cs", rendered.display_name);
+        if let Some(raw) = rendered.raw {
+            add_cs_file(&files, format!("Raw{}.cs", rendered.display_name), raw);
         }
-
-        /*
-         * Raw represents the layer of C# that directly manipulates the C ABI. It is expected to be unsafe and low-level, and is not intended for direct consumption by end-users.
-         * The content layer represents the safe, idiomatic C# API that end-users will interact with.
-         * It may wrap or compose multiple raw items, and should prioritize usability and safety.
-         */
-        // Compute the formatted name once: applies `#[diplomat::rename]`
-        // and C# keyword escaping. The same name flows into the file
-        // names, the type declaration sites (`public partial class T`),
-        // and the type references (`Raw.T.Method`).
-        let display_name = ctx.formatter.fmt_type_name(id).into_owned();
-        // Attribute any diagnostic pushed while lowering this type (or its
-        // methods) to `Type` / `Type::method`. Restored on scope exit.
-        let _guard = ctx.errors.set_context_ty(display_name.clone().into());
-        let lowered = match ty {
-            diplomat_core::hir::TypeDef::Struct(struct_def) => {
-                ctx.gen_struct(display_name.clone(), struct_def)
-            }
-            diplomat_core::hir::TypeDef::OutStruct(struct_def) => ctx.gen_out_struct(struct_def),
-            diplomat_core::hir::TypeDef::Opaque(opaque_def) => {
-                ctx.gen_opaque(display_name.clone(), opaque_def)
-            }
-            diplomat_core::hir::TypeDef::Enum(enum_def) => {
-                ctx.gen_enum(display_name.clone(), enum_def)
-            }
-            _ => {
-                // No other type variants are expected to be emitted as top-level items, but
-                // if we add any in the future, this will catch them and prevent silent
-                // omissions.
-                unreachable!("unexpected type variant: {id:?}");
-            }
-        };
-
-        // A `None` means the type used an unsupported shape: the diagnostic
-        // was already recorded, so skip emitting it. The end-gate in `lib.rs`
-        // aborts the whole run (printing every collected diagnostic) before
-        // any file is written, so a skipped type never ships partial output.
-        let Some((raw, content)) = lowered else {
-            continue;
-        };
-
-        let file_name = format!("{display_name}.cs");
-        if let Some(raw) = raw {
-            let raw_file_name = format!("Raw{display_name}.cs");
-            add_cs_file(&files, raw_file_name, raw);
-        }
-        add_cs_file(&files, file_name, content);
+        add_cs_file(&files, file_name, rendered.content);
     }
 
     // Emit result structs + their exception classes. One exception per
@@ -453,15 +414,20 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("RustHandle template render failed"),
     );
-    add_cs_file(
-        &files,
-        "DiplomatPinnedMemory.cs".to_string(),
-        DiplomatPinnedMemoryTemplate {
-            namespace: &namespace,
-        }
-        .render()
-        .expect("DiplomatPinnedMemory template render failed"),
-    );
+    // System.Buffers.MemoryHandle / ReadOnlyMemory need the System.Memory
+    // package on the netstandard2.0 floor, so only ship the helper when the
+    // run actually pins a slice.
+    if uses_pinned_memory {
+        add_cs_file(
+            &files,
+            "DiplomatPinnedMemory.cs".to_string(),
+            DiplomatPinnedMemoryTemplate {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("DiplomatPinnedMemory template render failed"),
+        );
+    }
 
     (files, errors)
 }
@@ -992,6 +958,105 @@ mod test {
         assert!(
             error_str.contains("mutable slice parameter")
                 && error_str.contains("borrowed by the output"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    // A run with NO pinned-slice return must not ship the System.Memory-
+    // dependent pin helper, nor the Dispose sweep that references it — the
+    // netstandard2.0 floor would fail to compile it.
+    #[test]
+    fn run_without_pinning_omits_pin_helper_and_sweep() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Plain;
+
+                impl Plain {
+                    pub fn make() -> Box<Plain> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        assert!(
+            !files.contains_key("DiplomatPinnedMemory.cs"),
+            "no pinned return means the pin helper must not be emitted"
+        );
+        let plain = files.get("Plain.cs").expect("expected Plain.cs output");
+        assert!(
+            !plain.contains("(edge as DiplomatPinnedMemory)"),
+            "no pinned return means the Dispose sweep must be absent:\n{plain}"
+        );
+    }
+
+    // A run WITH a pinned-slice return ships the helper and the sweep on every
+    // opaque (cross-type: the sweep must be present regardless of which type
+    // declares the pinning method).
+    #[test]
+    fn run_with_pinning_emits_pin_helper_and_sweep() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Viewer<'a>(&'a [u8]);
+
+                impl<'a> Viewer<'a> {
+                    pub fn open(data: &'a [u8]) -> Box<Viewer<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        assert!(
+            files.contains_key("DiplomatPinnedMemory.cs"),
+            "a pinned return should emit the pin helper"
+        );
+        let viewer = files.get("Viewer.cs").expect("expected Viewer.cs output");
+        assert!(
+            viewer.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
+            "a pinned return should emit the Dispose sweep:\n{viewer}"
+        );
+    }
+
+    // A borrowed opaque return builds a non-owning wrapper whose Dispose never
+    // runs the Rust destructor, so it must not root a pin — unpinning there
+    // would free the buffer while Rust still holds the slice. Reject it.
+    #[test]
+    fn borrowed_opaque_return_borrowing_slice_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct SliceView<'a>(&'a [u8]);
+
+                impl<'a> SliceView<'a> {
+                    pub fn peek(&'a self, data: &'a [u8]) -> &'a SliceView<'a> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("only owned opaque success returns borrowing from"),
             "unexpected diagnostics: {error_str}"
         );
     }
