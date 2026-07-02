@@ -207,12 +207,12 @@ mod ffi {
             Box::new(Self {})
         }
 
-        pub fn opaque_cb_self(&self, cb : impl Fn(&MyString), st : &MyString) {
-            cb(st);
+        pub fn opaque_cb_self<'a>(&self, cb : impl Fn(&MyString) -> &'a MyString, st : &MyString) -> &'a MyString {
+            cb(st)
         }
 
-        pub fn opaque_cb_mut_self(&mut self, cb : impl Fn(&MyString), st : &MyString) {
-            cb(st);
+        pub fn opaque_cb_mut_self<'a>(&mut self, cb : impl Fn(&MyString) -> &'a MyString, st : &MyString) -> &'a MyString {
+            cb(st)
         }
     }
 
