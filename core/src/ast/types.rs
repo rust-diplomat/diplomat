@@ -1294,7 +1294,12 @@ impl TypeName {
                             }
                         }
                         _ => {
-                            panic!("Unsupported trait component: {trait_bound:?}");
+                            create_report(AstReport::new(
+                                "Unsupported trait bound".into(),
+                                Some(trait_bound.span().spanned_into(module_location)),
+                                "Expected lifetime or trait name.".into(),
+                                vec![]
+                            ));
                         }
                     }
                 }

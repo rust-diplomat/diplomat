@@ -307,6 +307,7 @@ mod tests {
         "lifetime_callback_param.rs",
         "unsupported_fn_type.rs",
         "ns_lifetime.rs",
+        "unsupported_bound.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
