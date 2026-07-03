@@ -8,9 +8,9 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Unnamespaced: IDisposable
+public partial class SliceParseError: IDisposable
 {
-    private unsafe RustHandle<Raw.Unnamespaced> _inner;
+    private unsafe RustHandle<Raw.SliceParseError> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC cannot finalize
@@ -18,10 +18,10 @@ public partial class Unnamespaced: IDisposable
     /// </summary>
     private object[] _edges;
 
-    private static readonly unsafe RustDestructor<Raw.Unnamespaced> _destroy = Raw.Unnamespaced.Destroy;
+    private static readonly unsafe RustDestructor<Raw.SliceParseError> _destroy = Raw.SliceParseError.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>Unnamespaced</c> from a raw handle.
+    /// Creates a managed <c>SliceParseError</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -29,9 +29,9 @@ public partial class Unnamespaced: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe Unnamespaced(Raw.Unnamespaced* handle)
+    internal unsafe SliceParseError(Raw.SliceParseError* handle)
     {
-        _inner = RustHandle<Raw.Unnamespaced>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.SliceParseError>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -40,9 +40,9 @@ public partial class Unnamespaced: IDisposable
     /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
     /// use-after-free and remains the caller's responsibility.
     /// </remarks>
-    internal unsafe Unnamespaced(Raw.Unnamespaced* handle, object[] edges)
+    internal unsafe SliceParseError(Raw.SliceParseError* handle, object[] edges)
     {
-        _inner = RustHandle<Raw.Unnamespaced>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.SliceParseError>.Owned(handle, _destroy);
         _edges = edges;
     }
 
@@ -52,43 +52,16 @@ public partial class Unnamespaced: IDisposable
     /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
     /// while this view is in use.
     /// </summary>
-    internal unsafe Unnamespaced(RustHandle<Raw.Unnamespaced> inner, object[] edges)
+    internal unsafe SliceParseError(RustHandle<Raw.SliceParseError> inner, object[] edges)
     {
         _inner = inner;
         _edges = edges;
-    }
-    /// <returns>
-    /// A <c>Unnamespaced</c> allocated on Rust side.
-    /// </returns>
-    public static Unnamespaced Make(RenamedAttrEnum e)
-    {
-        unsafe
-        {
-            Raw.Unnamespaced* result = Raw.Unnamespaced.Make(e);
-            return new Unnamespaced(result);
-        }
-    }
-    public void UseNamespaced(AttrOpaque1Renamed n)
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("Unnamespaced");
-            }
-            if (n == null) throw new ArgumentNullException(nameof(n));
-            Raw.AttrOpaque1Renamed* nRaw = n.AsFFI();
-            if (nRaw == null) throw new ObjectDisposedException(nameof(AttrOpaque1Renamed));
-            Raw.Unnamespaced.UseNamespaced(AsFFI(), nRaw);
-            GC.KeepAlive(this);
-            GC.KeepAlive(n);
-        }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.Unnamespaced* AsFFI()
+    internal unsafe Raw.SliceParseError* AsFFI()
     {
         return _inner.Ptr;
     }
@@ -118,7 +91,7 @@ public partial class Unnamespaced: IDisposable
         }
     }
 
-    ~Unnamespaced()
+    ~SliceParseError()
     {
         Dispose();
     }

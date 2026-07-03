@@ -59,6 +59,10 @@ public partial struct {{ name }}
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+{%- if method.has_pinned_inputs() %}
+    /// <br/>
+    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+{%- endif %}
     /// </remarks>
 {%- endif %}
 
