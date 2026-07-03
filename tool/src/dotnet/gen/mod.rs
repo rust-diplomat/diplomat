@@ -23,9 +23,7 @@ use std::{
 };
 
 use askama::Template;
-use diplomat_core::hir::{
-    self, DocsUrlGenerator, EnumDef, OpaqueDef, OutStructDef, TypeContext,
-};
+use diplomat_core::hir::{self, DocsUrlGenerator, EnumDef, OpaqueDef, OutStructDef, TypeContext};
 
 use crate::dotnet::r#gen::callback::DotnetCallback;
 use crate::{dotnet::gen::fillable::DotnetResult, ErrorStore};
@@ -292,7 +290,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 fields,
                 methods,
             } => {
-                let raw = self.gen_struct_raw(display_name.clone(), fields.clone(), methods.clone());
+                let raw =
+                    self.gen_struct_raw(display_name.clone(), fields.clone(), methods.clone());
                 // Structs are value types with no Dispose, so no pin sweep —
                 // their only pin references live in per-method bodies.
                 let content = self.gen_struct_impl(display_name, fields, methods);

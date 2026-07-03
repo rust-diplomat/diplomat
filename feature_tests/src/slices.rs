@@ -213,7 +213,9 @@ pub mod ffi {
         }
 
         pub fn sum(&self) -> u32 {
-            self.0.iter().fold(0u32, |acc, &b| acc.wrapping_add(b as u32))
+            self.0
+                .iter()
+                .fold(0u32, |acc, &b| acc.wrapping_add(b as u32))
         }
     }
 

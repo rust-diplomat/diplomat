@@ -1047,25 +1047,23 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     }
                     // A pinned param roots its holder; any other slice/string
                     // param is call-scoped, so a borrowing return would dangle.
-                    LifetimeEdgeKind::SliceParam => {
-                        match arm.pin_for(&edge.param_name) {
-                            Some(pin) => {
-                                if !edges.contains(&pin.pin_local) {
-                                    edges.push(pin.pin_local.clone());
-                                }
+                    LifetimeEdgeKind::SliceParam => match arm.pin_for(&edge.param_name) {
+                        Some(pin) => {
+                            if !edges.contains(&pin.pin_local) {
+                                edges.push(pin.pin_local.clone());
                             }
-                            None => {
-                                self.errors.push_error(format!(
+                        }
+                        None => {
+                            self.errors.push_error(format!(
                                     "[.NET backend] {what} borrows from slice/string parameter \
                                      `{}`; only owned opaque success returns borrowing from \
                                      `&[u8]`/`&[u32]` parameters are supported — other slice/string \
                                      borrow positions still pin only for the duration of the call",
                                     edge.param_name
                                 ));
-                                return None;
-                            }
+                            return None;
                         }
-                    }
+                    },
                     // No struct edge-plumbing yet.
                     LifetimeEdgeKind::StructLifetime(..) => {
                         self.errors.push_error(format!(

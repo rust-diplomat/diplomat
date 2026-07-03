@@ -703,9 +703,7 @@ mod test {
             errors.join("\n")
         );
 
-        let list = files
-            .get("Parsed.cs")
-            .expect("expected Parsed.cs output");
+        let list = files.get("Parsed.cs").expect("expected Parsed.cs output");
         assert!(
             list.contains("public static Parsed Parse(ReadOnlyMemory<byte> data)"),
             "borrowed slice param should surface as ReadOnlyMemory<byte>:\n{list}"
@@ -928,9 +926,7 @@ mod test {
             .get("BuilderOptions.cs")
             .expect("expected BuilderOptions.cs output");
         assert!(
-            builder.contains(
-                "stays pinned until the returned value is disposed; do not mutate it"
-            ),
+            builder.contains("stays pinned until the returned value is disposed; do not mutate it"),
             "struct methods with pinned inputs should carry the pin remark:\n{builder}"
         );
     }
