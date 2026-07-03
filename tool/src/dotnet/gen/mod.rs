@@ -305,9 +305,28 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// (its diagnostic was recorded during lowering); the end-gate aborts the
     /// whole run before any file is written.
     fn build_methods(&self, methods: &'tcx [hir::Method]) -> Vec<MethodInfo<'tcx>> {
+        // Two `override string ToString()` members (a stringifier plus a
+        // parameterless `to_string`, say) would be a C# duplicate-member error.
+        let mut has_to_string_override = false;
         methods
             .iter()
             .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
+            .filter(|info| {
+                if !info.is_to_string_override() {
+                    return true;
+                }
+                if has_to_string_override {
+                    self.errors.push_error(
+                        "[.NET backend] multiple methods render as the `ToString()` \
+                         override on this type; C# allows only one. Rename or disable \
+                         the extras."
+                            .to_string(),
+                    );
+                    return false;
+                }
+                has_to_string_override = true;
+                true
+            })
             .collect()
     }
 

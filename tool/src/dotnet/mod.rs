@@ -158,7 +158,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.fallible_constructors = false;
     a.accessors = false;
     a.static_accessors = false;
-    a.stringifiers = false;
+    a.stringifiers = true;
     a.comparators = false;
     a.iterators = false;
     a.iterables = false;
@@ -1242,6 +1242,132 @@ mod test {
         assert!(
             exc.contains("params object[] edges"),
             "exception class should accept keep-alive edges in its constructor:\n{exc}"
+        );
+    }
+
+    // A stringifier replaces its plain named method with the `ToString()`
+    // override on the idiomatic layer; the raw layer keeps the method's name.
+    #[test]
+    fn stringifier_renders_as_to_string_override() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Person;
+
+                impl Person {
+                    #[diplomat::attr(auto, stringifier)]
+                    pub fn display(&self, w: &mut DiplomatWrite) {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let person = files.get("Person.cs").expect("expected Person.cs output");
+        assert!(
+            person.contains("public override string ToString()"),
+            "stringifier should render as the ToString() override:\n{person}"
+        );
+        assert!(
+            !person.contains("public string Display("),
+            "the plain named method should be replaced, not duplicated:\n{person}"
+        );
+
+        let raw = files
+            .get("RawPerson.cs")
+            .expect("expected RawPerson.cs output");
+        assert!(
+            raw.contains("Display("),
+            "the raw layer should keep the method's own name:\n{raw}"
+        );
+    }
+
+    #[test]
+    fn static_stringifier_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Banner;
+
+                impl Banner {
+                    #[diplomat::attr(auto, stringifier)]
+                    pub fn motd(w: &mut DiplomatWrite) {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("static stringifier is not supported"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    #[test]
+    fn fallible_stringifier_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Shaky;
+
+                impl Shaky {
+                    #[diplomat::attr(auto, stringifier)]
+                    pub fn stringify(&self, w: &mut DiplomatWrite) -> Result<(), Box<Shaky>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("fallible or nullable stringifier is not supported"),
+            "unexpected diagnostics: {error_str}"
+        );
+    }
+
+    // A stringifier and a parameterless `to_string` would both emit
+    // `override string ToString()` — a C# duplicate-member error.
+    #[test]
+    fn duplicate_to_string_overrides_are_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Twice;
+
+                impl Twice {
+                    #[diplomat::attr(auto, stringifier)]
+                    pub fn display(&self, w: &mut DiplomatWrite) {
+                        unimplemented!()
+                    }
+
+                    pub fn to_string(&self, w: &mut DiplomatWrite) {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        let error_str = errors.join("\n");
+        assert!(
+            error_str.contains("multiple methods render as the `ToString()` override"),
+            "unexpected diagnostics: {error_str}"
         );
     }
 }
