@@ -489,7 +489,7 @@ impl Module {
 
         let mod_macros = if let Some(inc) = &include_info {
             let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location)
-                .expect("Could not parse macro definitions");
+                .expect(&format!("Could not parse macro definitions in {:?}", inc.base_path));
             Macros { defs }
         } else {
             Macros::new()
