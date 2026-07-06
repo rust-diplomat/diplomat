@@ -215,7 +215,16 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
         } else if a.path() == &include_path {
             Some(Attr::Include(
                 a.parse_args()
-                    .expect("Failed to parse malformed diplomat::include"),
+                    .unwrap_or_else(|e| {
+                        create_report(AstReport::new(
+                            "Failed to parse diplomat::include".into(),
+                            Some(e.span().spanned_into(attrs_location)),
+                            e.to_string(),
+                            vec![
+                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
+                            ]
+                        ));
+                    }),
             ))
         } else {
             None

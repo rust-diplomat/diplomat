@@ -313,6 +313,7 @@ mod tests {
         "malformed_attr.rs",
         "malformed_cfg.rs",
         "malformed_demo.rs",
+        "malformed_include.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
