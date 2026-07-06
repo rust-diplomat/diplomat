@@ -314,6 +314,7 @@ mod tests {
         "malformed_cfg.rs",
         "malformed_demo.rs",
         "malformed_include.rs",
+        "malformed_rust_link.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
