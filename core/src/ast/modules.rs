@@ -663,8 +663,10 @@ pub fn parse_macro_file(
         {
             inner
         } else {
+            let inc_loc = include_info.base_path.join(i.path.clone());
+            let module_location = &SpanLocation::FilePath(inc_loc.to_string_lossy().into());
             let file_contents =
-                std::fs::read_to_string(include_info.base_path.join(i.path.clone()))?;
+                std::fs::read_to_string(inc_loc)?;
             let syn_file = syn::parse_file(&file_contents)
                 .map_err(|e| std::io::Error::other(e.to_string()))?;
             // Parse the module (we're just interested in the macros, but this is a quick shortcut to do that)
