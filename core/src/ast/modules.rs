@@ -707,7 +707,11 @@ pub fn parse_macro_file(
         // there are no collisions between multiple #[diplomat::include()] files:
         for id in defs.keys() {
             if let Some(pth) = previously_hit.get(id) {
-                return Err(std::io::Error::other(format!("Duplicate macro definition of {id} found in {}: original definition from {pth}", i.path)));
+                create_report(AstReport::new(
+                    format!("Duplicate macro definition of {id} found"),
+                    Some(id.span().spanned_into(module_location)),
+                    format!("Previously defined in {pth}"),
+                    vec![]));
             } else {
                 previously_hit.insert(id.clone(), i.path.clone());
             }
