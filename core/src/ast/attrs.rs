@@ -184,7 +184,16 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
         } else if a.path() == &demo_path {
             Some(Attr::DemoBackend(
                 a.parse_args()
-                    .expect("Failed to parse malformed diplomat::demo"),
+                    .unwrap_or_else(|e| {
+                        create_report(AstReport::new(
+                            "Failed to parse diplomat::demo".into(),
+                            Some(e.span().spanned_into(attrs_location)),
+                            e.to_string(),
+                            vec![
+                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
+                            ]
+                        ));
+                    }),
             ))
         } else if a.path() == &deprecated {
             if let Some(Meta::NameValue(MetaNameValue {

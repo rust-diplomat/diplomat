@@ -312,6 +312,7 @@ mod tests {
         "slice_no_type.rs",
         "malformed_attr.rs",
         "malformed_cfg.rs",
+        "malformed_demo.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
