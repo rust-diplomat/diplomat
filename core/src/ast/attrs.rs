@@ -168,7 +168,16 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
         } else if a.path() == &diplomat_cfg_path {
             Some(Attr::DiplomatCFGBackend(
                 a.parse_args()
-                    .expect("Failed to parse malformed diplomat::cfg"),
+                    .unwrap_or_else(|e| {
+                        create_report(AstReport::new(
+                            "Failed to parse diplomat::cfg".into(),
+                            Some(e.span().spanned_into(attrs_location)),
+                            e.to_string(),
+                            vec![
+                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
+                            ]
+                        ));
+                    }),
             ))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
