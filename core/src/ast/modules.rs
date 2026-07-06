@@ -668,7 +668,13 @@ pub fn parse_macro_file(
             let file_contents =
                 std::fs::read_to_string(inc_loc)?;
             let syn_file = syn::parse_file(&file_contents)
-                .map_err(|e| std::io::Error::other(e.to_string()))?;
+                .unwrap_or_else(|e| 
+                    create_report(AstReport::new(
+                        "Error reading file".into(),
+                        Some(e.span().spanned_into(module_location)),
+                        e.to_string(),
+                    vec![]))
+                );
             // Parse the module (we're just interested in the macros, but this is a quick shortcut to do that)
             let mut mst = ModuleBuilder {
                 custom_types_by_name: BTreeMap::new(),
