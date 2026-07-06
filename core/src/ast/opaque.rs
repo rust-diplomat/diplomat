@@ -31,7 +31,7 @@ impl OpaqueType {
         module_location: &SpanLocation,
     ) -> Self {
         let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&strct.attrs);
+        attrs.add_attrs(&strct.attrs, module_location);
         let name = (&strct.ident).spanned_into(module_location);
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),
@@ -52,7 +52,7 @@ impl OpaqueType {
         module_location: &SpanLocation,
     ) -> Self {
         let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&enm.attrs);
+        attrs.add_attrs(&enm.attrs, module_location);
         let name = (&enm.ident).spanned_into(module_location);
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),

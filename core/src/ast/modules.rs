@@ -270,7 +270,7 @@ impl<'a> ModuleBuilder<'a> {
                     }
                 };
                 let mut impl_attrs = self.impl_parent_attrs.clone();
-                impl_attrs.add_attrs(&imp.attrs);
+                impl_attrs.add_attrs(&imp.attrs, self.module_location);
                 let method_parent_attrs =
                     impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                 let self_ident = self_path.path.elements.last().unwrap();
@@ -485,7 +485,7 @@ impl Module {
         include_info: Option<ModuleIncludeInfo<'a>>,
         module_location: &SpanLocation,
     ) -> Module {
-        let mod_attrs: Attrs = (&*input.attrs).into();
+        let mod_attrs: Attrs = (&*input.attrs).spanned_into(module_location);
 
         let mod_macros = if let Some(inc) = &include_info {
             let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location)
@@ -650,7 +650,7 @@ pub fn parse_macro_file(
         return Ok(BTreeMap::new());
     }
 
-    let attrs: Attrs = (*m.attrs).into();
+    let attrs: Attrs = (*m.attrs).spanned_into(module_location);
 
     let mut previously_hit = BTreeMap::<syn::Ident, String>::new();
 

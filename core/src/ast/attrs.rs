@@ -2,11 +2,16 @@
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
+use syn::spanned::Spanned;
 use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
 use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, MetaNameValue, Token};
+
+use crate::ast::SpanLocation;
+use crate::ast::idents::{FromWithSpan, IntoWithSpan};
+use crate::ast::logging::{AstReport, create_report};
 
 /// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
 /// potentially read by the diplomat macro and the AST backends, anything that is not should
@@ -106,21 +111,21 @@ impl Attrs {
         }
     }
 
-    pub(crate) fn add_attrs(&mut self, attrs: &[Attribute]) {
-        for attr in syn_attr_to_ast_attr(attrs) {
+    pub(crate) fn add_attrs(&mut self, attrs: &[Attribute], attrs_location : &SpanLocation) {
+        for attr in syn_attr_to_ast_attr(attrs, attrs_location) {
             self.add_attr(attr)
         }
     }
-    pub(crate) fn from_attrs(attrs: &[Attribute]) -> Self {
+    pub(crate) fn from_attrs(attrs: &[Attribute], attrs_location : &SpanLocation) -> Self {
         let mut this = Self::default();
-        this.add_attrs(attrs);
+        this.add_attrs(attrs, attrs_location);
         this
     }
 }
 
-impl From<&[Attribute]> for Attrs {
-    fn from(other: &[Attribute]) -> Self {
-        Self::from_attrs(other)
+impl FromWithSpan<&[Attribute]> for Attrs {
+    fn spanned_from(other: &[Attribute], module_location: &SpanLocation) -> Self {
+        Self::from_attrs(other, module_location)
     }
 }
 
@@ -135,7 +140,7 @@ enum Attr {
     // More goes here
 }
 
-fn syn_attr_to_ast_attr(attrs: &[Attribute]) -> impl Iterator<Item = Attr> + '_ {
+fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLocation) -> impl Iterator<Item = Attr> + 'a {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let diplomat_cfg_path: syn::Path = syn::parse_str("diplomat::cfg").unwrap();
