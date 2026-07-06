@@ -11,7 +11,7 @@ use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, MetaNameValue, To
 
 use crate::ast::SpanLocation;
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::{AstReport, create_report};
+use crate::ast::logging::{AstReport, ContextLocation, create_report};
 
 /// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
 /// potentially read by the diplomat macro and the AST backends, anything that is not should
@@ -154,7 +154,16 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
         } else if a.path() == &dattr_path {
             Some(Attr::DiplomatBackend(
                 a.parse_args()
-                    .expect("Failed to parse malformed diplomat::attr"),
+                    .unwrap_or_else(|e| {
+                        create_report(AstReport::new(
+                            "Failed to parse diplomat::attr".into(),
+                            Some(e.span().spanned_into(attrs_location)),
+                            e.to_string(),
+                            vec![
+                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
+                            ]
+                        ));
+                    }),
             ))
         } else if a.path() == &diplomat_cfg_path {
             Some(Attr::DiplomatCFGBackend(
