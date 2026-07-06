@@ -36,7 +36,7 @@ impl OpaqueType {
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),
             name,
-            docs: Docs::from_attrs(&strct.attrs),
+            docs: Docs::from_attrs(&strct.attrs, module_location),
             lifetimes: LifetimeEnv::from_struct_item(strct, &[], module_location),
             methods: vec![],
             mutability,
@@ -57,7 +57,7 @@ impl OpaqueType {
         OpaqueType {
             dtor_abi_name: Self::dtor_abi_name(&name, &attrs),
             name,
-            docs: Docs::from_attrs(&enm.attrs),
+            docs: Docs::from_attrs(&enm.attrs, module_location),
             lifetimes: LifetimeEnv::from_enum_item(enm, &[], module_location),
             methods: vec![],
             mutability,

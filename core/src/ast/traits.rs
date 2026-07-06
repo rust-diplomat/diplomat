@@ -108,7 +108,7 @@ impl Trait {
                     output_type,
                     lifetimes,
                     attrs: fct_attrs,
-                    docs: Docs::from_attrs(&fct.attrs),
+                    docs: Docs::from_attrs(&fct.attrs, module_location),
                 });
             }
         }
@@ -143,7 +143,7 @@ impl Trait {
         Self {
             name: (&trt.ident).spanned_into(module_location),
             methods: trait_fcts,
-            docs: Docs::from_attrs(&trt.attrs),
+            docs: Docs::from_attrs(&trt.attrs, module_location),
             lifetimes: LifetimeEnv::from_trait(trt, module_location), // TODO
             attrs,
             is_send,

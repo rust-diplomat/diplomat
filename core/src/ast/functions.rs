@@ -89,7 +89,7 @@ impl Function {
             output_type,
             lifetimes,
             attrs,
-            docs: Docs::from_attrs(&f.attrs),
+            docs: Docs::from_attrs(&f.attrs, module_location),
         }
     }
 }

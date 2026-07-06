@@ -302,7 +302,7 @@ fn test_docs_url_generator() {
         assert_eq!(
             DocsUrlGenerator::default().gen_for_rust_link(
                 &Docs::from_ast(
-                    &ast::Docs::from_attrs(&[attr]),
+                    &ast::Docs::from_attrs(&[attr], &ast::SpanLocation::None),
                     &BasicAttributeValidator::default(),
                     &mut ErrorStore::default()
                 )
@@ -321,7 +321,7 @@ fn test_docs_url_generator() {
         )
         .gen_for_rust_link(
             &Docs::from_ast(
-                &ast::Docs::from_attrs(&[test_cases[0].0.clone()]),
+                &ast::Docs::from_attrs(&[test_cases[0].0.clone()], &ast::SpanLocation::None),
                 &BasicAttributeValidator::default(),
                 &mut ErrorStore::default()
             )
@@ -334,7 +334,7 @@ fn test_docs_url_generator() {
         DocsUrlGenerator::with_base_urls(Some("http://std-docs.biz/".to_string()), HashMap::new())
             .gen_for_rust_link(
                 &Docs::from_ast(
-                    &ast::Docs::from_attrs(&[test_cases[0].0.clone()]),
+                    &ast::Docs::from_attrs(&[test_cases[0].0.clone()], &ast::SpanLocation::None),
                     &BasicAttributeValidator::default(),
                     &mut ErrorStore::default()
                 )

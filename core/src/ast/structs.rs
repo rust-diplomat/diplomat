@@ -51,7 +51,7 @@ impl Struct {
                     });
                 let type_name =
                     TypeName::from_syn(&field.ty, Some(self_path_type.clone()), module_location);
-                let docs = Docs::from_attrs(&field.attrs);
+                let docs = Docs::from_attrs(&field.attrs, module_location);
 
                 (name, type_name, docs, Attrs::from_attrs(&field.attrs, module_location))
             })
@@ -62,7 +62,7 @@ impl Struct {
         attrs.add_attrs(&strct.attrs, module_location);
         Struct {
             name: (&strct.ident).spanned_into(module_location),
-            docs: Docs::from_attrs(&strct.attrs),
+            docs: Docs::from_attrs(&strct.attrs, module_location),
             lifetimes,
             fields,
             methods: vec![],

@@ -107,7 +107,7 @@ impl Method {
 
         Method {
             name: (method_ident).spanned_into(module_location),
-            docs: Docs::from_attrs(&m.attrs),
+            docs: Docs::from_attrs(&m.attrs, module_location),
             abi_name: (&extern_ident).spanned_into(module_location),
             self_param,
             self_type: Some(self_path_type),

@@ -1,3 +1,4 @@
+use crate::ast::SpanLocation;
 use crate::ast::attrs::DiplomatBackendAttrCfg;
 
 use super::Path;
@@ -27,8 +28,8 @@ impl Default for DocumentationSection {
 pub struct Docs(pub Vec<DocumentationSection>, pub Vec<RustLink>);
 
 impl Docs {
-    pub fn from_attrs(attrs: &[Attribute]) -> Self {
-        Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs))
+    pub fn from_attrs(attrs: &[Attribute], attrs_location : &SpanLocation) -> Self {
+        Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs, attrs_location))
     }
 
     fn get_doc_lines(attrs: &[Attribute]) -> Vec<DocumentationSection> {
@@ -65,7 +66,7 @@ impl Docs {
         sections
     }
 
-    fn get_rust_link(attrs: &[Attribute]) -> Vec<RustLink> {
+    fn get_rust_link(attrs: &[Attribute], attrs_location : &SpanLocation) -> Vec<RustLink> {
         attrs
             .iter()
             .filter(|i| i.path().to_token_stream().to_string() == "diplomat :: rust_link")

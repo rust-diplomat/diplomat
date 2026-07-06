@@ -42,7 +42,7 @@ impl Enum {
 
         Enum {
             name: (&enm.ident).spanned_into(module_location),
-            docs: Docs::from_attrs(&enm.attrs),
+            docs: Docs::from_attrs(&enm.attrs, module_location),
             variants: enm
                 .variants
                 .iter()
@@ -79,7 +79,7 @@ impl Enum {
                     (
                         (&v.ident).spanned_into(module_location),
                         new_discriminant,
-                        Docs::from_attrs(&v.attrs),
+                        Docs::from_attrs(&v.attrs, module_location),
                         v_attrs,
                     )
                 })
