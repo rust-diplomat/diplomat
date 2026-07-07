@@ -7,7 +7,7 @@ Diplomat only supports a small set of types that can be passed over FFI.
      - `bool`
      - `char`
      - `DiplomatChar` (`u32`), which is treated as `char`-equivalent on the backend language, but need not be a valid Unicode code point for the Rust code to be sound.
-     - Slices, `&[T]` where `T` is one of:
+     - [Slices](./types/slices.md), `&[T]` where `T` is one of:
          - An integer type
          - `bool`
          - `char`
