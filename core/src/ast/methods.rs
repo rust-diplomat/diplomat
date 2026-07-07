@@ -56,7 +56,7 @@ impl Method {
         module_location: &SpanLocation,
     ) -> Method {
         let mut attrs = impl_attrs.clone();
-        attrs.add_attrs(&m.attrs);
+        attrs.add_attrs(&m.attrs, module_location);
 
         let self_ident = self_path_type.path.elements.last().unwrap();
         let method_ident = &m.sig.ident;
@@ -107,7 +107,7 @@ impl Method {
 
         Method {
             name: (method_ident).spanned_into(module_location),
-            docs: Docs::from_attrs(&m.attrs),
+            docs: Docs::from_attrs(&m.attrs, module_location),
             abi_name: (&extern_ident).spanned_into(module_location),
             self_param,
             self_type: Some(self_path_type),
@@ -270,7 +270,7 @@ impl SelfParam {
                 )
             }),
             path_type,
-            attrs: Attrs::from_attrs(&rec.attrs),
+            attrs: Attrs::from_attrs(&rec.attrs, module_location),
         }
     }
 }
@@ -353,7 +353,7 @@ impl Param {
             }
         };
 
-        let attrs = Attrs::from_attrs(&t.attrs);
+        let attrs = Attrs::from_attrs(&t.attrs, module_location);
 
         Param {
             name: (&ident.ident).spanned_into(module_location),

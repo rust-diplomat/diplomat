@@ -270,7 +270,7 @@ impl<'a> ModuleBuilder<'a> {
                     }
                 };
                 let mut impl_attrs = self.impl_parent_attrs.clone();
-                impl_attrs.add_attrs(&imp.attrs);
+                impl_attrs.add_attrs(&imp.attrs, self.module_location);
                 let method_parent_attrs =
                     impl_attrs.attrs_for_inheritance(AttrInheritContext::MethodFromImpl);
                 let self_ident = self_path.path.elements.last().unwrap();
@@ -485,11 +485,16 @@ impl Module {
         include_info: Option<ModuleIncludeInfo<'a>>,
         module_location: &SpanLocation,
     ) -> Module {
-        let mod_attrs: Attrs = (&*input.attrs).into();
+        let mod_attrs: Attrs = (&*input.attrs).spanned_into(module_location);
 
         let mod_macros = if let Some(inc) = &include_info {
             let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location)
-                .expect("Could not parse macro definitions");
+                .unwrap_or_else(|e| {
+                    panic!(
+                        "Could not parse macro definitions in {:?}: {e}",
+                        inc.base_path
+                    )
+                });
             Macros { defs }
         } else {
             Macros::new()
@@ -650,7 +655,7 @@ pub fn parse_macro_file(
         return Ok(BTreeMap::new());
     }
 
-    let attrs: Attrs = (*m.attrs).into();
+    let attrs: Attrs = (*m.attrs).spanned_into(module_location);
 
     let mut previously_hit = BTreeMap::<syn::Ident, String>::new();
 
@@ -663,10 +668,17 @@ pub fn parse_macro_file(
         {
             inner
         } else {
-            let file_contents =
-                std::fs::read_to_string(include_info.base_path.join(i.path.clone()))?;
-            let syn_file = syn::parse_file(&file_contents)
-                .map_err(|e| std::io::Error::other(e.to_string()))?;
+            let inc_loc = include_info.base_path.join(i.path.clone());
+            let module_location = &SpanLocation::FilePath(inc_loc.to_string_lossy().into());
+            let file_contents = std::fs::read_to_string(inc_loc)?;
+            let syn_file = syn::parse_file(&file_contents).unwrap_or_else(|e| {
+                create_report(AstReport::new(
+                    "Error reading file".into(),
+                    Some(e.span().spanned_into(module_location)),
+                    e.to_string(),
+                    vec![],
+                ))
+            });
             // Parse the module (we're just interested in the macros, but this is a quick shortcut to do that)
             let mut mst = ModuleBuilder {
                 custom_types_by_name: BTreeMap::new(),
@@ -699,7 +711,12 @@ pub fn parse_macro_file(
         // there are no collisions between multiple #[diplomat::include()] files:
         for id in defs.keys() {
             if let Some(pth) = previously_hit.get(id) {
-                return Err(std::io::Error::other(format!("Duplicate macro definition of {id} found in {}: original definition from {pth}", i.path)));
+                create_report(AstReport::new(
+                    format!("Duplicate macro definition of {id} found"),
+                    Some(id.span().spanned_into(module_location)),
+                    format!("Previously defined in {pth}"),
+                    vec![],
+                ));
             } else {
                 previously_hit.insert(id.clone(), i.path.clone());
             }

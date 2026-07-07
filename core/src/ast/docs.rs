@@ -1,10 +1,14 @@
 use crate::ast::attrs::DiplomatBackendAttrCfg;
+use crate::ast::idents::IntoWithSpan;
+use crate::ast::logging::{create_report, AstReport, ContextLocation};
+use crate::ast::SpanLocation;
 
 use super::Path;
 use core::fmt;
 use quote::ToTokens;
 use serde::{Deserialize, Serialize};
 use syn::parse::{self, Parse, ParseStream};
+use syn::spanned::Spanned;
 use syn::{Attribute, Ident, Meta, Token};
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
@@ -27,8 +31,11 @@ impl Default for DocumentationSection {
 pub struct Docs(pub Vec<DocumentationSection>, pub Vec<RustLink>);
 
 impl Docs {
-    pub fn from_attrs(attrs: &[Attribute]) -> Self {
-        Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs))
+    pub fn from_attrs(attrs: &[Attribute], attrs_location: &SpanLocation) -> Self {
+        Self(
+            Self::get_doc_lines(attrs),
+            Self::get_rust_link(attrs, attrs_location),
+        )
     }
 
     fn get_doc_lines(attrs: &[Attribute]) -> Vec<DocumentationSection> {
@@ -65,11 +72,23 @@ impl Docs {
         sections
     }
 
-    fn get_rust_link(attrs: &[Attribute]) -> Vec<RustLink> {
+    fn get_rust_link(attrs: &[Attribute], attrs_location: &SpanLocation) -> Vec<RustLink> {
         attrs
             .iter()
             .filter(|i| i.path().to_token_stream().to_string() == "diplomat :: rust_link")
-            .map(|i| i.parse_args().expect("Malformed attribute"))
+            .map(|i| {
+                i.parse_args().unwrap_or_else(|e| {
+                    create_report(AstReport::new(
+                        "Could not read rust link".into(),
+                        Some(e.span().spanned_into(attrs_location)),
+                        e.to_string(),
+                        vec![ContextLocation::new(
+                            i.span().spanned_into(attrs_location),
+                            "".into(),
+                        )],
+                    ));
+                })
+            })
             .collect()
     }
 

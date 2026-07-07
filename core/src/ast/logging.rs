@@ -231,6 +231,8 @@ pub(crate) fn create_report(report: AstReport) -> ! {
 mod tests {
     use std::fmt::Write;
 
+    use crate::ast::ModuleIncludeInfo;
+
     #[derive(Clone, Debug)]
     struct StderrWrapper {
         buf: String,
@@ -253,9 +255,9 @@ mod tests {
     }
 
     fn parse_file_hook_errors(file_loc: &str, suffix: &str) {
-        let crate_dir = env!("CARGO_MANIFEST_DIR");
-        let local_path = format!("src/ast/snapshots/span_testing/{file_loc}");
-        let file_path = std::path::Path::new(crate_dir).join(&local_path);
+        let folder_pth_name = format!("src/ast/snapshots/span_testing");
+        let folder_pth = std::path::Path::new(&folder_pth_name);
+        let file_path = folder_pth.join(file_loc);
 
         let mut settings = insta::Settings::clone_current();
         settings.set_snapshot_suffix(format!("{file_loc}_{suffix}"));
@@ -267,8 +269,11 @@ mod tests {
         crate::ast::Module::from_syn(
             &p,
             true,
-            None,
-            &crate::ast::SpanLocation::FilePath(local_path),
+            Some(ModuleIncludeInfo {
+                base_path: &folder_pth,
+                cache: None,
+            }),
+            &crate::ast::SpanLocation::FilePath(format!("{}/{file_loc}", folder_pth_name)),
         );
     }
 
@@ -310,6 +315,12 @@ mod tests {
         "unsupported_bound.rs",
         "unsupported_type.rs",
         "slice_no_type.rs",
+        "malformed_attr.rs",
+        "malformed_cfg.rs",
+        "malformed_demo.rs",
+        "malformed_include.rs",
+        "malformed_rust_link.rs",
+        "error_in_included.rs",
     ];
 
     fn test_file_list(suffix: &'static str) {
@@ -322,18 +333,18 @@ mod tests {
             let t = std::thread::spawn(|| {
                 parse_file_hook_errors(f, suffix);
             });
-            results.push(t.join());
+            results.push((f, t.join()));
         }
-        for res in results {
+        for (f, res) in results {
             match res {
                 Ok(_) => {}
                 Err(p) => {
                     if let Some(st) = p.downcast_ref::<String>() {
                         if !st.contains("Diplomat error") {
-                            panic!("{st}");
+                            panic!("{f}: {st}");
                         }
                     } else {
-                        panic!("Could not convert error to string.");
+                        panic!("{f}: Could not convert error to string.");
                     }
                 }
             }

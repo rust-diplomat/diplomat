@@ -42,7 +42,7 @@ impl Function {
         }
 
         let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&f.attrs);
+        attrs.add_attrs(&f.attrs, module_location);
 
         let concat_func_ident = if attrs.abi_rename.is_empty() {
             format!("diplomat_external_{ident}")
@@ -89,7 +89,7 @@ impl Function {
             output_type,
             lifetimes,
             attrs,
-            docs: Docs::from_attrs(&f.attrs),
+            docs: Docs::from_attrs(&f.attrs, module_location),
         }
     }
 }

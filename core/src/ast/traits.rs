@@ -37,7 +37,7 @@ impl Trait {
     /// Extract a [`Trait`] metadata value from an AST node.
     pub fn new(trt: &syn::ItemTrait, parent_attrs: &Attrs, module_location: &SpanLocation) -> Self {
         let mut attrs = parent_attrs.clone();
-        attrs.add_attrs(&trt.attrs);
+        attrs.add_attrs(&trt.attrs, module_location);
 
         let mut trait_fcts = Vec::new();
 
@@ -59,7 +59,7 @@ impl Trait {
         for trait_item in trt.items.iter() {
             if let syn::TraitItem::Fn(fct) = trait_item {
                 let mut fct_attrs = attrs.clone();
-                fct_attrs.add_attrs(&fct.attrs);
+                fct_attrs.add_attrs(&fct.attrs, module_location);
                 // copied from the method parsing
                 let fct_ident = &fct.sig.ident;
                 let concat_fct_ident = format!("{self_ident}_{fct_ident}");
@@ -108,7 +108,7 @@ impl Trait {
                     output_type,
                     lifetimes,
                     attrs: fct_attrs,
-                    docs: Docs::from_attrs(&fct.attrs),
+                    docs: Docs::from_attrs(&fct.attrs, module_location),
                 });
             }
         }
@@ -143,7 +143,7 @@ impl Trait {
         Self {
             name: (&trt.ident).spanned_into(module_location),
             methods: trait_fcts,
-            docs: Docs::from_attrs(&trt.attrs),
+            docs: Docs::from_attrs(&trt.attrs, module_location),
             lifetimes: LifetimeEnv::from_trait(trt, module_location), // TODO
             attrs,
             is_send,
