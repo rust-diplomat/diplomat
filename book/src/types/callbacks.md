@@ -1,7 +1,8 @@
 # Callbacks
 
+({{get_supports("callbacks")}})
+
 Diplomat has limited, experimental support for exposing and working with callbacks. See [tracking issue](https://github.com/rust-diplomat/diplomat/issues/146)
-Currently these are only supported in the C++, kotlin, and nanobind backends.
 
 Functions taking callbacks as parameters take the form
 

@@ -19,14 +19,14 @@ Diplomat only supports a small set of types that can be passed over FFI.
          - `&DiplomatStr`: An unvalidated string expected to be UTF-8.
          - `&DiplomatStr16`: An unvalidated string expected to be UTF-16.
      - [`DiplomatWrite`](./write.md) for returning strings. This needs to be the last parameter of the method.
-     - [`Option<&T>` ,`Option<Box<T>>`](./option.md) of opaque types, `Option<T>` of structs, enums, primitives, or the above slice types
+     - [`Option<&T>` ,`Option<Box<T>>`](./types/option.md) of opaque types, `Option<T>` of structs, enums, primitives, or the above slice types
      - [Callbacks](./callbacks.md) in parameters. Support is limited.
      - `Result<T, E>` in return values
      - `()` as a `Result` `Ok`/`Error` type, or as a return value
  - Custom types
-     - Custom [opaque types](./opaque.md) (passed as references or via `Box<T>`)
-     - Custom [structs and C-like enums](./structs.md)
-     - Custom [traits](./traits.md)
+     - Custom [opaque types](./types/opaque.md) (passed as references or via `Box<T>`)
+     - Custom [structs and C-like enums](./types/structs.md)
+     - Custom [traits](./types/traits.md)
 
 More types can be supported in the future.
 

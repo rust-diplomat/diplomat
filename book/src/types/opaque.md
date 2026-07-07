@@ -2,7 +2,7 @@
 
 In the vast majority of cases, we'd like to expose Rust types over FFI "opaquely", that is, the FFI code does not know anything about the contents of these types, rather it wants to do things with the type.
 
-By default, Diplomat will not let you expose fields of types other than the [allowed types](./types.md) over FFI. The following code will trigger a resolution error when running `diplomat-tool`:
+By default, Diplomat will not let you expose fields of types other than the [allowed types](../types.md) over FFI. The following code will trigger a resolution error when running `diplomat-tool`:
 
 ```rust
 #[diplomat::bridge]
