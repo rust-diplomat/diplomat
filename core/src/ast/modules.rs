@@ -488,8 +488,9 @@ impl Module {
         let mod_attrs: Attrs = (&*input.attrs).spanned_into(module_location);
 
         let mod_macros = if let Some(inc) = &include_info {
-            let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location)
-                .expect(&format!("Could not parse macro definitions in {:?}", inc.base_path));
+            let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location).expect(
+                &format!("Could not parse macro definitions in {:?}", inc.base_path),
+            );
             Macros { defs }
         } else {
             Macros::new()
@@ -665,16 +666,15 @@ pub fn parse_macro_file(
         } else {
             let inc_loc = include_info.base_path.join(i.path.clone());
             let module_location = &SpanLocation::FilePath(inc_loc.to_string_lossy().into());
-            let file_contents =
-                std::fs::read_to_string(inc_loc)?;
-            let syn_file = syn::parse_file(&file_contents)
-                .unwrap_or_else(|e| 
-                    create_report(AstReport::new(
-                        "Error reading file".into(),
-                        Some(e.span().spanned_into(module_location)),
-                        e.to_string(),
-                    vec![]))
-                );
+            let file_contents = std::fs::read_to_string(inc_loc)?;
+            let syn_file = syn::parse_file(&file_contents).unwrap_or_else(|e| {
+                create_report(AstReport::new(
+                    "Error reading file".into(),
+                    Some(e.span().spanned_into(module_location)),
+                    e.to_string(),
+                    vec![],
+                ))
+            });
             // Parse the module (we're just interested in the macros, but this is a quick shortcut to do that)
             let mut mst = ModuleBuilder {
                 custom_types_by_name: BTreeMap::new(),
@@ -711,7 +711,8 @@ pub fn parse_macro_file(
                     format!("Duplicate macro definition of {id} found"),
                     Some(id.span().spanned_into(module_location)),
                     format!("Previously defined in {pth}"),
-                    vec![]));
+                    vec![],
+                ));
             } else {
                 previously_hit.insert(id.clone(), i.path.clone());
             }

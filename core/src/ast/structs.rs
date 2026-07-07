@@ -53,7 +53,12 @@ impl Struct {
                     TypeName::from_syn(&field.ty, Some(self_path_type.clone()), module_location);
                 let docs = Docs::from_attrs(&field.attrs, module_location);
 
-                (name, type_name, docs, Attrs::from_attrs(&field.attrs, module_location))
+                (
+                    name,
+                    type_name,
+                    docs,
+                    Attrs::from_attrs(&field.attrs, module_location),
+                )
             })
             .collect();
 

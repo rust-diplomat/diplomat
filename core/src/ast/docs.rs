@@ -1,7 +1,7 @@
-use crate::ast::SpanLocation;
 use crate::ast::attrs::DiplomatBackendAttrCfg;
 use crate::ast::idents::IntoWithSpan;
-use crate::ast::logging::{AstReport, ContextLocation, create_report};
+use crate::ast::logging::{create_report, AstReport, ContextLocation};
+use crate::ast::SpanLocation;
 
 use super::Path;
 use core::fmt;
@@ -31,8 +31,11 @@ impl Default for DocumentationSection {
 pub struct Docs(pub Vec<DocumentationSection>, pub Vec<RustLink>);
 
 impl Docs {
-    pub fn from_attrs(attrs: &[Attribute], attrs_location : &SpanLocation) -> Self {
-        Self(Self::get_doc_lines(attrs), Self::get_rust_link(attrs, attrs_location))
+    pub fn from_attrs(attrs: &[Attribute], attrs_location: &SpanLocation) -> Self {
+        Self(
+            Self::get_doc_lines(attrs),
+            Self::get_rust_link(attrs, attrs_location),
+        )
     }
 
     fn get_doc_lines(attrs: &[Attribute]) -> Vec<DocumentationSection> {
@@ -69,20 +72,23 @@ impl Docs {
         sections
     }
 
-    fn get_rust_link(attrs: &[Attribute], attrs_location : &SpanLocation) -> Vec<RustLink> {
+    fn get_rust_link(attrs: &[Attribute], attrs_location: &SpanLocation) -> Vec<RustLink> {
         attrs
             .iter()
             .filter(|i| i.path().to_token_stream().to_string() == "diplomat :: rust_link")
-            .map(|i| i.parse_args().unwrap_or_else(|e| {
-                create_report(AstReport::new(
-                    "Could not read rust link".into(),
-                    Some(e.span().spanned_into(attrs_location)),
-                    e.to_string(),
-                    vec![
-                        ContextLocation::new(i.span().spanned_into(attrs_location), "".into())
-                    ]
-                ));
-            }))
+            .map(|i| {
+                i.parse_args().unwrap_or_else(|e| {
+                    create_report(AstReport::new(
+                        "Could not read rust link".into(),
+                        Some(e.span().spanned_into(attrs_location)),
+                        e.to_string(),
+                        vec![ContextLocation::new(
+                            i.span().spanned_into(attrs_location),
+                            "".into(),
+                        )],
+                    ));
+                })
+            })
             .collect()
     }
 

@@ -231,7 +231,7 @@ pub(crate) fn create_report(report: AstReport) -> ! {
 mod tests {
     use std::fmt::Write;
 
-use crate::ast::ModuleIncludeInfo;
+    use crate::ast::ModuleIncludeInfo;
 
     #[derive(Clone, Debug)]
     struct StderrWrapper {
@@ -270,12 +270,10 @@ use crate::ast::ModuleIncludeInfo;
         crate::ast::Module::from_syn(
             &p,
             true,
-            Some(
-                ModuleIncludeInfo {
-                    base_path: &folder_pth,
-                    cache: None
-                }
-            ),
+            Some(ModuleIncludeInfo {
+                base_path: &folder_pth,
+                cache: None,
+            }),
             &crate::ast::SpanLocation::FilePath(format!("{}/{file_loc}", folder_pth_name)),
         );
     }

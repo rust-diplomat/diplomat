@@ -2,16 +2,16 @@
 
 use serde::ser::{SerializeStruct, Serializer};
 use serde::{Deserialize, Serialize};
-use syn::spanned::Spanned;
 use std::borrow::Cow;
 use std::convert::Infallible;
 use std::str::FromStr;
 use syn::parse::{Error as ParseError, Parse, ParseStream};
+use syn::spanned::Spanned;
 use syn::{Attribute, Expr, Ident, Lit, LitStr, Meta, MetaList, MetaNameValue, Token};
 
-use crate::ast::SpanLocation;
 use crate::ast::idents::{FromWithSpan, IntoWithSpan};
-use crate::ast::logging::{AstReport, ContextLocation, create_report};
+use crate::ast::logging::{create_report, AstReport, ContextLocation};
+use crate::ast::SpanLocation;
 
 /// The list of attributes on a type. All attributes except `attrs` (HIR attrs) are
 /// potentially read by the diplomat macro and the AST backends, anything that is not should
@@ -111,12 +111,12 @@ impl Attrs {
         }
     }
 
-    pub(crate) fn add_attrs(&mut self, attrs: &[Attribute], attrs_location : &SpanLocation) {
+    pub(crate) fn add_attrs(&mut self, attrs: &[Attribute], attrs_location: &SpanLocation) {
         for attr in syn_attr_to_ast_attr(attrs, attrs_location) {
             self.add_attr(attr)
         }
     }
-    pub(crate) fn from_attrs(attrs: &[Attribute], attrs_location : &SpanLocation) -> Self {
+    pub(crate) fn from_attrs(attrs: &[Attribute], attrs_location: &SpanLocation) -> Self {
         let mut this = Self::default();
         this.add_attrs(attrs, attrs_location);
         this
@@ -140,7 +140,10 @@ enum Attr {
     // More goes here
 }
 
-fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLocation) -> impl Iterator<Item = Attr> + 'a {
+fn syn_attr_to_ast_attr<'a>(
+    attrs: &'a [Attribute],
+    attrs_location: &'a SpanLocation,
+) -> impl Iterator<Item = Attr> + 'a {
     let cfg_path: syn::Path = syn::parse_str("cfg").unwrap();
     let dattr_path: syn::Path = syn::parse_str("diplomat::attr").unwrap();
     let diplomat_cfg_path: syn::Path = syn::parse_str("diplomat::cfg").unwrap();
@@ -152,49 +155,45 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
         if a.path() == &cfg_path {
             Some(Attr::Cfg(a.clone()))
         } else if a.path() == &dattr_path {
-            Some(Attr::DiplomatBackend(
-                a.parse_args()
-                    .unwrap_or_else(|e| {
-                        create_report(AstReport::new(
-                            "Failed to parse diplomat::attr".into(),
-                            Some(e.span().spanned_into(attrs_location)),
-                            e.to_string(),
-                            vec![
-                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
-                            ]
-                        ));
-                    }),
-            ))
+            Some(Attr::DiplomatBackend(a.parse_args().unwrap_or_else(|e| {
+                create_report(AstReport::new(
+                    "Failed to parse diplomat::attr".into(),
+                    Some(e.span().spanned_into(attrs_location)),
+                    e.to_string(),
+                    vec![ContextLocation::new(
+                        a.span().spanned_into(attrs_location),
+                        "".into(),
+                    )],
+                ));
+            })))
         } else if a.path() == &diplomat_cfg_path {
-            Some(Attr::DiplomatCFGBackend(
-                a.parse_args()
-                    .unwrap_or_else(|e| {
-                        create_report(AstReport::new(
-                            "Failed to parse diplomat::cfg".into(),
-                            Some(e.span().spanned_into(attrs_location)),
-                            e.to_string(),
-                            vec![
-                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
-                            ]
-                        ));
-                    }),
-            ))
+            Some(Attr::DiplomatCFGBackend(a.parse_args().unwrap_or_else(
+                |e| {
+                    create_report(AstReport::new(
+                        "Failed to parse diplomat::cfg".into(),
+                        Some(e.span().spanned_into(attrs_location)),
+                        e.to_string(),
+                        vec![ContextLocation::new(
+                            a.span().spanned_into(attrs_location),
+                            "".into(),
+                        )],
+                    ));
+                },
+            )))
         } else if a.path() == &crename_attr {
             Some(Attr::CRename(RenameAttr::from_meta(&a.meta).unwrap()))
         } else if a.path() == &demo_path {
-            Some(Attr::DemoBackend(
-                a.parse_args()
-                    .unwrap_or_else(|e| {
-                        create_report(AstReport::new(
-                            "Failed to parse diplomat::demo".into(),
-                            Some(e.span().spanned_into(attrs_location)),
-                            e.to_string(),
-                            vec![
-                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
-                            ]
-                        ));
-                    }),
-            ))
+            Some(Attr::DemoBackend(a.parse_args().unwrap_or_else(|e| {
+                create_report(AstReport::new(
+                    "Failed to parse diplomat::demo".into(),
+                    Some(e.span().spanned_into(attrs_location)),
+                    e.to_string(),
+                    vec![ContextLocation::new(
+                        a.span().spanned_into(attrs_location),
+                        "".into(),
+                    )],
+                ));
+            })))
         } else if a.path() == &deprecated {
             if let Some(Meta::NameValue(MetaNameValue {
                 value:
@@ -213,19 +212,17 @@ fn syn_attr_to_ast_attr<'a>(attrs: &'a [Attribute], attrs_location : &'a SpanLoc
                 Some(Attr::Deprecated("deprecated".into()))
             }
         } else if a.path() == &include_path {
-            Some(Attr::Include(
-                a.parse_args()
-                    .unwrap_or_else(|e| {
-                        create_report(AstReport::new(
-                            "Failed to parse diplomat::include".into(),
-                            Some(e.span().spanned_into(attrs_location)),
-                            e.to_string(),
-                            vec![
-                                ContextLocation::new(a.span().spanned_into(attrs_location), "".into())
-                            ]
-                        ));
-                    }),
-            ))
+            Some(Attr::Include(a.parse_args().unwrap_or_else(|e| {
+                create_report(AstReport::new(
+                    "Failed to parse diplomat::include".into(),
+                    Some(e.span().spanned_into(attrs_location)),
+                    e.to_string(),
+                    vec![ContextLocation::new(
+                        a.span().spanned_into(attrs_location),
+                        "".into(),
+                    )],
+                ));
+            })))
         } else {
             None
         }
