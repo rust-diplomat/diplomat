@@ -8,6 +8,7 @@ use super::{
     StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
     TypeDef, TypeId,
 };
+use crate::ast::AstReport;
 use crate::ast::attrs::AttrInheritContext;
 use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
@@ -28,12 +29,18 @@ pub enum LoweringError {
     /// instance into an specialized enum variant, generalizing where possible
     /// without losing any information.
     Other(String),
+    OtherWithLoc(ast::AstReport),
 }
 
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::Other(ref s) => s.fmt(f),
+            Self::OtherWithLoc(ref rep) => {
+                ast::write_report(rep, f).map_err(|_| {
+                    std::fmt::Error{}
+                })
+            }
         }
     }
 }
@@ -353,13 +360,17 @@ impl<'ast> LoweringContext<'ast> {
         );
         // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
         if !attrs.disable {
-            for (name, ty, docs, attrs) in ast_struct.fields.iter() {
-                let name = self.lower_ident(name, "struct field name")?;
+            for (name_outer, ty, docs, attrs) in ast_struct.fields.iter() {
+                let name = self.lower_ident(name_outer, "struct field name")?;
                 if !ty.is_ffi_safe() {
                     let ffisafe = ty.ffi_safe_version();
-                    self.errors.push(LoweringError::Other(format!(
-                        "Found FFI-unsafe type {ty} in struct field {struct_name}.{name}, consider using {ffisafe}",
-                    )));
+                    self.errors.push(LoweringError::OtherWithLoc(
+                        AstReport::new(
+                            format!("Found FFI-unsafe type {ty} in struct field {struct_name}.{name}"),
+                            name_outer.span(), format!("Consider using {ffisafe}"),
+                            vec![]
+                        )
+                    ));
                 }
                 let ty = self.lower_type::<Everywhere>(
                     ty,
