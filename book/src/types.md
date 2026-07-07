@@ -13,6 +13,8 @@ Diplomat only supports a small set of types that can be passed over FFI.
          - `char`
          - `DiplomatByte` (`u8`): The same as `u8` except in languages where "byte buffer" and "list of integers" are different types
          - `Box<OpaqueType>`
+         - [`OpaqueType`](./types/slices.md#opaques)
+         - [`PrimitiveStruct`](./types/slices.md#primitive-structs)
          - `DiplomatStrSlice`: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends
      - String slices:
          - `&str`: A validated, UTF-8 string. Will be converted/validated by the target language bindings if necessary.
