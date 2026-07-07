@@ -22,6 +22,7 @@
     - [Disabling APIs](attrs/disable.md)
     - [Visibility and `pub`](attrs/visibility.md)
     - [Feature Gates](attrs/features.md)
+    - [Default Values](attrs/default_value.md)
     - [Renaming APIs](attrs/rename.md)
     - [Namespacing](attrs/namespace.md)
     - [Constructors](attrs/constructors.md)
