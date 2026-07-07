@@ -488,8 +488,8 @@ impl Module {
         let mod_attrs: Attrs = (&*input.attrs).spanned_into(module_location);
 
         let mod_macros = if let Some(inc) = &include_info {
-            let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location).expect(
-                &format!("Could not parse macro definitions in {:?}", inc.base_path),
+            let defs = parse_macro_file(input, force_analyze, inc.clone(), module_location).unwrap_or_else(|e|
+                panic!("Could not parse macro definitions in {:?}: {e}", inc.base_path),
             );
             Macros { defs }
         } else {
