@@ -152,7 +152,7 @@ Nanobind generally requires the GIL [when attempting to call into C++](https://g
 
 To get around this, for any functions which may be long running and asynchronous, you will want to use [Custom Extra Code](../attrs/custom_extra_code.md) to mark a method with the [`nb::call_guard<nb::gil_scoped_release>`](https://nanobind.readthedocs.io/en/latest/api_core.html#gil-management) attribute. With this attribute present, Nanobind will call [PyEval_SaveThread](https://docs.python.org/3/c-api/threads.html#c.PyEval_SaveThread) at the start of the bound method, and will call [PyEval_RestoreThread](https://docs.python.org/3/c-api/threads.html#c.PyEval_RestoreThread) when the bound method has finished executing.
 
-This step currently requires extra steps on your part as Diplomat currently makes no guarantees about the consequences of releasing the GIL when calling into asynchronous Rust. It is up to you to ensure correctness.
+Asynchronous methods through Nanobind currently require configuration through `custom_extra_code` as Diplomat currently makes no guarantees about the consequences of releasing the GIL when calling into asynchronous Rust. It is up to you to ensure correctness.
 
 See [https://github.com/rust-diplomat/diplomat/issues/1196](https://github.com/rust-diplomat/diplomat/issues/1196) for more.
 
