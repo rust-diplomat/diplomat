@@ -406,11 +406,14 @@ impl<'ast> LoweringContext<'ast> {
         let methods = if attrs.disable {
             Vec::new()
         } else if ast_struct.fields.is_empty() {
-            if !ast_struct.methods.is_empty() {
-                self.errors.push(LoweringError::Other(format!(
-                    "Methods on ZST structs are not yet implemented: {}",
-                    ast_struct.name
-                )));
+            if let Some(m) = ast_struct.methods.first() {
+                self.errors.push(LoweringError::OtherWithLoc(
+                    AstReport::new(
+                        "Methods on ZST structs are not yet implemented".into(),
+                        m.name.span(),
+                        format!("Remove method {} from {}", m.name, ast_struct.name),
+                        vec![]
+                    )));
                 return Err(());
             } else {
                 Vec::new()
