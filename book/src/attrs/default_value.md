@@ -30,7 +30,7 @@ In C++ for instance, this function will now be defined with a default value:
 ```c++
 void Test::test(int32_t a, int64_t b, int64_t c = 100);
 ```
-## Supported Default Value Types
+### Supported Default Value Types
 Diplomat currently supports reading default values in the following formats:
 - Characters
 - 64-bit integers
