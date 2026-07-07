@@ -49,3 +49,4 @@ mod macros;
 pub use macros::{MacroDef, MacroUse, Macros};
 
 mod logging;
+pub use logging::{AstReport, write_report};

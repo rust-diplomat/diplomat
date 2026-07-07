@@ -6,7 +6,8 @@ use crate::ast::{idents::Span, Ident, SpanLocation};
 static WRITER: RwLock<&(dyn Fn() -> Box<dyn std::io::Write> + Send + Sync)> =
     RwLock::new(&(|| Box::new(std::io::stderr())));
 
-pub(crate) struct ContextLocation {
+#[derive(Debug)]
+pub struct ContextLocation {
     // Allow for pretty-print:
     #[allow(unused)]
     location: Span,
@@ -21,7 +22,8 @@ impl ContextLocation {
     }
 }
 
-pub(crate) struct AstReport {
+#[derive(Debug)]
+pub struct AstReport {
     title: String,
     primary_loc: Option<Span>,
     primary_label: String,
@@ -87,11 +89,33 @@ fn evaluate_bytes(sp: &super::idents::Span, src: &str) -> std::ops::Range<usize>
     }
 }
 
-pub(crate) fn create_report(report: AstReport) -> ! {
-    use std::io::Write;
-    let mut out = WRITER.read().unwrap()();
+pub trait WriteReport {
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), String>;
+    fn flush(&mut self) -> Result<(), String>;
+}
 
-    let span = report.primary_loc;
+impl WriteReport for Box<dyn std::io::Write> {
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), String> {
+        std::io::Write::write_fmt(self, args).map_err(|e| e.to_string())
+    }
+
+    fn flush(&mut self) -> Result<(), String> {
+        std::io::Write::flush(self).map_err(|e| e.to_string())
+    }
+}
+
+impl WriteReport for &mut std::fmt::Formatter<'_> {
+    fn write_fmt(&mut self, args: std::fmt::Arguments<'_>) -> Result<(), String> {
+        std::fmt::Write::write_fmt(self, args).map_err(|e| e.to_string())
+    }
+
+    fn flush(&mut self) -> Result<(), String> {
+        Ok(())
+    }
+}
+
+pub fn write_report(report : &AstReport, mut out : impl WriteReport) -> Result<(), String> {
+    let span = report.primary_loc.as_ref();
     let src = if let Some(sp) = &span {
         match &sp.span_location {
             SpanLocation::FilePath(f) => {
@@ -140,27 +164,28 @@ pub(crate) fn create_report(report: AstReport) -> ! {
 
             &[Level::ERROR.primary_title(&report.title).element(
                 Snippet::<Annotation>::source(&src)
-                    .path(match sp.span_location {
+                    .path(match &sp.span_location {
                         SpanLocation::FilePath(f) => Some(f),
                         _ => None,
                     })
                     .annotation(
                         AnnotationKind::Primary
                             .span(bytes_range.unwrap())
-                            .label(report.primary_label),
+                            .label(&report.primary_label),
                     )
                     .annotations(annotations),
             )]
         } else {
             &[Level::ERROR
                 .primary_title(&report.title)
-                .element(Level::ERROR.message(report.primary_label))]
+                .element(Level::ERROR.message(&report.primary_label))]
         };
         let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
-        writeln!(out, "{}", renderer.render(report)).expect("Could not write report.");
+        writeln!(out, "{}", renderer.render(report))?;
     }
     #[cfg(not(feature = "pretty-print"))]
     {
+        let mut valid_excerpt = true;
         let (location, excerpt_pre, excerpt, excerpt_post) = if let Some(sp) = span {
             let range = bytes_range.unwrap();
             let start = sp.start.line;
@@ -174,7 +199,9 @@ pub(crate) fn create_report(report: AstReport) -> ! {
             let range_pre = range.start.saturating_sub(5);
             let range_post = std::cmp::min(range.end.saturating_add(5), src.len());
             match sp.span_location {
-                SpanLocation::None => (span_location, "", "<Excerpt not available>", ""),
+                SpanLocation::None => {
+                    valid_excerpt = false;
+                    (span_location, "", "<Excerpt not available>", "")},
                 _ => (
                     format!("{span_location}:{start}:{col}"),
                     &src[range_pre..range.start],
@@ -183,6 +210,7 @@ pub(crate) fn create_report(report: AstReport) -> ! {
                 ),
             }
         } else {
+            valid_excerpt = false;
             (
                 "<No associated span>".into(),
                 "",
@@ -190,21 +218,28 @@ pub(crate) fn create_report(report: AstReport) -> ! {
                 "",
             )
         };
-        write!(out, "Diplomat error: ").expect("Could not write to report.");
-        writeln!(out, "{}", report.title).expect("Could not write to report.");
-        writeln!(out, "In {location}:").expect("Could not write to report.");
+        write!(out, "Diplomat error: ")?;
+        writeln!(out, "{}", report.title)?;
+        if !valid_excerpt {
+            writeln!(out, "> {}", report.primary_label)?;
+            out.flush()?;
+            return Ok(());
+        }
+        writeln!(out, "In {location}:")?;
 
         let excerpt_pre_trimmed = excerpt_pre.trim_start();
 
         if !excerpt_pre.is_empty() {
-            write!(out, "...{}", excerpt_pre_trimmed).expect("Could not write to report.");
+            write!(out, "...{}", excerpt_pre_trimmed)?;
         }
 
-        write!(out, "{excerpt}").expect("Could not write to report.");
+        write!(out, "{excerpt}")?;
 
         if !excerpt_post.is_empty() {
-            writeln!(out, "{}...", excerpt_post.trim_end()).expect("Could not write to report.");
+            write!(out, "{}...", excerpt_post.trim_end())?;
         }
+
+        writeln!(out, "")?;
 
         // Add visible separation between the label and the excerpt.
         if !excerpt.is_empty() {
@@ -215,13 +250,19 @@ pub(crate) fn create_report(report: AstReport) -> ! {
                 "{}{}",
                 " ".repeat(3 + excerpt_pre_trimmed.len()),
                 "^".repeat(excerpt.len())
-            )
-            .expect("Could not write to report.");
+            )?;
         }
 
-        write!(out, "{}", report.primary_label).expect("Could not write to report.");
+        write!(out, "{}", report.primary_label)?;
     }
-    out.flush().expect("Could not write to output.");
+    out.flush()?;
+    Ok(())
+}
+
+pub fn create_report(report: AstReport) -> ! {
+    let out = WRITER.read().unwrap()();
+    write_report(&report, out).expect("Could not write report");
+    
     // Rust-analyzer will not show error messages unless we panic,
     // This just tells rust-analyzer users to check stderr:
     panic!("Diplomat error: {} (check stderr for more)", report.title);
