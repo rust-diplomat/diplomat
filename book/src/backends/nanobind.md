@@ -146,12 +146,14 @@ somelib.long_running_async()
 somelib.run_callback(lambda: pass)
 ```
 
+Then the GIL will lock and the program will freeze. When Rust calls into `f()`, Nanobind attempts to acquire the GIL, which is already held by `somelib.long_running_async`.
+
 Nanobind generally requires the GIL [when attempting to call into C++](https://github.com/wjakob/nanobind/blob/73223b97e28909eb8fc7e83213c352c020a854f6/src/common.cpp#L282), which in turn will hold the GIL while our async Rust function is being run. 
 
 To get around this, for any functions which may be long running and asynchronous, you will want to use [Custom Extra Code](../attrs/custom_extra_code.md) to mark a method with the [`nb::call_guard<nb::gil_scoped_release>`](https://nanobind.readthedocs.io/en/latest/api_core.html#gil-management) attribute. With this attribute present, Nanobind will call [PyEval_SaveThread](https://docs.python.org/3/c-api/threads.html#c.PyEval_SaveThread) at the start of the bound method, and will call [PyEval_RestoreThread](https://docs.python.org/3/c-api/threads.html#c.PyEval_RestoreThread) when the bound method has finished executing.
 
 This step currently requires extra steps on your part as Diplomat currently makes no guarantees about the consequences of releasing the GIL when calling into asynchronous Rust. It is up to you to ensure correctness.
 
-See https://github.com/rust-diplomat/diplomat/issues/1196 for more.
+See [https://github.com/rust-diplomat/diplomat/issues/1196](https://github.com/rust-diplomat/diplomat/issues/1196) for more.
 
 {{supports("nanobind")}}
