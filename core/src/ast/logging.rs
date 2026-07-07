@@ -221,7 +221,9 @@ pub fn write_report(report : &AstReport, mut out : impl WriteReport) -> Result<(
         write!(out, "Diplomat error: ")?;
         writeln!(out, "{}", report.title)?;
         if !valid_excerpt {
-            writeln!(out, "> {}", report.primary_label)?;
+            if !report.primary_label.is_empty() {
+                writeln!(out, "> {}", report.primary_label)?;
+            }
             out.flush()?;
             return Ok(());
         }
