@@ -1,5 +1,5 @@
 # Custom Extra Code
-Currently supported by `cpp` and `nanobind`.
+{{get_supports("custom_bindings")}}
 
 For developers who have a greater understanding of how Diplomat backends function, you are able to mark `enum` and `struct` definitions to insert custom extra binding code:
 

@@ -1,5 +1,19 @@
 # Default Values
+## Default Value
 {{get_supports("defaults")}}
+You can mark the default value of an Enum through `#[diplomat::default]`:
+
+```rs
+pub enum MyEnum {
+    A,
+    B,
+    #[diplomat::default]
+    C
+}
+```
+
+## Default Arguments
+{{get_supports("default_args")}}
 
 Some backends support marking parameters with default values:
 
