@@ -193,12 +193,34 @@ mod ffi {
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1204
     #[diplomat::cfg(all(supports = "callbacks", not(kotlin)))]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct OpaqueCallbacks;
 
     impl OpaqueCallbacks {
         pub fn ret_op<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> &'a MyString {
             f(st)
+        }
+
+        #[diplomat::attr(auto, constructor)]
+        pub fn ctor<'a>(f: impl Fn(&MyString) -> &'a MyString, st: &MyString) -> Box<Self> {
+            let _ = f(st);
+            Box::new(Self {})
+        }
+
+        pub fn opaque_cb_self<'a>(
+            &self,
+            cb: impl Fn(&MyString) -> &'a MyString,
+            st: &MyString,
+        ) -> &'a MyString {
+            cb(st)
+        }
+
+        pub fn opaque_cb_mut_self<'a>(
+            &mut self,
+            cb: impl Fn(&MyString) -> &'a MyString,
+            st: &MyString,
+        ) -> &'a MyString {
+            cb(st)
         }
     }
 
