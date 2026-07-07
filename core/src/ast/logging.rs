@@ -255,9 +255,8 @@ mod tests {
     }
 
     fn parse_file_hook_errors(file_loc: &str, suffix: &str) {
-        let crate_dir = env!("CARGO_MANIFEST_DIR");
         let folder_pth_name = format!("src/ast/snapshots/span_testing");
-        let folder_pth = std::path::Path::new(crate_dir).join(&folder_pth_name);
+        let folder_pth = std::path::Path::new(&folder_pth_name);
         let file_path = folder_pth.join(file_loc);
 
         let mut settings = insta::Settings::clone_current();
