@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-443f8944.js";
+            window.path_to_searchindex_js = "searchindex-625f59d9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-0b0cd8fa.js"></script>
+        <script src="toc-8f37a71e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,13 +183,15 @@
 <li><code>bool</code></li>
 <li><code>char</code></li>
 <li><code>DiplomatChar</code> (<code>u32</code>), which is treated as <code>char</code>-equivalent on the backend language, but need not be a valid Unicode code point for the Rust code to be sound.</li>
-<li>Slices, <code>&amp;[T]</code> where <code>T</code> is one of:
+<li><a href="./types/slices.html">Slices</a>, <code>&amp;[T]</code> where <code>T</code> is one of:
 <ul>
 <li>An integer type</li>
 <li><code>bool</code></li>
 <li><code>char</code></li>
 <li><code>DiplomatByte</code> (<code>u8</code>): The same as <code>u8</code> except in languages where “byte buffer” and “list of integers” are different types</li>
 <li><code>Box&lt;OpaqueType&gt;</code></li>
+<li><a href="./types/slices.html#opaques"><code>OpaqueType</code></a></li>
+<li><a href="./types/slices.html#primitive-structs"><code>PrimitiveStruct</code></a></li>
 <li><code>DiplomatStrSlice</code>: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends</li>
 </ul>
 </li>
@@ -200,18 +202,18 @@
 <li><code>&amp;DiplomatStr16</code>: An unvalidated string expected to be UTF-16.</li>
 </ul>
 </li>
-<li><a href="./write.html"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
-<li><a href="./option.html"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
-<li><a href="./callbacks.html">Callbacks</a> in parameters. Support is limited.</li>
-<li><code>Result&lt;T, E&gt;</code> in return values</li>
+<li><a href="./types/write.html"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
+<li><a href="./types/option.html"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
+<li><a href="./types/callbacks.html">Callbacks</a> in parameters. Support is limited.</li>
+<li><a href="./types/result.html"><code>Result&lt;T, E&gt;</code></a> in return values</li>
 <li><code>()</code> as a <code>Result</code> <code>Ok</code>/<code>Error</code> type, or as a return value</li>
 </ul>
 </li>
 <li>Custom types
 <ul>
-<li>Custom <a href="./opaque.html">opaque types</a> (passed as references or via <code>Box&lt;T&gt;</code>)</li>
-<li>Custom <a href="./structs.html">structs and C-like enums</a></li>
-<li>Custom <a href="./traits.html">traits</a></li>
+<li>Custom <a href="./types/opaque.html">opaque types</a> (passed as references or via <code>Box&lt;T&gt;</code>)</li>
+<li>Custom <a href="./types/structs.html">structs and C-like enums</a></li>
+<li>Custom <a href="./types/traits.html">traits</a></li>
 </ul>
 </li>
 </ul>
@@ -226,7 +228,7 @@
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="opaque.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="types/opaque.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -240,7 +242,7 @@
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="opaque.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="types/opaque.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

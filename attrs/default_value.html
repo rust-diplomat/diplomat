@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Slices - The Diplomat Book</title>
+        <title>Default Values - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-443f8944.js";
+            window.path_to_searchindex_js = "../searchindex-625f59d9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0b0cd8fa.js"></script>
+        <script src="../toc-8f37a71e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -174,56 +174,48 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
-<h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=static_slices)]</code>)</p>
-<p>Support for <code>&amp;'static</code> slices.</p>
-<h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=abi_compatibles)]</code>)</p>
-<p>Some Diplomat backends support providing slices of structs as function parameters:</p>
-<pre><code class="language-rs">#[diplomat::bridge]
-mod ffi {
-    #[diplomat::attr(auto, abi_compatible)]
-    struct Struct {
-        a : bool,
-        b : i32
-    }
-
-    impl Struct {
-        pub fn bar(slice : &amp;mut [Struct]) {}
-        pub fn baz(other_slice : &amp;[Struct]) {}
-    }
+                        <h1 id="default-values"><a class="header" href="#default-values">Default Values</a></h1>
+<h2 id="default-value"><a class="header" href="#default-value">Default Value</a></h2>
+<p>Supported by queried with <code>#[diplomat::cfg(supports=defaults)]</code>
+You can mark the default value of an Enum through <code>#[diplomat::default]</code>:</p>
+<pre><code class="language-rs">pub enum MyEnum {
+    A,
+    B,
+    #[diplomat::default]
+    C
 }
 </code></pre>
-<p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
-<ul>
-<li>The struct type must have <code>#[diplomat::attr(auto, abi_compatible)]</code> attribute.</li>
-<li>The struct can only have fields that are either:
-<ul>
-<li>Primitive</li>
-<li>Nested primitive structs</li>
-</ul>
-</li>
-</ul>
-<h2 id="opaques"><a class="header" href="#opaques">Opaques</a></h2>
-<p>(Supported by queried with <code>#[diplomat::cfg(supports=opaque_slices)]</code>)</p>
-<p>Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See <a href="https://github.com/rust-diplomat/diplomat/issues/1168">the relevant issue on GitHub</a>):</p>
-<pre><code class="language-rs">// Allowed:
-pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
-
-// Will throw an error on lowering:
-pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
+<h2 id="default-arguments"><a class="header" href="#default-arguments">Default Arguments</a></h2>
+<p>Supported by queried with <code>#[diplomat::cfg(supports=default_args)]</code></p>
+<p>Some backends support marking parameters with default values:</p>
+<pre><code class="language-rs">impl Test {
+    pub fn test(a : i32, b : i64,
+    #[diplomat::attr(supports=defaults, default_value=100)]
+    c : i64) {}
+}
 </code></pre>
+<p>In C++ for instance, this function will now be defined with a default value:</p>
+<pre><code class="language-c++">void Test::test(int32_t a, int64_t b, int64_t c = 100);
+</code></pre>
+<h3 id="supported-default-value-types"><a class="header" href="#supported-default-value-types">Supported Default Value Types</a></h3>
+<p>Diplomat currently supports reading default values in the following formats:</p>
+<ul>
+<li>Characters</li>
+<li>64-bit integers</li>
+<li>64-bit floats</li>
+<li>Booleans</li>
+</ul>
+<p>You can set a default value to be any of these, regardless of the type of the parameter itself (although the compiler may complain).</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../attrs/stringifiers.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/features.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../attrs/references.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../attrs/rename.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -233,11 +225,11 @@ pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a Som
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../attrs/stringifiers.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/features.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../attrs/references.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../attrs/rename.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

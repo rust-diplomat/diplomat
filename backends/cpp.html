@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-443f8944.js";
+            window.path_to_searchindex_js = "../searchindex-625f59d9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0b0cd8fa.js"></script>
+        <script src="../toc-8f37a71e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -283,7 +283,7 @@ mod ffi {
     const Opaque&amp; a;
 };
 </code></pre>
-<p>Note that this is struct is currently <a href="../attrs/slices.html#primitive-structs">not considered ABI compatible</a>, so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:</p>
+<p>Note that this is struct is currently <a href="../types/slices.html#primitive-structs">not considered ABI compatible</a>, so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:</p>
 <pre><code class="language-cpp">struct SomeStructCFriendly {
     const Opaque* a;
 };
@@ -306,7 +306,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Namespaces</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/namespace.html">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
@@ -324,13 +324,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Defaults</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/default_value.html#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Constructors</p>
+<p><input disabled="" type="checkbox"> <a href="../attrs/constructors.html">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -339,13 +339,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Getters/Setters</p>
+<p><input disabled="" type="checkbox"> <a href="../attrs/accessors.html">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Stringifiers</p>
+<p><input disabled="" type="checkbox"> <a href="../attrs/stringifiers.html">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="../attrs/comparators.html">Comparators</a></p>
@@ -354,25 +354,25 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> <a href="../attrs/comparators.html#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/iterators.html">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/iterators.html#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/indexing.html">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Arithmetic</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/arithmetic.html">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/option.html">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/callbacks.html">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="../types/traits.html">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -387,7 +387,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="../attrs/references.html">References for more</a>.</p>
@@ -399,19 +399,19 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Custom Bindings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/custom_extra_code.html">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Default Arguments</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/default_value.html#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> <a href="../attrs/slices.html#opaques">Opaque Slices</a></p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#opaques">Opaque Slices</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="../attrs/tuples.html">tuples for more</a></p>

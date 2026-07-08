@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-443f8944.js";
+            window.path_to_searchindex_js = "searchindex-625f59d9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-0b0cd8fa.js"></script>
+        <script src="toc-8f37a71e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -199,7 +199,7 @@ mod ffi {
     }
 }
 <span class="boring">}</span></code></pre>
-<p>This is a simple struct with public fields; which is easier to reason about in an introductory example. <em>Most</em> APIs exposed via Diplomat will be via “opaque types”, to be covered in the <a href="./opaque.html">chapter on opaque types</a>.</p>
+<p>This is a simple struct with public fields; which is easier to reason about in an introductory example. <em>Most</em> APIs exposed via Diplomat will be via “opaque types”, to be covered in the <a href="./types/opaque.html">chapter on opaque types</a>.</p>
 <p>Every type declared within a <code>diplomat::bridge</code> module along with all methods in its associated impl will be exposed over FFI. For example, the above code will generate the following extern API:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {

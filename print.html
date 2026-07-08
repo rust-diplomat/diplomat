@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-443f8944.js";
+            window.path_to_searchindex_js = "searchindex-625f59d9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-0b0cd8fa.js"></script>
+        <script src="toc-8f37a71e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -346,13 +346,15 @@ impl SomeConfig {
 <li><code>bool</code></li>
 <li><code>char</code></li>
 <li><code>DiplomatChar</code> (<code>u32</code>), which is treated as <code>char</code>-equivalent on the backend language, but need not be a valid Unicode code point for the Rust code to be sound.</li>
-<li>Slices, <code>&amp;[T]</code> where <code>T</code> is one of:
+<li><a href="#slices">Slices</a>, <code>&amp;[T]</code> where <code>T</code> is one of:
 <ul>
 <li>An integer type</li>
 <li><code>bool</code></li>
 <li><code>char</code></li>
 <li><code>DiplomatByte</code> (<code>u8</code>): The same as <code>u8</code> except in languages where “byte buffer” and “list of integers” are different types</li>
 <li><code>Box&lt;OpaqueType&gt;</code></li>
+<li><a href="#opaques"><code>OpaqueType</code></a></li>
+<li><a href="#primitive-structs"><code>PrimitiveStruct</code></a></li>
 <li><code>DiplomatStrSlice</code>: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends</li>
 </ul>
 </li>
@@ -366,7 +368,7 @@ impl SomeConfig {
 <li><a href="#returning-strings-write"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
 <li><a href="#option-types"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
 <li><a href="#callbacks">Callbacks</a> in parameters. Support is limited.</li>
-<li><code>Result&lt;T, E&gt;</code> in return values</li>
+<li><a href="#result-types"><code>Result&lt;T, E&gt;</code></a> in return values</li>
 <li><code>()</code> as a <code>Result</code> <code>Ok</code>/<code>Error</code> type, or as a return value</li>
 </ul>
 </li>
@@ -568,7 +570,8 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="traits"><a class="header" href="#traits">Traits</a></h1>
-<p>Backends that support traits (with <code>#[diplomat::cfg(supports=traits)]</code>) can be passed in as input-only parameters:</p>
+<p>(Supported by <code>c</code>, and <code>kotlin</code>, queried with <code>#[diplomat::cfg(supports=traits)]</code>)</p>
+<p>Backends that support traits can be passed in as input-only parameters:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
     pub trait SomeTrait {
@@ -588,6 +591,7 @@ mod ffi {
 <p>Traits are treated internally like holders of <a href="#callbacks">callbacks</a>, and so support all the same types that callbacks do.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="option-types"><a class="header" href="#option-types">Option types</a></h1>
+<p>Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=option)]</code></p>
 <p>Option types in Diplomat are relatively straightforward, you simply use <code>Option&lt;T&gt;</code> and it turns into the idiomatic equivalent over FFI.</p>
 <p><code>Option&lt;T&gt;</code> currently only works when wrapping reference types (<code>Box&lt;OpaqueType&gt;</code> and <code>&amp;OpaqueType</code>), structs/enums/primitives, or slices of the above. It may be used as an input argument, or in return type position:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -659,8 +663,8 @@ mod ffi {
 <p>On backends that do not support <code>Result</code>, they will instead throw an error (i.e., Python/Nanobind and JS).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h1>
-<p>Diplomat has limited, experimental support for exposing and working with callbacks. See <a href="https://github.com/rust-diplomat/diplomat/issues/146">tracking issue</a>
-Currently these are only supported in the C++, kotlin, and nanobind backends.</p>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=callbacks)]</code>)</p>
+<p>Diplomat has limited, experimental support for exposing and working with callbacks. See <a href="https://github.com/rust-diplomat/diplomat/issues/146">tracking issue</a></p>
 <p>Functions taking callbacks as parameters take the form</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -707,6 +711,47 @@ mod ffi {
 <p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
 <p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
 <p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
+<h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=static_slices)]</code>)</p>
+<p>Support for <code>&amp;'static</code> slices.</p>
+<h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=abi_compatibles)]</code>)</p>
+<p>Some Diplomat backends support providing slices of structs as function parameters:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    #[diplomat::attr(auto, abi_compatible)]
+    struct Struct {
+        a : bool,
+        b : i32
+    }
+
+    impl Struct {
+        pub fn bar(slice : &amp;mut [Struct]) {}
+        pub fn baz(other_slice : &amp;[Struct]) {}
+    }
+}
+</code></pre>
+<p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
+<ul>
+<li>The struct type must have <code>#[diplomat::attr(auto, abi_compatible)]</code> attribute.</li>
+<li>The struct can only have fields that are either:
+<ul>
+<li>Primitive</li>
+<li>Nested primitive structs</li>
+</ul>
+</li>
+</ul>
+<h2 id="opaques"><a class="header" href="#opaques">Opaques</a></h2>
+<p>(Supported by queried with <code>#[diplomat::cfg(supports=opaque_slices)]</code>)</p>
+<p>Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See <a href="https://github.com/rust-diplomat/diplomat/issues/1168">the relevant issue on GitHub</a>):</p>
+<pre><code class="language-rs">// Allowed:
+pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
+
+// Will throw an error on lowering:
+pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
 <p>Some Diplomat backends support converting documentation comments into each language’s native comments. Rust doc syntax will be converted to markdown.</p>
@@ -1011,6 +1056,39 @@ struct Config;
 <pre><code>diplomat_tool cpp . --features-enabled=some,comma,separated,list
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="default-values"><a class="header" href="#default-values">Default Values</a></h1>
+<h2 id="default-value"><a class="header" href="#default-value">Default Value</a></h2>
+<p>Supported by queried with <code>#[diplomat::cfg(supports=defaults)]</code>
+You can mark the default value of an Enum through <code>#[diplomat::default]</code>:</p>
+<pre><code class="language-rs">pub enum MyEnum {
+    A,
+    B,
+    #[diplomat::default]
+    C
+}
+</code></pre>
+<h2 id="default-arguments"><a class="header" href="#default-arguments">Default Arguments</a></h2>
+<p>Supported by queried with <code>#[diplomat::cfg(supports=default_args)]</code></p>
+<p>Some backends support marking parameters with default values:</p>
+<pre><code class="language-rs">impl Test {
+    pub fn test(a : i32, b : i64,
+    #[diplomat::attr(supports=defaults, default_value=100)]
+    c : i64) {}
+}
+</code></pre>
+<p>In C++ for instance, this function will now be defined with a default value:</p>
+<pre><code class="language-c++">void Test::test(int32_t a, int64_t b, int64_t c = 100);
+</code></pre>
+<h3 id="supported-default-value-types"><a class="header" href="#supported-default-value-types">Supported Default Value Types</a></h3>
+<p>Diplomat currently supports reading default values in the following formats:</p>
+<ul>
+<li>Characters</li>
+<li>64-bit integers</li>
+<li>64-bit floats</li>
+<li>Booleans</li>
+</ul>
+<p>You can set a default value to be any of these, regardless of the type of the parameter itself (although the compiler may complain).</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="renaming-apis"><a class="header" href="#renaming-apis">Renaming APIs</a></h1>
 <p>(Supported by all backends)</p>
 <p>Any type, method, field, or enum variant can be renamed with the <code>rename</code> attribute.</p>
@@ -1293,47 +1371,6 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <p>In Dart, this will generate a <code>toString()</code> method.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
-<h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=static_slices)]</code>)</p>
-<p>Support for <code>&amp;'static</code> slices.</p>
-<h2 id="primitive-structs"><a class="header" href="#primitive-structs">Primitive Structs</a></h2>
-<p>(Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=abi_compatibles)]</code>)</p>
-<p>Some Diplomat backends support providing slices of structs as function parameters:</p>
-<pre><code class="language-rs">#[diplomat::bridge]
-mod ffi {
-    #[diplomat::attr(auto, abi_compatible)]
-    struct Struct {
-        a : bool,
-        b : i32
-    }
-
-    impl Struct {
-        pub fn bar(slice : &amp;mut [Struct]) {}
-        pub fn baz(other_slice : &amp;[Struct]) {}
-    }
-}
-</code></pre>
-<p>Mapping Diplomat types from the bound language to the C API can vary based on what types are in the struct. To reduce this complexity, slices of structs come with some restrictions:</p>
-<ul>
-<li>The struct type must have <code>#[diplomat::attr(auto, abi_compatible)]</code> attribute.</li>
-<li>The struct can only have fields that are either:
-<ul>
-<li>Primitive</li>
-<li>Nested primitive structs</li>
-</ul>
-</li>
-</ul>
-<h2 id="opaques"><a class="header" href="#opaques">Opaques</a></h2>
-<p>(Supported by queried with <code>#[diplomat::cfg(supports=opaque_slices)]</code>)</p>
-<p>Currently, opaque slices are restricted to input only, with no borrows allowed in the output (See <a href="https://github.com/rust-diplomat/diplomat/issues/1168">the relevant issue on GitHub</a>):</p>
-<pre><code class="language-rs">// Allowed:
-pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
-
-// Will throw an error on lowering:
-pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="references"><a class="header" href="#references">References</a></h1>
 <h2 id="struct"><a class="header" href="#struct">&amp;Struct</a></h2>
 <p>(Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=struct_refs)]</code>)</p>
@@ -1349,7 +1386,7 @@ pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a Som
 <p>To assist in making mutable structs possible, some backends will codegen different structure field types from normal behavior. See the <a href="#c-backend-1">C++ backend’s docs for an example of why this might be</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="custom-extra-code"><a class="header" href="#custom-extra-code">Custom Extra Code</a></h1>
-<p>Currently supported by <code>cpp</code> and <code>nanobind</code>.</p>
+<p>Supported by <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=custom_bindings)]</code></p>
 <p>For developers who have a greater understanding of how Diplomat backends function, you are able to mark <code>enum</code> and <code>struct</code> definitions to insert custom extra binding code:</p>
 <pre><code class="language-rs">#[diplomat::bridge]
 mod ffi {
@@ -2108,7 +2145,7 @@ typedef struct TraitName_VTable {
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox"> Namespaces</p>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
@@ -2126,13 +2163,13 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Defaults</p>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Constructors</p>
+<p><input disabled="" type="checkbox"> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -2141,13 +2178,13 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Getters/Setters</p>
+<p><input disabled="" type="checkbox"> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Stringifiers</p>
+<p><input disabled="" type="checkbox"> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
@@ -2156,25 +2193,25 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Iterators</p>
+<p><input disabled="" type="checkbox"> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Iterables</p>
+<p><input disabled="" type="checkbox"> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Indexers</p>
+<p><input disabled="" type="checkbox"> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Arithmetic</p>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Traits</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -2189,7 +2226,7 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2201,13 +2238,13 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Custom Bindings</p>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Default Arguments</p>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -2352,7 +2389,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <h2 id="supports-1"><a class="header" href="#supports-1">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Namespaces</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
@@ -2370,13 +2407,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Defaults</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Constructors</p>
+<p><input disabled="" type="checkbox"> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -2385,13 +2422,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Getters/Setters</p>
+<p><input disabled="" type="checkbox"> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Stringifiers</p>
+<p><input disabled="" type="checkbox"> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
@@ -2400,25 +2437,25 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Arithmetic</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -2433,7 +2470,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2445,13 +2482,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Custom Bindings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Default Arguments</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -2468,7 +2505,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <h2 id="supports-2"><a class="header" href="#supports-2">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox"> Namespaces</p>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Memory Sharing</p>
@@ -2486,13 +2523,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Static Slices</p>
+<p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Defaults</p>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Named Constructors</p>
@@ -2501,13 +2538,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
@@ -2516,25 +2553,25 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Arithmetic</p>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Callbacks</p>
+<p><input disabled="" type="checkbox"> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -2549,7 +2586,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox"> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2561,13 +2598,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Custom Bindings</p>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Default Arguments</p>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -2584,7 +2621,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <h2 id="supports-3"><a class="header" href="#supports-3">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox"> Namespaces</p>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Memory Sharing</p>
@@ -2602,13 +2639,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Static Slices</p>
+<p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Defaults</p>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Named Constructors</p>
@@ -2617,13 +2654,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Stringifiers</p>
+<p><input disabled="" type="checkbox"> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
@@ -2632,25 +2669,25 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Indexers</p>
+<p><input disabled="" type="checkbox"> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Arithmetic</p>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Callbacks</p>
+<p><input disabled="" type="checkbox"> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -2665,7 +2702,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox"> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2677,13 +2714,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Custom Bindings</p>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Default Arguments</p>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -2700,7 +2737,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <h2 id="supports-4"><a class="header" href="#supports-4">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox"> Namespaces</p>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Memory Sharing</p>
@@ -2718,13 +2755,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Static Slices</p>
+<p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Defaults</p>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -2733,13 +2770,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Stringifiers</p>
+<p><input disabled="" type="checkbox"> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
@@ -2748,25 +2785,25 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Indexers</p>
+<p><input disabled="" type="checkbox"> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Arithmetic</p>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Callbacks</p>
+<p><input disabled="" type="checkbox"> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -2781,7 +2818,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox"> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2793,13 +2830,13 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Custom Bindings</p>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Default Arguments</p>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -2884,7 +2921,7 @@ so here some specific examples</p>
 <h2 id="supports-5"><a class="header" href="#supports-5">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox"> Namespaces</p>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Memory Sharing</p>
@@ -2902,13 +2939,13 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Defaults</p>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Constructors</p>
+<p><input disabled="" type="checkbox"> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -2917,13 +2954,13 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Getters/Setters</p>
+<p><input disabled="" type="checkbox"> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
@@ -2932,25 +2969,25 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Arithmetic</p>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Traits</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Custom Errors</p>
@@ -2965,7 +3002,7 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox" checked=""> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox"> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
@@ -2977,13 +3014,13 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Custom Bindings</p>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Default Arguments</p>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
@@ -3116,7 +3153,7 @@ somelib.Foo.takes_slice(f)
 <h2 id="supports-6"><a class="header" href="#supports-6">Supports</a></h2>
 <ul>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Namespaces</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#namespacing">Namespaces</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Memory Sharing</p>
@@ -3134,13 +3171,13 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Static Slices</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Defaults</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#default-value">Defaults</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Constructors</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#constructors">Constructors</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Named Constructors</p>
@@ -3149,13 +3186,13 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Getters/Setters</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Static Getters/Setters</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Stringifiers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#stringifiers">Stringifiers</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#comparators">Comparators</a></p>
@@ -3164,25 +3201,25 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> <a href="#partial-comparisons">Partial Comparators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterators</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#iterators-and-iterables">Iterators</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Iterables</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Indexers</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#indexing">Indexers</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Arithmetic</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Options</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Callbacks</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#callbacks">Callbacks</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Traits</p>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Custom Errors</p>
@@ -3197,7 +3234,7 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> ABI Compatible Structs</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#primitive-structs">ABI Compatible Structs</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> Struct References. See <a href="#references">References for more</a>.</p>
@@ -3209,13 +3246,13 @@ somelib.Foo.takes_slice(f)
 <p><input disabled="" type="checkbox" checked=""> Free Functions</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Custom Bindings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#custom-extra-code">Custom Bindings</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Owned Slices</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Default Arguments</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#default-arguments">Default Arguments</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Mutable Slices (<code>&amp;mut [T]</code>)</p>
