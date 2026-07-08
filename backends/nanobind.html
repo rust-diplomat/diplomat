@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-625f59d9.js";
+            window.path_to_searchindex_js = "../searchindex-c1a267c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8f37a71e.js"></script>
@@ -291,6 +291,29 @@ somelib.Foo.takes_slice(f)
 <h3 id="explanation"><a class="header" href="#explanation">Explanation</a></h3>
 <p>Converting Rust types to and from Python is not straightforward. Every <code>list</code> object in Python is a <a href="https://docs.python.org/3/c-api/list.html">sequence of <code>PyObject</code> types</a> in C. For passing information to and from Rust, this makes straightforward conversion extremely difficult. Instead, nanobind will copy Python types into C++ memory layouts it understands.</p>
 <p>This is why we the <code>somelib.FooSlice</code> type exists. In nanobind terminology, this is a <a href="https://nanobind.readthedocs.io/en/latest/exchanging.html#option-2-bindings">bound object</a>, or a class that exists in Python that allows us to easily grab its memory and manipulate in C++. Any <code>list</code> you pass into a parameter that takes <code>&amp;[Foo]</code> as an input type will copy the contents of the <code>list</code> upon conversion into C/C++ into <code>somelib.FooSlice</code>.</p>
+<h2 id="async-nanobind"><a class="header" href="#async-nanobind">Async Nanobind</a></h2>
+<p>Diplomat’s Nanobind backend is currently based on <a href="https://wiki.python.org/moin/GlobalInterpreterLock">Python’s GIL</a> for much of its codegen and templating. This keeps synchronicity relatively straightforward, but for asynchronous functions this may require extra configuration on your end.</p>
+<p>Say we have two methods:</p>
+<pre><code class="language-rs">#[diplomat::bridge]
+mod ffi {
+    pub fn long_running_async() {
+        calls_long_running_async();
+    }
+
+    pub fn run_callback(f : impl Fn()) {
+        f();
+    }
+}
+</code></pre>
+<p>And we call these methods in order:</p>
+<pre><code class="language-py">somelib.long_running_async()
+somelib.run_callback(lambda: pass)
+</code></pre>
+<p>Then the GIL will lock and the program will freeze. When Rust calls into <code>f()</code>, Nanobind attempts to acquire the GIL, which is already held by <code>somelib.long_running_async</code>.</p>
+<p>Nanobind generally requires the GIL <a href="https://github.com/wjakob/nanobind/blob/73223b97e28909eb8fc7e83213c352c020a854f6/src/common.cpp#L282">when attempting to call into C++</a>, which in turn will hold the GIL while our async Rust function is being run.</p>
+<p>To get around this, for any functions which may be long running and asynchronous, you will want to use <a href="../attrs/custom_extra_code.html">Custom Extra Code</a> to mark a method with the <a href="https://nanobind.readthedocs.io/en/latest/api_core.html#gil-management"><code>nb::call_guard&lt;nb::gil_scoped_release&gt;</code></a> attribute. With this attribute present, Nanobind will call <a href="https://docs.python.org/3/c-api/threads.html#c.PyEval_SaveThread">PyEval_SaveThread</a> at the start of the bound method, and will call <a href="https://docs.python.org/3/c-api/threads.html#c.PyEval_RestoreThread">PyEval_RestoreThread</a> when the bound method has finished executing.</p>
+<p>Asynchronous methods through Nanobind currently require configuration through <code>custom_extra_code</code> as Diplomat currently makes no guarantees about the consequences of releasing the GIL when calling into asynchronous Rust. It is up to you to ensure correctness.</p>
+<p>See <a href="https://github.com/rust-diplomat/diplomat/issues/1196">https://github.com/rust-diplomat/diplomat/issues/1196</a> for more.</p>
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
