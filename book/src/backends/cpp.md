@@ -131,7 +131,7 @@ struct SomeStruct {
 };
 ```
 
-Note that this is struct is currently [not considered ABI compatible](../attrs/slices.md#primitive-structs), so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:
+Note that this is struct is currently [not considered ABI compatible](../types/slices.md#primitive-structs), so we cannot pass it directly as a pointer. Instead, we must convert it into an ABI-compatible struct:
 ```cpp
 struct SomeStructCFriendly {
     const Opaque* a;

@@ -1,6 +1,8 @@
 # Traits
 
-Backends that support traits (with `#[diplomat::cfg(supports=traits)]`) can be passed in as input-only parameters:
+({{get_supports("traits")}})
+
+Backends that support traits can be passed in as input-only parameters:
 
 ```rs
 #[diplomat::bridge]

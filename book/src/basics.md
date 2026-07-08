@@ -25,7 +25,7 @@ mod ffi {
 }
 ```
 
-This is a simple struct with public fields; which is easier to reason about in an introductory example. _Most_ APIs exposed via Diplomat will be via "opaque types", to be covered in the [chapter on opaque types](./opaque.md).
+This is a simple struct with public fields; which is easier to reason about in an introductory example. _Most_ APIs exposed via Diplomat will be via "opaque types", to be covered in the [chapter on opaque types](./types/opaque.md).
 
 Every type declared within a `diplomat::bridge` module along with all methods in its associated impl will be exposed over FFI. For example, the above code will generate the following extern API:
 
