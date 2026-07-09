@@ -1360,11 +1360,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     ) -> String {
         let name = format!(
             "_Result{}{}",
-            &self
-                .formatter
+            self.formatter
                 .fmt_type_as_ident(ok.map(|o| self.gen_type_name_ffi(o, false)).as_deref()),
-            &self
-                .formatter
+            self.formatter
                 .fmt_type_as_ident(err.map(|o| self.gen_type_name_ffi(o, false)).as_deref())
         );
 
