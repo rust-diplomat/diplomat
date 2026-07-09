@@ -141,9 +141,9 @@ impl PreparedType<'_> {
     fn uses_owned_byte_slice_return(&self) -> bool {
         match self {
             Self::Prerendered { .. } => false,
-            Self::Opaque { methods, .. } | Self::Struct { methods, .. } => methods
-                .iter()
-                .any(|m| m.return_type.is_owned_byte_slice()),
+            Self::Opaque { methods, .. } | Self::Struct { methods, .. } => {
+                methods.iter().any(|m| m.return_type.is_owned_byte_slice())
+            }
         }
     }
 }

@@ -322,8 +322,7 @@ pub(crate) fn run<'tcx>(
      * The content layer represents the safe, idiomatic C# API that end-users will interact with.
      * It may wrap or compose multiple raw items, and should prioritize usability and safety.
      */
-    let (uses_pinned_memory, uses_owned_byte_slice_return, rendered_types) =
-        ctx.render_all_types();
+    let (uses_pinned_memory, uses_owned_byte_slice_return, rendered_types) = ctx.render_all_types();
     for rendered in rendered_types {
         let file_name = format!("{}.cs", rendered.display_name);
         if let Some(raw) = rendered.raw {

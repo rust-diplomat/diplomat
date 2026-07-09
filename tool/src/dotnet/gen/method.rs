@@ -1259,8 +1259,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
                 if is_nullable_path {
                     self.errors.push_error(
-                        "[.NET backend] `Option<Box<[u8]>>` return is not supported."
-                            .to_string(),
+                        "[.NET backend] `Option<Box<[u8]>>` return is not supported.".to_string(),
                     );
                     return None;
                 }

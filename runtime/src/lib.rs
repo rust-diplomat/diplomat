@@ -104,7 +104,9 @@ pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) 
 #[no_mangle]
 pub unsafe extern "C" fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
-        drop(alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr, len)));
+        drop(alloc::boxed::Box::from_raw(
+            core::ptr::slice_from_raw_parts_mut(ptr, len),
+        ));
     }
 }
 
