@@ -1209,6 +1209,30 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::SuccessType::OutType(hir::Type::Enum(p)) => {
                 DotnetReturnType::Enum(self.enum_name(p))
             }
+            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Primitive(
+                MaybeOwn::Own,
+                primitive_type,
+            ))) => {
+                if !matches!(
+                    primitive_type,
+                    hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8)
+                ) {
+                    self.errors.push_error(format!(
+                        "[.NET backend] owned slice return not yet supported for element \
+                         type {primitive_type:?}; only owned `u8`/`DiplomatByte` slices \
+                         (`Box<[u8]>`) are supported today"
+                    ));
+                    return None;
+                }
+                if is_nullable_path {
+                    self.errors.push_error(
+                        "[.NET backend] `Option<Box<[u8]>>` return is not supported."
+                            .to_string(),
+                    );
+                    return None;
+                }
+                DotnetReturnType::OwnedByteSlice
+            }
             other => {
                 self.errors.push_error(format!(
                     "[.NET backend] success return type not yet supported: {other:?}"

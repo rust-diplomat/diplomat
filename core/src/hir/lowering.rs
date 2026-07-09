@@ -1,6 +1,6 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
-    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, Lifetime, LifetimeEnv,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime, LifetimeEnv,
     LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef, OpaquePath,
     Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
@@ -1562,6 +1562,18 @@ impl<'ast> LoweringContext<'ast> {
                     "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
                 Err(())
+            }
+            ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
+                if self.attr_validator.attrs_supported().owned_slice_returns
+                    && matches!(
+                        PrimitiveType::from_ast(*prim),
+                        PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
+                    ) =>
+            {
+                Ok(OutType::Slice(Slice::Primitive(
+                    MaybeOwn::Own,
+                    PrimitiveType::from_ast(*prim),
+                )))
             }
             ast::TypeName::PrimitiveSlice(None, _, _stdlib)
             | ast::TypeName::StrReference(None, _, _stdlib) => {

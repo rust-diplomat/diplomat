@@ -92,6 +92,22 @@ pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) 
     alloc::alloc::dealloc(ptr, Layout::from_size_align(size, align).unwrap())
 }
 
+/// Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
+/// pair (e.g. via `DiplomatOwnedSlice<u8>`).
+///
+/// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
+///
+/// # Safety
+/// - `ptr`/`len` must be the raw parts of a `Box<[u8]>` that Rust allocated and handed across
+///   FFI; this reconstructs that box and drops it, so the same allocator that made it frees it.
+/// - Must not be called more than once for the same `ptr`.
+#[no_mangle]
+pub unsafe extern "C" fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize) {
+    if !ptr.is_null() {
+        drop(alloc::boxed::Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr, len)));
+    }
+}
+
 /// Whether a `&[u8]` is a `&str`.
 ///
 /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
