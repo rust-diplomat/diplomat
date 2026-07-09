@@ -20,7 +20,10 @@ public sealed unsafe class RustVec : MemoryManager<byte>
 
     private byte* _ptr;
     private readonly int _length;
-    private bool _disposed;
+    // int, not bool: two racing Dispose calls (user thread vs. user thread,
+    // or user thread vs. finalizer) must not both reach the destroy extern —
+    // the flag is claimed once via Interlocked.Exchange.
+    private int _disposed;
 
     /// <summary>
     /// Count of constructed-but-not-yet-freed instances. Same assembly as the
@@ -34,6 +37,12 @@ public sealed unsafe class RustVec : MemoryManager<byte>
     {
         if (length > (nuint)int.MaxValue)
         {
+            // Free the buffer Rust just handed us before bailing, and suppress
+            // the finalizer: it runs even on partially-constructed objects and
+            // would otherwise decrement DebugLiveCount without a matching
+            // increment.
+            diplomat_owned_slice_u8_destroy(ptr, length);
+            GC.SuppressFinalize(this);
             throw new IndexOutOfRangeException("Owned Rust slice is too large for a .NET Span/Memory");
         }
         _ptr = ptr;
@@ -52,16 +61,20 @@ public sealed unsafe class RustVec : MemoryManager<byte>
 
     public override Span<byte> GetSpan()
     {
-        if (_disposed)
+        // Local copy: a racing Dispose could null _ptr between the disposed
+        // check and the Span construction, and a (null, len > 0) span would
+        // AV on first read instead of throwing.
+        byte* ptr = _ptr;
+        if (_disposed != 0)
         {
             throw new ObjectDisposedException(nameof(RustVec));
         }
-        return _ptr == null ? Span<byte>.Empty : new Span<byte>(_ptr, _length);
+        return ptr == null ? Span<byte>.Empty : new Span<byte>(ptr, _length);
     }
 
     public override MemoryHandle Pin(int elementIndex = 0)
     {
-        if (_disposed)
+        if (_disposed != 0)
         {
             throw new ObjectDisposedException(nameof(RustVec));
         }
@@ -69,9 +82,11 @@ public sealed unsafe class RustVec : MemoryManager<byte>
         {
             throw new ArgumentOutOfRangeException(nameof(elementIndex));
         }
-        // The buffer is unmanaged and already fixed in place — there's no GCHandle
-        // to allocate, just hand back a handle over the existing pointer.
-        return _ptr == null ? default : new MemoryHandle(_ptr + elementIndex);
+        // The buffer is unmanaged and already fixed in place — no GCHandle to
+        // allocate. Passing `this` as the IPinnable makes the MemoryHandle keep
+        // this manager reachable, so the finalizer can't free the buffer while
+        // a caller still holds the pinned pointer.
+        return _ptr == null ? default : new MemoryHandle(_ptr + elementIndex, default, this);
     }
 
     public override void Unpin()
@@ -81,11 +96,10 @@ public sealed unsafe class RustVec : MemoryManager<byte>
 
     protected override void Dispose(bool disposing)
     {
-        if (_disposed)
+        if (System.Threading.Interlocked.Exchange(ref _disposed, 1) != 0)
         {
             return;
         }
-        _disposed = true;
         if (_ptr != null)
         {
             diplomat_owned_slice_u8_destroy(_ptr, (nuint)_length);
