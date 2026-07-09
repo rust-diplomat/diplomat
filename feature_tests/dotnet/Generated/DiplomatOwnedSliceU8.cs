@@ -1,0 +1,14 @@
+using System.Runtime.InteropServices;
+
+namespace Somelib.Diplomat;
+
+// Same layout as `DiplomatSliceU8`, kept as a distinct type: this one crosses
+// the FFI boundary by value as an owned-return, not a borrowed param, and the
+// distinct name keeps that ownership story visible even though the raw bytes
+// on the wire are identical.
+[StructLayout(LayoutKind.Sequential)]
+internal unsafe struct DiplomatOwnedSliceU8
+{
+    public byte* Ptr;
+    public nuint Len;
+}
