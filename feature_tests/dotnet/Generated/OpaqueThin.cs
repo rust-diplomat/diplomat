@@ -91,7 +91,7 @@ public partial class OpaqueThin: IDisposable
             {
                 throw new ObjectDisposedException("OpaqueThin");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.OpaqueThin.C(AsFFI(), &writeable);

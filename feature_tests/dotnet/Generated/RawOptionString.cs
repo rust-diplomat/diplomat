@@ -13,7 +13,7 @@ internal partial struct OptionString
     internal static unsafe extern OptionString* New(DiplomatSliceU8 diplomatStr);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionString_write", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern DiplomatResultVoidUnit Write(OptionString* handle, DiplomatWriteable* writeable);
+    internal static unsafe extern DiplomatResultVoidUnit Write(OptionString* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionString_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OptionString* handle);

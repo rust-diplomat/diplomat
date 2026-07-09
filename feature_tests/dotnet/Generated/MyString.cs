@@ -114,7 +114,7 @@ public partial class MyString: IDisposable
             {
                 throw new ObjectDisposedException("MyString");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.MyString.GetStr(AsFFI(), &writeable);
@@ -135,7 +135,7 @@ public partial class MyString: IDisposable
             byte[] fooBytes = System.Text.Encoding.UTF8.GetBytes(foo);
             fixed (byte* fooPtr = fooBytes)
             {
-                DiplomatWriteable writeable = new DiplomatWriteable();
+                DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {
                     Raw.MyString.StringTransform(new DiplomatSliceU8 { Ptr = fooPtr, Len = (nuint)fooBytes.Length }, &writeable);

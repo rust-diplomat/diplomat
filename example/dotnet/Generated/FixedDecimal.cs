@@ -89,7 +89,7 @@ public partial class FixedDecimal: IDisposable
             {
                 throw new ObjectDisposedException("FixedDecimal");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 var result = Raw.FixedDecimal.ToString(AsFFI(), &writeable);

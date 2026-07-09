@@ -13,7 +13,7 @@ internal partial struct Float64Vec
     internal static unsafe extern Float64Vec* NewF64BeBytes(DiplomatSliceU8 v);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Float64Vec_to_string", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern void ToString(Float64Vec* handle, DiplomatWriteable* writeable);
+    internal static unsafe extern void ToString(Float64Vec* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Float64Vec_get", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatOptionDouble Get(Float64Vec* handle, nuint i);

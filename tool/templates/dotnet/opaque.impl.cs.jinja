@@ -84,7 +84,7 @@ public partial class {{ name }}: IDisposable
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
         methods surface as `string` — the writer is allocated, filled, and
         disposed inside the generated body (see method_body.cs.jinja), so
-        the low-level DiplomatWriteable never appears on the public API. #}
+        the low-level DiplomatWrite never appears on the public API. #}
     {%- for method in methods %}
 {%- if let Some(info) = method.error_info %}
     /// <exception cref="{{ info.exception_name }}"></exception>

@@ -82,7 +82,7 @@ public partial class OptionString: IDisposable
             {
                 throw new ObjectDisposedException("OptionString");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 var result = Raw.OptionString.Write(AsFFI(), &writeable);
