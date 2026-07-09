@@ -1432,6 +1432,9 @@ mod test {
         );
     }
 
+    // `Option<Box<[u8]>>` is rejected at HIR-lowering time: the new arm in
+    // `core::hir::lowering` requires `!in_result_option`, so an optioned
+    // owned slice falls through to the pre-existing rejection.
     #[test]
     fn optional_owned_byte_slice_return_is_rejected() {
         let tk_stream = quote! {
@@ -1448,12 +1451,79 @@ mod test {
             }
         };
 
-        let (_files, errors) = run_dotnet(tk_stream);
+        let errors = lowering_errors(tk_stream);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("Option<Box<[u8]>>"),
+            errors[0].contains("Owned slices cannot be returned"),
             "unexpected diagnostic: {}",
             errors[0]
+        );
+    }
+
+    // `Result<Box<[u8]>, E>` must stay rejected: the macro leaves the ok arm
+    // as a raw `Box<[u8]>` fat pointer inside `DiplomatResult` (it only
+    // converts to the repr(C) `DiplomatOwnedSlice<u8>` for a plain top-level
+    // return), so the result union's layout would not be FFI-stable.
+    #[test]
+    fn fallible_owned_byte_slice_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                pub enum MyError {
+                    A,
+                }
+
+                impl Buf {
+                    pub fn make(len: u32) -> Result<Box<[u8]>, MyError> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("Owned slices cannot be returned"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
+    // The new lowering arm is scoped to method returns: an owned slice in an
+    // out-struct field must keep the old rejection even with
+    // `owned_slice_returns` enabled.
+    #[test]
+    fn owned_byte_slice_out_struct_field_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::out]
+                pub struct Out {
+                    pub bytes: Box<[u8]>,
+                }
+
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Out {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream);
+        assert!(
+            !errors.is_empty()
+                && errors
+                    .iter()
+                    .any(|e| e.contains("Owned slices cannot be returned")),
+            "unexpected diagnostics: {errors:?}"
         );
     }
 

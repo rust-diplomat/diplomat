@@ -1257,9 +1257,23 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     ));
                     return None;
                 }
+                // Both rejections are defense in depth — HIR lowering only
+                // accepts an owned byte slice as a plain top-level return
+                // (`!in_result_option`), because the macro leaves a `Result`'s
+                // ok arm as a raw `Box<[u8]>` fat pointer inside
+                // `DiplomatResult` instead of converting it to the repr(C)
+                // `DiplomatOwnedSlice<u8>`, so the union layout would not be
+                // FFI-stable.
                 if is_nullable_path {
                     self.errors.push_error(
                         "[.NET backend] `Option<Box<[u8]>>` return is not supported.".to_string(),
+                    );
+                    return None;
+                }
+                if failed.is_some() {
+                    self.errors.push_error(
+                        "[.NET backend] `Result<Box<[u8]>, E>` return is not supported."
+                            .to_string(),
                     );
                     return None;
                 }

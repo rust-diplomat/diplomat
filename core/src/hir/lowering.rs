@@ -1563,8 +1563,16 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
+            // Plain top-level method returns only: out-struct fields and
+            // callbacks keep the old rejection, and `Result`/`Option` inners
+            // are excluded because the macro leaves the ok arm as a raw
+            // `Box<[u8]>` inside `DiplomatResult` — a fat pointer with no
+            // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
+            // shape an infallible return is converted to.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
                 if self.attr_validator.attrs_supported().owned_slice_returns
+                    && context == TypeLoweringContext::Method
+                    && !in_result_option
                     && matches!(
                         PrimitiveType::from_ast(*prim),
                         PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)

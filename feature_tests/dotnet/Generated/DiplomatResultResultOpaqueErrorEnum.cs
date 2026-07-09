@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 namespace Somelib.Raw;
 
 using Somelib;
-using Somelib.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct DiplomatResultResultOpaqueErrorEnum
