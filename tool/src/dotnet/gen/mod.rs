@@ -133,6 +133,19 @@ impl PreparedType<'_> {
             }
         }
     }
+
+    /// True iff any of this type's methods returns an owned `Box<[u8]>`
+    /// (`RustVec`). Gates whether the `RustVec` runtime helper (and its
+    /// `System.Buffers.MemoryManager<byte>` / `System.Memory` dependency on
+    /// the netstandard2.0 / .NET Framework floor) is emitted.
+    fn uses_owned_byte_slice_return(&self) -> bool {
+        match self {
+            Self::Prerendered { .. } => false,
+            Self::Opaque { methods, .. } | Self::Struct { methods, .. } => methods
+                .iter()
+                .any(|m| m.return_type.is_owned_byte_slice()),
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -189,9 +202,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// first (each method lowered exactly once) so the flag is known before
     /// the first opaque Dispose sweep — a pin edge lands on the RETURNED
     /// type's wrapper, which may render before the method that pins into it.
-    pub(super) fn render_all_types(&self) -> (bool, Vec<RenderedType>) {
+    pub(super) fn render_all_types(&self) -> (bool, bool, Vec<RenderedType>) {
         let mut prepared_types = Vec::new();
         let mut uses_pinned_memory = false;
+        let mut uses_owned_byte_slice_return = false;
         for (id, ty) in self.tcx.all_types() {
             if ty.attrs().disable {
                 continue;
@@ -205,6 +219,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 continue;
             };
             uses_pinned_memory |= prepared.uses_pinned_memory();
+            uses_owned_byte_slice_return |= prepared.uses_owned_byte_slice_return();
             prepared_types.push(prepared);
         }
 
@@ -220,7 +235,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
             })
             .collect();
-        (uses_pinned_memory, rendered)
+        (uses_pinned_memory, uses_owned_byte_slice_return, rendered)
     }
 
     /// Build a type's render data without emitting any C#. `build_method_info`
