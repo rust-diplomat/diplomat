@@ -57,6 +57,7 @@ public partial class FixedDecimal: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>FixedDecimal</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class FixedDecimal: IDisposable
             return new FixedDecimal(result);
         }
     }
+
     public void MultiplyPow10(short power)
     {
         unsafe
@@ -80,6 +82,7 @@ public partial class FixedDecimal: IDisposable
             GC.KeepAlive(this);
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     public override string ToString()
     {

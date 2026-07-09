@@ -57,6 +57,7 @@ public partial class RenamedVectorTest: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>RenamedVectorTest</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class RenamedVectorTest: IDisposable
             return new RenamedVectorTest(result);
         }
     }
+
     public nuint Len()
     {
         unsafe
@@ -81,6 +83,7 @@ public partial class RenamedVectorTest: IDisposable
             return result;
         }
     }
+
     public double? Get(nuint idx)
     {
         unsafe
@@ -94,6 +97,7 @@ public partial class RenamedVectorTest: IDisposable
             return result.IsSome ? result.Value : (double?)null;
         }
     }
+
     public void Push(double value)
     {
         unsafe

@@ -57,6 +57,7 @@ public partial class AttrOpaque1Renamed: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>AttrOpaque1Renamed</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return new AttrOpaque1Renamed(result);
         }
     }
+
     /// <returns>
     /// A <c>AttrOpaque1Renamed</c> allocated on Rust side.
     /// </returns>
@@ -79,6 +81,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return new AttrOpaque1Renamed(result);
         }
     }
+
     public static int MacTest()
     {
         unsafe
@@ -86,6 +89,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return Raw.AttrOpaque1Renamed.MacTest();
         }
     }
+
     public static int Hello()
     {
         unsafe
@@ -93,6 +97,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return Raw.AttrOpaque1Renamed.Hello();
         }
     }
+
     public byte method_renamed()
     {
         unsafe
@@ -106,6 +111,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return result;
         }
     }
+
     public byte Abirenamed()
     {
         unsafe
@@ -119,6 +125,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             return result;
         }
     }
+
     public void UseUnnamespaced(Unnamespaced un)
     {
         unsafe
@@ -135,6 +142,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             GC.KeepAlive(un);
         }
     }
+
     public void UseNamespaced(RenamedAttrEnum n)
     {
         unsafe

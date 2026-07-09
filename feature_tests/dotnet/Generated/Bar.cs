@@ -57,6 +57,7 @@ public partial class Bar: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>Foo</c> allocated on Rust side.
     /// </returns>

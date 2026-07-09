@@ -57,6 +57,7 @@ public partial class Opaque: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class Opaque: IDisposable
             return new Opaque(result);
         }
     }
+
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
     /// </returns>
@@ -84,6 +86,7 @@ public partial class Opaque: IDisposable
             }
         }
     }
+
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
     /// </returns>
@@ -100,6 +103,7 @@ public partial class Opaque: IDisposable
             }
         }
     }
+
     public string GetDebugStr()
     {
         unsafe
@@ -121,6 +125,7 @@ public partial class Opaque: IDisposable
             }
         }
     }
+
     public void AssertStruct(MyStruct s)
     {
         unsafe
@@ -133,6 +138,7 @@ public partial class Opaque: IDisposable
             GC.KeepAlive(this);
         }
     }
+
     public static nuint ReturnsUsize()
     {
         unsafe
@@ -140,6 +146,7 @@ public partial class Opaque: IDisposable
             return Raw.Opaque.ReturnsUsize();
         }
     }
+
     public static ImportedStruct ReturnsImported()
     {
         unsafe

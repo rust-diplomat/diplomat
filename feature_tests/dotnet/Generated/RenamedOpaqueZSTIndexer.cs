@@ -57,6 +57,7 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>RenamedOpaqueZSTIndexer</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class RenamedOpaqueZSTIndexer: IDisposable
             return new RenamedOpaqueZSTIndexer(result);
         }
     }
+
     /// <returns>
     /// A <c>RenamedOpaqueZSTIndexer</c> allocated on Rust side.
     /// </returns>

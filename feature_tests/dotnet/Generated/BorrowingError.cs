@@ -57,6 +57,7 @@ public partial class BorrowingError: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>OpaqueThin</c> allocated on Rust side.
     /// </returns>

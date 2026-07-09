@@ -57,6 +57,7 @@ public partial class MethodOverloading: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>MethodOverloading</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class MethodOverloading: IDisposable
             return new MethodOverloading(result);
         }
     }
+
     /// <returns>
     /// A <c>MethodOverloading</c> allocated on Rust side.
     /// </returns>
@@ -79,6 +81,7 @@ public partial class MethodOverloading: IDisposable
             return new MethodOverloading(result);
         }
     }
+
     /// <returns>
     /// A <c>MethodOverloading</c> allocated on Rust side.
     /// </returns>

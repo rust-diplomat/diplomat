@@ -57,6 +57,7 @@ public partial class OpaqueThinVec: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>OpaqueThinVec</c> allocated on Rust side.
     /// </returns>
@@ -73,6 +74,7 @@ public partial class OpaqueThinVec: IDisposable
             }
         }
     }
+
     public void SetFirstC(string value)
     {
         unsafe
@@ -90,6 +92,7 @@ public partial class OpaqueThinVec: IDisposable
             }
         }
     }
+
     /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
     /// </returns>
@@ -110,6 +113,7 @@ public partial class OpaqueThinVec: IDisposable
             return new OpaqueThinIter(result, new object[] { this });
         }
     }
+
     public nuint Len()
     {
         unsafe
@@ -123,6 +127,7 @@ public partial class OpaqueThinVec: IDisposable
             return result;
         }
     }
+
     /// <returns>
     /// A <c>OpaqueThin</c> allocated on Rust side.
     /// </returns>
@@ -143,6 +148,7 @@ public partial class OpaqueThinVec: IDisposable
             return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
     }
+
     /// <returns>
     /// A <c>OpaqueThin</c> allocated on Rust side.
     /// </returns>
@@ -163,6 +169,7 @@ public partial class OpaqueThinVec: IDisposable
             return result == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result), new object[] { this });
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
     /// A <c>OpaqueThin</c> allocated on Rust side.
@@ -188,6 +195,7 @@ public partial class OpaqueThinVec: IDisposable
             return new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result.Ok), new object[] { this });
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
     /// A <c>OpaqueThin</c> allocated on Rust side.
@@ -213,6 +221,7 @@ public partial class OpaqueThinVec: IDisposable
             return result.Ok == null ? null : new OpaqueThin(RustHandle<Raw.OpaqueThin>.Borrowed(result.Ok), new object[] { this });
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
@@ -238,6 +247,7 @@ public partial class OpaqueThinVec: IDisposable
             return new OpaqueThinIter(result.Ok, new object[] { this });
         }
     }
+
     /// <returns>
     /// A <c>OpaqueThinIter</c> allocated on Rust side.
     /// </returns>
@@ -258,6 +268,7 @@ public partial class OpaqueThinVec: IDisposable
             return result == null ? null : new OpaqueThinIter(result, new object[] { this });
         }
     }
+
     /// <exception cref="BorrowingErrorException"></exception>
     public int TryBorrow(bool fail)
     {

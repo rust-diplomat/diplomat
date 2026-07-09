@@ -57,6 +57,7 @@ public partial class RenamedMixinTest: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     public static string Hello()
     {
         unsafe

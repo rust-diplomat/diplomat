@@ -57,6 +57,7 @@ public partial class GcRaceProbe: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>GcRaceProbe</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class GcRaceProbe: IDisposable
             return new GcRaceProbe(result);
         }
     }
+
     public ulong DropsDuringSpin(ulong millis)
     {
         unsafe

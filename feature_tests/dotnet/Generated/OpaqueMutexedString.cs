@@ -57,6 +57,7 @@ public partial class OpaqueMutexedString: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>OpaqueMutexedString</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class OpaqueMutexedString: IDisposable
             return new OpaqueMutexedString(result);
         }
     }
+
     public void Change(nuint number)
     {
         unsafe
@@ -80,6 +82,7 @@ public partial class OpaqueMutexedString: IDisposable
             GC.KeepAlive(this);
         }
     }
+
     public nuint GetLenAndAdd(nuint other)
     {
         unsafe
@@ -93,6 +96,7 @@ public partial class OpaqueMutexedString: IDisposable
             return result;
         }
     }
+
     /// <returns>
     /// A <c>Utf16Wrap</c> allocated on Rust side.
     /// </returns>
@@ -109,6 +113,7 @@ public partial class OpaqueMutexedString: IDisposable
             return new Utf16Wrap(result);
         }
     }
+
     public ushort ToUnsignedFromUnsigned(ushort input)
     {
         unsafe

@@ -57,6 +57,7 @@ public partial class FixedDecimalFormatter: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
     /// A <c>FixedDecimalFormatter</c> allocated on Rust side.
@@ -81,6 +82,7 @@ public partial class FixedDecimalFormatter: IDisposable
             return new FixedDecimalFormatter(result.Ok);
         }
     }
+
     public string FormatWrite(FixedDecimal value)
     {
         unsafe

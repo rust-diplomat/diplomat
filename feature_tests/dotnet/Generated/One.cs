@@ -57,6 +57,7 @@ public partial class One: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -80,6 +81,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { hold });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -103,6 +105,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { hold });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -138,6 +141,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { a, b, c, d });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -161,6 +165,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { hold });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -192,6 +197,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { top, left, right, bottom });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -223,6 +229,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { left, bottom });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -254,6 +261,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { right, bottom });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -285,6 +293,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { bottom });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -320,6 +329,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { a, b, c, d });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>
@@ -347,6 +357,7 @@ public partial class One: IDisposable
             return new One(result, new object[] { explicitHold, implicitHold });
         }
     }
+
     /// <returns>
     /// A <c>One</c> allocated on Rust side.
     /// </returns>

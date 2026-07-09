@@ -23,6 +23,7 @@ public partial struct RenamedStructWithAttrs
         A = raw.A,
         B = raw.B,
     };
+
     /// <exception cref="InvalidOperationException"></exception>
 
     public static RenamedStructWithAttrs NewFallible(bool a, uint b)
@@ -38,6 +39,7 @@ public partial struct RenamedStructWithAttrs
         }
     }
 
+
     public uint C()
     {
         unsafe
@@ -45,6 +47,7 @@ public partial struct RenamedStructWithAttrs
             return Raw.RenamedStructWithAttrs.C(this.AsFFI());
         }
     }
+
 
     public void Deprecated()
     {

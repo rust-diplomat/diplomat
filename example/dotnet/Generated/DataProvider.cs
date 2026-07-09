@@ -57,6 +57,7 @@ public partial class DataProvider: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>DataProvider</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class DataProvider: IDisposable
             return new DataProvider(result);
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     public static void ReturnsResult()
     {
