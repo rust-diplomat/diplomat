@@ -57,6 +57,7 @@ public partial class OwnedSliceReturn: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     public static RustVec MakeBytes(uint len)
     {
         unsafe

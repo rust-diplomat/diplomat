@@ -1440,7 +1440,6 @@ impl BackendAttrSupport {
             "owned_slices" => Some(self.owned_slices),
             "mutable_slices" => Some(self.mutable_slices),
             "tuples" => Some(self.tuples),
-            "opaque_slices" => Some(self.opaque_slices),
             "owned_slice_returns" => Some(self.owned_slice_returns),
             _ => None,
         }
