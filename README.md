@@ -6,6 +6,7 @@ Diplomat supports generating bindings from Rust to:
 - C++
 - Dart
 - Javascript/Typescript
+- .NET (C#)
 - Kotlin (using JNA)
 - Python (using [nanobind](https://nanobind.readthedocs.io/en/latest/index.html))
 

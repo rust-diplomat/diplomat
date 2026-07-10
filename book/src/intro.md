@@ -25,10 +25,11 @@ Diplomat currently supports the following backends:
  - JavaScript/TypeScript (using WASM)
    - [demo_gen](./demo_gen/intro.md)
  - Dart
+ - [.NET (C#)](./backends/dotnet.md)
  - [Kotlin (using JNA)](./backends/kotlin.md)
  - Python via [Nanobind](https://github.com/wjakob/nanobind) (maintained by [Zeromatter](https://www.zeromatter.com/))
  
-There is work in progress for a [Java backend] (using Panama). We used to have a .NET backend but it was removed in a refactor, it may get added again.
+There is work in progress for a [Java backend] (using Panama).
 
 We're happy to fix bugs or add configurability in the current backends if their produced output does not match what you need in your language. Details on how to write new backends is documented [later in this book](developer.html): you can do so as a third party library depending on `diplomat_core`, but we are also happy to accept these into Diplomat with the understanding that we'll only do minimal work to keep them working over time.
 
