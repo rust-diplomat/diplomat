@@ -82,7 +82,7 @@ public partial class Float64Vec: IDisposable
             {
                 throw new ObjectDisposedException("Float64Vec");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.Float64Vec.ToString(AsFFI(), &writeable);

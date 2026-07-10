@@ -78,7 +78,7 @@ public partial class MyOpaqueEnum: IDisposable
             {
                 throw new ObjectDisposedException("MyOpaqueEnum");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.MyOpaqueEnum.ToString(AsFFI(), &writeable);

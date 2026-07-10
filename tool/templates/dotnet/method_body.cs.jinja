@@ -56,11 +56,11 @@
 {%- if method.return_type.is_write() %}
     {#- Write methods return `string`. Allocate the writer in this frame,
         pass its address to Rust, read the buffer back, dispose. The
-        low-level DiplomatWriteable never appears on the public API.
+        low-level DiplomatWrite never appears on the public API.
         try/finally guarantees the unmanaged buffer is freed even if the
         raw call or ToUnicode() throws (the error-arm throw sits inside
         the try; finally still runs). #}
-{{ bi }}DiplomatWriteable writeable = new DiplomatWriteable();
+{{ bi }}DiplomatWrite writeable = new DiplomatWrite();
 {{ bi }}try
 {{ bi }}{
     {%- if method.error_info.is_some() %}

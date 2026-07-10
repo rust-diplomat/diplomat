@@ -62,7 +62,7 @@ public partial class RenamedMixinTest: IDisposable
     {
         unsafe
         {
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.RenamedMixinTest.Hello(&writeable);

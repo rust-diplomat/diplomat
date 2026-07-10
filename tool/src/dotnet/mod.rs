@@ -80,13 +80,13 @@ struct DiplomatSliceMutU32Template<'a> {
     namespace: &'a str,
 }
 
-/// `DiplomatWriteable` — caller-provided buffer Rust appends UTF-8 bytes
+/// `DiplomatWrite` — caller-provided buffer Rust appends UTF-8 bytes
 /// into. Carries function pointers for `flush` and `grow` callbacks so
 /// Rust can ask C# to enlarge the buffer when it runs out. Used for
 /// every "return string" API on the Rust side (`fn foo(&self, write: &mut DiplomatWrite)`).
 #[derive(Template)]
-#[template(path = "dotnet/DiplomatWriteable.cs.jinja", escape = "none")]
-struct DiplomatWriteableTemplate<'a> {
+#[template(path = "dotnet/DiplomatWrite.cs.jinja", escape = "none")]
+struct DiplomatWriteTemplate<'a> {
     namespace: &'a str,
 }
 
@@ -392,12 +392,12 @@ pub(crate) fn run<'tcx>(
     );
     add_cs_file(
         &files,
-        "DiplomatWriteable.cs".to_string(),
-        DiplomatWriteableTemplate {
+        "DiplomatWrite.cs".to_string(),
+        DiplomatWriteTemplate {
             namespace: &namespace,
         }
         .render()
-        .expect("DiplomatWriteable template render failed"),
+        .expect("DiplomatWrite template render failed"),
     );
     add_cs_file(
         &files,

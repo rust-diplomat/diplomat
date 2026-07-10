@@ -66,7 +66,7 @@ public partial class Utf16Wrap: IDisposable
             {
                 throw new ObjectDisposedException("Utf16Wrap");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.Utf16Wrap.GetDebugStr(AsFFI(), &writeable);

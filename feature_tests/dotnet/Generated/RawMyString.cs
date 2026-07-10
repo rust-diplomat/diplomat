@@ -19,10 +19,10 @@ internal partial struct MyString
     internal static unsafe extern void SetStr(MyString* handle, DiplomatSliceU8 newStr);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_get_str", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern void GetStr(MyString* handle, DiplomatWriteable* writeable);
+    internal static unsafe extern void GetStr(MyString* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_string_transform", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern void StringTransform(DiplomatSliceU8 foo, DiplomatWriteable* writeable);
+    internal static unsafe extern void StringTransform(DiplomatSliceU8 foo, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(MyString* handle);

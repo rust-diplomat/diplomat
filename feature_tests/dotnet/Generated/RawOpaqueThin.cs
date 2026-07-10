@@ -16,7 +16,7 @@ internal partial struct OpaqueThin
     internal static unsafe extern float B(OpaqueThin* handle);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThin_c", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern void C(OpaqueThin* handle, DiplomatWriteable* writeable);
+    internal static unsafe extern void C(OpaqueThin* handle, DiplomatWrite* writeable);
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueThin_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OpaqueThin* handle);

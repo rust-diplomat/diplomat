@@ -112,7 +112,7 @@ public partial class Opaque: IDisposable
             {
                 throw new ObjectDisposedException("Opaque");
             }
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.Opaque.GetDebugStr(AsFFI(), &writeable);

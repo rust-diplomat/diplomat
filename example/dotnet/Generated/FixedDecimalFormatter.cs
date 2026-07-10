@@ -94,7 +94,7 @@ public partial class FixedDecimalFormatter: IDisposable
             if (value == null) throw new ArgumentNullException(nameof(value));
             Raw.FixedDecimal* valueRaw = value.AsFFI();
             if (valueRaw == null) throw new ObjectDisposedException(nameof(FixedDecimal));
-            DiplomatWriteable writeable = new DiplomatWriteable();
+            DiplomatWrite writeable = new DiplomatWrite();
             try
             {
                 Raw.FixedDecimalFormatter.FormatWrite(AsFFI(), valueRaw, &writeable);

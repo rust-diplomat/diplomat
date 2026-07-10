@@ -1,5 +1,5 @@
 {#- Shared raw [DllImport] extern declaration. Four return-type cases:
-    - Write:              void return + trailing DiplomatWriteable* param
+    - Write:              void return + trailing DiplomatWrite* param
     - Fallible:           DiplomatResult struct
     - Option<value-type>: DiplomatOption struct (tagged)
     - Option<Box<T>> / plain: just method.return_type.raw() (pointer

@@ -213,7 +213,7 @@ impl Display for DotnetReturnType {
             // Both render as the C# keyword `void` in raw externs. The
             // idiomatic signature spells `Write` methods as `string`
             // instead (see `idiomatic_signature_return_type`) — the writer
-            // is allocated and consumed internally, so `DiplomatWriteable`
+            // is allocated and consumed internally, so `DiplomatWrite`
             // never appears on the public API.
             Self::Write | Self::Unit => write!(f, "void"),
         }
@@ -630,7 +630,7 @@ impl MethodInfo<'_> {
     /// Idiomatic return type as it appears in the generated method
     /// signature. `Write` methods surface as `string`: the writer is
     /// allocated, filled, and disposed inside the generated body, so the
-    /// low-level `DiplomatWriteable` is never exposed on the public API.
+    /// low-level `DiplomatWrite` is never exposed on the public API.
     /// Everything else defers to [`Self::idiomatic_return_type`].
     pub(super) fn idiomatic_signature_return_type(&self) -> String {
         if self.return_type.is_write() {
@@ -649,9 +649,9 @@ impl MethodInfo<'_> {
             return self.inputs.raw_params.clone();
         }
         if self.inputs.raw_params.is_empty() {
-            "DiplomatWriteable* writeable".to_string()
+            "DiplomatWrite* writeable".to_string()
         } else {
-            format!("{}, DiplomatWriteable* writeable", self.inputs.raw_params)
+            format!("{}, DiplomatWrite* writeable", self.inputs.raw_params)
         }
     }
 
