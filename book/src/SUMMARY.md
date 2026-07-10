@@ -47,6 +47,7 @@
   - [C](backends/c.md)
   - [C++](backends/cpp.md)
   - [Dart](backends/dart.md)
+  - [.NET](backends/dotnet.md)
   - [demo_gen](backends/demo_gen.md)
   - [Javascript](backends/js.md)
   - [Kotlin](backends/kotlin.md)
