@@ -127,9 +127,14 @@ struct DiplomatOwnedSliceU8Template<'a> {
     namespace: &'a str,
 }
 
-/// `RustVec` — zero-copy `MemoryManager<byte>` wrapper over an owned
-/// `Box<[u8]>` Rust handed back across FFI. Frees via the companion
-/// `diplomat_owned_slice_u8_destroy` extern on `Dispose`/finalize.
+#[derive(Template)]
+#[template(path = "dotnet/RawRustVec.cs.jinja", escape = "none")]
+struct RawRustVecTemplate<'a> {
+    namespace: &'a str,
+}
+
+/// `RustVec` — GC-owned wrapper over an owned `Box<[u8]>` Rust handed back
+/// across FFI. It allows scoped zero-copy access and explicit cloning.
 #[derive(Template)]
 #[template(path = "dotnet/RustVec.cs.jinja", escape = "none")]
 struct RustVecTemplate<'a> {
@@ -456,10 +461,8 @@ pub(crate) fn run<'tcx>(
         );
     }
 
-    // `RustVec` pulls in `System.Buffers.MemoryManager<byte>`, which needs
-    // System.Memory on the netstandard2.0 / .NET Framework floor — so, like
-    // `DiplomatPinnedMemory`, only ship it (and its raw struct) when the run
-    // actually returns an owned `Box<[u8]>`.
+    // The helper owns native memory, so only ship it when a method returns an
+    // owned `Box<[u8]>`.
     if uses_owned_byte_slice_return {
         add_cs_file(
             &files,
@@ -469,6 +472,15 @@ pub(crate) fn run<'tcx>(
             }
             .render()
             .expect("DiplomatOwnedSliceU8 template render failed"),
+        );
+        add_cs_file(
+            &files,
+            "RawRustVec.cs".to_string(),
+            RawRustVecTemplate {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("RawRustVec template render failed"),
         );
         add_cs_file(
             &files,
@@ -1358,9 +1370,30 @@ mod test {
             "raw extern should return the DiplomatOwnedSliceU8 (ptr, len) struct by value:\n{raw_buf}"
         );
 
+        let rust_vec = files
+            .get("RustVec.cs")
+            .expect("an owned byte-slice return should emit the RustVec runtime helper");
         assert!(
-            files.contains_key("RustVec.cs"),
-            "an owned byte-slice return should emit the RustVec runtime helper"
+            rust_vec.contains("public sealed class RustVec : IDisposable")
+                && rust_vec.contains("public void WithSpan(RustVecSpanAction action)")
+                && rust_vec.contains("public byte[] Clone()")
+                && rust_vec.contains("~RustVec()"),
+            "RustVec should provide scoped access, explicit cloning, and GC fallback:\n{rust_vec}"
+        );
+        assert!(
+            !rust_vec.contains("public sealed unsafe class RustVec")
+                && !rust_vec.contains("MemoryManager<byte>")
+                && !rust_vec.contains("public Span<byte> GetSpan")
+                && !rust_vec.contains("DllImport"),
+            "RustVec must not expose an escaping memory view:\n{rust_vec}"
+        );
+        let raw_rust_vec = files
+            .get("RawRustVec.cs")
+            .expect("an owned byte-slice return should emit the raw RustVec helper");
+        assert!(
+            raw_rust_vec.contains("namespace Somelib.Raw;")
+                && raw_rust_vec.contains("internal static extern void Destroy"),
+            "raw RustVec should own the destroy import:\n{raw_rust_vec}"
         );
         assert!(
             files.contains_key("DiplomatOwnedSliceU8.cs"),
@@ -1396,6 +1429,10 @@ mod test {
         assert!(
             !files.contains_key("RustVec.cs"),
             "no owned byte-slice return means RustVec must not be emitted"
+        );
+        assert!(
+            !files.contains_key("RawRustVec.cs"),
+            "no owned byte-slice return means raw RustVec must not be emitted"
         );
         assert!(
             !files.contains_key("DiplomatOwnedSliceU8.cs"),

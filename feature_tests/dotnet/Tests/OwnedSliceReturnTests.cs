@@ -1,5 +1,5 @@
 using System;
-using System.Buffers;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Somelib;
 using Somelib.Diplomat;
@@ -7,13 +7,6 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// `OwnedSliceReturn.MakeBytes` returns an owned `Box<[u8]>` — on .NET this
-// lowers to a zero-copy `RustVec` (`System.Buffers.MemoryManager<byte>`)
-// wrapping the raw `(ptr, len)` pair directly, rather than copying into a
-// managed `byte[]`. These tests exercise: correct bytes back (small, empty,
-// and large buffers), `GetSpan`/`Memory` content after the raw call returns,
-// `Dispose()` idempotency, and the finalizer path actually freeing the
-// native buffer when `Dispose()` is never called.
 public class OwnedSliceReturnTests
 {
     [Fact]
@@ -21,81 +14,127 @@ public class OwnedSliceReturnTests
     {
         using RustVec vec = OwnedSliceReturn.MakeBytes(5);
 
-        Assert.Equal(5, vec.Memory.Length);
-        Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, vec.Memory.ToArray());
+        Assert.Equal(5, vec.Length);
+        Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, vec.Clone());
     }
 
     [Fact]
-    public void MakeBytes_EmptyBuffer_ReturnsEmptyMemory()
+    public void MakeBytes_EmptyBuffer_ReturnsEmptyClone()
     {
         using RustVec vec = OwnedSliceReturn.MakeBytes(0);
 
-        Assert.Equal(0, vec.Memory.Length);
-        Assert.Empty(vec.GetSpan().ToArray());
+        Assert.Equal(0, vec.Length);
+        Assert.Empty(vec.Clone());
     }
 
-    // Large enough that a copy-based implementation would be an obviously
-    // expensive round trip, and big enough to make GC.AddMemoryPressure's
-    // effect meaningful rather than a rounding error.
     [Fact]
     public void MakeBytes_LargeBuffer_RoundTripsEveryByte()
     {
         const int len = 4 * 1024 * 1024;
         using RustVec vec = OwnedSliceReturn.MakeBytes(len);
 
-        Assert.Equal(len, vec.Memory.Length);
-        ReadOnlySpan<byte> span = vec.GetSpan();
-        for (int i = 0; i < len; i += 4096)
+        Assert.Equal(len, vec.Length);
+        vec.WithSpan(span =>
         {
-            Assert.Equal((byte)(i % 256), span[i]);
-        }
-        Assert.Equal((byte)((len - 1) % 256), span[len - 1]);
+            for (int i = 0; i < len; i += 4096)
+            {
+                Assert.Equal((byte)(i % 256), span[i]);
+            }
+            Assert.Equal((byte)((len - 1) % 256), span[len - 1]);
+        });
     }
 
-    // Catches marshaling/offset bugs in the raw DiplomatOwnedSliceU8 struct:
-    // GetSpan/Memory must reflect the actual raw call result, not a stale or
-    // shifted view of it.
     [Fact]
-    public void GetSpan_And_Memory_AgreeWithEachOtherAfterRawCall()
+    public void WithSpan_ProvidesZeroCopySynchronousAccess()
     {
         using RustVec vec = OwnedSliceReturn.MakeBytes(64);
 
-        ReadOnlySpan<byte> span = vec.GetSpan();
-        ReadOnlyMemory<byte> memory = vec.Memory;
-
-        Assert.Equal(64, span.Length);
-        Assert.Equal(64, memory.Length);
-        Assert.True(span.SequenceEqual(memory.Span));
-        for (int i = 0; i < 64; i++)
+        vec.WithSpan(span =>
         {
-            Assert.Equal((byte)i, span[i]);
-        }
+            Assert.Equal(64, span.Length);
+            for (int i = 0; i < 64; i++)
+            {
+                Assert.Equal((byte)i, span[i]);
+            }
+        });
     }
 
     [Fact]
-    public void Dispose_IsIdempotent()
+    public void Clone_ReturnsIndependentManagedCopy()
     {
-        // MemoryManager<T> exposes Dispose() only through IDisposable, not as
-        // a public member of RustVec directly — same as any `using (memoryManager)`.
-        IDisposable vec = OwnedSliceReturn.MakeBytes(8);
+        using RustVec vec = OwnedSliceReturn.MakeBytes(3);
+
+        byte[] clone = vec.Clone();
+        clone[0] = 99;
+
+        Assert.Equal(new byte[] { 0, 1, 2 }, vec.Clone());
+    }
+
+    [Fact]
+    public void WithSpan_MutatesRustAllocationWithoutCopying()
+    {
+        using RustVec vec = OwnedSliceReturn.MakeBytes(3);
+
+        vec.WithSpan(span => span[0] = 99);
+
+        Assert.Equal(new byte[] { 99, 1, 2 }, vec.Clone());
+    }
+
+    [Fact]
+    public void RustVec_DoesNotExposeEscapingMemoryView()
+    {
+        const BindingFlags publicInstance = BindingFlags.Public | BindingFlags.Instance;
+
+        Assert.Null(typeof(RustVec).GetMethod("GetSpan", publicInstance));
+        Assert.Null(typeof(RustVec).GetProperty("Memory", publicInstance));
+        Assert.Contains(typeof(IDisposable), typeof(RustVec).GetInterfaces());
+    }
+
+    [Fact]
+    public void Dispose_IsIdempotentAndRejectsFurtherAccess()
+    {
+        RustVec vec = OwnedSliceReturn.MakeBytes(3);
 
         vec.Dispose();
-        vec.Dispose(); // must not throw, must not double-free
+        vec.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => _ = vec.Length);
+        Assert.Throws<ObjectDisposedException>(() => vec.Clone());
+        Assert.Throws<ObjectDisposedException>(() => vec.WithSpan(_ => { }));
     }
 
     [Fact]
-    public void Disposed_Memory_ThrowsObjectDisposedException()
+    public void Dispose_DuringWithSpanIsRejected()
     {
-        RustVec vec = OwnedSliceReturn.MakeBytes(8);
-        ((IDisposable)vec).Dispose();
+        using RustVec vec = OwnedSliceReturn.MakeBytes(3);
 
-        Assert.Throws<ObjectDisposedException>(() => vec.Memory);
+        vec.WithSpan(span =>
+        {
+            Assert.Throws<InvalidOperationException>(() => vec.Dispose());
+            Assert.Equal((byte)0, span[0]);
+        });
     }
 
-    // Builds inside an AggressiveOptimization frame so Tier1's precise
-    // liveness drops the local at its last use (same technique as
-    // GcRaceTests/PinnedSliceTests) — nothing keeps the RustVec reachable
-    // once this method returns.
+    [Fact]
+    public void WithSpan_NullActionIsRejected()
+    {
+        using RustVec vec = OwnedSliceReturn.MakeBytes(3);
+
+        Assert.Throws<ArgumentNullException>(() => vec.WithSpan(null!));
+    }
+
+    [Fact]
+    public void WithSpan_ExceptionDoesNotBlockLaterDispose()
+    {
+        RustVec vec = OwnedSliceReturn.MakeBytes(3);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            vec.WithSpan(_ => throw new InvalidOperationException()));
+
+        vec.Dispose();
+    }
+
+    // Precise liveness must release the local so the finalizer path is observable.
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static void MakeAndDropWithoutDisposing(int len)
     {
@@ -103,26 +142,13 @@ public class OwnedSliceReturnTests
         GC.KeepAlive(vec);
     }
 
-    // The single most valuable test here: proves the finalizer path actually
-    // frees the native buffer when Dispose() is never called by the caller.
-    // RustVec.DebugLiveCount is a same-assembly test hook (constructed
-    // instances increment it, a real free — from either Dispose or the
-    // finalizer — decrements it); there is no other way to observe from C#
-    // that a *finalized* instance's native memory was freed, since touching
-    // the pointer after that would itself be a use-after-free.
     [Fact]
-    public void Finalizer_FreesNativeBufferWhenDisposeIsNeverCalled()
+    public void Finalizer_FreesNativeBuffer()
     {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
         long baseline = RustVec.DebugLiveCount;
-
-        for (int i = 0; i < 200 && RustVec.DebugLiveCount > baseline; i++)
-        {
-            // Drain stragglers from earlier tests so what we observe below is
-            // caused by THIS loop's allocations, not leftover garbage.
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-        baseline = RustVec.DebugLiveCount;
 
         for (int i = 0; i < 64; i++)
         {

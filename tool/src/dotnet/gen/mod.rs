@@ -134,10 +134,7 @@ impl PreparedType<'_> {
         }
     }
 
-    /// True iff any of this type's methods returns an owned `Box<[u8]>`
-    /// (`RustVec`). Gates whether the `RustVec` runtime helper (and its
-    /// `System.Buffers.MemoryManager<byte>` / `System.Memory` dependency on
-    /// the netstandard2.0 / .NET Framework floor) is emitted.
+    /// True iff any method returns an owned `Box<[u8]>`; gates its helpers.
     fn uses_owned_byte_slice_return(&self) -> bool {
         match self {
             Self::Prerendered { .. } => false,

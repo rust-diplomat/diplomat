@@ -199,9 +199,8 @@ pub(crate) enum DotnetReturnType {
     Unit,
     /// Owned `Box<[u8]>` return. Crosses the raw FFI boundary as the
     /// `DiplomatOwnedSliceU8` `(ptr, len)` struct (returned by value, not
-    /// behind a pointer); the idiomatic surface wraps it in `RustVec`
-    /// (a zero-copy `MemoryManager<byte>`) rather than copying into a
-    /// managed `byte[]`.
+    /// behind a pointer); the idiomatic surface wraps it in `RustVec` for
+    /// scoped zero-copy access or an explicit managed clone.
     OwnedByteSlice,
 }
 
