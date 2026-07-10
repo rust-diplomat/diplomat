@@ -180,7 +180,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // `RustVec` (see `gen::method::lower_return`). Owned slice *parameters*
     // stay rejected via `owned_slices` above — this is a separate flag on
     // purpose, so input and return position can be toggled independently.
-    a.owned_slice_returns = true;
+    a.owned_byte_slice_returns = true;
 
     a.constructors = false;
     a.named_constructors = false;
@@ -1328,7 +1328,7 @@ mod test {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Owned `Box<[u8]>` return -> `RustVec` (owned_slice_returns)
+    // Owned `Box<[u8]>` return -> `RustVec` (owned_byte_slice_returns)
     // ─────────────────────────────────────────────────────────────────────
 
     #[test]
@@ -1441,7 +1441,7 @@ mod test {
     }
 
     // `Box<[u32]>` is rejected at HIR-lowering time (before the .NET backend's
-    // own `lower_return` even runs): the new `owned_slice_returns`-gated arm in
+    // own `lower_return` even runs): the new `owned_byte_slice_returns`-gated arm in
     // `core::hir::lowering` only accepts `u8`/`DiplomatByte`, so anything else
     // falls through to the pre-existing "owned slices cannot be returned" arm.
     #[test]
@@ -1532,7 +1532,7 @@ mod test {
 
     // The new lowering arm is scoped to method returns: an owned slice in an
     // out-struct field must keep the old rejection even with
-    // `owned_slice_returns` enabled.
+    // `owned_byte_slice_returns` enabled.
     #[test]
     fn owned_byte_slice_out_struct_field_is_rejected() {
         let tk_stream = quote! {
@@ -1564,7 +1564,7 @@ mod test {
         );
     }
 
-    // Regression guard: `owned_slice_returns` gates the RETURN position only.
+    // Regression guard: `owned_byte_slice_returns` gates the RETURN position only.
     // Splitting it from `owned_slices` was the whole point (see DECISIONS.md) —
     // an owned slice *parameter* must stay rejected exactly as before.
     #[test]
@@ -1588,7 +1588,7 @@ mod test {
         assert!(
             errors[0].contains("Owned slices are not supported in this backend"),
             "an owned slice parameter must still be rejected now that \
-             owned_slice_returns is enabled for the return position; got: {}",
+             owned_byte_slice_returns is enabled for the return position; got: {}",
             errors[0]
         );
     }

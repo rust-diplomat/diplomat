@@ -223,7 +223,7 @@ pub mod ffi {
     // (`System.Buffers.MemoryManager<byte>`) wrapping the raw `(ptr, len)`
     // pair directly, rather than copying into a managed `byte[]`.
     #[diplomat::opaque]
-    #[diplomat::cfg(supports=owned_slice_returns)]
+    #[diplomat::cfg(supports=owned_byte_slice_returns)]
     pub struct OwnedSliceReturn;
 
     impl OwnedSliceReturn {

@@ -1356,7 +1356,7 @@ pub struct BackendAttrSupport {
     /// (`Box<[u8]>`) from a method. Distinct from `owned_slices`, which
     /// governs the input/field position — a backend can support one without
     /// the other. Currently only used to gate `Box<[u8]>` (byte) returns.
-    pub owned_slice_returns: bool,
+    pub owned_byte_slice_returns: bool,
 }
 
 impl BackendAttrSupport {
@@ -1401,7 +1401,7 @@ impl BackendAttrSupport {
             mutable_slices: true,
             tuples: true,
             opaque_slices: true,
-            owned_slice_returns: true,
+            owned_byte_slice_returns: true,
         }
     }
 
@@ -1440,7 +1440,7 @@ impl BackendAttrSupport {
             "owned_slices" => Some(self.owned_slices),
             "mutable_slices" => Some(self.mutable_slices),
             "tuples" => Some(self.tuples),
-            "owned_slice_returns" => Some(self.owned_slice_returns),
+            "owned_byte_slice_returns" => Some(self.owned_byte_slice_returns),
             _ => None,
         }
     }
@@ -1594,7 +1594,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 mutable_slices,
                 tuples,
                 opaque_slices,
-                owned_slice_returns,
+                owned_byte_slice_returns,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1635,7 +1635,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "mutable_slices" => mutable_slices,
                 "tuples" => tuples,
                 "opaque_slices" => opaque_slices,
-                "owned_slice_returns" => owned_slice_returns,
+                "owned_byte_slice_returns" => owned_byte_slice_returns,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

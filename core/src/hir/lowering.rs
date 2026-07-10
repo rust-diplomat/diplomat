@@ -1570,7 +1570,10 @@ impl<'ast> LoweringContext<'ast> {
             // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
             // shape an infallible return is converted to.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
-                if self.attr_validator.attrs_supported().owned_slice_returns
+                if self
+                    .attr_validator
+                    .attrs_supported()
+                    .owned_byte_slice_returns
                     && context == TypeLoweringContext::Method
                     && !in_result_option
                     && matches!(
