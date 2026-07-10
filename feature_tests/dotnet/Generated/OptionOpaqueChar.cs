@@ -57,6 +57,7 @@ public partial class OptionOpaqueChar: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     public void AssertChar(uint ch)
     {
         unsafe

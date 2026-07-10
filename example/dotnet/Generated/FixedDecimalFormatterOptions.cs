@@ -24,6 +24,7 @@ public partial struct FixedDecimalFormatterOptions
         SomeOtherConfig = raw.SomeOtherConfig,
     };
 
+
     public static FixedDecimalFormatterOptions Default()
     {
         unsafe

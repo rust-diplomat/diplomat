@@ -21,6 +21,7 @@ public partial struct RenamedTestMacroStruct
         A = raw.A,
     };
 
+
     public static nuint TestFunc()
     {
         unsafe
@@ -28,6 +29,7 @@ public partial struct RenamedTestMacroStruct
             return Raw.RenamedTestMacroStruct.TestFunc();
         }
     }
+
 
     public static RenamedTestMacroStruct TestMeta()
     {

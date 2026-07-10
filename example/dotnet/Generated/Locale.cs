@@ -57,6 +57,7 @@ public partial class Locale: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>Locale</c> allocated on Rust side.
     /// </returns>

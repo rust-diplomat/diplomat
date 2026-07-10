@@ -57,6 +57,7 @@ public partial class ResultOpaque: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
@@ -73,6 +74,7 @@ public partial class ResultOpaque: IDisposable
             return new ResultOpaque(result.Ok);
         }
     }
+
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
@@ -89,6 +91,7 @@ public partial class ResultOpaque: IDisposable
             return new ResultOpaque(result.Ok);
         }
     }
+
     /// <exception cref="ErrorEnumException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
@@ -105,6 +108,7 @@ public partial class ResultOpaque: IDisposable
             return new ResultOpaque(result.Ok);
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
@@ -121,6 +125,7 @@ public partial class ResultOpaque: IDisposable
             return new ResultOpaque(result.Ok);
         }
     }
+
     /// <exception cref="ErrorStructException"></exception>
     /// <returns>
     /// A <c>ResultOpaque</c> allocated on Rust side.
@@ -137,6 +142,7 @@ public partial class ResultOpaque: IDisposable
             return new ResultOpaque(result.Ok);
         }
     }
+
     /// <exception cref="ResultOpaqueException"></exception>
     public static void NewInErr(int i)
     {
@@ -150,6 +156,7 @@ public partial class ResultOpaque: IDisposable
             return;
         }
     }
+
     /// <exception cref="InvalidOperationException"></exception>
     public static int NewInt(int i)
     {
@@ -163,6 +170,7 @@ public partial class ResultOpaque: IDisposable
             return result.Ok;
         }
     }
+
     /// <exception cref="ResultOpaqueException"></exception>
     public static ErrorEnum NewInEnumErr(int i)
     {
@@ -176,6 +184,7 @@ public partial class ResultOpaque: IDisposable
             return result.Ok;
         }
     }
+
     public void AssertInteger(int i)
     {
         unsafe

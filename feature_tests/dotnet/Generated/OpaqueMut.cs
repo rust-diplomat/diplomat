@@ -57,6 +57,7 @@ public partial class OpaqueMut: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>OpaqueMut</c> allocated on Rust side.
     /// </returns>

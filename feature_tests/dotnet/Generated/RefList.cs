@@ -57,6 +57,7 @@ public partial class RefList: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>RefList</c> allocated on Rust side.
     /// </returns>

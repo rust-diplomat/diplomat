@@ -57,6 +57,7 @@ public partial class MyString: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
     /// </returns>
@@ -73,6 +74,7 @@ public partial class MyString: IDisposable
             }
         }
     }
+
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
     /// </returns>
@@ -89,6 +91,7 @@ public partial class MyString: IDisposable
             }
         }
     }
+
     public void SetStr(string newStr)
     {
         unsafe
@@ -106,6 +109,7 @@ public partial class MyString: IDisposable
             }
         }
     }
+
     public string GetStr()
     {
         unsafe
@@ -127,6 +131,7 @@ public partial class MyString: IDisposable
             }
         }
     }
+
     public static string StringTransform(string foo)
     {
         unsafe

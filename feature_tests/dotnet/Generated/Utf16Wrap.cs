@@ -57,6 +57,7 @@ public partial class Utf16Wrap: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     public string GetDebugStr()
     {
         unsafe

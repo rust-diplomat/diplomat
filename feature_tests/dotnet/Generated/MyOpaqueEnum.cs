@@ -57,6 +57,7 @@ public partial class MyOpaqueEnum: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>MyOpaqueEnum</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class MyOpaqueEnum: IDisposable
             return new MyOpaqueEnum(result);
         }
     }
+
     public override string ToString()
     {
         unsafe

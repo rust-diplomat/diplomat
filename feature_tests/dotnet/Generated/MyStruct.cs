@@ -39,6 +39,7 @@ public partial struct MyStruct
         G = raw.G,
     };
 
+
     public static MyStruct New()
     {
         unsafe
@@ -47,6 +48,7 @@ public partial struct MyStruct
             return MyStruct.FromFFI(result);
         }
     }
+
 
     public static MyStruct NewOverload(int i)
     {
@@ -57,6 +59,7 @@ public partial struct MyStruct
         }
     }
 
+
     public byte IntoA()
     {
         unsafe
@@ -64,6 +67,7 @@ public partial struct MyStruct
             return Raw.MyStruct.IntoA(this.AsFFI());
         }
     }
+
     /// <exception cref="MyZstException"></exception>
 
     public static void ReturnsZstResult()
@@ -78,6 +82,7 @@ public partial struct MyStruct
             return;
         }
     }
+
     /// <exception cref="MyZstException"></exception>
 
     public static void FailsZstResult()

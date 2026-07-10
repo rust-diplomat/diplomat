@@ -57,6 +57,7 @@ public partial class Unnamespaced: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>Unnamespaced</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class Unnamespaced: IDisposable
             return new Unnamespaced(result);
         }
     }
+
     public void UseNamespaced(AttrOpaque1Renamed n)
     {
         unsafe

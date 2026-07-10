@@ -28,8 +28,7 @@ public partial struct {{ name }}
     };
 
     {%- for property in properties %}
-
-{%- if property.lifetime_warning %}
+{% if property.lifetime_warning %}
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
@@ -47,7 +46,7 @@ public partial struct {{ name }}
     {%- endfor %}
 
     {%- for method in methods %}
-{%- if let Some(info) = method.error_info %}
+{% if let Some(info) = method.error_info %}
     /// <exception cref="{{ info.exception_name }}"></exception>
 {%- endif %}
 {%- if method.return_type.is_opaque() %}

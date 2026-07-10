@@ -57,6 +57,7 @@ public partial class OptionOpaque: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
     /// </returns>
@@ -68,6 +69,7 @@ public partial class OptionOpaque: IDisposable
             return result == null ? null : new OptionOpaque(result);
         }
     }
+
     /// <returns>
     /// A <c>OptionOpaque</c> allocated on Rust side.
     /// </returns>
@@ -79,6 +81,7 @@ public partial class OptionOpaque: IDisposable
             return result == null ? null : new OptionOpaque(result);
         }
     }
+
     public nint? OptionIsize()
     {
         unsafe
@@ -92,6 +95,7 @@ public partial class OptionOpaque: IDisposable
             return result.IsSome ? result.Value : (nint?)null;
         }
     }
+
     public nuint? OptionUsize()
     {
         unsafe
@@ -105,6 +109,7 @@ public partial class OptionOpaque: IDisposable
             return result.IsSome ? result.Value : (nuint?)null;
         }
     }
+
     public int? OptionI32()
     {
         unsafe
@@ -118,6 +123,7 @@ public partial class OptionOpaque: IDisposable
             return result.IsSome ? result.Value : (int?)null;
         }
     }
+
     public uint? OptionU32()
     {
         unsafe
@@ -131,6 +137,7 @@ public partial class OptionOpaque: IDisposable
             return result.IsSome ? result.Value : (uint?)null;
         }
     }
+
     public void AssertInteger(int i)
     {
         unsafe
@@ -143,6 +150,7 @@ public partial class OptionOpaque: IDisposable
             GC.KeepAlive(this);
         }
     }
+
     public static bool OptionOpaqueArgument(OptionOpaque? arg)
     {
         unsafe

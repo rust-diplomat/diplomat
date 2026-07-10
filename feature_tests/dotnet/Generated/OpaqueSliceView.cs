@@ -57,6 +57,7 @@ public partial class OpaqueSliceView: IDisposable
         _inner = inner;
         _edges = edges;
     }
+
     /// <exception cref="SliceParseErrorException"></exception>
     /// <returns>
     /// A <c>OpaqueSliceView</c> allocated on Rust side.
@@ -89,6 +90,7 @@ public partial class OpaqueSliceView: IDisposable
             }
         }
     }
+
     /// <exception cref="SliceParseErrorException"></exception>
     /// <returns>
     /// A <c>OpaqueSliceView</c> allocated on Rust side.
@@ -121,6 +123,7 @@ public partial class OpaqueSliceView: IDisposable
             }
         }
     }
+
     /// <returns>
     /// A <c>OpaqueSliceView</c> allocated on Rust side.
     /// </returns>
@@ -148,6 +151,7 @@ public partial class OpaqueSliceView: IDisposable
             }
         }
     }
+
     public uint Length()
     {
         unsafe
@@ -161,6 +165,7 @@ public partial class OpaqueSliceView: IDisposable
             return result;
         }
     }
+
     public byte Get(uint index)
     {
         unsafe
@@ -174,6 +179,7 @@ public partial class OpaqueSliceView: IDisposable
             return result;
         }
     }
+
     public uint Sum()
     {
         unsafe
