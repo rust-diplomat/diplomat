@@ -1564,9 +1564,7 @@ mod test {
         );
     }
 
-    // Regression guard: `owned_byte_slice_returns` gates the RETURN position only.
-    // Splitting it from `owned_slices` was the whole point (see DECISIONS.md) —
-    // an owned slice *parameter* must stay rejected exactly as before.
+    // This guards the return-only capability from enabling owned slice parameters.
     #[test]
     fn owned_byte_slice_parameter_is_still_rejected() {
         let tk_stream = quote! {
