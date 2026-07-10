@@ -1,4 +1,4 @@
-#![cfg_attr(not(any(target_arch = "wasm32")), no_std)]
+#![no_std]
 
 //! The [Diplomat](https://rust-diplomat.github.io/diplomat/) runtime crate.
 //!
