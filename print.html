@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c1a267c1.js";
+            window.path_to_searchindex_js = "searchindex-9cd96bb7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-8f37a71e.js"></script>
+        <script src="toc-9d6e84c7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,10 +194,11 @@
 </ul>
 </li>
 <li>Dart</li>
+<li><a href="#net-backend">.NET (C#)</a></li>
 <li><a href="#kotlin-backend">Kotlin (using JNA)</a></li>
 <li>Python via <a href="https://github.com/wjakob/nanobind">Nanobind</a> (maintained by <a href="https://www.zeromatter.com/">Zeromatter</a>)</li>
 </ul>
-<p>There is work in progress for a <a href="https://github.com/rust-diplomat/diplomat/issues/144">Java backend</a> (using Panama). We used to have a .NET backend but it was removed in a refactor, it may get added again.</p>
+<p>There is work in progress for a <a href="https://github.com/rust-diplomat/diplomat/issues/144">Java backend</a> (using Panama).</p>
 <p>We’re happy to fix bugs or add configurability in the current backends if their produced output does not match what you need in your language. Details on how to write new backends is documented <a href="#how-to-set-up-a-minimal-backend">later in this book</a>: you can do so as a third party library depending on <code>diplomat_core</code>, but we are also happy to accept these into Diplomat with the understanding that we’ll only do minimal work to keep them working over time.</p>
 <h2 id="setup"><a class="header" href="#setup">Setup</a></h2>
 <p>To install the <code>diplomat</code> CLI tool, run</p>
@@ -1976,6 +1977,7 @@ mod ffi {
 <p>The different backends have specific considerations or configurations. Check below
 to see what is necessary. Documentation for more backends will be added in the future.</p>
 <ul>
+<li><a href="#net-backend">.NET</a></li>
 <li><a href="#kotlin-backend">Kotlin</a></li>
 <li><a href="#nanobind-backend">Nanobind</a></li>
 </ul>
@@ -2617,8 +2619,170 @@ SomeStruct_takes_mut(ffiFriendly);
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="demo_gen-backend"><a class="header" href="#demo_gen-backend">demo_gen Backend</a></h1>
+<h1 id="net-backend"><a class="header" href="#net-backend">.NET Backend</a></h1>
+<p>The .NET backend wraps Diplomat’s C ABI in a C# library, generating two layers per type:
+a <code>Raw</code> layer of <code>[LibraryImport]</code> P/Invoke declarations and unsafe pointer types, and an
+idiomatic layer of safe, GC-friendly classes built on top of it. Consumers only interact
+with the idiomatic layer.</p>
+<p>To run the .NET backend you need to provide some configuration:</p>
+<pre><code class="language-sh">diplomat-tool -e {PATH_TO_LIB.RS} -c {CONFIG_FILE} --config {CONFIG_OVERRIDE_1} dotnet {OUTPUT_PATH}
+</code></pre>
+<p>The configuration consists of these options:</p>
+<ul>
+<li><code>namespace</code> - the root .NET namespace for the generated bindings (e.g. <code>Icu4x</code>). Defaults
+to the crate’s <code>lib_name</code>, upper-camel-cased.</li>
+<li><code>dylib_name</code> (or <code>native_lib</code>) - the native library name passed to <code>LibraryImport</code>.
+Defaults to the crate’s <code>lib_name</code>.</li>
+<li><code>exception_trim_suffix</code> (or <code>exceptions.trim_suffix</code>) - suffix trimmed when deriving
+exception class names from error types, e.g. trimming <code>Error</code> so <code>FooError</code> becomes
+<code>FooException</code>.</li>
+<li><code>exception_message_method</code> (or <code>exceptions.error_message_method</code>) - the method on an
+error type used to populate the generated exception’s message, e.g. <code>ToDisplay</code>.</li>
+<li><code>getters_prefix</code> (or <code>properties.getters_prefix</code>) - prefix identifying property getters,
+e.g. <code>get_</code>.</li>
+<li><code>setters_prefix</code> (or <code>properties.setters_prefix</code>) - prefix identifying property setters,
+e.g. <code>set_</code>.</li>
+<li><code>scaffold</code> - an optional binary value. If set to <code>true</code>, <code>diplomat-tool</code> will emit a
+<code>.csproj</code> scaffold next to the generated sources.</li>
+</ul>
+<h2 id="ownership-and-memory-safety"><a class="header" href="#ownership-and-memory-safety">Ownership and memory safety</a></h2>
+<p>Every opaque type is backed by a <code>RustHandle&lt;T&gt;</code> rather than a bare pointer. A handle
+remembers who owns the underlying memory: an <strong>owned</strong> handle carries the Rust destructor
+and runs it on release; a <strong>borrowed</strong> handle carries none, so releasing it is a no-op
+because Rust still owns (and will free) that memory. This means methods returning <code>&amp;T</code> or
+<code>Option&lt;&amp;T&gt;</code> are safe to wrap without risking a double-free.</p>
+<p>Borrowed returns also carry a <code>_edges</code> array on the object rooting whatever it borrowed
+from, so the GC can’t collect the source object out from under a still-live borrowed
+reference. <code>object[] _edges</code> is <code>Array.Empty&lt;object&gt;()</code> (no allocation) when a type has
+no lifetime-carrying returns.</p>
+<p>Consumers are not required to call <code>Dispose()</code>; a finalizer is the documented last-resort
+cleanup path for owned handles. Native calls are followed by <code>GC.KeepAlive(this)</code> to
+prevent the finalizer from running mid-call and freeing memory a P/Invoke is still using.</p>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<p>The best way to learn to use the .NET backend is to first understand Diplomat generally
+by reading this <a href="SUMMARY.html">book</a>. Then look at the <code>example</code> and <code>feature_tests</code>
+directories in the Diplomat project.</p>
+<ul>
+<li>Feature tests: <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/feature_tests/dotnet/Tests">.NET usage</a></li>
+<li>Example: <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/src/">rust source</a>, <a href="https://github.com/rust-diplomat/diplomat/tree/main/example/dotnet/Generated">.NET generated bindings</a></li>
+</ul>
 <h2 id="supports-3"><a class="header" href="#supports-3">Supports</a></h2>
+<ul>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Memory Sharing</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Non Exhaustive Structs</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> UTF16 Strings</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#default-value">Defaults</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#constructors">Constructors</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Named Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Fallible Constructors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#getters-and-setters">Getters/Setters</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Static Getters/Setters</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#stringifiers">Stringifiers</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#comparators">Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#partial-comparisons">Partial Comparators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#iterators-and-iterables">Iterators</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#marking-a-type-as-an-iterable">Iterables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#indexing">Indexers</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#arithmetic-operator-overloads">Arithmetic</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#option-types">Options</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#callbacks">Callbacks</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#traits">Traits</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Custom Errors</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Send</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Traits are Sync</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Generate Mocking Interface</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#primitive-structs">ABI Compatible Structs</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Mutable Struct References. See <a href="#references">References for more</a>.</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Free Functions</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#custom-extra-code">Custom Bindings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Owned Slices</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#default-arguments">Default Arguments</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> Mutable Slices (<code>&amp;mut [T]</code>)</p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="demo_gen-backend"><a class="header" href="#demo_gen-backend">demo_gen Backend</a></h1>
+<h2 id="supports-4"><a class="header" href="#supports-4">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
@@ -2734,7 +2898,7 @@ SomeStruct_takes_mut(ffiFriendly);
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="javascript-backend"><a class="header" href="#javascript-backend">Javascript Backend</a></h1>
-<h2 id="supports-4"><a class="header" href="#supports-4">Supports</a></h2>
+<h2 id="supports-5"><a class="header" href="#supports-5">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
@@ -2900,7 +3064,7 @@ If you choose <code>scaffold</code> then it will also generate a couple of confi
 ├── build.gradle.kts
 ├── setttings.gradle.kts
 </code></pre>
-<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
 <p>The best way to learn to use the kotlin backend is first understand diplomat generally by reading this <a href="SUMMARY.html">book</a>.
 Then look at the <code>example</code> and <code>feature_tests</code> directories in the diplomat project. Then you can look at the tests
 for how to use them</p>
@@ -2918,7 +3082,7 @@ so here some specific examples</p>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/main/kotlin/dev/diplomattest/somelib/CallbackWrapper.kt">generated kotlin code</a></li>
 <li><a href="https://github.com/rust-diplomat/diplomat/blob/main/feature_tests/kotlin/somelib/src/test/kotlin/dev/diplomattest/somelib/CallbackWrapperTest.kt">example usage</a></li>
 </ul>
-<h2 id="supports-5"><a class="header" href="#supports-5">Supports</a></h2>
+<h2 id="supports-6"><a class="header" href="#supports-6">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#namespacing">Namespaces</a></p>
@@ -3173,7 +3337,7 @@ somelib.run_callback(lambda: pass)
 <p>To get around this, for any functions which may be long running and asynchronous, you will want to use <a href="#custom-extra-code">Custom Extra Code</a> to mark a method with the <a href="https://nanobind.readthedocs.io/en/latest/api_core.html#gil-management"><code>nb::call_guard&lt;nb::gil_scoped_release&gt;</code></a> attribute. With this attribute present, Nanobind will call <a href="https://docs.python.org/3/c-api/threads.html#c.PyEval_SaveThread">PyEval_SaveThread</a> at the start of the bound method, and will call <a href="https://docs.python.org/3/c-api/threads.html#c.PyEval_RestoreThread">PyEval_RestoreThread</a> when the bound method has finished executing.</p>
 <p>Asynchronous methods through Nanobind currently require configuration through <code>custom_extra_code</code> as Diplomat currently makes no guarantees about the consequences of releasing the GIL when calling into asynchronous Rust. It is up to you to ensure correctness.</p>
 <p>See <a href="https://github.com/rust-diplomat/diplomat/issues/1196">https://github.com/rust-diplomat/diplomat/issues/1196</a> for more.</p>
-<h2 id="supports-6"><a class="header" href="#supports-6">Supports</a></h2>
+<h2 id="supports-7"><a class="header" href="#supports-7">Supports</a></h2>
 <ul>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#namespacing">Namespaces</a></p>
