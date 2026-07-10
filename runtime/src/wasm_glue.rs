@@ -6,7 +6,7 @@
 #[cfg(debug_assertions)]
 extern crate std;
 #[cfg(debug_assertions)]
-use alloc::{ boxed::Box, string::String };
+use alloc::{boxed::Box, string::String};
 
 // https://blog.rust-lang.org/2026/04/04/changes-to-webassembly-targets-and-handling-undefined-symbols/#what-is-going-to-break-and-how-to-fix
 #[link(wasm_import_module = "env")]
