@@ -63,10 +63,10 @@ jobs:
     - uses: actions-rust-lang/setup-rust-toolchain@v1
 
     - name: Install MSRV Rust
-      run: rustup install 1.81 --profile minimal
+      run: rustup install 1.88 --profile minimal
 
     - name: Check
-      run: cargo +1.81 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
+      run: cargo +1.88 check -p diplomat -p diplomat-runtime -p diplomat_core --verbose
 
   gen:
     runs-on: ubuntu-latest
