@@ -20,10 +20,10 @@ int main(int argc, char* argv[]) {
 
     static_assert(std::is_same_v<diplomat::as_ffi_t<ns::RenamedOpaqueArithmetic>, ns::capi::RenamedOpaqueArithmetic*>);
 
-    std::unique_ptr<Opaque> o = Opaque::new_();
+    Opaque o = Opaque::new_();
     MyStruct s = MyStruct::new_();
 
-    o->assert_struct(s);
+    o.assert_struct(s);
 
     simple_assert_eq("struct values", s.a, 17);
     simple_assert_eq("struct values", s.b, true);
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     BigStructWithStuff::assert_slice(in, 4);
 
     auto primitive_vec = PrimitiveStructVec::new_();
-    primitive_vec->push({
+    primitive_vec.push({
             .x = 1.0f,
             .a = true,
             .b = 'a',
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
             .d = 0,
             .e = 0
         });
-    primitive_vec->push({
+    primitive_vec.push({
         .x = 2.0f,
         .a = false,
         .b = '\0',
@@ -96,15 +96,15 @@ int main(int argc, char* argv[]) {
         .d = 0,
         .e = 0
     });
-    primitive_vec->push({.x = -1.0f});
+    primitive_vec.push({.x = -1.0f});
 
-    PrimitiveStruct::mutable_slice(primitive_vec->as_slice_mut());
-    simple_assert_eq("primitiveArr cumulative sum", primitive_vec->get(2).value().x, 2.0f);
-    simple_assert_eq("primitiveArr alternating bool", primitive_vec->get(0).value().a, false);
-    simple_assert_eq("primitiveArr alternating bool 2", primitive_vec->get(1).value().a, true);
-    simple_assert_eq("primitiveArr DiplomatChar", (int)primitive_vec->get(2).value().b, 2);
-    simple_assert_eq("primitiveArr isize", primitive_vec->get(0).value().d, 101);
-    simple_assert_eq("primitiveArr DiplomatByte", primitive_vec->get(1).value().e, 3);
+    PrimitiveStruct::mutable_slice(primitive_vec.as_slice_mut());
+    simple_assert_eq("primitiveArr cumulative sum", primitive_vec.get(2).value().x, 2.0f);
+    simple_assert_eq("primitiveArr alternating bool", primitive_vec.get(0).value().a, false);
+    simple_assert_eq("primitiveArr alternating bool 2", primitive_vec.get(1).value().a, true);
+    simple_assert_eq("primitiveArr DiplomatChar", (int)primitive_vec.get(2).value().b, 2);
+    simple_assert_eq("primitiveArr isize", primitive_vec.get(0).value().d, 101);
+    simple_assert_eq("primitiveArr DiplomatByte", primitive_vec.get(1).value().e, 3);
 
     CyclicStructA cyclic_arr[] {
         {
@@ -162,26 +162,26 @@ int main(int argc, char* argv[]) {
     auto op_one = Opaque::new_();
     auto op_two = OpaqueMut::new_();
 
-    StructOfOpaque mut_struct_opaque = StructOfOpaque {op_one.get(), op_two.get()};
+    StructOfOpaque mut_struct_opaque = StructOfOpaque {op_one.as_ref(), op_two.as_mut_ref()};
 
     simple_assert_eq("Mutable Struct Opaque Ref Before", mut_struct_opaque.i->get_debug_str(), "\"\"");
 
     auto op_three = Opaque::from_str("String").ok().value();
 
-    mut_struct_opaque.take_in(*op_three);
+    mut_struct_opaque.take_in(op_three);
     simple_assert_eq("Mutable Struct Opaque Ref After", mut_struct_opaque.i->get_debug_str(), "\"String\"");
 
-    ImmutableStructOfOpaque immut_struct_opaque = ImmutableStructOfOpaque { *op_three.get() };
+    ImmutableStructOfOpaque immut_struct_opaque = ImmutableStructOfOpaque { op_three.as_ref() };
     simple_assert_eq("Immutable Struct Ref", immut_struct_opaque.take_in(), "\"String\"");
     auto tuple_out = OutTupleStruct::new_();
     simple_assert_eq("Tuple getter", std::get<0>(tuple_out), 0);
     simple_assert_eq("Tuple getter inner struct", std::get<2>(tuple_out).a, true);
 
     auto opaque_ref = Opaque::new_();
-    auto tuple_in = std::tuple<int32_t, int32_t, MyStruct, const Opaque&>{10, 0, struct_ref_one, *opaque_ref.get()};
+    auto tuple_in = std::tuple<int32_t, int32_t, MyStruct, OpaqueRef>{10, 0, struct_ref_one, opaque_ref.as_ref()};
     simple_assert_eq("Tuple input", TupleStruct::takes_st_as_tuple(tuple_in), 10);
 
-    auto containing_tuple = std::tuple<std::tuple<int32_t, int32_t, MyStruct, const Opaque&>>{tuple_in};
+    auto containing_tuple = std::tuple<std::tuple<int32_t, int32_t, MyStruct, OpaqueRef>>{tuple_in};
     simple_assert_eq("Tuple containing input", (uint32_t)TupleStruct::takes_containing(containing_tuple), (uint32_t)'A');
 
 }
