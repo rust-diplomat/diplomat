@@ -89,6 +89,358 @@ template<> struct WriteTrait<std::string> {
   }
 };
 
+template <typename T, typename CPtr> class Ref;
+template <typename T, typename Enable = void> class Optional;
+
+/// CRTP base class for generated opaque wrapper classes (`class Foo : public
+/// OpaquePointer<Foo, capi::Foo, capi::Foo_destroy>`). Holds the single owned pointer and
+/// implements the ctor/dtor/move/AsFFI/FromFFI boilerplate once instead of once per opaque type.
+///
+/// `T` must add no data members of its own: its entire layout must stay exactly one `CPtr*` (no
+/// virtual functions either), since `Ref` below reinterpret_casts its own pointer-sized storage
+/// as a `T`/`const T` to give borrowed access without ever constructing or destroying a `T`
+/// through that cast.
+template <typename T, typename CPtr, void (*Destructor)(CPtr*)>
+class OpaquePointer {
+public:
+    inline const CPtr* AsFFI() const { return ptr_; }
+    inline CPtr* AsFFI() { return ptr_; }
+    inline static T FromFFI(CPtr* ptr) {
+        T result{};
+        result.ptr_ = ptr;
+        return result;
+    }
+
+    inline ~OpaquePointer() {
+        if (ptr_) {
+            Destructor(ptr_);
+        }
+    }
+    OpaquePointer(const OpaquePointer&) = delete;
+    OpaquePointer& operator=(const OpaquePointer&) = delete;
+    inline OpaquePointer(OpaquePointer&& old) noexcept : ptr_(old.ptr_) {
+        old.ptr_ = nullptr;
+    }
+    inline OpaquePointer& operator=(OpaquePointer&& old) noexcept {
+        if (this == &old) {
+            return *this;
+        }
+        if (ptr_) {
+            Destructor(ptr_);
+        }
+        ptr_ = old.ptr_;
+        old.ptr_ = nullptr;
+        return *this;
+    }
+
+    inline explicit operator bool() const { return ptr_ != nullptr; }
+
+    /// Releases ownership of the underlying pointer without destroying it -- the caller becomes
+    /// responsible for it (e.g. by round-tripping it through `FromFFI` again later). Used by the
+    /// owning specialization of `Optional<T>` to take ownership from a live `T` without
+    /// double-freeing when the original `T` goes out of scope.
+    inline CPtr* release() {
+        CPtr* p = ptr_;
+        ptr_ = nullptr;
+        return p;
+    }
+
+    /// A non-owning, trivially-copyable, immutable view of this object -- safe to store (e.g. in
+    /// a struct field), unlike a raw `const T&`, since it doesn't dangle when reassigned.
+    inline Ref<T, const CPtr> as_ref() const {
+        return Ref<T, const CPtr>::FromFFI(AsFFI());
+    }
+    /// As `as_ref`, but mutable.
+    inline Ref<T, CPtr> as_mut_ref() {
+        return Ref<T, CPtr>::FromFFI(AsFFI());
+    }
+protected:
+    OpaquePointer() = default;
+private:
+    CPtr* ptr_{nullptr};
+    friend T;
+};
+
+/// A non-owning, trivially-copyable reference to a `T` (an `OpaquePointer`-derived opaque
+/// wrapper). Used where a real `T&`/`const T&` can't be: struct fields, and anywhere else that
+/// needs to store and reassign a borrow rather than just pass it through a call.
+///
+/// Mutability is encoded by `CPtr` itself rather than by a separate class: `Ref<Foo, const
+/// capi::Foo>` (aliased as `FooRef`) is immutable, `Ref<Foo, capi::Foo>` (aliased as `FooRefMut`)
+/// is mutable. Always go through those generated aliases rather than spelling this out directly
+/// -- a bare `Ref<Foo, capi::Foo>` means *mutable* here, since it's `CPtr`'s own qualification
+/// being read, not a hardcoded choice.
+///
+/// Safe for the same reason `OpaquePointer::as_ref`/`as_mut_ref` are: `T`'s entire layout is one
+/// `CPtr*`, bit-identical to this class's own storage, so reinterpreting `&ptr_` as a
+/// `ValueType*` never constructs or destroys a `T` -- it just reuses the layout to call methods
+/// through the existing bits.
+template <typename T, typename CPtr>
+class Ref {
+public:
+    using CType = CPtr;
+    using ValueType = std::conditional_t<std::is_const_v<CPtr>, const T, T>;
+
+    inline CPtr* AsFFI() const { return ptr_; }
+    inline static Ref FromFFI(CPtr* ptr) {
+        Ref r;
+        r.ptr_ = ptr;
+        return r;
+    }
+
+    inline ValueType& get() { return *reinterpret_cast<ValueType*>(&ptr_); }
+    inline ValueType& operator*() { return get(); }
+    inline ValueType* operator->() { return &get(); }
+    inline operator ValueType&() { return get(); }
+private:
+    Ref() = default;
+    CPtr* ptr_{nullptr};
+};
+
+/// Detects "T behaves like an ABI pointer wrapper" (a generated opaque class `Foo`, or `Ref<T,
+/// CPtr>`) -- i.e. anything whose `AsFFI()` returns a raw C pointer, as opposed to a
+/// primitive/struct/enum whose `AsFFI()` (if it has one at all) returns a value type. This is
+/// what lets `Optional<T>` niche-optimize to a single pointer (`nullptr` = empty) for such `T`,
+/// the C++ analogue of Rust's `Option<&T>`/`Option<Box<T>>` niche optimizations, instead of
+/// falling back to a `std::optional<T>`-shaped "value plus presence flag" representation.
+template <typename T, typename = void>
+struct is_pointer_like : std::false_type {};
+template <typename T>
+struct is_pointer_like<T, std::void_t<decltype(sizeof(T)),
+                          std::enable_if_t<std::is_pointer_v<decltype(std::declval<T>().AsFFI())>>>>
+  : std::true_type {};
+template <typename T>
+constexpr bool is_pointer_like_v = is_pointer_like<T>::value;
+
+/// The `Ref`/opaque-aware equivalent of `std::optional<T>`, used everywhere `std::optional<T>`
+/// would otherwise appear in generated signatures (return types, struct fields, callback
+/// params/returns). Dispatches on `T`'s shape via the two partial specializations below:
+///
+/// - Pointer-like `T` (a generated opaque wrapper `Foo`, or `Ref<Foo, CPtr>`/`FooRef`/`FooRefMut`)
+///   niche-optimizes to a single pointer, `nullptr` meaning empty -- the C++ analogue of Rust's
+///   `Option<Box<T>>`/`Option<&T>`. This matters beyond just avoiding a wasted flag byte: a plain
+///   `std::optional<Ref<T, CPtr>>` isn't guaranteed to be the same size as a raw `CPtr*` (the
+///   discriminant flag typically doubles it), which would break the reinterpret_cast trick slices
+///   (and struct fields, and callback signatures) rely on.
+/// - Everything else (primitives, structs, enums, strings, ...) falls back to wrapping a real
+///   `std::optional<T>`, since the C ABI needs an explicit presence flag for these regardless.
+///
+/// This primary template is that fallback; see the specializations below it for the pointer-like
+/// cases.
+template <typename T, typename Enable>
+class Optional {
+    std::optional<T> inner_;
+public:
+    using value_type = T;
+
+    // All converting constructors are `explicit`, deliberately unlike `std::optional`: we want
+    // constructing an `Optional<T>` (present or absent) to always be a visible, intentional act at
+    // the call site, closer to Rust's `Some(x)`/`None` than to `std::optional`'s pervasive
+    // implicit conversions.
+    inline explicit Optional() = default;
+    inline explicit Optional(std::nullopt_t) noexcept {}
+    // Templated (rather than a plain `Optional(T value)`) for the same reason
+    // `std::optional<T>`'s own converting constructor is templated: it lets a single
+    // user-defined conversion (e.g. an enum-wrapper class's own converting constructor from its
+    // raw enum literal type) still apply when initializing an `Optional<T>` -- a non-templated
+    // `Optional(T)` parameter would need a *second*, disallowed user-defined conversion on top of
+    // that to reach `T` first. Still explicit -- templated-ness and explicit-ness are orthogonal;
+    // this only affects whether *this* constructor can fire without being spelled out, not what
+    // conversions can happen to reach `T` once it's invoked.
+    template <typename U = T, typename = std::enable_if_t<
+        std::is_constructible_v<T, U&&> &&
+        !std::is_same_v<std::decay_t<U>, Optional> &&
+        !std::is_same_v<std::decay_t<U>, std::nullopt_t>>>
+    inline explicit Optional(U&& value) : inner_(std::forward<U>(value)) {}
+
+    inline explicit operator bool() const { return inner_.has_value(); }
+    inline bool has_value() const { return inner_.has_value(); }
+
+    inline void reset() { inner_.reset(); }
+    inline void emplace(T value) { inner_.emplace(std::move(value)); }
+
+    inline T& get() { return *inner_; }
+    inline const T& get() const { return *inner_; }
+    inline T& operator*() { return get(); }
+    inline const T& operator*() const { return get(); }
+    inline T* operator->() { return &get(); }
+    inline const T* operator->() const { return &get(); }
+    // Ref-qualified like `std::optional::value()`, so `Result::ok().value()`-style chains (`ok()`
+    // returns an `Optional<T>` temporary) move out of the temporary instead of trying to copy
+    // from it -- important since `T` here can be move-only.
+    inline T& value() & { return get(); }
+    inline const T& value() const & { return get(); }
+    inline T&& value() && { return std::move(get()); }
+};
+
+// Lets `Optional<T> == nullptr`-style presence checks work for any specialization (e.g. the
+// generated `__getitem__` bindings do this for `Optional<Ref<...>>`) -- `get()` isn't comparable
+// to `nullptr` there, so this only ever checks presence, same as `std::optional == nullopt`.
+template <typename T, typename Enable>
+inline bool operator==(const Optional<T, Enable>& opt, std::nullptr_t) {
+    return !opt.has_value();
+}
+template <typename T, typename Enable>
+inline bool operator==(std::nullptr_t, const Optional<T, Enable>& opt) {
+    return !opt.has_value();
+}
+
+// Lets `Optional<T> == someT`-style comparisons work, matching `std::optional`'s own comparison
+// support -- used e.g. when comparing a struct field of `Optional<PrimitiveOrEnum>` against a
+// raw value in test code.
+template <typename T, typename Enable, typename U>
+inline bool operator==(const Optional<T, Enable>& opt, const U& value) {
+    return opt.has_value() && opt.get() == value;
+}
+template <typename T, typename Enable, typename U>
+inline bool operator==(const U& value, const Optional<T, Enable>& opt) {
+    return opt == value;
+}
+
+/// Non-owning, pointer-like, copyable `T` (`Ref<Foo, CPtr>`, i.e. `FooRef`/`FooRefMut`) -- stores
+/// only the one pointer (reinterpret_cast, same trick as `Ref` itself), `nullptr` meaning empty.
+/// No destructor/move-only machinery needed since `T` itself never owns anything.
+///
+/// `value_type` is `T::ValueType` (i.e. the wrapped opaque type, `Foo`/`const Foo`), not `T`
+/// itself, so that language bindings which already know how to convert `Foo`/`std::optional<Foo>`
+/// (e.g. nanobind's `optional_caster`, generic over anything shaped like `std::optional`) can
+/// reuse that existing support instead of needing separate knowledge of `Ref`/`Optional<Ref<>>`
+/// -- see the nanobind `type_caster` for this case in `common.h.jinja`.
+template <typename T>
+class Optional<T, std::enable_if_t<is_pointer_like_v<T> && std::is_copy_constructible_v<T>>> {
+    using CPtr = typename T::CType;
+    using ValueType = typename T::ValueType;
+public:
+    using value_type = ValueType;
+
+    // All converting constructors are `explicit` -- see the primary template's constructors for
+    // why. For this specialization specifically: a bare `FooRef`/`FooRefMut` shouldn't be able to
+    // silently become "always present" wherever an `Optional<FooRef>` is expected -- callers
+    // should say `Optional(ref)`/`Optional<FooRef>(ref)` and mean it.
+    inline explicit Optional() = default;
+    inline explicit Optional(std::nullopt_t) noexcept {}
+    inline explicit Optional(T ref) noexcept : ptr_(ref.AsFFI()) {}
+
+    inline explicit operator bool() const { return ptr_ != nullptr; }
+    inline bool has_value() const { return ptr_ != nullptr; }
+
+    inline void reset() { ptr_ = nullptr; }
+    inline void emplace(T ref) { ptr_ = ref.AsFFI(); }
+    // Overload used by nanobind's optional_caster, which emplaces directly from a `ValueType&`
+    // (the already-registered `Foo` class), not a `Ref` -- see `value_type` above.
+    inline void emplace(ValueType& value) { ptr_ = value.AsFFI(); }
+
+    inline ValueType& get() { return *reinterpret_cast<ValueType*>(&ptr_); }
+    inline ValueType& get() const { return *reinterpret_cast<ValueType*>(const_cast<CPtr**>(&ptr_)); }
+    inline ValueType& operator*() { return get(); }
+    inline ValueType& operator*() const { return get(); }
+    inline ValueType* operator->() { return &get(); }
+    inline ValueType* operator->() const { return &get(); }
+    // Ref-qualified like `std::optional::value()` -- see the primary template's `value()` for why.
+    inline ValueType& value() & { return get(); }
+    inline ValueType&& value() && { return std::move(get()); }
+
+    inline CPtr* AsFFI() const { return ptr_; }
+    inline static Optional FromFFI(CPtr* ptr) {
+        Optional o;
+        o.ptr_ = ptr;
+        return o;
+    }
+private:
+    CPtr* ptr_{nullptr};
+};
+
+/// Owning, pointer-like, move-only `T` (a generated opaque wrapper class `Foo`) -- the ABI
+/// representation (a single nullable `CPtr*`) already matches Rust's `Option<Box<T>>` niche
+/// optimization, so this stores just that one pointer and constructs/destroys the wrapped `Foo`
+/// on demand (via `T::FromFFI`/`T`'s own destructor), exactly as `OpaquePointer` itself does,
+/// rather than adding a separate `std::optional`-style presence flag.
+template <typename T>
+class Optional<T, std::enable_if_t<is_pointer_like_v<T> && !std::is_copy_constructible_v<T>>> {
+    using CPtr = std::remove_pointer_t<decltype(std::declval<T>().AsFFI())>;
+public:
+    using value_type = T;
+
+    // All converting constructors are `explicit` -- see the primary template's constructors for
+    // why.
+    inline explicit Optional() = default;
+    inline explicit Optional(std::nullopt_t) noexcept {}
+    inline explicit Optional(T value) noexcept : ptr_(value.release()) {}
+
+    inline ~Optional() { reset(); }
+    Optional(const Optional&) = delete;
+    Optional& operator=(const Optional&) = delete;
+    inline Optional(Optional&& old) noexcept : ptr_(old.ptr_) { old.ptr_ = nullptr; }
+    inline Optional& operator=(Optional&& old) noexcept {
+        if (this == &old) {
+            return *this;
+        }
+        reset();
+        ptr_ = old.ptr_;
+        old.ptr_ = nullptr;
+        return *this;
+    }
+
+    inline explicit operator bool() const { return ptr_ != nullptr; }
+    inline bool has_value() const { return ptr_ != nullptr; }
+
+    inline void reset() {
+        if (ptr_) {
+            CPtr* p = ptr_;
+            ptr_ = nullptr;
+            T tmp = T::FromFFI(p);
+        }
+    }
+    inline void emplace(T value) {
+        reset();
+        ptr_ = value.release();
+    }
+
+    inline T& get() { return *reinterpret_cast<T*>(&ptr_); }
+    inline const T& get() const { return *reinterpret_cast<const T*>(&ptr_); }
+    inline T& operator*() { return get(); }
+    inline const T& operator*() const { return get(); }
+    inline T* operator->() { return &get(); }
+    inline const T* operator->() const { return &get(); }
+    // Ref-qualified like `std::optional::value()` -- important here specifically, since `T` is
+    // move-only: `Result::ok().value()`-style chains need to move the wrapped `T` out of the
+    // `Optional<T>` temporary `ok()` returns, not try to copy it.
+    inline T& value() & { return get(); }
+    inline T&& value() && { return std::move(get()); }
+
+    inline CPtr* AsFFI() const { return ptr_; }
+    inline static Optional FromFFI(CPtr* ptr) {
+        Optional o;
+        o.ptr_ = ptr;
+        return o;
+    }
+    // Mirrors `OpaquePointer::release()`: relinquishes ownership without destroying, so callers
+    // rebuilding a fresh owning value from this one's pointer (e.g. the nanobind ZST fix-up) don't
+    // also trigger this `Optional`'s own destructor on the same pointer.
+    inline CPtr* release() {
+        CPtr* p = ptr_;
+        ptr_ = nullptr;
+        return p;
+    }
+private:
+    CPtr* ptr_{nullptr};
+};
+
+// Deduction guide so `Optional(val)` (used in generated code the same way `std::optional(val)`
+// was before) resolves to the right `Optional<T>` regardless of which specialization backs it.
+template<typename T>
+Optional(T) -> Optional<T>;
+
+// Trait for extracting inner types from T*, std::optional, std::unique_ptr, Ref, or Optional.
+// These are the potential types returned by next() functions.
+template<typename T> struct inner { /* only T*, std::optional, std::unique_ptr, Ref, and Optional are supported */ };
+template<typename T> struct inner<T*> { using type = T; };
+template<typename T> struct inner<std::unique_ptr<T>> { using type = T; };
+template<typename T> struct inner<std::optional<T>>{ using type = T; };
+template<typename T, typename CPtr> struct inner<Ref<T, CPtr>> { using type = T; };
+template<typename T> struct inner<Optional<T>> { using type = T; };
+template<typename T, typename CPtr> struct inner<Optional<Ref<T, CPtr>>> { using type = T; };
+
 template<class T> struct Ok {
   T inner;
 
@@ -150,19 +502,19 @@ public:
   }
 
   template<typename U = T, typename std::enable_if_t<!std::is_reference_v<U>, std::nullptr_t> = nullptr>
-  std::optional<T> ok() && {
+  Optional<T> ok() && {
     if (!this->is_ok()) {
-      return std::nullopt;
+      return Optional<T>(std::nullopt);
     }
-    return std::make_optional(std::move(std::get<Ok<T>>(std::move(this->val)).inner));
+    return Optional<T>(std::move(std::get<Ok<T>>(std::move(this->val)).inner));
   }
 
   template<typename U = E, typename std::enable_if_t<!std::is_reference_v<U>, std::nullptr_t> = nullptr>
-  std::optional<E> err() && {
+  Optional<E> err() && {
     if (!this->is_err()) {
-      return std::nullopt;
+      return Optional<E>(std::nullopt);
     }
-    return std::make_optional(std::move(std::get<Err<E>>(std::move(this->val)).inner));
+    return Optional<E>(std::move(std::get<Err<E>>(std::move(this->val)).inner));
   }
 
   // std::optional does not work with reference types directly, so wrap them if present
@@ -315,8 +667,13 @@ struct as_ffi {
   using type = T;
 };
 
+// The `sizeof` check here is a completeness guard: a raw `capi::Foo*` (used for a borrowed
+// opaque callback arg/return) has an intentionally-incomplete pointee, and without this guard
+// `decltype(declval<capi::Foo>().AsFFI())` would be a hard compile error rather than a SFINAE
+// failure, since substitution only cleanly fails on ill-formed *dependent* expressions.
 template <typename T>
-struct as_ffi<T, std::void_t<decltype(std::declval<std::remove_pointer_t<T>>().AsFFI())>> {
+struct as_ffi<T, std::void_t<decltype(sizeof(std::remove_pointer_t<T>)),
+                              decltype(std::declval<std::remove_pointer_t<T>>().AsFFI())>> {
   using type = decltype(std::declval<std::remove_pointer_t<T>>().AsFFI());
 };
 
@@ -324,6 +681,11 @@ template <typename T>
 struct as_ffi<std::unique_ptr<T>> {
   using type = decltype(std::declval<T>().AsFFI());
 };
+
+// `Optional<Foo>`/`Optional<Ref<Foo, CPtr>>` (the pointer-like specializations) already have
+// their own `AsFFI()` returning a raw pointer, so the generic detector above picks them up
+// automatically -- no separate specialization needed here (unlike `std::optional<T>`, which never
+// has `AsFFI()` at all).
 
 template<typename T>
 using as_ffi_t = typename as_ffi<T>::type;
@@ -394,6 +756,11 @@ struct is_optional<std::optional<T>> {
 };
 
 template<typename T>
+struct is_optional<Optional<T>> {
+  static constexpr bool value = true;
+};
+
+template<typename T>
 constexpr bool is_optional_v = is_optional<T>::value;
 
 /// Replace the argument types from the std::function with the argument types for th function pointer
@@ -450,7 +817,7 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     }
 
     template<typename TOut, typename T>
-    static TOut replace_optional_ret(std::optional<T> optional) {
+    static TOut replace_optional_ret(Optional<T> optional) {
       constexpr bool has_ok = !std::is_same_v<T, std::monostate>;
 
       bool is_ok = optional.has_value();
@@ -481,7 +848,7 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       if constexpr (has_ok) {
         if (is_ok) {
           if constexpr (is_optional_v<T>) {
-            out.ok = replace_optional_ret<decltype(out.ok)>(std::get<Ok<T>>(res.val).inner);
+            out.ok = replace_optional_ret<decltype(out.ok)>(std::move(std::get<Ok<T>>(res.val).inner));
           } else {
             out.ok = replace_ret<T>(std::get<Ok<T>>(res.val).inner);
           }
@@ -491,7 +858,7 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
       if constexpr(has_err) {
         if (!is_ok) {
           if constexpr(is_optional_v<T>) {
-            out.err = replace_optional_ret<decltype(out.err)>(std::get<Err<E>>(res.val).inner);
+            out.err = replace_optional_ret<decltype(out.err)>(std::move(std::get<Err<E>>(res.val).inner));
           } else {
             out.err = replace_ret<E>(std::get<Err<E>>(res.val).inner);
           }
@@ -504,21 +871,20 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
     // For DiplomatOption<>
     template<typename T, typename TOut>
     static TOut c_run_callback_diplomat_option(const void *cb, replace_fn_t<Args>... args) {
-      std::optional<T> ret = c_run_callback(cb, args...);
+      Optional<T> ret = c_run_callback(cb, args...);
 
-      return replace_optional_ret<TOut>(ret);
+      return replace_optional_ret<TOut>(std::move(ret));
     }
 
-    // All we need to do is just convert one pointer to another, while keeping the arguments the same:
+    // `Ret` (the callback's actual C++-facing return type) can be an owned `Foo` (by value), a
+    // borrowed `Ref<Foo,CPtr>` (`FooRef`/`FooRefMut`), or already the raw ABI pointer --
+    // `replace_ret` already knows how to convert all three to `T` (the raw ABI pointer
+    // `replace_fn_t<Ret>`).
     template<typename T>
     static T c_run_callback_diplomat_opaque(const void* cb, replace_fn_t<Args>... args) {
       Ret out = c_run_callback(cb, args...);
 
-      if constexpr(std::is_pointer_v<Ret>) {
-        return out->AsFFI();
-      } else {
-        return out.AsFFI();
-      }
+      return replace_ret<Ret>(out);
     }
 
     static void c_delete(const void *cb) {
@@ -531,13 +897,6 @@ template <typename Ret, typename... Args> struct fn_traits<std::function<Ret(Arg
 // additional deduction guide required
 template<class T>
 fn_traits(T) -> fn_traits<T>;
-
-// Trait for extracting inner types from either T*, std::optional, or std::unique_ptr.
-// These are the three potential types returned by next() functions
-template<typename T> struct inner { /* only T*, std::optional, and std::unique_ptr are supported */ };
-template<typename T> struct inner<T*> { using type = T; };
-template<typename T> struct inner<std::unique_ptr<T>> { using type = T; };
-template<typename T> struct inner<std::optional<T>>{ using type = T; };
 
 template<typename T, typename U = typename inner<T>::type>
 inline const U get_inner_if_present(T v) {
@@ -553,7 +912,7 @@ template<typename T, typename U = void> struct has_next : std::false_type {};
 template<typename T> struct has_next < T, std::void_t<decltype(std::declval<T>().next())>> : std::true_type {};
 template<typename T> constexpr bool has_next_v = has_next<T>::value;
 
-/// Helper template enabling native iteration over unique ptrs to objects which implement next()
+/// Helper template enabling native iteration over owned objects which implement next()
 template<typename T>
 struct next_to_iter_helper {
   static_assert(has_next_v<T>, "next_to_iter_helper may only be used with types implementing next()");
@@ -565,14 +924,16 @@ struct next_to_iter_helper {
   using reference = std::add_lvalue_reference_t<value_type>;
   using iterator_category = std::input_iterator_tag;
 
-  next_to_iter_helper(std::unique_ptr<T>&& ptr) : _ptr(std::move(ptr)), _curr(_ptr->next()) {}
+  next_to_iter_helper(T&& ptr) : _ptr(std::make_shared<T>(std::move(ptr))), _curr(_ptr->next()) {}
 
   // https://en.cppreference.com/w/cpp/named_req/InputIterator requires that the type be copyable
   next_to_iter_helper(const next_to_iter_helper& o) : _ptr(o._ptr), _curr(o._curr) {}
 
   void operator++() { _curr = _ptr->next(); }
   void operator++(int) { ++(*this); }
-  const value_type& operator*() const { return *_curr; }
+  // Not `const`: `Ref::operator*()` (used when `next()` returns a borrowed opaque reference)
+  // isn't `const` either, for the same reason -- see its definition above.
+  const value_type& operator*() { return *_curr; }
 
   bool operator!=(std::nullopt_t) {
     return (bool)_curr;

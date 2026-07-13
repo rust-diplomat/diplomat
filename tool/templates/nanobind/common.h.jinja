@@ -200,6 +200,22 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
     };
 
+    // `diplomat::Optional<T>` is used everywhere `std::optional<T>` would otherwise appear in
+    // generated signatures (see runtime.hpp.jinja for why: it niche-optimizes pointer-like T --
+    // owned opaques and Ref<Foo, CPtr> -- to a single pointer instead of paying for a separate
+    // presence flag). Its API surface (`value_type`, `operator bool()`, `reset()`, `emplace()`,
+    // `operator*()`) intentionally mirrors `std::optional<T>`'s closely enough that nanobind's own
+    // `optional_caster` (normally used for `std::optional<T>`, but generic over any type shaped
+    // like it) works here unmodified -- so `Optional<Foo>`/`Optional<FooRef>` get exactly the same
+    // `Optional[...]` Python typing and `None`/value conversion as `std::optional<Foo>` would,
+    // with no separate caster logic to maintain. For the pointer-like specializations,
+    // `Optional<T>::value_type` is deliberately the wrapped opaque type itself (`Foo`/`const Foo`),
+    // not `Ref<Foo, CPtr>`, so this reuses `Foo`'s own already-registered `nb::class_<Foo>` caster
+    // rather than needing separate knowledge of `Ref`.
+    template <typename T>
+    struct type_caster<{{lib_name}}::diplomat::Optional<T>>
+        : optional_caster<{{lib_name}}::diplomat::Optional<T>> {};
+
     template <typename T, std::size_t E>
     class type_caster<{{lib_name}}::diplomat::span<T, E>> {
         // The type referenced by the span, with const removed.

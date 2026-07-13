@@ -157,12 +157,13 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.fmt_type_name_maybe_namespaced(id.into())
     }
 
-    pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
-        self.c.fmt_ptr(ident, mutability)
-    }
-
+    /// Wraps `ident` in `diplomat::Optional<...>` -- our own `std::optional`-alike, used
+    /// everywhere a `T`/`Option<T>` boundary is generated (return types, struct fields, callback
+    /// params/returns). `Optional<T>` niche-optimizes to a single pointer for pointer-like `T`
+    /// (owned opaques `Foo`, borrowed `Ref<Foo, CPtr>`/`FooRef`/`FooRefMut`) and otherwise falls
+    /// back to wrapping a real `std::optional<T>` -- see its definition in `runtime.hpp.jinja`.
     pub fn fmt_optional(&self, ident: &str) -> String {
-        format!("std::optional<{ident}>")
+        format!("{}diplomat::Optional<{ident}>", self.lib_name_ns_prefix)
     }
 
     pub fn fmt_borrowed<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {
@@ -174,8 +175,21 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         }
     }
 
-    pub fn fmt_move_ref<'a>(&self, ident: &'a str) -> Cow<'a, str> {
-        format!("{ident}&&").into()
+    /// Formats a struct-field/callback borrow of an opaque type as `FooRef`/`FooRefMut` -- the
+    /// per-type aliases for `diplomat::Ref<Foo, const capi::Foo>`/`diplomat::Ref<Foo, capi::Foo>`
+    /// (mutability is encoded by the second argument's own const-qualification, see `Ref` in
+    /// `runtime.hpp.jinja`) that `opaque_decl.h.jinja` declares alongside every opaque class, so
+    /// call sites don't need to spell out the full `diplomat::Ref<...>` template instantiation.
+    /// `ident` must already be `Foo`'s fully-qualified name (e.g. from `fmt_type_name`) -- the
+    /// alias lives in the same namespace as `Foo` itself, so appending the suffix to the
+    /// qualified name is sufficient. See `OpaquePointer`/`Ref` in `runtime.hpp.jinja` for why
+    /// struct fields/callbacks need this instead of `fmt_borrowed`'s `Foo&`.
+    pub fn fmt_opaque_ref(&self, ident: &str, mutability: hir::Mutability) -> String {
+        if mutability.is_mutable() {
+            format!("{ident}RefMut")
+        } else {
+            format!("{ident}Ref")
+        }
     }
 
     pub fn fmt_optional_borrowed<'a>(

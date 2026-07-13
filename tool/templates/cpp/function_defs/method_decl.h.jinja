@@ -21,7 +21,8 @@
 {%- endif -%}
 
 {%- when Some(hir::SpecialMethod::Iterable) -%}
-{%- let helper_type = m.return_ty.replace("std::unique_ptr", &fmt.lib_prefixed_path("diplomat::next_to_iter_helper") ) %}
+{%- let helper_prefix = fmt.lib_prefixed_path("diplomat::next_to_iter_helper") -%}
+{%- let helper_type = helper_prefix.to_string() + "<" + m.return_ty.as_ref() + ">" %}
   inline {{helper_type}} begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 {%- when Some(hir::SpecialMethod::Comparison(false)) %}
