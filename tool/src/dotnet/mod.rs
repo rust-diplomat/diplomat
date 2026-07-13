@@ -531,11 +531,15 @@ mod test {
     /// For shapes rejected before a `TypeContext` even exists (HIR-lowering-time
     /// errors, e.g. an owned slice used in parameter/field position) — `new_tcx`
     /// panics on these, since every other test here expects a valid context.
-    fn lowering_errors(tk_stream: proc_macro2::TokenStream) -> Vec<String> {
+    fn lowering_errors(
+        tk_stream: proc_macro2::TokenStream,
+        owned_byte_slice_returns: bool,
+    ) -> Vec<String> {
         let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
 
         let mut attr_validator = BasicAttributeValidator::new("dotnet_test");
         attr_validator.support = super::attr_support();
+        attr_validator.support.owned_byte_slice_returns = owned_byte_slice_returns;
 
         match TypeContext::from_syn(
             &file,
@@ -1440,10 +1444,31 @@ mod test {
         );
     }
 
-    // `Box<[u32]>` is rejected at HIR-lowering time (before the .NET backend's
-    // own `lower_return` even runs): the new `owned_byte_slice_returns`-gated arm in
-    // `core::hir::lowering` only accepts `u8`/`DiplomatByte`, so anything else
-    // falls through to the pre-existing "owned slices cannot be returned" arm.
+    #[test]
+    fn owned_byte_slice_return_reports_unsupported_backend() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Box<[u8]> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, false);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("#[diplomat::cfg(supports = owned_byte_slice_returns)]"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
     #[test]
     fn owned_slice_return_of_non_u8_primitive_is_rejected() {
         let tk_stream = quote! {
@@ -1460,10 +1485,10 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream);
+        let errors = lowering_errors(tk_stream, true);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("Owned slices cannot be returned"),
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
             "unexpected diagnostic: {}",
             errors[0]
         );
@@ -1488,10 +1513,10 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream);
+        let errors = lowering_errors(tk_stream, true);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("Owned slices cannot be returned"),
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
             "unexpected diagnostic: {}",
             errors[0]
         );
@@ -1521,10 +1546,10 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream);
+        let errors = lowering_errors(tk_stream, true);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("Owned slices cannot be returned"),
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
             "unexpected diagnostic: {}",
             errors[0]
         );
@@ -1554,12 +1579,12 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream);
+        let errors = lowering_errors(tk_stream, true);
         assert!(
             !errors.is_empty()
                 && errors
                     .iter()
-                    .any(|e| e.contains("Owned slices cannot be returned")),
+                    .any(|e| e.contains("except for top-level `Box<[u8]>` method returns")),
             "unexpected diagnostics: {errors:?}"
         );
     }
@@ -1581,7 +1606,7 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream);
+        let errors = lowering_errors(tk_stream, true);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
             errors[0].contains("Owned slices are not supported in this backend"),

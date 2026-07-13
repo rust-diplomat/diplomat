@@ -1570,17 +1570,24 @@ impl<'ast> LoweringContext<'ast> {
             // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
             // shape an infallible return is converted to.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
-                if self
-                    .attr_validator
-                    .attrs_supported()
-                    .owned_byte_slice_returns
-                    && context == TypeLoweringContext::Method
+                if context == TypeLoweringContext::Method
                     && !in_result_option
                     && matches!(
                         PrimitiveType::from_ast(*prim),
                         PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
                     ) =>
             {
+                if !self
+                    .attr_validator
+                    .attrs_supported()
+                    .owned_byte_slice_returns
+                {
+                    self.errors.push(LoweringError::Other(
+                        "`Box<[u8]>` returns are not supported in this backend. Try #[diplomat::cfg(supports = owned_byte_slice_returns)] to restrict this API to supporting backends."
+                            .into(),
+                    ));
+                    return Err(());
+                }
                 Ok(OutType::Slice(Slice::Primitive(
                     MaybeOwn::Own,
                     PrimitiveType::from_ast(*prim),
@@ -1589,7 +1596,7 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::PrimitiveSlice(None, _, _stdlib)
             | ast::TypeName::StrReference(None, _, _stdlib) => {
                 self.errors.push(LoweringError::Other(
-                    "Owned slices cannot be returned".into(),
+                    "Owned slices cannot be returned, except for top-level `Box<[u8]>` method returns on backends supporting `owned_byte_slice_returns`.".into(),
                 ));
                 Err(())
             }
