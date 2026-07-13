@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "Opaque.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct Opaque; }
@@ -30,7 +31,7 @@ namespace capi {
 
 namespace somelib {
 struct ImmutableStructOfOpaque {
-    const somelib::Opaque& i;
+    somelib::OpaqueRef i;
 
   inline std::string take_in() const;
   template<typename W>

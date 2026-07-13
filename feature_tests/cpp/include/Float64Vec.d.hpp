@@ -25,26 +25,33 @@ namespace capi {
       const Float64Vec** data;
       size_t len;
     } DiplomatFloat64VecView;
+    extern "C" {
+    void Float64Vec_destroy(Float64Vec* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Float64Vec {
+class Float64Vec;
+using Float64VecRef = somelib::diplomat::Ref<Float64Vec, const somelib::capi::Float64Vec>;
+using Float64VecRefMut = somelib::diplomat::Ref<Float64Vec, somelib::capi::Float64Vec>;
+
+class Float64Vec : public somelib::diplomat::OpaquePointer<Float64Vec, somelib::capi::Float64Vec, somelib::capi::Float64Vec_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_(somelib::diplomat::span<const double> v);
+  inline static somelib::Float64Vec new_(somelib::diplomat::span<const double> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_bool(somelib::diplomat::span<const bool> v);
+  inline static somelib::Float64Vec new_bool(somelib::diplomat::span<const bool> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_i16(somelib::diplomat::span<const int16_t> v);
+  inline static somelib::Float64Vec new_i16(somelib::diplomat::span<const int16_t> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_u16(somelib::diplomat::span<const uint16_t> v);
+  inline static somelib::Float64Vec new_u16(somelib::diplomat::span<const uint16_t> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_isize(somelib::diplomat::span<const intptr_t> v);
+  inline static somelib::Float64Vec new_isize(somelib::diplomat::span<const intptr_t> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_usize(somelib::diplomat::span<const size_t> v);
+  inline static somelib::Float64Vec new_usize(somelib::diplomat::span<const size_t> v);
 
-  inline static std::unique_ptr<somelib::Float64Vec> new_f64_be_bytes(somelib::diplomat::span<const uint8_t> v);
+  inline static somelib::Float64Vec new_f64_be_bytes(somelib::diplomat::span<const uint8_t> v);
 
   inline somelib::diplomat::span<const double> as_slice() const DIPLOMAT_LIFETIME_BOUND;
 
@@ -58,20 +65,8 @@ public:
 
   inline somelib::diplomat::span<const double> borrow() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline std::optional<double> operator[](size_t i) const;
+  inline somelib::diplomat::Optional<double> operator[](size_t i) const;
 
-    inline const somelib::capi::Float64Vec* AsFFI() const;
-    inline somelib::capi::Float64Vec* AsFFI();
-    inline static const somelib::Float64Vec* FromFFI(const somelib::capi::Float64Vec* ptr);
-    inline static somelib::Float64Vec* FromFFI(somelib::capi::Float64Vec* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Float64Vec() = delete;
-    Float64Vec(const somelib::Float64Vec&) = delete;
-    Float64Vec(somelib::Float64Vec&&) noexcept = delete;
-    Float64Vec operator=(const somelib::Float64Vec&) = delete;
-    Float64Vec operator=(somelib::Float64Vec&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -41,15 +41,15 @@ inline somelib::MyStructContainingAnOption somelib::MyStructContainingAnOption::
 
 inline somelib::capi::MyStructContainingAnOption somelib::MyStructContainingAnOption::AsFFI() const {
     return somelib::capi::MyStructContainingAnOption {
-        /* .a = */ a.has_value() ? (somelib::capi::MyStruct_option{ { a.value().AsFFI() }, true }) : (somelib::capi::MyStruct_option{ {}, false }),
-        /* .b = */ b.has_value() ? (somelib::capi::DefaultEnum_option{ { b.value().AsFFI() }, true }) : (somelib::capi::DefaultEnum_option{ {}, false }),
+        /* .a = */ a.has_value() ? (somelib::capi::MyStruct_option{ { const_cast<somelib::diplomat::Optional<somelib::MyStruct>&>(a).value().AsFFI() }, true }) : (somelib::capi::MyStruct_option{ {}, false }),
+        /* .b = */ b.has_value() ? (somelib::capi::DefaultEnum_option{ { const_cast<somelib::diplomat::Optional<somelib::DefaultEnum>&>(b).value().AsFFI() }, true }) : (somelib::capi::DefaultEnum_option{ {}, false }),
     };
 }
 
 inline somelib::MyStructContainingAnOption somelib::MyStructContainingAnOption::FromFFI(somelib::capi::MyStructContainingAnOption c_struct) {
     return somelib::MyStructContainingAnOption {
-        /* .a = */ c_struct.a.is_ok ? std::optional(somelib::MyStruct::FromFFI(c_struct.a.ok)) : std::nullopt,
-        /* .b = */ c_struct.b.is_ok ? std::optional(somelib::DefaultEnum::FromFFI(c_struct.b.ok)) : std::nullopt,
+        /* .a = */ c_struct.a.is_ok ? somelib::diplomat::Optional(somelib::MyStruct::FromFFI(c_struct.a.ok)) : decltype(somelib::diplomat::Optional(somelib::MyStruct::FromFFI(c_struct.a.ok)))(std::nullopt),
+        /* .b = */ c_struct.b.is_ok ? somelib::diplomat::Optional(somelib::DefaultEnum::FromFFI(c_struct.b.ok)) : decltype(somelib::diplomat::Optional(somelib::DefaultEnum::FromFFI(c_struct.b.ok)))(std::nullopt),
     };
 }
 

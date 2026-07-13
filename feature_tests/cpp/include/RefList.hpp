@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::RefList> somelib::RefList::node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND) {
+inline somelib::RefList somelib::RefList::node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::RefList_node(data.AsFFI());
-    return std::unique_ptr<somelib::RefList>(somelib::RefList::FromFFI(result));
-}
-
-inline const somelib::capi::RefList* somelib::RefList::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::RefList*>(this);
-}
-
-inline somelib::capi::RefList* somelib::RefList::AsFFI() {
-    return reinterpret_cast<somelib::capi::RefList*>(this);
-}
-
-inline const somelib::RefList* somelib::RefList::FromFFI(const somelib::capi::RefList* ptr) {
-    return reinterpret_cast<const somelib::RefList*>(ptr);
-}
-
-inline somelib::RefList* somelib::RefList::FromFFI(somelib::capi::RefList* ptr) {
-    return reinterpret_cast<somelib::RefList*>(ptr);
-}
-
-inline void somelib::RefList::operator delete(void* ptr) {
-    somelib::capi::RefList_destroy(reinterpret_cast<somelib::capi::RefList*>(ptr));
+    return somelib::RefList::FromFFI(result);
 }
 
 

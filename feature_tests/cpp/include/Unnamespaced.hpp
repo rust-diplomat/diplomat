@@ -30,34 +30,14 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::Unnamespaced> somelib::Unnamespaced::make(somelib::ns::RenamedAttrEnum _e) {
+inline somelib::Unnamespaced somelib::Unnamespaced::make(somelib::ns::RenamedAttrEnum _e) {
     auto result = somelib::capi::namespace_Unnamespaced_make(_e.AsFFI());
-    return std::unique_ptr<somelib::Unnamespaced>(somelib::Unnamespaced::FromFFI(result));
+    return somelib::Unnamespaced::FromFFI(result);
 }
 
 inline void somelib::Unnamespaced::use_namespaced(const somelib::ns::AttrOpaque1Renamed& _n) const {
     somelib::capi::namespace_Unnamespaced_use_namespaced(this->AsFFI(),
         _n.AsFFI());
-}
-
-inline const somelib::capi::Unnamespaced* somelib::Unnamespaced::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::Unnamespaced*>(this);
-}
-
-inline somelib::capi::Unnamespaced* somelib::Unnamespaced::AsFFI() {
-    return reinterpret_cast<somelib::capi::Unnamespaced*>(this);
-}
-
-inline const somelib::Unnamespaced* somelib::Unnamespaced::FromFFI(const somelib::capi::Unnamespaced* ptr) {
-    return reinterpret_cast<const somelib::Unnamespaced*>(ptr);
-}
-
-inline somelib::Unnamespaced* somelib::Unnamespaced::FromFFI(somelib::capi::Unnamespaced* ptr) {
-    return reinterpret_cast<somelib::Unnamespaced*>(ptr);
-}
-
-inline void somelib::Unnamespaced::operator delete(void* ptr) {
-    somelib::capi::namespace_Unnamespaced_destroy(reinterpret_cast<somelib::capi::Unnamespaced*>(ptr));
 }
 
 

@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "MyString.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct MyString; }
@@ -22,33 +23,28 @@ class OpaqueCallbacks;
 namespace somelib {
 namespace capi {
     struct OpaqueCallbacks;
+    extern "C" {
+    void OpaqueCallbacks_destroy(OpaqueCallbacks* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueCallbacks {
+class OpaqueCallbacks;
+using OpaqueCallbacksRef = somelib::diplomat::Ref<OpaqueCallbacks, const somelib::capi::OpaqueCallbacks>;
+using OpaqueCallbacksRefMut = somelib::diplomat::Ref<OpaqueCallbacks, somelib::capi::OpaqueCallbacks>;
+
+class OpaqueCallbacks : public somelib::diplomat::OpaquePointer<OpaqueCallbacks, somelib::capi::OpaqueCallbacks, somelib::capi::OpaqueCallbacks_destroy> {
 public:
 
-  inline static const somelib::MyString& ret_op(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st);
+  inline static somelib::MyStringRef ret_op(std::function<somelib::MyStringRef(somelib::MyStringRef)> f, const somelib::MyString& st);
 
-  inline static std::unique_ptr<somelib::OpaqueCallbacks> ctor(std::function<const somelib::MyString&(const somelib::MyString&)> f, const somelib::MyString& st);
+  inline static somelib::OpaqueCallbacks ctor(std::function<somelib::MyStringRef(somelib::MyStringRef)> f, const somelib::MyString& st);
 
-  inline const somelib::MyString& opaque_cb_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st) const;
+  inline somelib::MyStringRef opaque_cb_self(std::function<somelib::MyStringRef(somelib::MyStringRef)> cb, const somelib::MyString& st) const;
 
-  inline const somelib::MyString& opaque_cb_mut_self(std::function<const somelib::MyString&(const somelib::MyString&)> cb, const somelib::MyString& st);
+  inline somelib::MyStringRef opaque_cb_mut_self(std::function<somelib::MyStringRef(somelib::MyStringRef)> cb, const somelib::MyString& st);
 
-    inline const somelib::capi::OpaqueCallbacks* AsFFI() const;
-    inline somelib::capi::OpaqueCallbacks* AsFFI();
-    inline static const somelib::OpaqueCallbacks* FromFFI(const somelib::capi::OpaqueCallbacks* ptr);
-    inline static somelib::OpaqueCallbacks* FromFFI(somelib::capi::OpaqueCallbacks* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueCallbacks() = delete;
-    OpaqueCallbacks(const somelib::OpaqueCallbacks&) = delete;
-    OpaqueCallbacks(somelib::OpaqueCallbacks&&) noexcept = delete;
-    OpaqueCallbacks operator=(const somelib::OpaqueCallbacks&) = delete;
-    OpaqueCallbacks operator=(somelib::OpaqueCallbacks&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

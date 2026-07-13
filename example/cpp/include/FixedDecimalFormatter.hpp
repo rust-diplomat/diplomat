@@ -33,11 +33,11 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> icu4x::FixedDecimalFormatter::try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options) {
+inline icu4x::diplomat::result<icu4x::FixedDecimalFormatter, std::monostate> icu4x::FixedDecimalFormatter::try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options) {
     auto result = icu4x::capi::icu4x_FixedDecimalFormatter_try_new_mv1(locale.AsFFI(),
         provider.AsFFI(),
         options.AsFFI());
-    return result.is_ok ? icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(icu4x::diplomat::Ok<std::unique_ptr<icu4x::FixedDecimalFormatter>>(std::unique_ptr<icu4x::FixedDecimalFormatter>(icu4x::FixedDecimalFormatter::FromFFI(result.ok)))) : icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate>(icu4x::diplomat::Err<std::monostate>());
+    return result.is_ok ? icu4x::diplomat::result<icu4x::FixedDecimalFormatter, std::monostate>(icu4x::diplomat::Ok<icu4x::FixedDecimalFormatter>(icu4x::FixedDecimalFormatter::FromFFI(result.ok))) : icu4x::diplomat::result<icu4x::FixedDecimalFormatter, std::monostate>(icu4x::diplomat::Err<std::monostate>());
 }
 
 inline std::string icu4x::FixedDecimalFormatter::format_write(const icu4x::FixedDecimal& value) const {
@@ -54,26 +54,6 @@ inline void icu4x::FixedDecimalFormatter::format_write_write(const icu4x::FixedD
     icu4x::capi::icu4x_FixedDecimalFormatter_format_write_mv1(this->AsFFI(),
         value.AsFFI(),
         &write);
-}
-
-inline const icu4x::capi::FixedDecimalFormatter* icu4x::FixedDecimalFormatter::AsFFI() const {
-    return reinterpret_cast<const icu4x::capi::FixedDecimalFormatter*>(this);
-}
-
-inline icu4x::capi::FixedDecimalFormatter* icu4x::FixedDecimalFormatter::AsFFI() {
-    return reinterpret_cast<icu4x::capi::FixedDecimalFormatter*>(this);
-}
-
-inline const icu4x::FixedDecimalFormatter* icu4x::FixedDecimalFormatter::FromFFI(const icu4x::capi::FixedDecimalFormatter* ptr) {
-    return reinterpret_cast<const icu4x::FixedDecimalFormatter*>(ptr);
-}
-
-inline icu4x::FixedDecimalFormatter* icu4x::FixedDecimalFormatter::FromFFI(icu4x::capi::FixedDecimalFormatter* ptr) {
-    return reinterpret_cast<icu4x::FixedDecimalFormatter*>(ptr);
-}
-
-inline void icu4x::FixedDecimalFormatter::operator delete(void* ptr) {
-    icu4x::capi::icu4x_FixedDecimalFormatter_destroy_mv1(reinterpret_cast<icu4x::capi::FixedDecimalFormatter*>(ptr));
 }
 
 

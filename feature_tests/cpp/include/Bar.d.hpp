@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "Foo.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct Foo; }
@@ -20,27 +21,22 @@ class Foo;
 namespace somelib {
 namespace capi {
     struct Bar;
+    extern "C" {
+    void Bar_destroy(Bar* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Bar {
+class Bar;
+using BarRef = somelib::diplomat::Ref<Bar, const somelib::capi::Bar>;
+using BarRefMut = somelib::diplomat::Ref<Bar, somelib::capi::Bar>;
+
+class Bar : public somelib::diplomat::OpaquePointer<Bar, somelib::capi::Bar, somelib::capi::Bar_destroy> {
 public:
 
-  inline const somelib::Foo& foo() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::FooRef foo() const DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::capi::Bar* AsFFI() const;
-    inline somelib::capi::Bar* AsFFI();
-    inline static const somelib::Bar* FromFFI(const somelib::capi::Bar* ptr);
-    inline static somelib::Bar* FromFFI(somelib::capi::Bar* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Bar() = delete;
-    Bar(const somelib::Bar&) = delete;
-    Bar(somelib::Bar&&) noexcept = delete;
-    Bar operator=(const somelib::Bar&) = delete;
-    Bar operator=(somelib::Bar&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -32,9 +32,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::OptionString> somelib::OptionString::new_(std::string_view diplomat_str) {
+inline somelib::diplomat::Optional<somelib::OptionString> somelib::OptionString::new_(std::string_view diplomat_str) {
     auto result = somelib::capi::OptionString_new({diplomat_str.data(), diplomat_str.size()});
-    return std::unique_ptr<somelib::OptionString>(somelib::OptionString::FromFFI(result));
+    return somelib::diplomat::Optional<somelib::OptionString>::FromFFI(result);
 }
 
 inline somelib::diplomat::result<std::string, std::monostate> somelib::OptionString::write() const {
@@ -52,29 +52,9 @@ inline somelib::diplomat::result<std::monostate, std::monostate> somelib::Option
     return result.is_ok ? somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline std::optional<std::string_view> somelib::OptionString::borrow() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<std::string_view> somelib::OptionString::borrow() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionString_borrow(this->AsFFI());
-    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
-}
-
-inline const somelib::capi::OptionString* somelib::OptionString::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OptionString*>(this);
-}
-
-inline somelib::capi::OptionString* somelib::OptionString::AsFFI() {
-    return reinterpret_cast<somelib::capi::OptionString*>(this);
-}
-
-inline const somelib::OptionString* somelib::OptionString::FromFFI(const somelib::capi::OptionString* ptr) {
-    return reinterpret_cast<const somelib::OptionString*>(ptr);
-}
-
-inline somelib::OptionString* somelib::OptionString::FromFFI(somelib::capi::OptionString* ptr) {
-    return reinterpret_cast<somelib::OptionString*>(ptr);
-}
-
-inline void somelib::OptionString::operator delete(void* ptr) {
-    somelib::capi::OptionString_destroy(reinterpret_cast<somelib::capi::OptionString*>(ptr));
+    return result.is_ok ? somelib::diplomat::Optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : somelib::diplomat::Optional<std::string_view>(std::nullopt);
 }
 
 

@@ -50,7 +50,7 @@ inline somelib::capi::ImmutableStructOfOpaque somelib::ImmutableStructOfOpaque::
 
 inline somelib::ImmutableStructOfOpaque somelib::ImmutableStructOfOpaque::FromFFI(somelib::capi::ImmutableStructOfOpaque c_struct) {
     return somelib::ImmutableStructOfOpaque {
-        /* .i = */ *somelib::Opaque::FromFFI(c_struct.i),
+        /* .i = */ somelib::OpaqueRef::FromFFI(c_struct.i),
     };
 }
 

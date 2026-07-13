@@ -5,24 +5,19 @@ expression: decl_header.body
 namespace diplomat {
 namespace capi {
     struct MyStruct;
+    extern "C" {
+    void MyStruct_destroy(MyStruct* self);
+    }
 } // namespace capi
 } // namespace
 
-class MyStruct {
+class MyStruct;
+using MyStructRef = diplomat::Ref<MyStruct, const diplomat::capi::MyStruct>;
+using MyStructRefMut = diplomat::Ref<MyStruct, diplomat::capi::MyStruct>;
+
+class MyStruct : public diplomat::OpaquePointer<MyStruct, diplomat::capi::MyStruct, diplomat::capi::MyStruct_destroy> {
 public:
 
   inline void new_(uint8_t default_) const;
 
-    inline const diplomat::capi::MyStruct* AsFFI() const;
-    inline diplomat::capi::MyStruct* AsFFI();
-    inline static const MyStruct* FromFFI(const diplomat::capi::MyStruct* ptr);
-    inline static MyStruct* FromFFI(diplomat::capi::MyStruct* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    MyStruct() = delete;
-    MyStruct(const MyStruct&) = delete;
-    MyStruct(MyStruct&&) noexcept = delete;
-    MyStruct operator=(const MyStruct&) = delete;
-    MyStruct operator=(MyStruct&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };

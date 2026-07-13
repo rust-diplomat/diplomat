@@ -24,31 +24,26 @@ class RenamedMyIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedMyIterable;
+    extern "C" {
+    void namespace_MyIterable_destroy(RenamedMyIterable* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedMyIterable {
+class RenamedMyIterable;
+using RenamedMyIterableRef = somelib::diplomat::Ref<RenamedMyIterable, const somelib::ns::capi::RenamedMyIterable>;
+using RenamedMyIterableRefMut = somelib::diplomat::Ref<RenamedMyIterable, somelib::ns::capi::RenamedMyIterable>;
+
+class RenamedMyIterable : public somelib::diplomat::OpaquePointer<RenamedMyIterable, somelib::ns::capi::RenamedMyIterable, somelib::ns::capi::namespace_MyIterable_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedMyIterable> new_(somelib::diplomat::span<const uint8_t> x);
+  inline static somelib::ns::RenamedMyIterable new_(somelib::diplomat::span<const uint8_t> x);
 
-  inline std::unique_ptr<somelib::ns::RenamedMyIterator> iter() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::ns::RenamedMyIterator iter() const DIPLOMAT_LIFETIME_BOUND;
   inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedMyIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
-    inline const somelib::ns::capi::RenamedMyIterable* AsFFI() const;
-    inline somelib::ns::capi::RenamedMyIterable* AsFFI();
-    inline static const somelib::ns::RenamedMyIterable* FromFFI(const somelib::ns::capi::RenamedMyIterable* ptr);
-    inline static somelib::ns::RenamedMyIterable* FromFFI(somelib::ns::capi::RenamedMyIterable* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedMyIterable() = delete;
-    RenamedMyIterable(const somelib::ns::RenamedMyIterable&) = delete;
-    RenamedMyIterable(somelib::ns::RenamedMyIterable&&) noexcept = delete;
-    RenamedMyIterable operator=(const somelib::ns::RenamedMyIterable&) = delete;
-    RenamedMyIterable operator=(somelib::ns::RenamedMyIterable&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -31,9 +31,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<icu4x::FixedDecimal> icu4x::FixedDecimal::new_(int32_t v) {
+inline icu4x::FixedDecimal icu4x::FixedDecimal::new_(int32_t v) {
     auto result = icu4x::capi::icu4x_FixedDecimal_new_mv1(v);
-    return std::unique_ptr<icu4x::FixedDecimal>(icu4x::FixedDecimal::FromFFI(result));
+    return icu4x::FixedDecimal::FromFFI(result);
 }
 
 inline void icu4x::FixedDecimal::multiply_pow10(int16_t power) {
@@ -54,26 +54,6 @@ inline icu4x::diplomat::result<std::monostate, std::monostate> icu4x::FixedDecim
     auto result = icu4x::capi::icu4x_FixedDecimal_to_string_mv1(this->AsFFI(),
         &write);
     return result.is_ok ? icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Ok<std::monostate>()) : icu4x::diplomat::result<std::monostate, std::monostate>(icu4x::diplomat::Err<std::monostate>());
-}
-
-inline const icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() const {
-    return reinterpret_cast<const icu4x::capi::FixedDecimal*>(this);
-}
-
-inline icu4x::capi::FixedDecimal* icu4x::FixedDecimal::AsFFI() {
-    return reinterpret_cast<icu4x::capi::FixedDecimal*>(this);
-}
-
-inline const icu4x::FixedDecimal* icu4x::FixedDecimal::FromFFI(const icu4x::capi::FixedDecimal* ptr) {
-    return reinterpret_cast<const icu4x::FixedDecimal*>(ptr);
-}
-
-inline icu4x::FixedDecimal* icu4x::FixedDecimal::FromFFI(icu4x::capi::FixedDecimal* ptr) {
-    return reinterpret_cast<icu4x::FixedDecimal*>(ptr);
-}
-
-inline void icu4x::FixedDecimal::operator delete(void* ptr) {
-    icu4x::capi::icu4x_FixedDecimal_destroy_mv1(reinterpret_cast<icu4x::capi::FixedDecimal*>(ptr));
 }
 
 

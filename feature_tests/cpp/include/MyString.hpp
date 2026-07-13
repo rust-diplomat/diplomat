@@ -49,27 +49,27 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::MyString> somelib::MyString::new_(std::string_view v) {
+inline somelib::MyString somelib::MyString::new_(std::string_view v) {
     auto result = somelib::capi::MyString_new({v.data(), v.size()});
-    return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
+    return somelib::MyString::FromFFI(result);
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::diplomat::Utf8Error> somelib::MyString::new_unsafe(std::string_view v) {
+inline somelib::diplomat::result<somelib::MyString, somelib::diplomat::Utf8Error> somelib::MyString::new_unsafe(std::string_view v) {
     if (!somelib::diplomat::capi::diplomat_is_str(v.data(), v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::MyString_new_unsafe({v.data(), v.size()});
-    return somelib::diplomat::Ok<std::unique_ptr<somelib::MyString>>(std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result)));
+    return somelib::diplomat::Ok<somelib::MyString>(somelib::MyString::FromFFI(result));
 }
 
-inline std::unique_ptr<somelib::MyString> somelib::MyString::new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
+inline somelib::MyString somelib::MyString::new_from_first(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
     auto result = somelib::capi::MyString_new_from_first({reinterpret_cast<const somelib::diplomat::capi::DiplomatStringView*>(v.data()), v.size()});
-    return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
+    return somelib::MyString::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::MyString> somelib::MyString::new_from_utf16(somelib::diplomat::span<const diplomat::u16string_view_for_slice> v) {
+inline somelib::MyString somelib::MyString::new_from_utf16(somelib::diplomat::span<const diplomat::u16string_view_for_slice> v) {
     auto result = somelib::capi::MyString_new_from_utf16({reinterpret_cast<const somelib::diplomat::capi::DiplomatString16View*>(v.data()), v.size()});
-    return std::unique_ptr<somelib::MyString>(somelib::MyString::FromFFI(result));
+    return somelib::MyString::FromFFI(result);
 }
 
 inline void somelib::MyString::set_str(std::string_view new_str) {
@@ -122,7 +122,7 @@ inline std::string_view somelib::MyString::borrow() const DIPLOMAT_LIFETIME_BOUN
     return std::string_view(result.data, result.len);
 }
 
-inline std::string somelib::MyString::slice_of_opaques(somelib::diplomat::span<const somelib::MyString*> sl) {
+inline std::string somelib::MyString::slice_of_opaques(somelib::diplomat::span<somelib::MyString> sl) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     somelib::capi::MyString_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
@@ -130,13 +130,13 @@ inline std::string somelib::MyString::slice_of_opaques(somelib::diplomat::span<c
     return output;
 }
 template<typename W>
-inline void somelib::MyString::slice_of_opaques_write(somelib::diplomat::span<const somelib::MyString*> sl, W& writeable) {
+inline void somelib::MyString::slice_of_opaques_write(somelib::diplomat::span<somelib::MyString> sl, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     somelib::capi::MyString_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
         &write);
 }
 
-inline std::string somelib::MyString::optional_slice_of_opaques(somelib::diplomat::span<const somelib::MyString*> sl) {
+inline std::string somelib::MyString::optional_slice_of_opaques(somelib::diplomat::span<somelib::diplomat::Optional<somelib::MyStringRef>> sl) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     somelib::capi::MyString_optional_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
@@ -144,13 +144,13 @@ inline std::string somelib::MyString::optional_slice_of_opaques(somelib::diploma
     return output;
 }
 template<typename W>
-inline void somelib::MyString::optional_slice_of_opaques_write(somelib::diplomat::span<const somelib::MyString*> sl, W& writeable) {
+inline void somelib::MyString::optional_slice_of_opaques_write(somelib::diplomat::span<somelib::diplomat::Optional<somelib::MyStringRef>> sl, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     somelib::capi::MyString_optional_slice_of_opaques({reinterpret_cast<const somelib::capi::MyString**>(sl.data()), sl.size()},
         &write);
 }
 
-inline std::string somelib::MyString::other_opaque_type(somelib::diplomat::span<const somelib::Float64Vec*> other) {
+inline std::string somelib::MyString::other_opaque_type(somelib::diplomat::span<somelib::Float64Vec> other) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     somelib::capi::MyString_other_opaque_type({reinterpret_cast<const somelib::capi::Float64Vec**>(other.data()), other.size()},
@@ -158,30 +158,10 @@ inline std::string somelib::MyString::other_opaque_type(somelib::diplomat::span<
     return output;
 }
 template<typename W>
-inline void somelib::MyString::other_opaque_type_write(somelib::diplomat::span<const somelib::Float64Vec*> other, W& writeable) {
+inline void somelib::MyString::other_opaque_type_write(somelib::diplomat::span<somelib::Float64Vec> other, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     somelib::capi::MyString_other_opaque_type({reinterpret_cast<const somelib::capi::Float64Vec**>(other.data()), other.size()},
         &write);
-}
-
-inline const somelib::capi::MyString* somelib::MyString::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::MyString*>(this);
-}
-
-inline somelib::capi::MyString* somelib::MyString::AsFFI() {
-    return reinterpret_cast<somelib::capi::MyString*>(this);
-}
-
-inline const somelib::MyString* somelib::MyString::FromFFI(const somelib::capi::MyString* ptr) {
-    return reinterpret_cast<const somelib::MyString*>(ptr);
-}
-
-inline somelib::MyString* somelib::MyString::FromFFI(somelib::capi::MyString* ptr) {
-    return reinterpret_cast<somelib::MyString*>(ptr);
-}
-
-inline void somelib::MyString::operator delete(void* ptr) {
-    somelib::capi::MyString_destroy(reinterpret_cast<somelib::capi::MyString*>(ptr));
 }
 
 

@@ -20,33 +20,28 @@ class OptionString;
 namespace somelib {
 namespace capi {
     struct OptionString;
+    extern "C" {
+    void OptionString_destroy(OptionString* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OptionString {
+class OptionString;
+using OptionStringRef = somelib::diplomat::Ref<OptionString, const somelib::capi::OptionString>;
+using OptionStringRefMut = somelib::diplomat::Ref<OptionString, somelib::capi::OptionString>;
+
+class OptionString : public somelib::diplomat::OpaquePointer<OptionString, somelib::capi::OptionString, somelib::capi::OptionString_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::OptionString> new_(std::string_view diplomat_str);
+  inline static somelib::diplomat::Optional<somelib::OptionString> new_(std::string_view diplomat_str);
 
   inline somelib::diplomat::result<std::string, std::monostate> write() const;
   template<typename W>
   inline somelib::diplomat::result<std::monostate, std::monostate> write_write(W& writeable_output) const;
 
-  inline std::optional<std::string_view> borrow() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<std::string_view> borrow() const DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::capi::OptionString* AsFFI() const;
-    inline somelib::capi::OptionString* AsFFI();
-    inline static const somelib::OptionString* FromFFI(const somelib::capi::OptionString* ptr);
-    inline static somelib::OptionString* FromFFI(somelib::capi::OptionString* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OptionString() = delete;
-    OptionString(const somelib::OptionString&) = delete;
-    OptionString(somelib::OptionString&&) noexcept = delete;
-    OptionString operator=(const somelib::OptionString&) = delete;
-    OptionString operator=(somelib::OptionString&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

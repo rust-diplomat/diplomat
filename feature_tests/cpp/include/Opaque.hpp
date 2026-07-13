@@ -42,22 +42,22 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::Opaque> somelib::Opaque::new_() {
+inline somelib::Opaque somelib::Opaque::new_() {
     auto result = somelib::capi::Opaque_new();
-    return std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result));
+    return somelib::Opaque::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Opaque> somelib::Opaque::try_from_utf8(std::string_view input) {
+inline somelib::diplomat::Optional<somelib::Opaque> somelib::Opaque::try_from_utf8(std::string_view input) {
     auto result = somelib::capi::Opaque_try_from_utf8({input.data(), input.size()});
-    return std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result));
+    return somelib::diplomat::Optional<somelib::Opaque>::FromFFI(result);
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::Opaque>, somelib::diplomat::Utf8Error> somelib::Opaque::from_str(std::string_view input) {
+inline somelib::diplomat::result<somelib::Opaque, somelib::diplomat::Utf8Error> somelib::Opaque::from_str(std::string_view input) {
     if (!somelib::diplomat::capi::diplomat_is_str(input.data(), input.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::Opaque_from_str({input.data(), input.size()});
-    return somelib::diplomat::Ok<std::unique_ptr<somelib::Opaque>>(std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(result)));
+    return somelib::diplomat::Ok<somelib::Opaque>(somelib::Opaque::FromFFI(result));
 }
 
 inline std::string somelib::Opaque::get_debug_str() const {
@@ -92,26 +92,6 @@ inline somelib::ImportedStruct somelib::Opaque::returns_imported() {
 inline int8_t somelib::Opaque::cmp() {
     auto result = somelib::capi::Opaque_cmp();
     return result;
-}
-
-inline const somelib::capi::Opaque* somelib::Opaque::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::Opaque*>(this);
-}
-
-inline somelib::capi::Opaque* somelib::Opaque::AsFFI() {
-    return reinterpret_cast<somelib::capi::Opaque*>(this);
-}
-
-inline const somelib::Opaque* somelib::Opaque::FromFFI(const somelib::capi::Opaque* ptr) {
-    return reinterpret_cast<const somelib::Opaque*>(ptr);
-}
-
-inline somelib::Opaque* somelib::Opaque::FromFFI(somelib::capi::Opaque* ptr) {
-    return reinterpret_cast<somelib::Opaque*>(ptr);
-}
-
-inline void somelib::Opaque::operator delete(void* ptr) {
-    somelib::capi::Opaque_destroy(reinterpret_cast<somelib::capi::Opaque*>(ptr));
 }
 
 

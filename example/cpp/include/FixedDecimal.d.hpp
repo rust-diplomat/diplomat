@@ -20,20 +20,27 @@ class FixedDecimal;
 namespace icu4x {
 namespace capi {
     struct FixedDecimal;
+    extern "C" {
+    void icu4x_FixedDecimal_destroy_mv1(FixedDecimal* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace icu4x {
+class FixedDecimal;
+using FixedDecimalRef = icu4x::diplomat::Ref<FixedDecimal, const icu4x::capi::FixedDecimal>;
+using FixedDecimalRefMut = icu4x::diplomat::Ref<FixedDecimal, icu4x::capi::FixedDecimal>;
+
 /**
  * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
  */
-class FixedDecimal {
+class FixedDecimal : public icu4x::diplomat::OpaquePointer<FixedDecimal, icu4x::capi::FixedDecimal, icu4x::capi::icu4x_FixedDecimal_destroy_mv1> {
 public:
 
   /**
    * Construct an {@link FixedDecimal} from an integer.
    */
-  inline static std::unique_ptr<icu4x::FixedDecimal> new_(int32_t v);
+  inline static icu4x::FixedDecimal new_(int32_t v);
 
   /**
    * Multiply the {@link FixedDecimal} by a given power of ten.
@@ -51,18 +58,6 @@ public:
   template<typename W>
   inline icu4x::diplomat::result<std::monostate, std::monostate> to_string_write(W& writeable_output) const;
 
-    inline const icu4x::capi::FixedDecimal* AsFFI() const;
-    inline icu4x::capi::FixedDecimal* AsFFI();
-    inline static const icu4x::FixedDecimal* FromFFI(const icu4x::capi::FixedDecimal* ptr);
-    inline static icu4x::FixedDecimal* FromFFI(icu4x::capi::FixedDecimal* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    FixedDecimal() = delete;
-    FixedDecimal(const icu4x::FixedDecimal&) = delete;
-    FixedDecimal(icu4x::FixedDecimal&&) noexcept = delete;
-    FixedDecimal operator=(const icu4x::FixedDecimal&) = delete;
-    FixedDecimal operator=(icu4x::FixedDecimal&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

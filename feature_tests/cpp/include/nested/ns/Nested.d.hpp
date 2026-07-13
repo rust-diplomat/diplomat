@@ -15,25 +15,20 @@
 namespace somelib::nested::ns {
 namespace capi {
     struct Nested;
+    extern "C" {
+    void namespace_Nested_destroy(Nested* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::nested::ns {
-class Nested {
+class Nested;
+using NestedRef = somelib::diplomat::Ref<Nested, const somelib::nested::ns::capi::Nested>;
+using NestedRefMut = somelib::diplomat::Ref<Nested, somelib::nested::ns::capi::Nested>;
+
+class Nested : public somelib::diplomat::OpaquePointer<Nested, somelib::nested::ns::capi::Nested, somelib::nested::ns::capi::namespace_Nested_destroy> {
 public:
 
-    inline const somelib::nested::ns::capi::Nested* AsFFI() const;
-    inline somelib::nested::ns::capi::Nested* AsFFI();
-    inline static const somelib::nested::ns::Nested* FromFFI(const somelib::nested::ns::capi::Nested* ptr);
-    inline static somelib::nested::ns::Nested* FromFFI(somelib::nested::ns::capi::Nested* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Nested() = delete;
-    Nested(const somelib::nested::ns::Nested&) = delete;
-    Nested(somelib::nested::ns::Nested&&) noexcept = delete;
-    Nested operator=(const somelib::nested::ns::Nested&) = delete;
-    Nested operator=(somelib::nested::ns::Nested&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

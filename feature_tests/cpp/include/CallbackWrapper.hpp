@@ -231,7 +231,7 @@ inline int32_t somelib::CallbackWrapper::test_str_cb_arg(std::function<int32_t(s
     return result;
 }
 
-inline void somelib::CallbackWrapper::test_opaque_cb_arg(std::function<void(somelib::MyString&)> cb, somelib::MyString& a) {
+inline void somelib::CallbackWrapper::test_opaque_cb_arg(std::function<void(somelib::MyStringRefMut)> cb, somelib::MyString& a) {
     somelib::capi::CallbackWrapper_test_opaque_cb_arg({new decltype(cb)(std::move(cb)), somelib::diplomat::fn_traits(cb).c_run_callback, somelib::diplomat::fn_traits(cb).c_delete},
         a.AsFFI());
 }
@@ -249,15 +249,15 @@ inline void somelib::CallbackWrapper::test_result_usize_output(std::function<som
     somelib::capi::CallbackWrapper_test_result_usize_output({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<size_t, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_usize_output_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_option_output(std::function<std::optional<std::monostate>()> t) {
+inline void somelib::CallbackWrapper::test_option_output(std::function<somelib::diplomat::Optional<std::monostate>()> t) {
     somelib::capi::CallbackWrapper_test_option_output({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_diplomat_option<std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_option_output_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_diplomat_option_output(std::function<std::optional<uint32_t>()> t) {
+inline void somelib::CallbackWrapper::test_diplomat_option_output(std::function<somelib::diplomat::Optional<uint32_t>()> t) {
     somelib::capi::CallbackWrapper_test_diplomat_option_output({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_diplomat_option<uint32_t, somelib::capi::DiplomatCallback_CallbackWrapper_test_diplomat_option_output_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline std::string somelib::CallbackWrapper::test_option_opaque(std::function<const somelib::Opaque*()> t) {
+inline std::string somelib::CallbackWrapper::test_option_opaque(std::function<somelib::diplomat::Optional<somelib::OpaqueRef>()> t) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     somelib::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const somelib::capi::Opaque*>, somelib::diplomat::fn_traits(t).c_delete},
@@ -265,13 +265,13 @@ inline std::string somelib::CallbackWrapper::test_option_opaque(std::function<co
     return output;
 }
 template<typename W>
-inline void somelib::CallbackWrapper::test_option_opaque_write(std::function<const somelib::Opaque*()> t, W& writeable) {
+inline void somelib::CallbackWrapper::test_option_opaque_write(std::function<somelib::diplomat::Optional<somelib::OpaqueRef>()> t, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     somelib::capi::CallbackWrapper_test_option_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_diplomat_opaque<const somelib::capi::Opaque*>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
 }
 
-inline void somelib::CallbackWrapper::test_owned_opaque(std::function<void(std::unique_ptr<somelib::Opaque>)> t) {
+inline void somelib::CallbackWrapper::test_owned_opaque(std::function<void(somelib::Opaque)> t) {
     somelib::capi::CallbackWrapper_test_owned_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).c_run_callback, somelib::diplomat::fn_traits(t).c_delete});
 }
 
@@ -279,17 +279,17 @@ inline void somelib::CallbackWrapper::test_diplomat_result(std::function<somelib
     somelib::capi::CallbackWrapper_test_diplomat_result({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<size_t, size_t, somelib::capi::DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline std::string somelib::CallbackWrapper::test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t) {
+inline std::string somelib::CallbackWrapper::test_result_opaque(std::function<somelib::diplomat::result<somelib::OpaqueRef, std::monostate>()> t) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
-    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::OpaqueRef, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
     return output;
 }
 template<typename W>
-inline void somelib::CallbackWrapper::test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t, W& writeable) {
+inline void somelib::CallbackWrapper::test_result_opaque_write(std::function<somelib::diplomat::result<somelib::OpaqueRef, std::monostate>()> t, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
-    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::OpaqueRef, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
 }
 
@@ -305,25 +305,25 @@ inline void somelib::CallbackWrapper::test_slice_conversion(std::function<someli
     somelib::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const double>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t) {
-    somelib::capi::CallbackWrapper_test_result_option_struct_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::optional<somelib::MyStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+inline void somelib::CallbackWrapper::test_result_option_struct_conversion(std::function<somelib::diplomat::result<somelib::diplomat::Optional<somelib::MyStruct>, std::monostate>()> t) {
+    somelib::capi::CallbackWrapper_test_result_option_struct_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::Optional<somelib::MyStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
 inline void somelib::CallbackWrapper::test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t) {
     somelib::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline std::string somelib::CallbackWrapper::test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t) {
+inline std::string somelib::CallbackWrapper::test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, somelib::OpaqueRef>()> t) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
-    somelib::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const somelib::Opaque&, somelib::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::monostate, somelib::OpaqueRef, somelib::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
     return output;
 }
 template<typename W>
-inline void somelib::CallbackWrapper::test_opaque_result_error_write(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t, W& writeable) {
+inline void somelib::CallbackWrapper::test_opaque_result_error_write(std::function<somelib::diplomat::result<std::monostate, somelib::OpaqueRef>()> t, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
-    somelib::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::monostate, const somelib::Opaque&, somelib::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_opaque_result_error({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::monostate, somelib::OpaqueRef, somelib::capi::DiplomatCallback_CallbackWrapper_test_opaque_result_error_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
 }
 

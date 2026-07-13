@@ -15,28 +15,23 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedDeprecatedOpaque;
+    extern "C" {
+    void namespace_DeprecatedOpaque_destroy(RenamedDeprecatedOpaque* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
+class RenamedDeprecatedOpaque;
+using RenamedDeprecatedOpaqueRef = somelib::diplomat::Ref<RenamedDeprecatedOpaque, const somelib::ns::capi::RenamedDeprecatedOpaque>;
+using RenamedDeprecatedOpaqueRefMut = somelib::diplomat::Ref<RenamedDeprecatedOpaque, somelib::ns::capi::RenamedDeprecatedOpaque>;
+
 /**
  * \deprecated use Foo
  */
-class [[deprecated("use Foo")]] RenamedDeprecatedOpaque {
+class [[deprecated("use Foo")]] RenamedDeprecatedOpaque : public somelib::diplomat::OpaquePointer<RenamedDeprecatedOpaque, somelib::ns::capi::RenamedDeprecatedOpaque, somelib::ns::capi::namespace_DeprecatedOpaque_destroy> {
 public:
 
-    inline const somelib::ns::capi::RenamedDeprecatedOpaque* AsFFI() const;
-    inline somelib::ns::capi::RenamedDeprecatedOpaque* AsFFI();
-    inline static const somelib::ns::RenamedDeprecatedOpaque* FromFFI(const somelib::ns::capi::RenamedDeprecatedOpaque* ptr);
-    inline static somelib::ns::RenamedDeprecatedOpaque* FromFFI(somelib::ns::capi::RenamedDeprecatedOpaque* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedDeprecatedOpaque() = delete;
-    RenamedDeprecatedOpaque(const somelib::ns::RenamedDeprecatedOpaque&) = delete;
-    RenamedDeprecatedOpaque(somelib::ns::RenamedDeprecatedOpaque&&) noexcept = delete;
-    RenamedDeprecatedOpaque operator=(const somelib::ns::RenamedDeprecatedOpaque&) = delete;
-    RenamedDeprecatedOpaque operator=(somelib::ns::RenamedDeprecatedOpaque&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -20,40 +20,35 @@ class DataProvider;
 namespace icu4x {
 namespace capi {
     struct DataProvider;
+    extern "C" {
+    void icu4x_DataProvider_destroy_mv1(DataProvider* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace icu4x {
+class DataProvider;
+using DataProviderRef = icu4x::diplomat::Ref<DataProvider, const icu4x::capi::DataProvider>;
+using DataProviderRefMut = icu4x::diplomat::Ref<DataProvider, icu4x::capi::DataProvider>;
+
 /**
  * An  data provider, capable of loading  data keys from some source.
  *
  * See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
  */
-class DataProvider {
+class DataProvider : public icu4x::diplomat::OpaquePointer<DataProvider, icu4x::capi::DataProvider, icu4x::capi::icu4x_DataProvider_destroy_mv1> {
 public:
 
   /**
    * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
    */
-  inline static std::unique_ptr<icu4x::DataProvider> new_static();
+  inline static icu4x::DataProvider new_static();
 
   /**
    * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
    */
   inline static icu4x::diplomat::result<std::monostate, std::monostate> returns_result();
 
-    inline const icu4x::capi::DataProvider* AsFFI() const;
-    inline icu4x::capi::DataProvider* AsFFI();
-    inline static const icu4x::DataProvider* FromFFI(const icu4x::capi::DataProvider* ptr);
-    inline static icu4x::DataProvider* FromFFI(icu4x::capi::DataProvider* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    DataProvider() = delete;
-    DataProvider(const icu4x::DataProvider&) = delete;
-    DataProvider(icu4x::DataProvider&&) noexcept = delete;
-    DataProvider operator=(const icu4x::DataProvider&) = delete;
-    DataProvider operator=(icu4x::DataProvider&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace
