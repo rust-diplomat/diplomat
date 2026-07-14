@@ -65,7 +65,7 @@ public partial struct {{ name }}
     /// </remarks>
 {%- endif %}
 
-    public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.name }}({{ method.inputs.idiomatic_params }})
+    public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.idiomatic_name }}({{ method.inputs.idiomatic_params }})
     {
         unsafe
         {

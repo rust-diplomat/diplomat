@@ -511,8 +511,11 @@ pub(super) struct ReturnLowering {
 pub(super) struct MethodInfo<'ctx> {
     /// `extern "C"` symbol name (e.g. `Color_brightness`).
     pub(super) abi_name: &'ctx str,
-    /// C# method name (PascalCase, e.g. `Brightness`).
+    /// C# method name on the raw interop layer (PascalCase, e.g. `Brightness`).
     pub(super) name: String,
+    /// Method name on the idiomatic wrapper. Same as `name` except when a
+    /// special method claims a C#-native spelling (stringifier → `ToString`).
+    pub(super) idiomatic_name: String,
     /// `"static "` for static methods, `""` for instance. Renders directly
     /// before the return type in the idiomatic method declaration.
     pub(super) static_kw: &'static str,
@@ -603,16 +606,17 @@ impl MethodInfo<'_> {
         }
     }
 
-    /// True when the convenience write overload would emit a
-    /// `public string ToString()` that exactly matches the signature of
-    /// `object.ToString()`. The C# compiler warns (CS0114) on
-    /// signature-matching hides that aren't explicitly `override` or
-    /// `new`; treating it as `override` matches author intent (Rust's
-    /// `to_string` is meant to be THE stringifier) and silences the
-    /// warning. Treating it as `override` matches author intent (Rust's
-    /// `to_string` is meant to be THE stringifier) and silences the warning.
+    /// True when the idiomatic method emits a `public string ToString()`
+    /// matching the signature of `object.ToString()` — a stringifier (renamed
+    /// to `ToString`) or a parameterless write method that happens to be named
+    /// `to_string`. The C# compiler warns (CS0114) on signature-matching hides
+    /// that aren't explicitly `override` or `new`; `override` matches author
+    /// intent (the method is meant to be THE stringifier) and silences the
+    /// warning.
     pub(super) fn is_to_string_override(&self) -> bool {
-        self.is_instance() && self.name == "ToString" && self.inputs.idiomatic_params.is_empty()
+        self.is_instance()
+            && self.idiomatic_name == "ToString"
+            && self.inputs.idiomatic_params.is_empty()
     }
 
     /// C# fragment for the idiomatic method signature's return type —
@@ -829,11 +833,11 @@ pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo
         match accessor.kind {
             PropertyAccessorKind::Getter => {
                 property.property_type = accessor.property_type.clone();
-                property.getter = Some(method.name.clone());
+                property.getter = Some(method.idiomatic_name.clone());
                 property.lifetime_warning |= method.lifetime_warning;
             }
             PropertyAccessorKind::Setter => {
-                property.setter = Some(method.name.clone());
+                property.setter = Some(method.idiomatic_name.clone());
             }
         }
     }
@@ -861,6 +865,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         // anything pushed while lowering this method. Restored on scope exit.
         let method_name = self.formatter.fmt_method_name(method).into_owned();
         let _guard = self.errors.set_context_method(method_name.clone().into());
+        // Special-method markers the backend doesn't dispatch yet fall through
+        // to the `_` arm and keep rendering as plain named methods.
+        let idiomatic_name = match &method.attrs.special_method {
+            Some(hir::SpecialMethod::Stringifier) => self.stringifier_name(method)?,
+            _ => method_name.clone(),
+        };
         let static_kw = if method.param_self.is_some() {
             ""
         } else {
@@ -913,8 +923,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         } else {
             return_type.to_string()
         };
-        let property_accessor =
-            self.property_accessor(method, &return_type, &return_type_name, &inputs);
+        // A renamed special method no longer exists under its prefix-derived
+        // name, so a property getter/setter would call a method that's gone.
+        let property_accessor = if idiomatic_name == method_name {
+            self.property_accessor(method, &return_type, &return_type_name, &inputs)
+        } else {
+            None
+        };
         let (keep_alive_edges, error_keep_alive_edges) =
             self.borrowed_output_keep_alive_edges(method, &inputs, &borrow_map, ownership)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
@@ -948,6 +963,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         Some(MethodInfo {
             abi_name: method.abi_name.as_str(),
             name: method_name,
+            idiomatic_name,
             static_kw,
             inputs,
             return_type,
@@ -1082,6 +1098,32 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
         }
         Some(edges)
+    }
+
+    /// `ToString` for a stringifier the backend can render, or `None`
+    /// (diagnostic recorded) for shapes a C# `ToString()` override can't
+    /// express. HIR validation already guarantees no parameters and a
+    /// `DiplomatWrite` success value.
+    fn stringifier_name(&self, method: &Method) -> Option<String> {
+        if method.param_self.is_none() {
+            self.errors.push_error(
+                "[.NET backend] static stringifier is not supported: `ToString()` can \
+                 only override `object.ToString()` on an instance. Remove the attribute \
+                 or disable this API for .NET."
+                    .to_string(),
+            );
+            return None;
+        }
+        if !matches!(method.output, hir::ReturnType::Infallible(_)) {
+            self.errors.push_error(
+                "[.NET backend] fallible or nullable stringifier is not supported: \
+                 `ToString()` has no error/none arm to surface. Make the method \
+                 infallible or disable this API for .NET."
+                    .to_string(),
+            );
+            return None;
+        }
+        Some("ToString".to_string())
     }
 
     fn property_accessor(
