@@ -219,6 +219,22 @@ pub mod ffi {
         }
     }
 
+    // Owned `Box<[u8]>` return: on .NET this lowers to a zero-copy `RustVec`
+    // (`System.Buffers.MemoryManager<byte>`) wrapping the raw `(ptr, len)`
+    // pair directly, rather than copying into a managed `byte[]`.
+    #[diplomat::opaque]
+    #[diplomat::cfg(supports=owned_byte_slice_returns)]
+    pub struct OwnedSliceReturn;
+
+    impl OwnedSliceReturn {
+        /// Returns an owned `Box<[u8]>` of `len` bytes, each set to `(i % 256) as u8`.
+        /// `len == 0` exercises the empty-buffer case; a large `len` exercises the
+        /// GC memory-pressure path.
+        pub fn make_bytes(len: u32) -> Box<[u8]> {
+            (0..len).map(|i| (i % 256) as u8).collect()
+        }
+    }
+
     // For testing throwing IndexError:
     #[diplomat::opaque]
     #[diplomat::cfg(nanobind)]

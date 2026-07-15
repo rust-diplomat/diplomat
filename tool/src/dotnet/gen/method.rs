@@ -197,6 +197,11 @@ pub(crate) enum DotnetReturnType {
     /// `DiplomatWrite` writer. Not yet emitted; preserves prior behavior.
     Write,
     Unit,
+    /// Owned `Box<[u8]>` return. Crosses the raw FFI boundary as the
+    /// `DiplomatOwnedSliceU8` `(ptr, len)` struct (returned by value, not
+    /// behind a pointer); the idiomatic surface wraps it in `RustVec` for
+    /// scoped zero-copy access or an explicit managed clone.
+    OwnedByteSlice,
 }
 
 impl Display for DotnetReturnType {
@@ -216,6 +221,11 @@ impl Display for DotnetReturnType {
             // is allocated and consumed internally, so `DiplomatWrite`
             // never appears on the public API.
             Self::Write | Self::Unit => write!(f, "void"),
+            // The raw shape (a by-value struct, not a pointer) — same
+            // spelling for both `raw()` and the union-field type. The
+            // idiomatic signature spells this as `RustVec` instead (see
+            // `idiomatic_signature_return_type`).
+            Self::OwnedByteSlice => write!(f, "DiplomatOwnedSliceU8"),
         }
     }
 }
@@ -257,6 +267,13 @@ impl DotnetReturnType {
 
     pub(super) fn is_bool(&self) -> bool {
         matches!(self, Self::Primitive(DotnetPrimitives::Bool))
+    }
+
+    /// True for an owned `Box<[u8]>` return. The idiomatic wrapper renders
+    /// these as `RustVec`-returning methods; the raw extern returns the
+    /// `DiplomatOwnedSliceU8` `(ptr, len)` struct by value.
+    pub(super) fn is_owned_byte_slice(&self) -> bool {
+        matches!(self, Self::OwnedByteSlice)
     }
 
     /// C# type stored for this arm inside a result/option
@@ -343,6 +360,9 @@ impl DotnetReturnType {
             Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
             Self::Unit | Self::Write => String::new(),
             Self::Primitive(_) | Self::Enum(_) => raw_expr.to_string(),
+            // The raw struct's fields are named to match `DiplomatSliceU8`
+            // (`Ptr` / `Len`) — see the constructor in `RustVec.cs.jinja`.
+            Self::OwnedByteSlice => format!("new RustVec({raw_expr}.Ptr, {raw_expr}.Len)"),
         }
     }
 
@@ -350,6 +370,9 @@ impl DotnetReturnType {
         match self {
             Self::Opaque(_) => "null".to_string(),
             Self::Unit | Self::Write => unreachable!("unit/write options are rejected earlier"),
+            Self::OwnedByteSlice => {
+                unreachable!("`Option<Box<[u8]>>` returns are rejected earlier")
+            }
             Self::Primitive(_) | Self::Struct(_) | Self::Enum(_) => format!("({self}?)null"),
         }
     }
@@ -635,6 +658,8 @@ impl MethodInfo<'_> {
     pub(super) fn idiomatic_signature_return_type(&self) -> String {
         if self.return_type.is_write() {
             "string".to_string()
+        } else if self.return_type.is_owned_byte_slice() {
+            "RustVec".to_string()
         } else {
             self.idiomatic_return_type()
         }
@@ -756,7 +781,12 @@ impl MethodInfo<'_> {
             .is_some();
         // `var`, not `Raw.<T>`: primitive/enum returns have no `Raw.` mirror,
         // so capturing the result for the keep-alive case stays valid C#.
-        if uses_tagged_option || self.can_return_raw_call_directly() {
+        // `DiplomatOwnedSliceU8` is a runtime helper type in `{namespace}.Diplomat`,
+        // not a per-type `Raw.` mirror, so it takes the same `var` path.
+        if uses_tagged_option
+            || self.can_return_raw_call_directly()
+            || self.return_type.is_owned_byte_slice()
+        {
             format!("var result = {raw_call};")
         } else {
             format!("Raw.{} result = {raw_call};", self.return_type.raw())
@@ -1102,6 +1132,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     // wouldn't match what callers expect anyway.
                     let property_type = if return_type.is_write() {
                         "string".to_string()
+                    } else if return_type.is_owned_byte_slice() {
+                        "RustVec".to_string()
                     } else {
                         return_type_name.to_string()
                     };
@@ -1208,6 +1240,43 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             }
             hir::SuccessType::OutType(hir::Type::Enum(p)) => {
                 DotnetReturnType::Enum(self.enum_name(p))
+            }
+            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Primitive(
+                MaybeOwn::Own,
+                primitive_type,
+            ))) => {
+                if !matches!(
+                    primitive_type,
+                    hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8)
+                ) {
+                    self.errors.push_error(format!(
+                        "[.NET backend] owned slice return not yet supported for element \
+                         type {primitive_type:?}; only owned `u8`/`DiplomatByte` slices \
+                         (`Box<[u8]>`) are supported today"
+                    ));
+                    return None;
+                }
+                // Both rejections are defense in depth — HIR lowering only
+                // accepts an owned byte slice as a plain top-level return
+                // (`!in_result_option`), because the macro leaves a `Result`'s
+                // ok arm as a raw `Box<[u8]>` fat pointer inside
+                // `DiplomatResult` instead of converting it to the repr(C)
+                // `DiplomatOwnedSlice<u8>`, so the union layout would not be
+                // FFI-stable.
+                if is_nullable_path {
+                    self.errors.push_error(
+                        "[.NET backend] `Option<Box<[u8]>>` return is not supported.".to_string(),
+                    );
+                    return None;
+                }
+                if failed.is_some() {
+                    self.errors.push_error(
+                        "[.NET backend] `Result<Box<[u8]>, E>` return is not supported."
+                            .to_string(),
+                    );
+                    return None;
+                }
+                DotnetReturnType::OwnedByteSlice
             }
             other => {
                 self.errors.push_error(format!(

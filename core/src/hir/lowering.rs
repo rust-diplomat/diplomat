@@ -1,12 +1,12 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
-    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, Lifetime, LifetimeEnv,
-    LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef, OpaquePath,
-    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
-    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
-    SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
-    StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
-    TypeDef, TypeId,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
+    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef,
+    OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param,
+    ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType,
+    ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod,
+    SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType, TraitDef,
+    TraitParamSelf, TraitPath, TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
@@ -1563,10 +1563,40 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
+            // Plain top-level method returns only: out-struct fields and
+            // callbacks keep the old rejection, and `Result`/`Option` inners
+            // are excluded because the macro leaves the ok arm as a raw
+            // `Box<[u8]>` inside `DiplomatResult` — a fat pointer with no
+            // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
+            // shape an infallible return is converted to.
+            ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
+                if context == TypeLoweringContext::Method
+                    && !in_result_option
+                    && matches!(
+                        PrimitiveType::from_ast(*prim),
+                        PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
+                    ) =>
+            {
+                if !self
+                    .attr_validator
+                    .attrs_supported()
+                    .owned_byte_slice_returns
+                {
+                    self.errors.push(LoweringError::Other(
+                        "`Box<[u8]>` returns are not supported in this backend. Try #[diplomat::cfg(supports = owned_byte_slice_returns)] to restrict this API to supporting backends."
+                            .into(),
+                    ));
+                    return Err(());
+                }
+                Ok(OutType::Slice(Slice::Primitive(
+                    MaybeOwn::Own,
+                    PrimitiveType::from_ast(*prim),
+                )))
+            }
             ast::TypeName::PrimitiveSlice(None, _, _stdlib)
             | ast::TypeName::StrReference(None, _, _stdlib) => {
                 self.errors.push(LoweringError::Other(
-                    "Owned slices cannot be returned".into(),
+                    "Owned slices cannot be returned, except for top-level `Box<[u8]>` method returns on backends supporting `owned_byte_slice_returns`.".into(),
                 ));
                 Err(())
             }

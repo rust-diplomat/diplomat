@@ -117,6 +117,30 @@ struct DiplomatPinnedMemoryTemplate<'a> {
     namespace: &'a str,
 }
 
+/// `DiplomatOwnedSliceU8` — the `repr(C)` `(ptr, len)` pair an owned
+/// `Box<[u8]>` return crosses the FFI boundary as, by value. Same layout as
+/// `DiplomatSliceU8`; kept as a distinct type so the raw layer still shows
+/// which structs are owned-returns vs. borrowed-params.
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatOwnedSliceU8.cs.jinja", escape = "none")]
+struct DiplomatOwnedSliceU8Template<'a> {
+    namespace: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "dotnet/RawRustVec.cs.jinja", escape = "none")]
+struct RawRustVecTemplate<'a> {
+    namespace: &'a str,
+}
+
+/// `RustVec` — GC-owned wrapper over an owned `Box<[u8]>` Rust handed back
+/// across FFI. It allows scoped zero-copy access and explicit cloning.
+#[derive(Template)]
+#[template(path = "dotnet/RustVec.cs.jinja", escape = "none")]
+struct RustVecTemplate<'a> {
+    namespace: &'a str,
+}
+
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut a = BackendAttrSupport::default();
 
@@ -152,6 +176,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // so we tell the HIR validator to reject them at lowering.
     a.static_slices = false;
     a.owned_slices = false;
+    // Only the return position: `Box<[u8]>` returns lower to a zero-copy
+    // `RustVec` (see `gen::method::lower_return`). Owned slice *parameters*
+    // stay rejected via `owned_slices` above — this is a separate flag on
+    // purpose, so input and return position can be toggled independently.
+    a.owned_byte_slice_returns = true;
 
     a.constructors = false;
     a.named_constructors = false;
@@ -298,7 +327,7 @@ pub(crate) fn run<'tcx>(
      * The content layer represents the safe, idiomatic C# API that end-users will interact with.
      * It may wrap or compose multiple raw items, and should prioritize usability and safety.
      */
-    let (uses_pinned_memory, rendered_types) = ctx.render_all_types();
+    let (uses_pinned_memory, uses_owned_byte_slice_return, rendered_types) = ctx.render_all_types();
     for rendered in rendered_types {
         let file_name = format!("{}.cs", rendered.display_name);
         if let Some(raw) = rendered.raw {
@@ -432,6 +461,38 @@ pub(crate) fn run<'tcx>(
         );
     }
 
+    // The helper owns native memory, so only ship it when a method returns an
+    // owned `Box<[u8]>`.
+    if uses_owned_byte_slice_return {
+        add_cs_file(
+            &files,
+            "DiplomatOwnedSliceU8.cs".to_string(),
+            DiplomatOwnedSliceU8Template {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("DiplomatOwnedSliceU8 template render failed"),
+        );
+        add_cs_file(
+            &files,
+            "RawRustVec.cs".to_string(),
+            RawRustVecTemplate {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("RawRustVec template render failed"),
+        );
+        add_cs_file(
+            &files,
+            "RustVec.cs".to_string(),
+            RustVecTemplate {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("RustVec template render failed"),
+        );
+    }
+
     (files, errors)
 }
 
@@ -464,6 +525,31 @@ mod test {
                 }
                 panic!("Failed to create context")
             }
+        }
+    }
+
+    /// For shapes rejected before a `TypeContext` even exists (HIR-lowering-time
+    /// errors, e.g. an owned slice used in parameter/field position) — `new_tcx`
+    /// panics on these, since every other test here expects a valid context.
+    fn lowering_errors(
+        tk_stream: proc_macro2::TokenStream,
+        owned_byte_slice_returns: bool,
+    ) -> Vec<String> {
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
+
+        let mut attr_validator = BasicAttributeValidator::new("dotnet_test");
+        attr_validator.support = super::attr_support();
+        attr_validator.support.owned_byte_slice_returns = owned_byte_slice_returns;
+
+        match TypeContext::from_syn(
+            &file,
+            Default::default(),
+            attr_validator,
+            None,
+            &diplomat_core::ast::SpanLocation::None,
+        ) {
+            Ok(_) => Vec::new(),
+            Err(e) => e.into_iter().map(|(_cx, err)| err.to_string()).collect(),
         }
     }
 
@@ -1242,6 +1328,291 @@ mod test {
         assert!(
             exc.contains("params object[] edges"),
             "exception class should accept keep-alive edges in its constructor:\n{exc}"
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Owned `Box<[u8]>` return -> `RustVec` (owned_byte_slice_returns)
+    // ─────────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn owned_byte_slice_return_lowers_to_rustvec() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Box<[u8]> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let buf = files.get("Buf.cs").expect("expected Buf.cs output");
+        assert!(
+            buf.contains("public static RustVec Make(uint len)"),
+            "idiomatic signature should return RustVec:\n{buf}"
+        );
+        assert!(
+            buf.contains("new RustVec(result.Ptr, result.Len)"),
+            "idiomatic body should wrap the raw (ptr, len) pair in RustVec:\n{buf}"
+        );
+
+        let raw_buf = files.get("RawBuf.cs").expect("expected RawBuf.cs output");
+        assert!(
+            raw_buf.contains("internal static unsafe extern DiplomatOwnedSliceU8 Make(uint len);"),
+            "raw extern should return the DiplomatOwnedSliceU8 (ptr, len) struct by value:\n{raw_buf}"
+        );
+
+        let rust_vec = files
+            .get("RustVec.cs")
+            .expect("an owned byte-slice return should emit the RustVec runtime helper");
+        assert!(
+            rust_vec.contains("public sealed class RustVec : IDisposable")
+                && rust_vec.contains("public void WithSpan(RustVecSpanAction action)")
+                && rust_vec.contains("public byte[] Clone()")
+                && rust_vec.contains("~RustVec()"),
+            "RustVec should provide scoped access, explicit cloning, and GC fallback:\n{rust_vec}"
+        );
+        assert!(
+            !rust_vec.contains("public sealed unsafe class RustVec")
+                && !rust_vec.contains("MemoryManager<byte>")
+                && !rust_vec.contains("public Span<byte> GetSpan")
+                && !rust_vec.contains("DllImport"),
+            "RustVec must not expose an escaping memory view:\n{rust_vec}"
+        );
+        let raw_rust_vec = files
+            .get("RawRustVec.cs")
+            .expect("an owned byte-slice return should emit the raw RustVec helper");
+        assert!(
+            raw_rust_vec.contains("namespace Somelib.Raw;")
+                && raw_rust_vec.contains("internal static extern void Destroy"),
+            "raw RustVec should own the destroy import:\n{raw_rust_vec}"
+        );
+        assert!(
+            files.contains_key("DiplomatOwnedSliceU8.cs"),
+            "an owned byte-slice return should emit the DiplomatOwnedSliceU8 raw struct"
+        );
+    }
+
+    // A run that never returns an owned byte slice must not ship RustVec or
+    // its raw struct — same "only emit what's used" discipline as
+    // `DiplomatPinnedMemory` (see `run_without_pinning_omits_pin_helper_and_sweep`).
+    #[test]
+    fn run_without_owned_byte_slice_return_omits_rustvec_helper() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Plain;
+
+                impl Plain {
+                    pub fn make() -> Box<Plain> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        assert!(
+            !files.contains_key("RustVec.cs"),
+            "no owned byte-slice return means RustVec must not be emitted"
+        );
+        assert!(
+            !files.contains_key("RawRustVec.cs"),
+            "no owned byte-slice return means raw RustVec must not be emitted"
+        );
+        assert!(
+            !files.contains_key("DiplomatOwnedSliceU8.cs"),
+            "no owned byte-slice return means its raw struct must not be emitted"
+        );
+    }
+
+    #[test]
+    fn owned_byte_slice_return_reports_unsupported_backend() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Box<[u8]> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, false);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("#[diplomat::cfg(supports = owned_byte_slice_returns)]"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn owned_slice_return_of_non_u8_primitive_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Box<[u32]> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, true);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
+    // `Option<Box<[u8]>>` is rejected at HIR-lowering time: the new arm in
+    // `core::hir::lowering` requires `!in_result_option`, so an optioned
+    // owned slice falls through to the pre-existing rejection.
+    #[test]
+    fn optional_owned_byte_slice_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Option<Box<[u8]>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, true);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
+    // `Result<Box<[u8]>, E>` must stay rejected: the macro leaves the ok arm
+    // as a raw `Box<[u8]>` fat pointer inside `DiplomatResult` (it only
+    // converts to the repr(C) `DiplomatOwnedSlice<u8>` for a plain top-level
+    // return), so the result union's layout would not be FFI-stable.
+    #[test]
+    fn fallible_owned_byte_slice_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                pub enum MyError {
+                    A,
+                }
+
+                impl Buf {
+                    pub fn make(len: u32) -> Result<Box<[u8]>, MyError> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, true);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
+            "unexpected diagnostic: {}",
+            errors[0]
+        );
+    }
+
+    // The new lowering arm is scoped to method returns: an owned slice in an
+    // out-struct field must keep the old rejection even with
+    // `owned_byte_slice_returns` enabled.
+    #[test]
+    fn owned_byte_slice_out_struct_field_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::out]
+                pub struct Out {
+                    pub bytes: Box<[u8]>,
+                }
+
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Out {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, true);
+        assert!(
+            !errors.is_empty()
+                && errors
+                    .iter()
+                    .any(|e| e.contains("except for top-level `Box<[u8]>` method returns")),
+            "unexpected diagnostics: {errors:?}"
+        );
+    }
+
+    // This guards the return-only capability from enabling owned slice parameters.
+    #[test]
+    fn owned_byte_slice_parameter_is_still_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                impl Buf {
+                    pub fn take(v: Box<[u8]>) {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, true);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("Owned slices are not supported in this backend"),
+            "an owned slice parameter must still be rejected now that \
+             owned_byte_slice_returns is enabled for the return position; got: {}",
+            errors[0]
         );
     }
 }
