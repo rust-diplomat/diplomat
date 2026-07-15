@@ -171,16 +171,24 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         (
             self.formatter.fmt_file_name(&name),
             match ty {
-                TypeDef::Enum(e) => self.gen_enum(e, &name),
+                TypeDef::Enum(e) => self.gen_enum(e, id, &name),
                 TypeDef::Opaque(o) => self.gen_opaque_def(o, &name),
-                TypeDef::Struct(s) => self.gen_struct_def(s, false, &name, true),
-                TypeDef::OutStruct(s) => self.gen_struct_def(s, true, &name, false),
+                TypeDef::Struct(s) => self.gen_struct_def(s, id, false, &name, true),
+                TypeDef::OutStruct(s) => self.gen_struct_def(s, id, true, &name, false),
                 _ => unreachable!("unknown AST/HIR variant"),
             },
         )
     }
 
-    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
+    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, id: TypeId, type_name: &str) -> String {
+        let is_error = ty.usage.results.iter().any(|r| match &**r {
+            hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+            hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+            _ => false,
+        });
+        let is_bug = ty.attrs.bug;
+        let is_catchable = ty.attrs.catchable || (!is_bug && is_error);
+
         let methods = ty
             .methods
             .iter()
@@ -199,6 +207,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             is_contiguous: bool,
+            is_bug: bool,
+            is_catchable: bool,
             special: SpecialMethodGenInfo<'a>,
         }
 
@@ -209,6 +219,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
+            is_bug,
+            is_catchable,
             special,
         }
         .render()
@@ -254,10 +266,18 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
+        id: TypeId,
         is_out: bool,
         type_name: &str,
         mutable: bool,
     ) -> String {
+        let is_error = ty.usage.results.iter().any(|r| match &**r {
+            hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+            hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+            _ => false,
+        });
+        let is_bug = ty.attrs.bug;
+        let is_catchable = ty.attrs.catchable || (!is_bug && is_error);
         let fields = ty
             .fields
             .iter()
@@ -361,6 +381,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: Vec<MethodInfo<'a>>,
             deprecated: Option<&'a str>,
             docs: String,
+            is_bug: bool,
+            is_catchable: bool,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
         }
@@ -373,6 +395,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods,
             deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
+            is_bug,
+            is_catchable,
             lifetimes: &ty.lifetimes,
             special,
         }

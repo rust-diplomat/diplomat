@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-enum ErrorEnum {
+enum ErrorEnum implements core.Exception {
   // ignore: public_member_api_docs
   foo,
   // ignore: public_member_api_docs
