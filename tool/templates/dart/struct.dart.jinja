@@ -19,7 +19,10 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 {% endif -%}
 final class {{type_name}}
    {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
-   {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
+   {%- if is_bug %} extends core.Error {%- endif %}
+   {%- if is_error && special.comparator %} implements core.Exception, core.Comparable<{{type_name}}>
+   {%- else if is_error %} implements core.Exception
+   {%- else if special.comparator %} implements core.Comparable<{{type_name}}> {%- endif %} {
 
   {%- for field in fields %}
   // ignore: public_member_api_docs

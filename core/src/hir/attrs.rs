@@ -69,6 +69,9 @@ pub struct Attrs {
     /// For #[diplomat::attr()]. If true, the struct should be treated as a tuple in function arguments and return values by the language.
     pub tuple: bool,
 
+    /// From #[diplomat::attr()]. Mark an error type as an unrecoverable bug/precondition failure (Error in Dart/panic).
+    pub bug: bool,
+
     /// Information on if a type declaration/impl block has custom bindings, and if so, what kind.
     pub custom_extra_code: HashMap<IncludeLocation, IncludeSource>,
 
@@ -598,6 +601,9 @@ impl Attrs {
                             }
                             this.tuple = true;
                         }
+                        "bug" => {
+                            this.bug = true;
+                        }
                         "custom_extra_code" => {
                             let (location, source) =
                                 IncludeLocation::pair_from_meta(&attr.meta, errors);
@@ -751,6 +757,7 @@ impl Attrs {
             abi_compatible,
             mut_struct_ref,
             tuple,
+            bug: _,
             custom_extra_code,
             default_value,
         } = &self;
@@ -1234,6 +1241,7 @@ impl Attrs {
             mut_struct_ref: false,
             // Not inherited
             tuple: false,
+            bug: false,
             // Not inherited
             custom_extra_code: Default::default(),
             // Not inherited
