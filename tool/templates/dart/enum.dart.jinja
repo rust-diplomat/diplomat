@@ -5,13 +5,14 @@
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 enum {{type_name}}
-   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}>
-   {%- else if is_catchable %} implements core.Exception
-   {%- else if is_bug %} implements core.Error
-   {%- else if special.comparator %} implements core.Comparable<{{type_name}}>
-   {%- else if special.comparator && is_catchable %} implements core.Exception, core.Comparable<{{type_name}}>
-   {%- else if special.comparator && is_bug %} implements core.Error, core.Comparable<{{type_name}}>
-   {%- endif %} {
+   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
+   {%- if is_bug && special.comparator %} implements core.Error, core.Comparable<{{type_name}}> {
+   {%- else if is_bug %} implements core.Error {
+   {%- else if is_error && special.comparator %} implements core.Exception, core.Comparable<{{type_name}}> {
+   {%- else if is_error %} implements core.Exception {
+   {%- else if special.comparator %} implements core.Comparable<{{type_name}}> {
+   {%- else %} {
+   {%- endif %}
 {%~ for enum_variant in ty.variants %}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
