@@ -181,13 +181,13 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_enum(&mut self, ty: &'cx hir::EnumDef, id: TypeId, type_name: &str) -> String {
-        let is_error = ty.usage.results.iter().any(|r| match &**r {
-            hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-            hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-            _ => false,
-        });
+        let is_error = ty.attrs.custom_errors
+            || ty.usage.results.iter().any(|r| match &**r {
+                hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+                hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+                _ => false,
+            });
         let is_bug = ty.attrs.bug;
-        let is_catchable = ty.attrs.catchable || (!is_bug && is_error);
 
         let methods = ty
             .methods
@@ -208,7 +208,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             docs: String,
             is_contiguous: bool,
             is_bug: bool,
-            is_catchable: bool,
+            is_error: bool,
             special: SpecialMethodGenInfo<'a>,
         }
 
@@ -220,7 +220,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
             is_bug,
-            is_catchable,
+            is_error,
             special,
         }
         .render()
@@ -271,13 +271,13 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        let is_error = ty.usage.results.iter().any(|r| match &**r {
-            hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-            hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-            _ => false,
-        });
+        let is_error = ty.attrs.custom_errors
+            || ty.usage.results.iter().any(|r| match &**r {
+                hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+                hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
+                _ => false,
+            });
         let is_bug = ty.attrs.bug;
-        let is_catchable = ty.attrs.catchable || (!is_bug && is_error);
         let fields = ty
             .fields
             .iter()
@@ -382,7 +382,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             deprecated: Option<&'a str>,
             docs: String,
             is_bug: bool,
-            is_catchable: bool,
+            is_error: bool,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
         }
@@ -396,7 +396,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_bug,
-            is_catchable,
+            is_error,
             lifetimes: &ty.lifetimes,
             special,
         }
