@@ -1,3 +1,4 @@
+using System.Text;
 using Somelib;
 using Xunit;
 
@@ -42,7 +43,9 @@ public class OptionTests
     [Fact]
     public void OptionString_Write_RoundTripsUtf8()
     {
-        using OptionString value = Assert.IsType<OptionString>(OptionString.New("hello 餐"));
+        // `&DiplomatStr` (unvalidated UTF-8) lowers to a zero-copy `byte[]`.
+        using OptionString value =
+            Assert.IsType<OptionString>(OptionString.New(Encoding.UTF8.GetBytes("hello 餐")));
 
         Assert.Equal("hello 餐", value.Write());
     }

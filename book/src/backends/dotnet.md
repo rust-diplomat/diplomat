@@ -43,6 +43,38 @@ Consumers are not required to call `Dispose()`; a finalizer is the documented la
 cleanup path for owned handles. Native calls are followed by `GC.KeepAlive(this)` to
 prevent the finalizer from running mid-call and freeing memory a P/Invoke is still using.
 
+## String encoding
+
+The backend supports both UTF-8 and UTF-16 strings, zero-copy wherever the C# and Rust
+representations line up:
+
+* `&DiplomatStr16` params and returns: a C# `string` is already a flat UTF-16 buffer, so
+  these are always zero-copy — pinned directly with `fixed` (or, if the return value
+  borrows it, via `ReadOnlyMemory<char>` + the same pinning holder slices use).
+* `&DiplomatStr` params and returns (unvalidated UTF-8 — Rust places no validity
+  requirement on the caller): treated exactly like `&[u8]`, so these are also zero-copy —
+  `byte[]` / `ReadOnlyMemory<byte>` pinned directly, no transcoding.
+* `&str` params (validated UTF-8 — Rust requires the caller to guarantee well-formed
+  UTF-8, undefined behavior otherwise): a transcode from the UTF-16 `string` is
+  unavoidable here. That copy is always routed through the explicitly-named
+  `Diplomat.Utf8.Clone(...)` helper rather than inlined, so it stays visible in the
+  generated source instead of hiding inside generic marshalling.
+
+A borrowed string or slice return (`&'a str` / `&'a DiplomatStr` / `&'a DiplomatStr16` /
+`&'a [u8]` / `&'a [u32]`) surfaces as `DiplomatBorrowedSpan<T>` — a zero-copy view over
+memory Rust still owns, rooted with the same keep-alive-edge mechanism as a borrowed
+opaque return. It intentionally does not expose a `Span`-returning property (nothing
+would keep the view rooted once the span escaped it); call `WithSpan(...)` for scoped,
+zero-copy, read-only access instead — the same pattern `RustVec` uses for owned returns
+(see below). Producing an independent `T[]` is a separate, explicit step: call `Clone()`.
+
+An owned `Box<[u8]>` return surfaces as `RustVec` — it owns the native allocation, is
+`IDisposable`, and offers the same `WithSpan(...)` / `Clone()` shape as
+`DiplomatBorrowedSpan<T>` (it deliberately avoids `MemoryManager<T>` for the same reason:
+`GetSpan()`'s result wouldn't keep the owner alive). Other owned string/slice returns
+(`Box<str>`, `Box<[T]>` for `T` other than `u8`) and `&[&str]` (`&[DiplomatStrSlice]`)
+parameters aren't supported yet.
+
 ## Examples
 The best way to learn to use the .NET backend is to first understand Diplomat generally
 by reading this [book](../SUMMARY.md). Then look at the `example` and `feature_tests`
