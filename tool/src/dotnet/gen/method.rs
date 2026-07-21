@@ -178,6 +178,46 @@ pub(crate) enum Ownership {
     Borrowed,
 }
 
+/// Element type carried by a borrowed slice/string return
+/// (`DiplomatBorrowedSpan<T>`). Distinct from [`DotnetPrimitives`] because
+/// `char` (a UTF-16 code unit) isn't a Rust primitive type being lowered —
+/// it's the C# wire element type a string encoding picks.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum BorrowedSpanElement {
+    Byte,
+    UInt32,
+    Char,
+}
+
+impl BorrowedSpanElement {
+    pub(super) fn element_type(self) -> &'static str {
+        match self {
+            Self::Byte => "byte",
+            Self::UInt32 => "uint",
+            Self::Char => "char",
+        }
+    }
+
+    /// The raw wire struct this element type is pinned onto — same structs
+    /// used for input slices (`DiplomatSliceU8`/`DiplomatSliceU32`/`DiplomatSliceU16`).
+    pub(super) fn wire_struct(self) -> &'static str {
+        match self {
+            Self::Byte => "DiplomatSliceU8",
+            Self::UInt32 => "DiplomatSliceU32",
+            Self::Char => "DiplomatSliceU16",
+        }
+    }
+
+    /// PascalCase token for embedding in generated *type names*.
+    pub(super) fn name_token(self) -> &'static str {
+        match self {
+            Self::Byte => "Byte",
+            Self::UInt32 => "UInt32",
+            Self::Char => "Char",
+        }
+    }
+}
+
 /// The return type of a method, expressed once. The variant names the
 /// *kind*; [`Display`] writes the bare C# name; templates branch on kind
 /// via `is_*` predicates and supply the kind-specific bits (the `*` for
@@ -194,6 +234,11 @@ pub(crate) enum DotnetReturnType {
     /// shape as a primitive at the C ABI (an integer discriminant) —
     /// neither raw extern nor idiomatic surface needs marshalling glue.
     Enum(String),
+    /// A borrowed slice/string return (`&'a str` / `&'a DiplomatStr` /
+    /// `&'a DiplomatStr16` / `&'a [u8]` / `&'a [u32]`) — a zero-copy view
+    /// over Rust-owned memory, wrapped in `DiplomatBorrowedSpan<T>` and
+    /// rooted with keep-alive edges the same way a borrowed opaque return is.
+    BorrowedSpan(BorrowedSpanElement),
     /// `DiplomatWrite` writer. Not yet emitted; preserves prior behavior.
     Write,
     Unit,
@@ -215,6 +260,9 @@ impl Display for DotnetReturnType {
         match self {
             Self::Primitive(p) => write!(f, "{p}"),
             Self::Opaque(name) | Self::Struct(name) | Self::Enum(name) => write!(f, "{name}"),
+            Self::BorrowedSpan(elem) => {
+                write!(f, "DiplomatBorrowedSpan<{}>", elem.element_type())
+            }
             // Both render as the C# keyword `void` in raw externs. The
             // idiomatic signature spells `Write` methods as `string`
             // instead (see `idiomatic_signature_return_type`) — the writer
@@ -240,10 +288,13 @@ impl DotnetReturnType {
     /// Templates avoid carrying the inline `{% if is_opaque() %}*{% endif %}`
     /// micro-conditional.
     pub(super) fn raw(&self) -> String {
-        if self.is_opaque() {
-            format!("{self}*")
-        } else {
-            self.to_string()
+        match self {
+            Self::Opaque(_) => format!("{self}*"),
+            // A borrowed span crosses the wire as the same struct-by-value
+            // shape used for input slices — not `DiplomatBorrowedSpan<T>`,
+            // which only exists on the idiomatic side.
+            Self::BorrowedSpan(elem) => elem.wire_struct().to_string(),
+            _ => self.to_string(),
         }
     }
 
@@ -313,7 +364,19 @@ impl DotnetReturnType {
         match self {
             Self::Unit | Self::Write => "Void".to_string(),
             Self::Primitive(p) => p.name_token().to_string(),
+            Self::BorrowedSpan(elem) => format!("BorrowedSpan{}", elem.name_token()),
             _ => self.to_string(),
+        }
+    }
+
+    /// `new object[] { ... }`, or the shared empty-array constant when there
+    /// are no edges to root — used by both opaque and borrowed-span
+    /// construction, which both carry keep-alive edges the same way.
+    fn edges_array_expr(edges: &[String]) -> String {
+        if edges.is_empty() {
+            "System.Array.Empty<object>()".to_string()
+        } else {
+            format!("new object[] {{ {} }}", edges.join(", "))
         }
     }
 
@@ -328,21 +391,16 @@ impl DotnetReturnType {
         edges: &[String],
         ownership: Ownership,
     ) -> String {
-        let edges_array = || {
-            if edges.is_empty() {
-                "System.Array.Empty<object>()".to_string()
-            } else {
-                format!("new object[] {{ {} }}", edges.join(", "))
-            }
-        };
         match ownership {
             Ownership::Owned if edges.is_empty() => format!("new {name}({raw_expr})"),
-            Ownership::Owned => format!("new {name}({raw_expr}, {})", edges_array()),
+            Ownership::Owned => {
+                format!("new {name}({raw_expr}, {})", Self::edges_array_expr(edges))
+            }
             // `new {name}(...)` (not `{name}.Borrowed(...)`) so the type always
             // resolves even when the wrapper has a same-named method.
             Ownership::Borrowed => format!(
                 "new {name}(RustHandle<Raw.{name}>.Borrowed({raw_expr}), {})",
-                edges_array()
+                Self::edges_array_expr(edges)
             ),
         }
     }
@@ -358,6 +416,14 @@ impl DotnetReturnType {
         match self {
             Self::Opaque(name) => Self::opaque_construction(name, &raw_expr, edges, ownership),
             Self::Struct(name) => format!("{name}.FromFFI({raw_expr})"),
+            // Rust still owns this memory — no ownership decision needed,
+            // unlike opaque construction. Just wrap the pointer/length off
+            // the raw wire struct and root the keep-alive edges.
+            Self::BorrowedSpan(elem) => format!(
+                "new DiplomatBorrowedSpan<{}>({raw_expr}.Ptr, {raw_expr}.Len, {})",
+                elem.element_type(),
+                Self::edges_array_expr(edges)
+            ),
             Self::Unit | Self::Write => String::new(),
             Self::Primitive(_) | Self::Enum(_) => raw_expr.to_string(),
             // The raw struct's fields are named to match `DiplomatSliceU8`
@@ -372,6 +438,9 @@ impl DotnetReturnType {
             Self::Unit | Self::Write => unreachable!("unit/write options are rejected earlier"),
             Self::OwnedByteSlice => {
                 unreachable!("`Option<Box<[u8]>>` returns are rejected earlier")
+            }
+            Self::BorrowedSpan(_) => {
+                unreachable!("Option-wrapped borrowed-span returns are rejected earlier")
             }
             Self::Primitive(_) | Self::Struct(_) | Self::Enum(_) => format!("({self}?)null"),
         }
@@ -764,11 +833,25 @@ impl MethodInfo<'_> {
         !self.inputs.borrowed_slice_pins.is_empty()
     }
 
+    /// True if this method returns a `DiplomatBorrowedSpan<T>` — used to
+    /// gate emitting that helper type only when a run actually needs it
+    /// (mirrors `has_pinned_inputs` gating `DiplomatPinnedMemory`).
+    pub(super) fn returns_borrowed_span(&self) -> bool {
+        matches!(self.return_type, DotnetReturnType::BorrowedSpan(_))
+    }
+
     pub(super) fn can_return_raw_call_directly(&self) -> bool {
         self.option_info.is_none()
             && matches!(
                 self.return_type,
-                DotnetReturnType::Primitive(_) | DotnetReturnType::Enum(_)
+                // `BorrowedSpan`'s raw type is a run-level wire struct
+                // (`DiplomatSliceU8`/`DiplomatSliceU16`/`DiplomatSliceU32`)
+                // living in the `Diplomat` namespace, not nested under the
+                // `Raw` static class like Opaque/Struct/Enum mirrors are —
+                // same "no `Raw.` mirror" situation as Primitive/Enum.
+                DotnetReturnType::Primitive(_)
+                    | DotnetReturnType::Enum(_)
+                    | DotnetReturnType::BorrowedSpan(_)
             )
     }
 
@@ -878,6 +961,19 @@ pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo
 // Per-method builders
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// The bits that differ between element types lowered by
+/// [`ItemGenContext::lower_immutable_element_slice`] — bundled into one
+/// struct so that function stays under clippy's argument-count limit.
+/// `mutable_class` is only consulted for the plain (non-borrowed-by-return)
+/// case — the borrowed-by-return case always rejects mutable slices before
+/// it matters.
+struct ImmutableElementShape<'a> {
+    element_type: &'a str,
+    ptr_type: &'a str,
+    immutable_class: &'a str,
+    mutable_class: &'a str,
+}
+
 impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// Build a method's render view, or `None` if the method uses an HIR
     /// shape the backend can't lower yet (the diagnostic is recorded during
@@ -949,14 +1045,39 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             self.borrowed_output_keep_alive_edges(method, &inputs, &borrow_map, ownership)?;
         let lifetime_warning = !keep_alive_edges.is_empty();
 
-        // A non-opaque success return drops edges silently in `idiomatic_value_expr`
-        // (no struct edge-plumbing yet) — would be a use-after-free.
-        if !keep_alive_edges.is_empty() && !matches!(return_type, DotnetReturnType::Opaque(_)) {
+        // A non-opaque, non-borrowed-span success return drops edges silently
+        // in `idiomatic_value_expr` (no struct edge-plumbing yet) — would be
+        // a use-after-free.
+        if !keep_alive_edges.is_empty()
+            && !matches!(
+                return_type,
+                DotnetReturnType::Opaque(_) | DotnetReturnType::BorrowedSpan(_)
+            )
+        {
             self.errors.push_error(format!(
                 "[.NET backend] return value of type `{return_type}` borrows from the receiver \
                  or an opaque parameter; keep-alive edges are only supported for opaque (`Box<T>`) \
-                 returns today. Return an opaque, or disable this API for .NET."
+                 and borrowed-span (`&str`/`&[T]`) returns today. Return an opaque or borrowed \
+                 span, or disable this API for .NET."
             ));
+            return None;
+        }
+
+        // `DiplomatBorrowedSpan<T>` carries its edges in its own constructor
+        // the same way an opaque wrapper does, but wrapping it in
+        // `Result`/`Option` hasn't been exercised end-to-end (the result/
+        // option helper structs' union-field and none-value plumbing was
+        // only ever built for opaque/primitive/struct/enum arms) — reject
+        // rather than risk generating broken bridging code.
+        if matches!(return_type, DotnetReturnType::BorrowedSpan(_))
+            && (option_info.is_some() || error_info.is_some())
+        {
+            self.errors.push_error(
+                "[.NET backend] wrapping a borrowed span return (`&str` / `&[T]`) in \
+                 `Result`/`Option` is not yet supported — return it bare, or disable this \
+                 API for .NET."
+                    .to_string(),
+            );
             return None;
         }
 
@@ -1241,43 +1362,92 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             hir::SuccessType::OutType(hir::Type::Enum(p)) => {
                 DotnetReturnType::Enum(self.enum_name(p))
             }
-            hir::SuccessType::OutType(hir::Type::Slice(hir::Slice::Primitive(
-                MaybeOwn::Own,
-                primitive_type,
-            ))) => {
-                if !matches!(
-                    primitive_type,
-                    hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8)
-                ) {
-                    self.errors.push_error(format!(
-                        "[.NET backend] owned slice return not yet supported for element \
-                         type {primitive_type:?}; only owned `u8`/`DiplomatByte` slices \
-                         (`Box<[u8]>`) are supported today"
-                    ));
-                    return None;
+            hir::SuccessType::OutType(hir::Type::Slice(slice)) => match slice {
+                hir::Slice::Str(Some(_), encoding) => {
+                    let elem = match encoding {
+                        hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => {
+                            BorrowedSpanElement::Byte
+                        }
+                        hir::StringEncoding::UnvalidatedUtf16 => BorrowedSpanElement::Char,
+                        other => {
+                            self.errors.push_error(format!(
+                                "[.NET backend] borrowed string return encoding not yet \
+                                 supported: {other:?}"
+                            ));
+                            return None;
+                        }
+                    };
+                    DotnetReturnType::BorrowedSpan(elem)
                 }
-                // Both rejections are defense in depth — HIR lowering only
-                // accepts an owned byte slice as a plain top-level return
-                // (`!in_result_option`), because the macro leaves a `Result`'s
-                // ok arm as a raw `Box<[u8]>` fat pointer inside
-                // `DiplomatResult` instead of converting it to the repr(C)
-                // `DiplomatOwnedSlice<u8>`, so the union layout would not be
-                // FFI-stable.
-                if is_nullable_path {
+                // Owned string returns (`Box<str>`) need the separately-decided
+                // owned-slice-return design (see DECISIONS.md) — not
+                // implemented here, don't re-litigate it.
+                hir::Slice::Str(None, _) => {
                     self.errors.push_error(
-                        "[.NET backend] `Option<Box<[u8]>>` return is not supported.".to_string(),
-                    );
-                    return None;
-                }
-                if failed.is_some() {
-                    self.errors.push_error(
-                        "[.NET backend] `Result<Box<[u8]>, E>` return is not supported."
+                        "[.NET backend] owned string return (`Box<str>`) is not yet \
+                         supported."
                             .to_string(),
                     );
                     return None;
                 }
-                DotnetReturnType::OwnedByteSlice
-            }
+                hir::Slice::Primitive(MaybeOwn::Borrow(_), primitive_type) => {
+                    let elem = match primitive_type {
+                        hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8) => {
+                            BorrowedSpanElement::Byte
+                        }
+                        hir::PrimitiveType::Int(hir::IntType::U32) => BorrowedSpanElement::UInt32,
+                        other => {
+                            self.errors.push_error(format!(
+                                "[.NET backend] borrowed slice return element type not yet \
+                                 supported: {other:?}"
+                            ));
+                            return None;
+                        }
+                    };
+                    DotnetReturnType::BorrowedSpan(elem)
+                }
+                hir::Slice::Primitive(MaybeOwn::Own, primitive_type) => {
+                    if !matches!(
+                        primitive_type,
+                        hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8)
+                    ) {
+                        self.errors.push_error(format!(
+                            "[.NET backend] owned slice return not yet supported for element \
+                             type {primitive_type:?}; only owned `u8`/`DiplomatByte` slices \
+                             (`Box<[u8]>`) are supported today"
+                        ));
+                        return None;
+                    }
+                    // Both rejections are defense in depth — HIR lowering only
+                    // accepts an owned byte slice as a plain top-level return
+                    // (`!in_result_option`), because the macro leaves a `Result`'s
+                    // ok arm as a raw `Box<[u8]>` fat pointer inside
+                    // `DiplomatResult` instead of converting it to the repr(C)
+                    // `DiplomatOwnedSlice<u8>`, so the union layout would not be
+                    // FFI-stable.
+                    if is_nullable_path {
+                        self.errors.push_error(
+                            "[.NET backend] `Option<Box<[u8]>>` return is not supported."
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    if failed.is_some() {
+                        self.errors.push_error(
+                            "[.NET backend] `Result<Box<[u8]>, E>` return is not supported."
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    DotnetReturnType::OwnedByteSlice
+                }
+                other => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] slice return type not yet supported: {other:?}"
+                    ));
+                    return None;
+                }
+            },
             other => {
                 self.errors.push_error(format!(
                     "[.NET backend] success return type not yet supported: {other:?}"
@@ -1483,6 +1653,78 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .into_owned()
     }
 
+    /// Lowers a parameter that's always immutable and always borrowed, and
+    /// whose C# idiomatic surface is an array/`ReadOnlyMemory` of some
+    /// blittable element type pinned directly onto the wire struct — shared
+    /// by `&[u8]`/`&[u32]` primitive slices and by `&DiplomatStr`
+    /// (`StringEncoding::UnvalidatedUtf8`), which carries no caller-side
+    /// validity contract and so is really just `&[u8]` tagged as
+    /// string-like.
+    fn lower_immutable_element_slice(
+        &self,
+        input_context: &MethodInputContext<'tcx>,
+        borrow_info: ParamBorrowInfo<'tcx>,
+        shape: ImmutableElementShape<'_>,
+        mutability: hir::Mutability,
+    ) -> Option<InputLowering> {
+        let ImmutableElementShape {
+            element_type,
+            ptr_type,
+            immutable_class,
+            mutable_class,
+        } = shape;
+        let arg_name = input_context.arg_name();
+        let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
+
+        Some(if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+            if matches!(mutability, hir::Mutability::Mutable) {
+                self.errors.push_error(format!(
+                    "[.NET backend] mutable slice parameter `{arg_name}` borrowed \
+                     by the output is not yet supported; ReadOnlyMemory cannot hand \
+                     Rust a mutable view"
+                ));
+                return None;
+            }
+            let pin = self.slice_local_name(input_context.param_ident(), "Pin");
+            InputLowering {
+                raw_param: format!("{immutable_class} {arg_name}"),
+                idiomatic_param: format!("ReadOnlyMemory<{element_type}> {arg_name}"),
+                raw_call_arg: format!(
+                    "new {immutable_class} {{ Ptr = ({ptr_type}*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
+                ),
+                borrowed_slice_pin: Some(SlicePin {
+                    arg_name: arg_name.to_string(),
+                    pin_local: pin,
+                }),
+                idiomatic_param_type: Some(format!("ReadOnlyMemory<{element_type}>")),
+                ..Default::default()
+            }
+        } else {
+            let slice_class = match mutability {
+                hir::Mutability::Mutable => mutable_class,
+                hir::Mutability::Immutable => immutable_class,
+            };
+
+            InputLowering {
+                raw_param: format!("{slice_class} {arg_name}"),
+                idiomatic_param: format!("{element_type}[] {arg_name}"),
+                raw_call_arg: format!(
+                    "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
+                ),
+                // Non-optional slice param — null array is a contract
+                // violation. Without this check the `{arg_name}.Length` in
+                // the call arg throws a bare `NullReferenceException` with
+                // no parameter name.
+                validation_statement: Some(format!(
+                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                )),
+                fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
+                idiomatic_param_type: Some(format!("{element_type}[]")),
+                ..Default::default()
+            }
+        })
+    }
+
     fn lower_input(
         &self,
         input_context: MethodInputContext<'tcx>,
@@ -1560,61 +1802,132 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             );
                             return None;
                         }
-                        hir::MaybeStatic::NonStatic(_) => {
-                            // The marshaller below is hard-coded to UTF-8.
-                            // `attr_support.utf16_strings = false` keeps the
-                            // HIR validator from sending UTF-16 here, but be
-                            // explicit so any future encoding (e.g.
-                            // `UnvalidatedUtf8`) doesn't silently slip
-                            // through and get encoded incorrectly.
-                            match string_encoding {
-                                hir::StringEncoding::Utf8
-                                | hir::StringEncoding::UnvalidatedUtf8 => {}
-                                other => {
-                                    self.errors.push_error(format!(
-                                        "[.NET backend] string encoding not yet supported: {other:?}"
-                                    ));
-                                    return None;
+                        hir::MaybeStatic::NonStatic(_) => match string_encoding {
+                            // `&str` requires the caller to *guarantee*
+                            // valid UTF-8 (UB on the Rust side otherwise —
+                            // see the doc comment on `StringEncoding::Utf8`),
+                            // so this can't be reshaped to a raw `byte[]`
+                            // like `UnvalidatedUtf8` below: a careless
+                            // caller could then hand Rust invalid UTF-8.
+                            // `Encoding.UTF8.GetBytes` on a real C# `string`
+                            // is the only thing that can make that
+                            // guarantee, so the transcode-copy stays —
+                            // routed through the explicitly-named
+                            // `Diplomat.Utf8.Clone` instead of inlining the
+                            // BCL call, so the allocation is visible.
+                            hir::StringEncoding::Utf8 => {
+                                let base = input_context.param_ident();
+                                let ptr = self.slice_local_name(base, "Ptr");
+                                let bytes = self.slice_local_name(base, "Bytes");
+                                InputLowering {
+                                    raw_param: format!("DiplomatSliceU8 {arg_name}"),
+                                    idiomatic_param: format!("string {arg_name}"),
+                                    raw_call_arg: format!(
+                                        "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}.Length }}"
+                                    ),
+                                    // `&str` is non-optional on the Rust
+                                    // side, so a null string is a contract
+                                    // violation. Surface `ArgumentNullException`
+                                    // naming the actual parameter — without this,
+                                    // `Utf8.Clone(null)` throws with its own
+                                    // internal param name (`"value"`). The
+                                    // template emits validation before to-bytes.
+                                    validation_statement: Some(format!(
+                                        "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                    )),
+                                    to_bytes_statement: Some(format!(
+                                        "byte[] {bytes} = Diplomat.Utf8.Clone({arg_name});"
+                                    )),
+                                    // FIXME: an empty string yields a zero-length
+                                    // `byte[]`, and `fixed` on an empty array binds
+                                    // a null pointer — so Rust receives
+                                    // `{ Ptr = null, Len = 0 }`. Diplomat's C ABI
+                                    // tolerates `(null, 0)` today (it only reads the
+                                    // pointer when `Len > 0`), but a strictly-correct
+                                    // binding would hand over a non-null dangling
+                                    // pointer for the empty case.
+                                    fix_statement: Some(format!(
+                                        "fixed (byte* {ptr} = {bytes})"
+                                    )),
+                                    idiomatic_param_type: Some("string".to_string()),
+                                    keep_alive_target: None,
+                                    borrowed_slice_pin: None,
                                 }
                             }
-                            let base = input_context.param_ident();
-                            let ptr = self.slice_local_name(base, "Ptr");
-                            let bytes = self.slice_local_name(base, "Bytes");
-                            InputLowering {
-                                raw_param: format!("DiplomatSliceU8 {arg_name}"),
-                                idiomatic_param: format!("string {arg_name}"),
-                                raw_call_arg: format!(
-                                    "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}.Length }}"
-                                ),
-                                // `&DiplomatStr` is non-optional on the Rust
-                                // side, so a null string is a contract
-                                // violation. Surface `ArgumentNullException`
-                                // naming the actual parameter — without this,
-                                // `Encoding.UTF8.GetBytes(null)` throws with
-                                // its own internal param name (`"s"`). The
-                                // template emits validation before to-bytes.
-                                validation_statement: Some(format!(
-                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                                )),
-                                to_bytes_statement: Some(format!(
-                                    "byte[] {bytes} = System.Text.Encoding.UTF8.GetBytes({arg_name});"
-                                )),
-                                // FIXME: an empty string yields a zero-length
-                                // `byte[]`, and `fixed` on an empty array binds
-                                // a null pointer — so Rust receives
-                                // `{ Ptr = null, Len = 0 }`. Diplomat's C ABI
-                                // tolerates `(null, 0)` today (it only reads the
-                                // pointer when `Len > 0`), but a strictly-correct
-                                // binding would hand over a non-null dangling
-                                // pointer for the empty case.
-                                fix_statement: Some(format!(
-                                    "fixed (byte* {ptr} = {bytes})"
-                                )),
-                                idiomatic_param_type: Some("string".to_string()),
-                                keep_alive_target: None,
-                                borrowed_slice_pin: None,
+                            // `&DiplomatStr` carries no caller-side validity
+                            // contract — Rust treats it as opaque bytes — so
+                            // unlike `&str` above it's really just `&[u8]`
+                            // tagged as string-like, and gets the exact same
+                            // zero-copy treatment as an existing `&[u8]`
+                            // parameter (no transcode, ever).
+                            hir::StringEncoding::UnvalidatedUtf8 => self
+                                .lower_immutable_element_slice(
+                                    &input_context,
+                                    borrow_info,
+                                    ImmutableElementShape {
+                                        element_type: "byte",
+                                        ptr_type: "byte",
+                                        immutable_class: "DiplomatSliceU8",
+                                        mutable_class: "DiplomatSliceU8",
+                                    },
+                                    hir::Mutability::Immutable,
+                                )?,
+                            hir::StringEncoding::UnvalidatedUtf16 => {
+                                // A C# `string` is already a flat UTF-16
+                                // buffer — `fixed` pins it directly with no
+                                // allocation, unlike the UTF-8 arm above
+                                // which must transcode first. Bonus: `fixed`
+                                // on a C# string (even `""`) always yields a
+                                // valid pointer to its null terminator, so
+                                // the empty-string dangling-pointer FIXME
+                                // above doesn't apply here.
+                                let base = input_context.param_ident();
+                                let ptr = self.slice_local_name(base, "Ptr");
+
+                                if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+                                    let pin = self.slice_local_name(base, "Pin");
+                                    InputLowering {
+                                        raw_param: format!("DiplomatSliceU16 {arg_name}"),
+                                        idiomatic_param: format!(
+                                            "ReadOnlyMemory<char> {arg_name}"
+                                        ),
+                                        raw_call_arg: format!(
+                                            "new DiplomatSliceU16 {{ Ptr = (char*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
+                                        ),
+                                        borrowed_slice_pin: Some(SlicePin {
+                                            arg_name: arg_name.to_string(),
+                                            pin_local: pin,
+                                        }),
+                                        idiomatic_param_type: Some(
+                                            "ReadOnlyMemory<char>".to_string(),
+                                        ),
+                                        ..Default::default()
+                                    }
+                                } else {
+                                    InputLowering {
+                                        raw_param: format!("DiplomatSliceU16 {arg_name}"),
+                                        idiomatic_param: format!("string {arg_name}"),
+                                        raw_call_arg: format!(
+                                            "new DiplomatSliceU16 {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
+                                        ),
+                                        validation_statement: Some(format!(
+                                            "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                        )),
+                                        fix_statement: Some(format!(
+                                            "fixed (char* {ptr} = {arg_name})"
+                                        )),
+                                        idiomatic_param_type: Some("string".to_string()),
+                                        ..Default::default()
+                                    }
+                                }
                             }
-                        }
+                            other => {
+                                self.errors.push_error(format!(
+                                    "[.NET backend] string encoding not yet supported: {other:?}"
+                                ));
+                                return None;
+                            }
+                        },
                     },
                     None => {
                         self.errors.push_error(
@@ -1628,7 +1941,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 hir::Slice::Primitive(maybe_own, primitive_type) => match primitive_type {
                     hir::PrimitiveType::Byte
                     | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::U32) => {
-                        let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
                         let MaybeOwn::Borrow(borrow) = maybe_own else {
                             self.errors.push_error(format!(
                                 "[.NET backend] owned primitive slice not yet supported: \
@@ -1649,56 +1961,17 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 _ => unreachable!(),
                             };
 
-                        if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
-                            if matches!(borrow.mutability, hir::Mutability::Mutable) {
-                                self.errors.push_error(format!(
-                                    "[.NET backend] mutable slice parameter `{arg_name}` borrowed \
-                                     by the output is not yet supported; ReadOnlyMemory cannot hand \
-                                     Rust a mutable view"
-                                ));
-                                return None;
-                            }
-                            let pin = self.slice_local_name(input_context.param_ident(), "Pin");
-                            InputLowering {
-                                raw_param: format!("{immutable_class} {arg_name}"),
-                                idiomatic_param: format!("ReadOnlyMemory<{element_type}> {arg_name}"),
-                                raw_call_arg: format!(
-                                    "new {immutable_class} {{ Ptr = ({ptr_type}*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
-                                ),
-                                borrowed_slice_pin: Some(SlicePin {
-                                    arg_name: arg_name.to_string(),
-                                    pin_local: pin,
-                                }),
-                                idiomatic_param_type: Some(format!("ReadOnlyMemory<{element_type}>")),
-                                ..Default::default()
-                            }
-                        } else {
-                            let slice_class = match borrow.mutability {
-                                hir::Mutability::Mutable => mutable_class,
-                                hir::Mutability::Immutable => immutable_class,
-                            };
-
-                            InputLowering {
-                                raw_param: format!("{slice_class} {arg_name}"),
-                                idiomatic_param: format!("{element_type}[] {arg_name}"),
-                                raw_call_arg: format!(
-                                    "new {slice_class} {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
-                                ),
-                                // Non-optional slice param — null array is a
-                                // contract violation. Without this check the
-                                // `{arg_name}.Length` in the call arg throws a
-                                // bare `NullReferenceException` with no
-                                // parameter name.
-                                validation_statement: Some(format!(
-                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                                )),
-                                fix_statement: Some(format!("fixed ({ptr_type}* {ptr} = {arg_name})")),
-                                to_bytes_statement: None,
-                                idiomatic_param_type: Some(format!("{element_type}[]")),
-                                keep_alive_target: None,
-                                borrowed_slice_pin: None,
-                            }
-                        }
+                        self.lower_immutable_element_slice(
+                            &input_context,
+                            borrow_info,
+                            ImmutableElementShape {
+                                element_type,
+                                ptr_type,
+                                immutable_class,
+                                mutable_class,
+                            },
+                            borrow.mutability,
+                        )?
                     }
                     hir::PrimitiveType::Int(int_type) => {
                         self.errors.push_error(format!(

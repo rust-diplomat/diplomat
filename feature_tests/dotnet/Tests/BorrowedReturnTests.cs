@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Somelib;
 using Xunit;
 
@@ -9,10 +10,14 @@ namespace Somelib.FeatureTests;
 // if `_edges` doesn't root it — these tests verify that can't happen.
 public class BorrowedReturnTests
 {
+    // `CreateSingle`/`SetFirstC`'s string param is `&DiplomatStr` (unvalidated
+    // UTF-8), lowered to a zero-copy `byte[]`.
+    private static byte[] Utf8(string s) => Encoding.UTF8.GetBytes(s);
+
     [Fact]
     public void First_ReturnsReadableBorrowedView()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hello");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hello"));
         Assert.Equal((nuint)1, vec.Len());
 
         using OpaqueThin first = vec.First()!;
@@ -25,7 +30,7 @@ public class BorrowedReturnTests
     [Fact]
     public void Get_InRangeBorrows_OutOfRangeReturnsNull()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // The indexer `get` is a borrowed return just like `First()`: an
         // in-range index hands back a non-owning view into the Vec slot.
@@ -39,7 +44,7 @@ public class BorrowedReturnTests
     [Fact]
     public void First_AliasesOwnerStorage_StringField()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "before");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
 
         // The borrow is taken BEFORE the mutation and never refreshed.
         using OpaqueThin borrow = vec.First()!;
@@ -50,14 +55,14 @@ public class BorrowedReturnTests
         // re-reads the field. If `First()` had handed back a copy, the borrow
         // would still read "before"; seeing "after" proves it is an interior
         // reference into the same Vec slot the owner just wrote.
-        vec.SetFirstC("after");
+        vec.SetFirstC(Utf8("after"));
         Assert.Equal("after", borrow.C());
     }
 
     [Fact]
     public void DisposingBorrowedView_DoesNotFreeOwnersMemory()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // A borrowed handle owns nothing, so Dispose must be a no-op on Rust's
         // pointer — even called twice, it must not double-free.
@@ -77,7 +82,7 @@ public class BorrowedReturnTests
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static OpaqueThin BorrowAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").First()!;
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).First()!;
     }
 
     [Fact]
@@ -105,7 +110,7 @@ public class BorrowedReturnTests
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static OpaqueThin TryFirstAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryFirst(false);
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).TryFirst(false);
     }
 
     [Fact]
@@ -130,7 +135,7 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleBorrowedReturn_Err_Throws()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         // The `Err(())` arm throws — and must not hand back a wrapper at all.
         Assert.Throws<InvalidOperationException>(() => vec.TryFirst(true));
     }
@@ -138,7 +143,7 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleOptionalBorrowedReturn_Composes()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // Result + Option + borrowing view: Ok(Some(_)) reads through the borrow.
         using OpaqueThin at0 = vec.TryGet(0, false)!;
@@ -154,7 +159,7 @@ public class BorrowedReturnTests
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static OpaqueThin TryGetAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryGet(0, false)!;
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).TryGet(0, false)!;
     }
 
     [Fact]
@@ -180,7 +185,7 @@ public class BorrowedReturnTests
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static OpaqueThinIter TryIterAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryIter(false);
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).TryIter(false);
     }
 
     [Fact]
@@ -229,14 +234,14 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleOwnedBorrowingBoxReturn_Err_Throws()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         Assert.Throws<InvalidOperationException>(() => vec.TryIter(true));
     }
 
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
     private static OpaqueThinIter OptionalIterAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").OptionalIter(true)!;
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).OptionalIter(true)!;
     }
 
     [Fact]
@@ -261,14 +266,14 @@ public class BorrowedReturnTests
     [Fact]
     public void OptionalOwnedBorrowingBoxReturn_None_ReturnsNull()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         Assert.Null(vec.OptionalIter(false));
     }
 
     [Fact]
     public void FallibleCustomBorrowingError_Throws_AndInnerExposesOwnerView()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, "hi");
+        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // The error is a custom opaque (`Box<BorrowingError<'a>>`) borrowing the
         // Vec, not a `()` mapped to InvalidOperationException. It surfaces as a
@@ -290,7 +295,7 @@ public class BorrowedReturnTests
     {
         try
         {
-            OpaqueThinVec.CreateSingle(42, 2.5f, "rooted").TryBorrow(true);
+            OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).TryBorrow(true);
             throw new InvalidOperationException("TryBorrow(true) was expected to throw");
         }
         catch (BorrowingErrorException ex)
