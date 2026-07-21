@@ -1947,7 +1947,9 @@ mod test {
             errors.join("\n")
         );
 
-        let my_string = files.get("MyString.cs").expect("expected MyString.cs output");
+        let my_string = files
+            .get("MyString.cs")
+            .expect("expected MyString.cs output");
         assert!(
             my_string.contains("public DiplomatBorrowedSpan<byte> Borrow()"),
             "borrowed string return should surface as DiplomatBorrowedSpan<byte>:\n{my_string}"

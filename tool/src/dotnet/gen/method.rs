@@ -393,7 +393,9 @@ impl DotnetReturnType {
     ) -> String {
         match ownership {
             Ownership::Owned if edges.is_empty() => format!("new {name}({raw_expr})"),
-            Ownership::Owned => format!("new {name}({raw_expr}, {})", Self::edges_array_expr(edges)),
+            Ownership::Owned => {
+                format!("new {name}({raw_expr}, {})", Self::edges_array_expr(edges))
+            }
             // `new {name}(...)` (not `{name}.Borrowed(...)`) so the type always
             // resolves even when the wrapper has a same-named method.
             Ownership::Borrowed => format!(
@@ -958,6 +960,19 @@ pub(super) fn collect_properties(methods: &[MethodInfo<'_>]) -> Vec<PropertyInfo
 // ─────────────────────────────────────────────────────────────────────────────
 // Per-method builders
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// The bits that differ between element types lowered by
+/// [`ItemGenContext::lower_immutable_element_slice`] — bundled into one
+/// struct so that function stays under clippy's argument-count limit.
+/// `mutable_class` is only consulted for the plain (non-borrowed-by-return)
+/// case — the borrowed-by-return case always rejects mutable slices before
+/// it matters.
+struct ImmutableElementShape<'a> {
+    element_type: &'a str,
+    ptr_type: &'a str,
+    immutable_class: &'a str,
+    mutable_class: &'a str,
+}
 
 impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// Build a method's render view, or `None` if the method uses an HIR
@@ -1644,19 +1659,20 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// by `&[u8]`/`&[u32]` primitive slices and by `&DiplomatStr`
     /// (`StringEncoding::UnvalidatedUtf8`), which carries no caller-side
     /// validity contract and so is really just `&[u8]` tagged as
-    /// string-like. `mutable_class` is only consulted for the plain
-    /// (non-borrowed-by-return) case — the borrowed-by-return case always
-    /// rejects mutable slices before it matters.
+    /// string-like.
     fn lower_immutable_element_slice(
         &self,
         input_context: &MethodInputContext<'tcx>,
         borrow_info: ParamBorrowInfo<'tcx>,
-        element_type: &str,
-        ptr_type: &str,
-        immutable_class: &str,
-        mutable_class: &str,
+        shape: ImmutableElementShape<'_>,
         mutability: hir::Mutability,
     ) -> Option<InputLowering> {
+        let ImmutableElementShape {
+            element_type,
+            ptr_type,
+            immutable_class,
+            mutable_class,
+        } = shape;
         let arg_name = input_context.arg_name();
         let ptr = self.slice_local_name(input_context.param_ident(), "Ptr");
 
@@ -1848,10 +1864,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 .lower_immutable_element_slice(
                                     &input_context,
                                     borrow_info,
-                                    "byte",
-                                    "byte",
-                                    "DiplomatSliceU8",
-                                    "DiplomatSliceU8",
+                                    ImmutableElementShape {
+                                        element_type: "byte",
+                                        ptr_type: "byte",
+                                        immutable_class: "DiplomatSliceU8",
+                                        mutable_class: "DiplomatSliceU8",
+                                    },
                                     hir::Mutability::Immutable,
                                 )?,
                             hir::StringEncoding::UnvalidatedUtf16 => {
@@ -1946,10 +1964,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         self.lower_immutable_element_slice(
                             &input_context,
                             borrow_info,
-                            element_type,
-                            ptr_type,
-                            immutable_class,
-                            mutable_class,
+                            ImmutableElementShape {
+                                element_type,
+                                ptr_type,
+                                immutable_class,
+                                mutable_class,
+                            },
                             borrow.mutability,
                         )?
                     }
