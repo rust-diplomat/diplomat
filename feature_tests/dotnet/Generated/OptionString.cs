@@ -61,15 +61,14 @@ public partial class OptionString: IDisposable
     /// <returns>
     /// A <c>OptionString</c> allocated on Rust side.
     /// </returns>
-    public static OptionString? New(string diplomatStr)
+    public static OptionString? New(byte[] diplomatStr)
     {
         unsafe
         {
             if (diplomatStr == null) throw new ArgumentNullException(nameof(diplomatStr));
-            byte[] diplomatStrBytes = System.Text.Encoding.UTF8.GetBytes(diplomatStr);
-            fixed (byte* diplomatStrPtr = diplomatStrBytes)
+            fixed (byte* diplomatStrPtr = diplomatStr)
             {
-                Raw.OptionString* result = Raw.OptionString.New(new DiplomatSliceU8 { Ptr = diplomatStrPtr, Len = (nuint)diplomatStrBytes.Length });
+                Raw.OptionString* result = Raw.OptionString.New(new DiplomatSliceU8 { Ptr = diplomatStrPtr, Len = (nuint)diplomatStr.Length });
                 return result == null ? null : new OptionString(result);
             }
         }

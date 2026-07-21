@@ -54,7 +54,6 @@ pub mod ffi {
             let _ = write;
         }
 
-        #[diplomat::attr(dotnet, disable)]
         pub fn borrow<'a>(&'a self) -> DiplomatStrSlice<'a> {
             AsRef::<[u8]>::as_ref(&self.0).into()
         }

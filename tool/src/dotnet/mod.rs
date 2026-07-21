@@ -3,8 +3,11 @@
 //! Generates C# bindings that call into the Diplomat-generated C ABI via
 //! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
 //! Opaque Rust handles map to `IDisposable` partial classes backed by
-//! `RustHandle<T>`, which records whether C# or Rust owns the pointer. Slices
-//! and strings copy across the boundary; callbacks are pinned via `GCHandle`.
+//! `RustHandle<T>`, which records whether C# or Rust owns the pointer.
+//! Slices, `&DiplomatStr` (unvalidated UTF-8) and `&DiplomatStr16` pin
+//! zero-copy; a validated `&str` still copies, since only a transcode from a
+//! real `System.String` can guarantee well-formed UTF-8. Callbacks are
+//! pinned via `GCHandle`.
 //!
 //! This file is the entry point that the Diplomat CLI dispatches to. Codegen
 //! itself lives in [`gen`] and naming/type-formatting concerns live in
@@ -16,20 +19,38 @@
 //! lifetime-edge analysis to root supported borrowed outputs and reject the
 //! unsafe cases:
 //!
-//! * `&[u8]` / `&[u32]` / `&DiplomatStr` params are pinned with `fixed (...)`
-//!   (or copied into a pinned `byte[]`) for the call and unpinned immediately
-//!   after. When an owned opaque success return borrows a `&[u8]` / `&[u32]`
-//!   param, that param instead surfaces as `ReadOnlyMemory` and is pinned via
-//!   `DiplomatPinnedMemory`, rooted as a keep-alive edge and unpinned after the
-//!   Rust destructor runs. String params and other borrow positions (borrowed
-//!   errors, Option-wrapped or non-opaque returns) are still rejected with a
-//!   diagnostic. Because `ReadOnlyMemory` / `MemoryHandle` need the
-//!   `System.Memory` package on the netstandard2.0 / .NET Framework floor, the
-//!   `DiplomatPinnedMemory` helper and its `Dispose` sweep are emitted only when
-//!   a run actually pins (see `uses_pinned_memory`), so runs that never borrow a
-//!   slice don't inherit the dependency.
+//! * `&[u8]` / `&[u32]` / `&DiplomatStr` (`byte[]`) and `&DiplomatStr16`
+//!   (`string`) params are pinned with `fixed (...)` for the call and
+//!   unpinned immediately after. A validated `&str` is transcoded first
+//!   (`Diplomat.Utf8.Clone`, an explicit, separately-named copy — see
+//!   `gen::method`'s `Slice::Str` lowering) and then pinned the same way.
+//!   When an owned opaque success return borrows a `&[u8]` / `&[u32]` /
+//!   `&DiplomatStr` / `&DiplomatStr16` param, that param instead surfaces as
+//!   `ReadOnlyMemory` and is pinned via `DiplomatPinnedMemory`, rooted as a
+//!   keep-alive edge and unpinned after the Rust destructor runs. A
+//!   validated `&str` can't take this path — the transcode-copy only lives
+//!   for the call, so this borrow position (and other borrow positions:
+//!   borrowed errors, Option-wrapped or non-opaque returns) are still
+//!   rejected with a diagnostic. Because `ReadOnlyMemory` / `MemoryHandle`
+//!   need the `System.Memory` package on the netstandard2.0 / .NET
+//!   Framework floor, the `DiplomatPinnedMemory` helper and its `Dispose`
+//!   sweep are emitted only when a run actually pins (see
+//!   `uses_pinned_memory`), so runs that never borrow a slice don't inherit
+//!   the dependency.
 //! * Borrowed opaque returns (`&T`, `&mut T`, `Option<&T>`) use non-owning
 //!   handles plus keep-alive edges.
+//! * Borrowed string/slice returns (`&'a str` / `&'a [u8]` / `&'a [u32]`) wrap
+//!   the same `(ptr, len)` shape as an input slice in `DiplomatBorrowedSpan<T>`,
+//!   rooted with keep-alive edges the same way a borrowed opaque return is.
+//!   It exposes `WithSpan(...)` (scoped, zero-copy, read-only access) and
+//!   `Clone()` (an explicit, independent `T[]`) — never a bare `Span`-returning
+//!   property, since nothing would keep the view's edges rooted once the span
+//!   escaped it. Wrapping one in `Result`/`Option` isn't supported yet.
+//! * An owned `Box<[u8]>` return wraps the `DiplomatOwnedSliceU8` `(ptr, len)`
+//!   struct in `RustVec`, which owns the native allocation and is
+//!   `IDisposable`. It offers the same `WithSpan(...)` / `Clone()` shape as
+//!   `DiplomatBorrowedSpan<T>`, for the same reason: `MemoryManager<T>` would
+//!   force a `GetSpan()` whose result doesn't keep the owner alive.
 //! * Borrowed opaque errors (`Result<_, &E>`) are rejected; without a success
 //!   arm to carry keep-alive edges, `Dispose` would call `Destroy` on a pointer
 //!   Rust still owns (double-free).
@@ -65,6 +86,16 @@ struct DiplomatSliceU8Template<'a> {
 #[derive(Template)]
 #[template(path = "dotnet/DiplomatSliceMutU8.cs.jinja", escape = "none")]
 struct DiplomatSliceMutU8Template<'a> {
+    namespace: &'a str,
+}
+
+/// `DiplomatSliceU16` — the `repr(C)` fat pointer that crosses the FFI
+/// boundary for every `&DiplomatStr16` param. A C# `char` is a UTF-16 code
+/// unit, the same width as Rust's `u16`, so a C# `string` pins directly into
+/// this shape with no transcoding.
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatSliceU16.cs.jinja", escape = "none")]
+struct DiplomatSliceU16Template<'a> {
     namespace: &'a str,
 }
 
@@ -106,6 +137,25 @@ struct NativeLibTemplate<'a> {
 #[derive(Template)]
 #[template(path = "dotnet/RustHandle.cs.jinja", escape = "none")]
 struct RustHandleTemplate<'a> {
+    namespace: &'a str,
+}
+
+/// `DiplomatBorrowedSpan<T>` — a zero-copy view over a borrowed slice/string
+/// return (Rust still owns the memory). Needs the `System.Memory` package on
+/// the netstandard2.0 / .NET Framework floor (`ReadOnlySpan<T>`), so it's
+/// emitted only when a run actually returns one (see `uses_borrowed_span`).
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatBorrowedSpan.cs.jinja", escape = "none")]
+struct DiplomatBorrowedSpanTemplate<'a> {
+    namespace: &'a str,
+}
+
+/// `Diplomat.Utf8` — explicit, named UTF-16 `string` -> UTF-8 `byte[]`
+/// clone, used wherever a validated `&str` parameter forces a transcode
+/// that can't be avoided (see `gen::method`'s `Slice::Str` lowering).
+#[derive(Template)]
+#[template(path = "dotnet/Utf8.cs.jinja", escape = "none")]
+struct Utf8Template<'a> {
     namespace: &'a str,
 }
 
@@ -156,15 +206,22 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.non_exhaustive_structs = true;
     a.method_overloading = true;
     a.utf8_strings = true;
-    a.utf16_strings = false;
-    // `option` and `mutable_slices` are advertised but coverage is
-    // narrower than the flag suggests:
+    a.utf16_strings = true;
+    // `option`, `mutable_slices`, and `utf16_strings` are advertised but
+    // coverage is narrower than the flag suggests:
     //   - `mutable_slices`: only `&mut [DiplomatByte]`, `&mut [u8]`, and
     //     `&mut [u32]` lower today; other primitive element types report a
     //     diagnostic in the slice-primitive arm of `gen::method::lower_input`.
     //   - `option`: works for primitive / enum / struct success values;
     //     unsupported non-primitive struct fields report a diagnostic during
     //     struct codegen.
+    //   - `utf16_strings`: `&DiplomatStr16` inputs are zero-copy (call-scoped
+    //     and borrowed-by-return); borrowed string *returns* (`&'a str` /
+    //     `&'a DiplomatStr` / `&'a DiplomatStr16`) work bare but not wrapped
+    //     in `Result`/`Option` yet; owned string returns (`Box<str>`) aren't
+    //     supported (see the separately-decided owned-slice-return design in
+    //     DECISIONS.md); `&[&str]` (`Slice::Strs`) is rejected regardless of
+    //     encoding.
     // The granularity needed to express this in `attr_support` doesn't
     // exist (no per-primitive flag), so we keep the broad flags `true`
     // and document the gaps here + via the diagnostics themselves.
@@ -327,7 +384,8 @@ pub(crate) fn run<'tcx>(
      * The content layer represents the safe, idiomatic C# API that end-users will interact with.
      * It may wrap or compose multiple raw items, and should prioritize usability and safety.
      */
-    let (uses_pinned_memory, uses_owned_byte_slice_return, rendered_types) = ctx.render_all_types();
+    let (uses_pinned_memory, uses_owned_byte_slice_return, uses_borrowed_span, rendered_types) =
+        ctx.render_all_types();
     for rendered in rendered_types {
         let file_name = format!("{}.cs", rendered.display_name);
         if let Some(raw) = rendered.raw {
@@ -403,6 +461,15 @@ pub(crate) fn run<'tcx>(
     );
     add_cs_file(
         &files,
+        "DiplomatSliceU16.cs".to_string(),
+        DiplomatSliceU16Template {
+            namespace: &namespace,
+        }
+        .render()
+        .expect("DiplomatSliceU16 template render failed"),
+    );
+    add_cs_file(
+        &files,
         "DiplomatSliceU32.cs".to_string(),
         DiplomatSliceU32Template {
             namespace: &namespace,
@@ -447,6 +514,15 @@ pub(crate) fn run<'tcx>(
         .render()
         .expect("RustHandle template render failed"),
     );
+    add_cs_file(
+        &files,
+        "Utf8.cs".to_string(),
+        Utf8Template {
+            namespace: &namespace,
+        }
+        .render()
+        .expect("Utf8 template render failed"),
+    );
     // The helper pulls in System.Memory, which the netstandard2.0 floor lacks
     // by default — so only ship it when the run actually pins a slice.
     if uses_pinned_memory {
@@ -458,6 +534,20 @@ pub(crate) fn run<'tcx>(
             }
             .render()
             .expect("DiplomatPinnedMemory template render failed"),
+        );
+    }
+    // Also needs System.Memory (`ReadOnlySpan<T>`) — same reasoning, gated
+    // independently since a method can return a borrowed span without
+    // pinning any input (e.g. borrowing only from `self`).
+    if uses_borrowed_span {
+        add_cs_file(
+            &files,
+            "DiplomatBorrowedSpan.cs".to_string(),
+            DiplomatBorrowedSpanTemplate {
+                namespace: &namespace,
+            }
+            .render()
+            .expect("DiplomatBorrowedSpan template render failed"),
         );
     }
 
@@ -684,8 +774,14 @@ mod test {
         );
     }
 
+    // `&DiplomatStr` (`UnvalidatedUtf8`) carries no caller-side validity
+    // contract, so it's lowered exactly like `&[u8]` (see
+    // `lower_immutable_element_slice`) — including this case, which used to
+    // be rejected before that reshape: an owned opaque return borrowing a
+    // `&DiplomatStr` parameter now pins it and roots the pin as a
+    // keep-alive edge, identical to `owned_return_borrowing_byte_slice_unpins_on_dispose`.
     #[test]
-    fn lifetime_carrying_owned_return_borrowing_slice_input_is_rejected() {
+    fn owned_return_borrowing_diplomat_str_input_pins_and_unpins_on_dispose() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -696,6 +792,53 @@ mod test {
 
                 impl<'a> Foo<'a> {
                     pub fn new(x: &'a DiplomatStr) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains("public static Foo New(ReadOnlyMemory<byte> x)"),
+            "borrowed &DiplomatStr param should surface as ReadOnlyMemory<byte>:\n{foo}"
+        );
+        assert!(
+            foo.contains("new Foo(result, new object[] { xPin })"),
+            "infallible owned return should root the pin holder as an edge:\n{foo}"
+        );
+        let release_at = foo
+            .find("_inner.Release();")
+            .expect("Dispose should release the Rust handle");
+        let unpin_at = foo
+            .find("(edge as DiplomatPinnedMemory)?.Dispose();")
+            .expect("Dispose should unpin holder edges");
+        assert!(
+            release_at < unpin_at,
+            "unpin must run AFTER Release() so Rust's Drop can still read the buffer:\n{foo}"
+        );
+    }
+
+    // A validated `&'a str` still forces a transcode-copy (`Utf8.Clone`),
+    // so it can't be pinned past the call — this borrow position stays
+    // rejected, unlike the `&DiplomatStr` case above.
+    #[test]
+    fn lifetime_carrying_owned_return_borrowing_validated_str_input_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a str);
+
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a str) -> Box<Self> {
                         unimplemented!()
                     }
                 }
@@ -1051,6 +1194,165 @@ mod test {
         assert!(
             !hasher.contains("DiplomatPinnedMemory.Pin("),
             "temporary slice method should not pin the input:\n{hasher}"
+        );
+    }
+
+    // `&DiplomatStr` carries no caller-side validity contract, so it's
+    // lowered exactly like `&[u8]` — zero-copy `byte[]` + `fixed`, no
+    // transcode, ever.
+    #[test]
+    fn temporary_diplomat_str_keeps_byte_array_fixed_pinning() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+
+                #[diplomat::opaque]
+                pub struct Hasher;
+
+                impl Hasher {
+                    pub fn hash(data: &DiplomatStr) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let hasher = files.get("Hasher.cs").expect("expected Hasher.cs output");
+        assert!(
+            hasher.contains("public static uint Hash(byte[] data)")
+                && hasher.contains("fixed (byte* dataPtr = data)"),
+            "&DiplomatStr should get the same byte[] + fixed lowering as &[u8]:\n{hasher}"
+        );
+        assert!(
+            !hasher.contains("Encoding.UTF8") && !hasher.contains("Utf8.Clone"),
+            "&DiplomatStr must never transcode — it's already raw bytes:\n{hasher}"
+        );
+    }
+
+    // A validated `&str` still needs the caller to guarantee well-formed
+    // UTF-8, so the idiomatic surface stays `string` and the unavoidable
+    // transcode is routed through the explicitly-named `Diplomat.Utf8.Clone`.
+    #[test]
+    fn validated_str_input_uses_utf8_clone() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Hasher;
+
+                impl Hasher {
+                    pub fn hash(data: &str) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let hasher = files.get("Hasher.cs").expect("expected Hasher.cs output");
+        assert!(
+            hasher.contains("public static uint Hash(string data)"),
+            "validated &str should keep the string idiomatic param:\n{hasher}"
+        );
+        assert!(
+            hasher.contains("byte[] dataBytes = Diplomat.Utf8.Clone(data);")
+                && hasher.contains("fixed (byte* dataPtr = dataBytes)"),
+            "the unavoidable transcode should be named Utf8.Clone, not inlined:\n{hasher}"
+        );
+    }
+
+    // A C# `string` is already a flat UTF-16 buffer — `&DiplomatStr16` pins
+    // it directly with no allocation.
+    #[test]
+    fn temporary_diplomat_str16_keeps_string_fixed_pinning() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr16;
+
+                #[diplomat::opaque]
+                pub struct Hasher;
+
+                impl Hasher {
+                    pub fn hash(data: &DiplomatStr16) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let hasher = files.get("Hasher.cs").expect("expected Hasher.cs output");
+        assert!(
+            hasher.contains("public static uint Hash(string data)")
+                && hasher.contains("fixed (char* dataPtr = data)"),
+            "&DiplomatStr16 should pin the C# string directly, zero-copy:\n{hasher}"
+        );
+        assert!(
+            !hasher.contains("Encoding.UTF8") && !hasher.contains("Utf8.Clone"),
+            "&DiplomatStr16 must never transcode:\n{hasher}"
+        );
+    }
+
+    // A `&DiplomatStr16` borrowed by an owned opaque return pins via
+    // `ReadOnlyMemory<char>` — same keep-alive-edge mechanism as `&[u8]`.
+    #[test]
+    fn owned_return_borrowing_diplomat_str16_input_pins_via_readonly_memory_char() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr16;
+
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a DiplomatStr16);
+
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a DiplomatStr16) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains("public static Foo New(ReadOnlyMemory<char> x)"),
+            "borrowed &DiplomatStr16 param should surface as ReadOnlyMemory<char>:\n{foo}"
+        );
+        assert!(
+            foo.contains("DiplomatPinnedMemory.Pin(x)") && foo.contains("(char*)xPin.Pointer"),
+            "borrowed &DiplomatStr16 should be pinned via DiplomatPinnedMemory:\n{foo}"
+        );
+        assert!(
+            foo.contains("new Foo(result, new object[] { xPin })"),
+            "infallible owned return should root the pin holder as an edge:\n{foo}"
         );
     }
 
@@ -1613,6 +1915,173 @@ mod test {
             "an owned slice parameter must still be rejected now that \
              owned_byte_slice_returns is enabled for the return position; got: {}",
             errors[0]
+        );
+    }
+
+    // A borrowed string return (`&'a str` family) has no `IDisposable`
+    // wrapper of its own — Rust still owns the memory — so it's a
+    // zero-copy `DiplomatBorrowedSpan<byte>` rooting `this` as a keep-alive
+    // edge, the same mechanism a borrowed opaque return already uses.
+    #[test]
+    fn borrowed_string_return_generates_diplomat_borrowed_span() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStrSlice;
+
+                #[diplomat::opaque]
+                pub struct MyString;
+
+                impl MyString {
+                    pub fn borrow<'a>(&'a self) -> DiplomatStrSlice<'a> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let my_string = files.get("MyString.cs").expect("expected MyString.cs output");
+        assert!(
+            my_string.contains("public DiplomatBorrowedSpan<byte> Borrow()"),
+            "borrowed string return should surface as DiplomatBorrowedSpan<byte>:\n{my_string}"
+        );
+        assert!(
+            my_string.contains(
+                "new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new object[] { this })"
+            ),
+            "the returned view should root `this` as a keep-alive edge:\n{my_string}"
+        );
+
+        let span = files
+            .get("DiplomatBorrowedSpan.cs")
+            .expect("DiplomatBorrowedSpan.cs should be emitted when a run returns one");
+        assert!(
+            span.contains("public readonly unsafe struct DiplomatBorrowedSpan<T>"),
+            "the view must be a plain struct (not a ref struct, not a class) so it can be \
+             stored anywhere and keep `edges` reachable:\n{span}"
+        );
+        assert!(
+            span.contains("public void WithSpan(DiplomatBorrowedSpanAction<T> action)"),
+            "the view should expose zero-copy access scoped to a callback, mirroring \
+             RustVec's WithSpan — never a bare Span-returning property:\n{span}"
+        );
+        assert!(
+            span.contains("public T[] Clone()"),
+            "an independent copy should be a separate, explicitly-named operation:\n{span}"
+        );
+        assert!(
+            !span.contains("void Dispose()"),
+            "the view never owns the memory, so it shouldn't be IDisposable:\n{span}"
+        );
+    }
+
+    // The same view type covers a borrowed primitive slice return, not just
+    // strings — `lower_return` previously had no `Type::Slice` arm at all.
+    #[test]
+    fn borrowed_u32_slice_return_generates_diplomat_borrowed_span() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buffer;
+
+                impl Buffer {
+                    pub fn borrow<'a>(&'a self) -> &'a [u32] {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let buffer = files.get("Buffer.cs").expect("expected Buffer.cs output");
+        assert!(
+            buffer.contains("public DiplomatBorrowedSpan<uint> Borrow()"),
+            "borrowed &[u32] return should surface as DiplomatBorrowedSpan<uint>:\n{buffer}"
+        );
+        assert!(
+            buffer.contains(
+                "new DiplomatBorrowedSpan<uint>(result.Ptr, result.Len, new object[] { this })"
+            ),
+            "the returned view should root `this` as a keep-alive edge:\n{buffer}"
+        );
+    }
+
+    // A run that never returns a borrowed span shouldn't pay for the
+    // System.Memory-dependent helper — mirrors
+    // `run_without_pinning_omits_pin_helper_and_sweep`.
+    #[test]
+    fn run_without_borrowed_span_omits_the_helper() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo;
+
+                impl Foo {
+                    pub fn value(&self) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        assert!(
+            !files.contains_key("DiplomatBorrowedSpan.cs"),
+            "a run that never returns a borrowed span shouldn't emit the helper"
+        );
+    }
+
+    // Wrapping a borrowed span return in Result/Option hasn't been exercised
+    // end-to-end (the result/option helper structs' bridging was only ever
+    // built for opaque/primitive/struct/enum arms) — reject rather than risk
+    // generating broken code, instead of silently mis-lowering it.
+    #[test]
+    fn fallible_borrowed_string_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStrSlice;
+
+                #[diplomat::opaque]
+                pub struct MyString;
+
+                #[diplomat::opaque]
+                pub struct MyError;
+
+                impl MyString {
+                    pub fn try_borrow<'a>(&'a self) -> Result<DiplomatStrSlice<'a>, Box<MyError>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1);
+        assert!(
+            errors[0].contains("wrapping a borrowed span return"),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
         );
     }
 }

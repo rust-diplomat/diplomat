@@ -143,6 +143,19 @@ impl PreparedType<'_> {
             }
         }
     }
+
+    /// True iff any of this type's methods returns a `DiplomatBorrowedSpan<T>`.
+    /// Gates emitting that helper type the same way `uses_pinned_memory` gates
+    /// `DiplomatPinnedMemory` — independent flag, since a method can return a
+    /// borrowed span without pinning any input (e.g. borrowing only from `self`).
+    fn uses_borrowed_span(&self) -> bool {
+        match self {
+            Self::Prerendered { .. } => false,
+            Self::Opaque { methods, .. } | Self::Struct { methods, .. } => {
+                methods.iter().any(|m| m.returns_borrowed_span())
+            }
+        }
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -195,14 +208,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     }
 
     /// Render every non-disabled type to `(display_name, raw, content)`,
-    /// alongside the run-level `uses_pinned_memory` flag. Types are BUILT
-    /// first (each method lowered exactly once) so the flag is known before
-    /// the first opaque Dispose sweep — a pin edge lands on the RETURNED
-    /// type's wrapper, which may render before the method that pins into it.
-    pub(super) fn render_all_types(&self) -> (bool, bool, Vec<RenderedType>) {
+    /// alongside the run-level `uses_pinned_memory`, `uses_owned_byte_slice_return`,
+    /// and `uses_borrowed_span` flags. Types are BUILT first (each method
+    /// lowered exactly once) so the flags are known before the first opaque
+    /// Dispose sweep — a pin edge lands on the RETURNED type's wrapper, which
+    /// may render before the method that pins into it.
+    pub(super) fn render_all_types(&self) -> (bool, bool, bool, Vec<RenderedType>) {
         let mut prepared_types = Vec::new();
         let mut uses_pinned_memory = false;
         let mut uses_owned_byte_slice_return = false;
+        let mut uses_borrowed_span = false;
         for (id, ty) in self.tcx.all_types() {
             if ty.attrs().disable {
                 continue;
@@ -217,6 +232,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             };
             uses_pinned_memory |= prepared.uses_pinned_memory();
             uses_owned_byte_slice_return |= prepared.uses_owned_byte_slice_return();
+            uses_borrowed_span |= prepared.uses_borrowed_span();
             prepared_types.push(prepared);
         }
 
@@ -232,7 +248,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
             })
             .collect();
-        (uses_pinned_memory, uses_owned_byte_slice_return, rendered)
+        (
+            uses_pinned_memory,
+            uses_owned_byte_slice_return,
+            uses_borrowed_span,
+            rendered,
+        )
     }
 
     /// Build a type's render data without emitting any C#. `build_method_info`
