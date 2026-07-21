@@ -61,15 +61,14 @@ public partial class Locale: IDisposable
     /// <returns>
     /// A <c>Locale</c> allocated on Rust side.
     /// </returns>
-    public static Locale New(string name)
+    public static Locale New(byte[] name)
     {
         unsafe
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
-            byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name);
-            fixed (byte* namePtr = nameBytes)
+            fixed (byte* namePtr = name)
             {
-                Raw.Locale* result = Raw.Locale.New(new DiplomatSliceU8 { Ptr = namePtr, Len = (nuint)nameBytes.Length });
+                Raw.Locale* result = Raw.Locale.New(new DiplomatSliceU8 { Ptr = namePtr, Len = (nuint)name.Length });
                 return new Locale(result);
             }
         }
