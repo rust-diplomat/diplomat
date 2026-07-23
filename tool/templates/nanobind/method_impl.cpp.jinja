@@ -97,7 +97,7 @@
         []({{type_name}}* self, {{m.param_decls.params[0].type_name}} index) {
             auto out = {% call method_name_cpp("map_inner(", ")") %}self->operator[] (index){% endcall %};
             {%- if op.is_optional() %}
-            if ({% if op.is_owned() -%} out.get() {%- else -%} out {%- endif %} == nullptr) {
+            if (out == nullptr) {
                 throw nb::index_error("Could not get index.");
             } else {
                 return out;
