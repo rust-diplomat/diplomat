@@ -149,8 +149,17 @@ namespace nanobind::detail
             if (value.is_ok()) {
                 if constexpr (std::is_same_v<U, std::monostate>) {
                     return none().release();
-                } else {
+                } else if constexpr (std::is_reference_v<T>) {
                     return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+                } else {
+                    // `.ok().value()` doesn't always hand back a `T` -- for Ref-shaped `T` (an
+                    // optional borrowed opaque success value), `Optional<T>::value()` hands back
+                    // the dereferenced `Foo&&` instead (see the Ref-based `Optional` specialization
+                    // in runtime.hpp.jinja), so cast through `Optional<T>::value_type` here rather
+                    // than the class-level `Caster`/`U` (which stay keyed on `T` itself, matching
+                    // how from_python populates ok_val above).
+                    using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                    return make_caster<OkValueType>::from_cpp(forward_like_<OkValueType>(std::move(value).ok().value()), p, cl);
                 }
             }
 
