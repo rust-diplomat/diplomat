@@ -151,19 +151,46 @@ namespace nanobind::detail
                     return none().release();
                 } else if constexpr (std::is_reference_v<T>) {
                     return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+                } else if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
+                    // Ref-shaped `T`: `.ok().value()` hands back the dereferenced `Foo&&` (see the
+                    // Ref-based `Optional` specialization in runtime.hpp.jinja), whose address is
+                    // part of the temporary `Optional<T>` this whole expression produced --
+                    // dangling the instant this function returns. Heap-allocate a small,
+                    // permanently "leaked" `Foo` wrapper holding the same pointer instead
+                    // (mirroring the `Ref<T,CPtr>`/`Optional<T>` casters above); rv_policy::reference
+                    // means nanobind never deletes it.
+                    using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                    OkValueType&& ok_ref = std::move(value).ok().value();
+                    using CPtr = std::remove_pointer_t<decltype(ok_ref.AsFFI())>;
+                    auto* heap_view = new OkValueType(OkValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(ok_ref.AsFFI())));
+                    return make_caster<OkValueType>::from_cpp(heap_view, rv_policy::reference, cl);
                 } else {
-                    // `.ok().value()` doesn't always hand back a `T` -- for Ref-shaped `T` (an
-                    // optional borrowed opaque success value), `Optional<T>::value()` hands back
-                    // the dereferenced `Foo&&` instead (see the Ref-based `Optional` specialization
-                    // in runtime.hpp.jinja), so cast through `Optional<T>::value_type` here rather
-                    // than the class-level `Caster`/`U` (which stay keyed on `T` itself, matching
-                    // how from_python populates ok_val above).
+                    // `.ok().value()` doesn't always hand back a `T` -- for owned-opaque `T`,
+                    // `Optional<T>::value_type` is `T` itself, so this is unchanged from before.
                     using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
                     return make_caster<OkValueType>::from_cpp(forward_like_<OkValueType>(std::move(value).ok().value()), p, cl);
                 }
             }
 
-            set_py_error(std::move(value).err().value(), p, cl);
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<E> && std::is_copy_constructible_v<E>) {
+                // Same dangling-temporary concern as the Ref-shaped `T` branch above, for the error
+                // variant.
+                using ErrValueType = typename {{lib_name}}::diplomat::Optional<E>::value_type;
+                ErrValueType&& err_ref = std::move(value).err().value();
+                using CPtr = std::remove_pointer_t<decltype(err_ref.AsFFI())>;
+                auto* heap_view = new ErrValueType(ErrValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(err_ref.AsFFI())));
+                // Pass the raw pointer, as an xvalue (not `*heap_view`, and not the bare lvalue
+                // `heap_view`) -- set_py_error's forwarding-reference parameter would otherwise
+                // deduce a reference type (to the pointee, or to the pointer variable itself),
+                // which its own is_reference_v<E> check (a plain std::is_reference_v, unlike
+                // nanobind's own reference-stripping is_pointer_v used elsewhere in this file) can't
+                // tell apart from the genuine-Rust-&T convention it's designed for. A pointer
+                // argument also keeps rv_policy::reference from being downgraded to `move` by
+                // infer_policy, which only pointer arguments are exempt from.
+                set_py_error(std::move(heap_view), rv_policy::reference, cl);
+            } else {
+                set_py_error(std::move(value).err().value(), p, cl);
+            }
 
             return nullptr;
         }
