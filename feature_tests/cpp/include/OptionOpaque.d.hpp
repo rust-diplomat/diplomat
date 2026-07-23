@@ -24,69 +24,64 @@ class OptionEnum;
 namespace somelib {
 namespace capi {
     struct OptionOpaque;
+    extern "C" {
+    void OptionOpaque_destroy(OptionOpaque* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OptionOpaque {
+class OptionOpaque;
+using OptionOpaqueRef = somelib::diplomat::Ref<OptionOpaque, const somelib::capi::OptionOpaque>;
+using OptionOpaqueRefMut = somelib::diplomat::Ref<OptionOpaque, somelib::capi::OptionOpaque>;
+
+class OptionOpaque : public somelib::diplomat::OpaquePointer<OptionOpaque, somelib::capi::OptionOpaque, somelib::capi::OptionOpaque_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::OptionOpaque> new_(int32_t i);
+  inline static somelib::diplomat::Optional<somelib::OptionOpaque> new_(int32_t i);
 
-  inline static std::unique_ptr<somelib::OptionOpaque> new_none();
+  inline static somelib::diplomat::Optional<somelib::OptionOpaque> new_none();
 
-  inline static std::optional<somelib::OptionStruct> returns();
+  inline static somelib::diplomat::Optional<somelib::OptionStruct> returns();
 
-  inline std::optional<intptr_t> option_isize() const;
+  inline somelib::diplomat::Optional<intptr_t> option_isize() const;
 
-  inline std::optional<size_t> option_usize() const;
+  inline somelib::diplomat::Optional<size_t> option_usize() const;
 
-  inline std::optional<int32_t> option_i32() const;
+  inline somelib::diplomat::Optional<int32_t> option_i32() const;
 
-  inline std::optional<uint32_t> option_u32() const;
+  inline somelib::diplomat::Optional<uint32_t> option_u32() const;
 
   inline static somelib::OptionStruct new_struct();
 
   inline static somelib::OptionStruct new_struct_nones();
 
-  inline const somelib::OptionOpaque* returns_none_self() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::OptionOpaqueRef> returns_none_self() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline const somelib::OptionOpaque* returns_some_self() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::OptionOpaqueRef> returns_some_self() const DIPLOMAT_LIFETIME_BOUND;
 
   inline void assert_integer(int32_t i) const;
 
-  inline static bool option_opaque_argument(const somelib::OptionOpaque* arg);
+  inline static bool option_opaque_argument(somelib::diplomat::Optional<somelib::OptionOpaqueRef> arg);
 
-  inline static std::optional<uint8_t> accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel);
+  inline static somelib::diplomat::Optional<uint8_t> accepts_option_u8(somelib::diplomat::Optional<uint8_t> arg, uint8_t sentinel);
 
-  inline static std::optional<somelib::OptionEnum> accepts_option_enum(std::optional<somelib::OptionEnum> arg, uint8_t sentinel);
+  inline static somelib::diplomat::Optional<somelib::OptionEnum> accepts_option_enum(somelib::diplomat::Optional<somelib::OptionEnum> arg, uint8_t sentinel);
 
   inline static void accepts_borrowing_option_struct(somelib::BorrowingOptionStruct arg);
 
-  inline static std::optional<somelib::OptionEnum> accepts_multiple_option_enum(uint8_t sentinel1, std::optional<somelib::OptionEnum> arg1, std::optional<somelib::OptionEnum> arg2, std::optional<somelib::OptionEnum> arg3, uint8_t sentinel2);
+  inline static somelib::diplomat::Optional<somelib::OptionEnum> accepts_multiple_option_enum(uint8_t sentinel1, somelib::diplomat::Optional<somelib::OptionEnum> arg1, somelib::diplomat::Optional<somelib::OptionEnum> arg2, somelib::diplomat::Optional<somelib::OptionEnum> arg3, uint8_t sentinel2);
 
-  inline static std::optional<somelib::OptionInputStruct> accepts_option_input_struct(std::optional<somelib::OptionInputStruct> arg, uint8_t sentinel);
+  inline static somelib::diplomat::Optional<somelib::OptionInputStruct> accepts_option_input_struct(somelib::diplomat::Optional<somelib::OptionInputStruct> arg, uint8_t sentinel);
 
   inline static somelib::OptionInputStruct returns_option_input_struct();
 
-  inline static size_t accepts_option_str(std::optional<std::string_view> arg, uint8_t sentinel);
+  inline static size_t accepts_option_str(somelib::diplomat::Optional<std::string_view> arg, uint8_t sentinel);
 
-  inline static bool accepts_option_str_slice(std::optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel);
+  inline static bool accepts_option_str_slice(somelib::diplomat::Optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel);
 
-  inline static int64_t accepts_option_primitive(std::optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel);
+  inline static int64_t accepts_option_primitive(somelib::diplomat::Optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel);
 
-    inline const somelib::capi::OptionOpaque* AsFFI() const;
-    inline somelib::capi::OptionOpaque* AsFFI();
-    inline static const somelib::OptionOpaque* FromFFI(const somelib::capi::OptionOpaque* ptr);
-    inline static somelib::OptionOpaque* FromFFI(somelib::capi::OptionOpaque* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OptionOpaque() = delete;
-    OptionOpaque(const somelib::OptionOpaque&) = delete;
-    OptionOpaque(somelib::OptionOpaque&&) noexcept = delete;
-    OptionOpaque operator=(const somelib::OptionOpaque&) = delete;
-    OptionOpaque operator=(somelib::OptionOpaque&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

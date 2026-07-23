@@ -27,29 +27,24 @@ class RenamedAttrEnum;
 namespace somelib {
 namespace capi {
     struct Unnamespaced;
+    extern "C" {
+    void namespace_Unnamespaced_destroy(Unnamespaced* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Unnamespaced {
+class Unnamespaced;
+using UnnamespacedRef = somelib::diplomat::Ref<Unnamespaced, const somelib::capi::Unnamespaced>;
+using UnnamespacedRefMut = somelib::diplomat::Ref<Unnamespaced, somelib::capi::Unnamespaced>;
+
+class Unnamespaced : public somelib::diplomat::OpaquePointer<Unnamespaced, somelib::capi::Unnamespaced, somelib::capi::namespace_Unnamespaced_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::Unnamespaced> make(somelib::ns::RenamedAttrEnum _e);
+  inline static somelib::Unnamespaced make(somelib::ns::RenamedAttrEnum _e);
 
   inline void use_namespaced(const somelib::ns::AttrOpaque1Renamed& _n) const;
 
-    inline const somelib::capi::Unnamespaced* AsFFI() const;
-    inline somelib::capi::Unnamespaced* AsFFI();
-    inline static const somelib::Unnamespaced* FromFFI(const somelib::capi::Unnamespaced* ptr);
-    inline static somelib::Unnamespaced* FromFFI(somelib::capi::Unnamespaced* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Unnamespaced() = delete;
-    Unnamespaced(const somelib::Unnamespaced&) = delete;
-    Unnamespaced(somelib::Unnamespaced&&) noexcept = delete;
-    Unnamespaced operator=(const somelib::Unnamespaced&) = delete;
-    Unnamespaced operator=(somelib::Unnamespaced&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

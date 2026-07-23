@@ -6,8 +6,8 @@
 namespace somelib::ns {
 void add_RenamedRenamedCachedIncludeZST_binding(nb::module_ mod) {
     nb::class_<somelib::ns::RenamedRenamedCachedIncludeZST> st(mod, "RenamedRenamedCachedIncludeZST");
-    st
-        .def(nb::init<>());
+    maybe_bind_default_init(st);
+    st;
 }
 
 } 

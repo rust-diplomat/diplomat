@@ -15,29 +15,25 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedStringList;
+    extern "C" {
+    void namespace_StringList_destroy(RenamedStringList* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
+class RenamedStringList;
+using RenamedStringListRef = somelib::diplomat::Ref<RenamedStringList, const somelib::ns::capi::RenamedStringList>;
+using RenamedStringListRefMut = somelib::diplomat::Ref<RenamedStringList, somelib::ns::capi::RenamedStringList>;
+
 /**
  * Testing support for List[str] in Nanobind
  */
-class RenamedStringList {
+class RenamedStringList : public somelib::diplomat::OpaquePointer<RenamedStringList, somelib::ns::capi::RenamedStringList, somelib::ns::capi::namespace_StringList_destroy> {
 public:
 
-    inline const somelib::ns::capi::RenamedStringList* AsFFI() const;
-    inline somelib::ns::capi::RenamedStringList* AsFFI();
-    inline static const somelib::ns::RenamedStringList* FromFFI(const somelib::ns::capi::RenamedStringList* ptr);
-    inline static somelib::ns::RenamedStringList* FromFFI(somelib::ns::capi::RenamedStringList* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedStringList() = delete;
-    RenamedStringList(const somelib::ns::RenamedStringList&) = delete;
-    RenamedStringList(somelib::ns::RenamedStringList&&) noexcept = delete;
-    RenamedStringList operator=(const somelib::ns::RenamedStringList&) = delete;
-    RenamedStringList operator=(somelib::ns::RenamedStringList&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 
+private:
 public:
     static std::vector<std::string> return_new();
 };

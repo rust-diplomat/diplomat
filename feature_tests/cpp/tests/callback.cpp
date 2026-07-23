@@ -65,27 +65,27 @@ int main(int argc, char *argv[])
         // We cannot reject this in earlier standards due to a defect in std::function.
         // See: https://lesleylai.info/en/const-correcness-std-function/
         auto cb = CallbackHolder::new_([copied](int32_t a) mutable { copied += a; return copied;});
-        simple_assert_eq("mutable cb object", cb->call(5), 5);
-        simple_assert_eq("mutable cb object", cb->call(5), 10);
+        simple_assert_eq("mutable cb object", cb.call(5), 5);
+        simple_assert_eq("mutable cb object", cb.call(5), 10);
     }
     {
         int copied = 0;
         auto cb = MutableCallbackHolder::new_([copied](int32_t a) mutable { copied += a; return copied;});
-        simple_assert_eq("mutable cb object", cb->call(5), 5);
-        simple_assert_eq("mutable cb object", cb->call(5), 10);
+        simple_assert_eq("mutable cb object", cb.call(5), 5);
+        simple_assert_eq("mutable cb object", cb.call(5), 10);
     }
     {
         auto opaque = MyString::new_("Bananna");
-        simple_assert_eq("opaque cb arg", opaque->borrow(), "Bananna");
-        o.test_opaque_cb_arg([](MyString& op) {
-            op.set_str("split");
-        }, *opaque);
-        simple_assert_eq("opaque cb arg", opaque->borrow(), "split");
+        simple_assert_eq("opaque cb arg", opaque.borrow(), "Bananna");
+        o.test_opaque_cb_arg([](MyStringRefMut op) {
+            op->set_str("split");
+        }, opaque);
+        simple_assert_eq("opaque cb arg", opaque.borrow(), "split");
     }
     {
         std::array<diplomat::string_view_for_slice, 2> names{"Banana", "Apple"};
         auto opaque = MyString::new_from_first(names);
-        simple_assert_eq("opaque cb arg", opaque->borrow(), "Banana");
+        simple_assert_eq("opaque cb arg", opaque.borrow(), "Banana");
     }
 
     {
@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
     }
     {
         o.test_option_output([]() {
-            return std::optional<std::monostate>(std::nullopt);
+            return diplomat::Optional<std::monostate>(std::nullopt);
         });
     }
     {
         o.test_diplomat_option_output([]() {
-            return std::optional<uint32_t>(0);
+            return diplomat::Optional<uint32_t>(0);
         });
     }
     {
@@ -114,22 +114,21 @@ int main(int argc, char *argv[])
         });
     }
     auto a = Opaque::from_str("This is a test value.").ok().value();
-    auto ptr = a.get();
     {
-        auto str = o.test_option_opaque([ptr]() {
-            return ptr;
+        auto str = o.test_option_opaque([&a]() {
+            return diplomat::Optional(a.as_ref());
         });
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
     {
-        auto str = o.test_result_opaque([ptr]() {
-            return diplomat::Ok<const Opaque&>(*ptr);
+        auto str = o.test_result_opaque([&a]() {
+            return diplomat::Ok(a.as_ref());
         });
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
     {
-        auto str = o.test_opaque_result_error([ptr]() {
-            return diplomat::Err<const Opaque&>(*ptr);
+        auto str = o.test_opaque_result_error([&a]() {
+            return diplomat::Err(a.as_ref());
         });
         simple_assert_eq("Test opaque string passing", str, "\"This is a test value.\"");
     }
@@ -154,8 +153,7 @@ int main(int argc, char *argv[])
     }
 
     auto primitive_vec = PrimitiveStructVec::new_();
-    auto primitive_vec_ptr = primitive_vec.get();
-    primitive_vec->push({
+    primitive_vec.push({
             .x = 1.0f,
             .a = true,
             .b = 'a',
@@ -163,7 +161,7 @@ int main(int argc, char *argv[])
             .d = 0,
             .e = 0
         });
-    primitive_vec->push({
+    primitive_vec.push({
         .x = 2.0f,
         .a = false,
         .b = 'f',
@@ -171,23 +169,23 @@ int main(int argc, char *argv[])
         .d = 0,
         .e = 0
     });
-    primitive_vec->push({.x = -1.0f});
+    primitive_vec.push({.x = -1.0f});
 
     {
-        o.test_struct_slice_conversion([primitive_vec_ptr]() {
-            return diplomat::Ok(primitive_vec_ptr->as_slice());
+        o.test_struct_slice_conversion([&primitive_vec]() {
+            return diplomat::Ok(primitive_vec.as_slice());
         });
     }
 
     {
-        o.test_owned_opaque([](std::unique_ptr<somelib::Opaque> op) {
-            simple_assert_eq("Owned opaques in callbacks", op->get_debug_str(), "\"Some string\"");
+        o.test_owned_opaque([](somelib::Opaque op) {
+            simple_assert_eq("Owned opaques in callbacks", op.get_debug_str(), "\"Some string\"");
         });
     }
 
     {
         o.test_result_option_struct_conversion([]() {
-            return diplomat::Ok<std::optional<somelib::MyStruct>>(std::optional(somelib::MyStruct {
+            return diplomat::Ok<diplomat::Optional<somelib::MyStruct>>(diplomat::Optional(somelib::MyStruct {
                 5,
                 false,
                 1,
@@ -200,12 +198,12 @@ int main(int argc, char *argv[])
     }
 
     {
-        auto st = MyString::new_();
-        std::function<const somelib::MyString&(const somelib::MyString&)> f = [](const MyString& i) -> const MyString& {
-            return std::move(i);
+        auto st = MyString::new_("Round trip");
+        std::function<MyStringRef(MyStringRef)> f = [](MyStringRef i) {
+            return i;
         };
-        const somelib::MyString& call = std::forward<const MyString&>(OpaqueCallbacks::ret_op(f, std::move(*st.get())));
-        simple_assert_eq("Return Opaque ref in callback", call.get_str(), st->get_str());
+        const MyString& call = OpaqueCallbacks::ret_op(f, st);
+        simple_assert_eq("Return Opaque ref in callback", call.get_str(), st.get_str());
     }
 
 }

@@ -2,12 +2,7 @@
 source: tool/src/nanobind/mod.rs
 expression: out
 ---
-PyType_Slot mylib_OpaqueStruct_slots[] = {
-    {Py_tp_free, (void *)mylib::OpaqueStruct::operator delete },
-    {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-    {0, nullptr}};
-
-nb::class_<mylib::OpaqueStruct> opaque(mod, "OpaqueStruct", nb::type_slots(mylib_OpaqueStruct_slots));
+nb::class_<mylib::OpaqueStruct> opaque(mod, "OpaqueStruct");
 opaque
     .def_static("do_thing", &mylib::OpaqueStruct::do_thing)
     .def_static("new", std::move(maybe_op_unwrap(nb::overload_cast<>(&mylib::OpaqueStruct::new_))))

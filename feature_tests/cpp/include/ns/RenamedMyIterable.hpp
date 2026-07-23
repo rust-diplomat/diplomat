@@ -29,38 +29,19 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedMyIterable> somelib::ns::RenamedMyIterable::new_(somelib::diplomat::span<const uint8_t> x) {
+inline somelib::ns::RenamedMyIterable somelib::ns::RenamedMyIterable::new_(somelib::diplomat::span<const uint8_t> x) {
     auto result = somelib::ns::capi::namespace_MyIterable_new({x.data(), x.size()});
-    return std::unique_ptr<somelib::ns::RenamedMyIterable>(somelib::ns::RenamedMyIterable::FromFFI(result));
+    return somelib::ns::RenamedMyIterable::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedMyIterator> somelib::ns::RenamedMyIterable::iter() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::ns::RenamedMyIterator somelib::ns::RenamedMyIterable::iter() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIterable_iter(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedMyIterator>(somelib::ns::RenamedMyIterator::FromFFI(result));
+    return somelib::ns::RenamedMyIterator::FromFFI(result);
 }
 
-inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedMyIterator>somelib::ns::RenamedMyIterable::begin() const {
+
+inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedMyIterator> somelib::ns::RenamedMyIterable::begin() const {
     return iter();
-}
-
-inline const somelib::ns::capi::RenamedMyIterable* somelib::ns::RenamedMyIterable::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedMyIterable*>(this);
-}
-
-inline somelib::ns::capi::RenamedMyIterable* somelib::ns::RenamedMyIterable::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedMyIterable*>(this);
-}
-
-inline const somelib::ns::RenamedMyIterable* somelib::ns::RenamedMyIterable::FromFFI(const somelib::ns::capi::RenamedMyIterable* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedMyIterable*>(ptr);
-}
-
-inline somelib::ns::RenamedMyIterable* somelib::ns::RenamedMyIterable::FromFFI(somelib::ns::capi::RenamedMyIterable* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedMyIterable*>(ptr);
-}
-
-inline void somelib::ns::RenamedMyIterable::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_MyIterable_destroy(reinterpret_cast<somelib::ns::capi::RenamedMyIterable*>(ptr));
 }
 
 

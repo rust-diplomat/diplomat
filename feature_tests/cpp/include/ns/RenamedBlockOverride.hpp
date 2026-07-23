@@ -25,26 +25,6 @@ namespace capi {
 } // namespace
 
 //Test!
-inline const somelib::ns::capi::RenamedBlockOverride* somelib::ns::RenamedBlockOverride::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedBlockOverride*>(this);
-}
-
-inline somelib::ns::capi::RenamedBlockOverride* somelib::ns::RenamedBlockOverride::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedBlockOverride*>(this);
-}
-
-inline const somelib::ns::RenamedBlockOverride* somelib::ns::RenamedBlockOverride::FromFFI(const somelib::ns::capi::RenamedBlockOverride* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedBlockOverride*>(ptr);
-}
-
-inline somelib::ns::RenamedBlockOverride* somelib::ns::RenamedBlockOverride::FromFFI(somelib::ns::capi::RenamedBlockOverride* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedBlockOverride*>(ptr);
-}
-
-inline void somelib::ns::RenamedBlockOverride::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_BlockOverride_destroy(reinterpret_cast<somelib::ns::capi::RenamedBlockOverride*>(ptr));
-}
-
 std::string somelib::ns::RenamedBlockOverride::special_function() {
     return "This is a custom binding.";
 }

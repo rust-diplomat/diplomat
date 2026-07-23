@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "Opaque.d.hpp"
 #include "PrimitiveStruct.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
@@ -39,14 +40,14 @@ struct OutTupleStruct {
     int32_t x;
     int32_t y;
     somelib::PrimitiveStruct primitive;
-    std::unique_ptr<somelib::Opaque> opaque;
+    somelib::Opaque opaque;
 
-  inline static std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> new_();
+  inline static std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> new_();
 
     inline somelib::capi::OutTupleStruct AsFFI() const;
     inline static somelib::OutTupleStruct FromFFI(somelib::capi::OutTupleStruct c_struct);
-    inline static somelib::capi::OutTupleStruct AsTupleFFI(std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> tuple);
-    inline static std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> TupleFromFFI(somelib::capi::OutTupleStruct c_struct);
+    inline static somelib::capi::OutTupleStruct AsTupleFFI(std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> tuple);
+    inline static std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> TupleFromFFI(somelib::capi::OutTupleStruct c_struct);
 };
 
 } // namespace

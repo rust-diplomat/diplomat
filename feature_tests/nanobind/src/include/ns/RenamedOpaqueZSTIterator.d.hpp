@@ -24,38 +24,33 @@ class RenamedOpaqueZSTIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueZSTIterator;
+    extern "C" {
+    void namespace_OpaqueZSTIterator_destroy(RenamedOpaqueZSTIterator* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
+class RenamedOpaqueZSTIterator;
+using RenamedOpaqueZSTIteratorRef = somelib::diplomat::Ref<RenamedOpaqueZSTIterator, const somelib::ns::capi::RenamedOpaqueZSTIterator>;
+using RenamedOpaqueZSTIteratorRefMut = somelib::diplomat::Ref<RenamedOpaqueZSTIterator, somelib::ns::capi::RenamedOpaqueZSTIterator>;
+
 /**
  * Tests for https://github.com/rust-diplomat/diplomat/issues/1050.
  */
-class RenamedOpaqueZSTIterator {
+class RenamedOpaqueZSTIterator : public somelib::diplomat::OpaquePointer<RenamedOpaqueZSTIterator, somelib::ns::capi::RenamedOpaqueZSTIterator, somelib::ns::capi::namespace_OpaqueZSTIterator_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueZSTIterator> ctor();
+  inline static somelib::ns::RenamedOpaqueZSTIterator ctor();
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIterator> next() const;
+  inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZSTIterator> next() const;
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIterator> operator[](size_t _idx) const;
+  inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZSTIterator> operator[](size_t _idx) const;
 
-  inline somelib::diplomat::result<std::string, std::unique_ptr<somelib::ns::RenamedOpaqueZST>> stringify() const;
+  inline somelib::diplomat::result<std::string, somelib::ns::RenamedOpaqueZST> stringify() const;
   template<typename W>
-  inline somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ns::RenamedOpaqueZST>> stringify_write(W& writeable_output) const;
+  inline somelib::diplomat::result<std::monostate, somelib::ns::RenamedOpaqueZST> stringify_write(W& writeable_output) const;
 
-    inline const somelib::ns::capi::RenamedOpaqueZSTIterator* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueZSTIterator* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueZSTIterator* FromFFI(const somelib::ns::capi::RenamedOpaqueZSTIterator* ptr);
-    inline static somelib::ns::RenamedOpaqueZSTIterator* FromFFI(somelib::ns::capi::RenamedOpaqueZSTIterator* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueZSTIterator() = delete;
-    RenamedOpaqueZSTIterator(const somelib::ns::RenamedOpaqueZSTIterator&) = delete;
-    RenamedOpaqueZSTIterator(somelib::ns::RenamedOpaqueZSTIterator&&) noexcept = delete;
-    RenamedOpaqueZSTIterator operator=(const somelib::ns::RenamedOpaqueZSTIterator&) = delete;
-    RenamedOpaqueZSTIterator operator=(somelib::ns::RenamedOpaqueZSTIterator&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

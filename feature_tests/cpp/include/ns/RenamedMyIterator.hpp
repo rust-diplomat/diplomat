@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::optional<uint8_t> somelib::ns::RenamedMyIterator::next() {
+inline somelib::diplomat::Optional<uint8_t> somelib::ns::RenamedMyIterator::next() {
     auto result = somelib::ns::capi::namespace_MyIterator_next(this->AsFFI());
-    return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
-}
-
-inline const somelib::ns::capi::RenamedMyIterator* somelib::ns::RenamedMyIterator::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedMyIterator*>(this);
-}
-
-inline somelib::ns::capi::RenamedMyIterator* somelib::ns::RenamedMyIterator::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedMyIterator*>(this);
-}
-
-inline const somelib::ns::RenamedMyIterator* somelib::ns::RenamedMyIterator::FromFFI(const somelib::ns::capi::RenamedMyIterator* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedMyIterator*>(ptr);
-}
-
-inline somelib::ns::RenamedMyIterator* somelib::ns::RenamedMyIterator::FromFFI(somelib::ns::capi::RenamedMyIterator* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedMyIterator*>(ptr);
-}
-
-inline void somelib::ns::RenamedMyIterator::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_MyIterator_destroy(reinterpret_cast<somelib::ns::capi::RenamedMyIterator*>(ptr));
+    return result.is_ok ? somelib::diplomat::Optional<uint8_t>(result.ok) : somelib::diplomat::Optional<uint8_t>(std::nullopt);
 }
 
 

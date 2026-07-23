@@ -298,8 +298,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .formatter
             .namespace_c_name(id.into(), ty.dtor_abi_name.as_str());
 
-        let c_header = self.c.gen_opaque_def(id);
+        let mut c_header = self.c.gen_opaque_def(id);
         let c_impl_header = self.c.gen_impl(id.into());
+
+        // `OpaquePointer<T, CPtr, Destructor>` needs `Destructor` (the dtor's fully-qualified
+        // name) at class-definition time in the *decl* header, so the dtor's `extern "C"` decl
+        // needs to be visible there too, not just in the impl header (where every other method
+        // is declared). This is otherwise identical to the dtor decl the impl header emits.
+        c_header.body.push_str(&format!(
+            "extern \"C\" {{\nvoid {}({}* self);\n}}\n",
+            ty.dtor_abi_name.as_str(),
+            type_name_unnamespaced,
+        ));
 
         let methods = ty
             .methods
@@ -316,6 +326,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
             ctype: &'a str,
+            dtor_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             type_name_unnamespaced: &'a str,
@@ -330,6 +341,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: self.formatter,
             type_name: &type_name,
             ctype: &ctype,
+            dtor_name: &dtor_name,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             type_name_unnamespaced: &type_name_unnamespaced,
@@ -347,8 +359,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             // ty: &'a hir::OpaqueDef,
             fmt: &'a Cpp2Formatter<'a>,
             type_name: &'a str,
-            ctype: &'a str,
-            dtor_name: String,
             methods: &'a [MethodInfo<'a>],
             namespace: Option<&'a str>,
             c_header: C2Header,
@@ -359,8 +369,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             // ty,
             fmt: self.formatter,
             type_name: &type_name,
-            ctype: &ctype,
-            dtor_name,
             methods: methods.as_slice(),
             namespace: ty.attrs.namespace.as_deref(),
             c_header: c_impl_header,
@@ -381,14 +389,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_header = self.c.gen_struct_def::<P>(id);
         let c_impl_header = self.c.gen_impl(id.into());
 
-        let is_in_mut_struct =
-            def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
-
         self.generating_struct_fields = true;
         let field_decls = def
             .fields
             .iter()
-            .map(|field| self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str()))
+            .map(|field| self.gen_field_ty_decl(&field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
         self.generating_struct_fields = false;
 
@@ -398,7 +403,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .enumerate()
             .map(|(idx, field)| {
                 self.gen_cpp_to_c_for_field(
-                    is_in_mut_struct,
                     if def.attrs.tuple { Some(idx) } else { None },
                     field,
                     namespace.clone(),
@@ -409,7 +413,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let c_to_cpp_fields = def
             .fields
             .iter()
-            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", is_in_mut_struct, field))
+            .map(|field| self.gen_c_to_cpp_for_field("c_struct.", field))
             .collect::<Vec<_>>();
 
         let methods = def
@@ -574,7 +578,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         };
 
         for param in method.params.iter() {
-            let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str());
+            let mut decls = self.gen_ty_decl(&param.ty, param.name.as_str(), true);
             let info = visitor.visit_param(&param.ty, decls.var_name.as_ref());
             if !matches!(
                 info,
@@ -589,6 +593,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     hir::DefaultArgValue::Integer(i) => i.to_string(),
                     hir::DefaultArgValue::Float(f) => f.to_string(),
                     _ => panic!("Default arg value {d:?} not implemented."),
+                };
+                // `Optional<T>`'s converting constructors are explicit (see runtime.hpp.jinja),
+                // so a bare literal default (`= 0`) no longer implicitly converts when the param
+                // itself is `Optional<T>` (i.e. a `DiplomatOption<T>` param) -- construct it
+                // explicitly instead.
+                let s = if matches!(param.ty, Type::DiplomatOption(_)) {
+                    format!("{}({s})", decls.type_name)
+                } else {
+                    s
                 };
                 decls.default_value = Some(s.into());
             }
@@ -609,6 +622,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 param_name,
                 Some(method.abi_name.to_string()),
                 namespace.clone(),
+                true,
             );
             // If we happen to be a reference to a struct (and we can't just do a reinterpret_cast on the pointer),
             // Then we need to add some pre- and post- function call conversions to:
@@ -759,29 +773,22 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         })
     }
 
-    /// Generates a field's type (based on [`Self::gen_ty_decl`]), with some carve outs based on the field's type.
-    ///
-    /// For some structs (i.e., mutable structs), not all types are not copy-constructible (i.e., references) across the boundary.
-    /// So this converts those references to pointers.
-    ///
-    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
+    /// Generates a field's type (based on [`Self::gen_ty_decl`]).
+    /// `is_param` distinguishes parameter/self position (where a borrowed opaque can safely be
+    /// a real `Foo&`/`const Foo&`, since the caller binds it directly to a real `Foo`) from
+    /// return/field position (where a borrowed opaque falls back to the raw `capi::Foo*` /
+    /// `const capi::Foo*` pointer: manufacturing a `Foo&` there would require reinterpret_casting
+    /// the address of a short-lived local variable, which dangles once that variable goes out of
+    /// scope). See [`Self::gen_opaque_name`].
     pub(crate) fn gen_field_ty_decl<'a, P: TyPosition>(
         &mut self,
-        is_in_mutable_struct: bool,
         ty: &Type<P>,
         var_name: &'a str,
     ) -> NamedType<'a>
     where
         'ccx: 'a,
     {
-        let mut res = self.gen_ty_decl(ty, var_name);
-        match ty {
-            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
-                res.type_name = self.gen_opaque_name::<P>(op, true);
-            }
-            _ => {}
-        }
-        res
+        self.gen_ty_decl(ty, var_name, false)
     }
 
     /// Generates C++ code for referencing a particular type with a given name.
@@ -789,12 +796,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         &mut self,
         ty: &Type<P>,
         var_name: &'a str,
+        is_param: bool,
     ) -> NamedType<'a>
     where
         'ccx: 'a,
     {
         let var_name = self.formatter.fmt_param_name(var_name);
-        let type_name = self.gen_type_name(ty);
+        let type_name = self.gen_type_name(ty, is_param);
 
         NamedType {
             var_name,
@@ -807,11 +815,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Generates C++ code for referencing a particular type.
     ///
     /// This function adds the necessary type imports to the decl and impl files.
-    pub(crate) fn gen_type_name<P: TyPosition>(&mut self, ty: &Type<P>) -> Cow<'ccx, str> {
+    ///
+    /// `is_param` is true for parameter/self position, false for return/field position; see
+    /// [`Self::gen_opaque_name`] for why this matters.
+    pub(crate) fn gen_type_name<P: TyPosition>(
+        &mut self,
+        ty: &Type<P>,
+        is_param: bool,
+    ) -> Cow<'ccx, str> {
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
-            Type::Opaque(ref op) => self.gen_opaque_name::<P>(op, false),
+            Type::Opaque(ref op) => self.gen_opaque_name::<P>(op, is_param),
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
             Type::Enum(ref e) => {
                 let id = e.tcx_id.into();
@@ -851,17 +866,57 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
                 ret.into_owned().into()
             }
-            Type::Slice(hir::Slice::Opaque(b, ref op_ty)) => {
-                // Treat the inner type as mutable, we'll handle adding `const` directives in a second:
-                let type_name = self.gen_opaque_name::<hir::Everywhere>(op_ty, true);
+            Type::Slice(hir::Slice::Opaque(_, ref op_ty)) => {
+                // Trigger the same forward-declare/include side effects as a normal opaque
+                // reference (the return value is discarded; we compute the element type below).
+                self.gen_opaque_name::<hir::Everywhere>(op_ty, false);
+
+                // Each element is a plain `Foo` value, always non-const regardless of op_ty's own
+                // mutability (never `Foo*`, even if op_ty is optional -- a null `capi::Foo*` in
+                // the underlying array just becomes a `Foo` with `operator bool() == false`).
+                // This is legal because `Foo`'s entire layout is one `capi::Foo*` (so an array of
+                // `capi::Foo*` and an array of `Foo` are bit-identical), and unlike a struct field
+                // or return value, `std::span` never constructs or destroys its elements --
+                // there's no risk of `Foo`'s destructor firing on memory a slice doesn't own.
+                //
+                // Elements can't be `const Foo` even for an immutable op_ty: `.data()` on
+                // `span<const Foo>` would be `const Foo*`, and reinterpret_cast to the
+                // ABI's fixed `const capi::Foo**` target would then be casting away constness
+                // (source pointee `const Foo`, target pointee `const capi::Foo*` -- itself
+                // non-const -- is a strictly *lower* qualification, which reinterpret_cast
+                // disallows). So, same as the container itself, the element type doesn't reflect
+                // borrow mutability at the C++ type level; Rust is still the actual enforcement.
+                let type_name = self.formatter.fmt_type_name(op_ty.tcx_id.into());
+
+                let element_type: Cow<'ccx, str> = if op_ty.is_optional() {
+                    // A `None` element is a null pointer in the underlying array. `Foo` (the
+                    // owning wrapper used below for the non-optional case) has no safe public way
+                    // to represent that: `Foo::FromFFI(nullptr)` builds a second `Foo` aliasing
+                    // the same (null) pointer, and unlike the non-optional case, a *non-null*
+                    // entry would alias a `Foo` that's still owned elsewhere -- if that element
+                    // were ever moved out of the span, its destructor would double-free.
+                    // `Optional<FooRef>`/`Optional<FooRefMut>` are the pointer-like specialization
+                    // of `Optional` (non-owning, same one-pointer layout, so the reinterpret_cast
+                    // below is still valid), so building this array from `.as_ref()`/
+                    // `.as_mut_ref()` (for `Some`) and `std::nullopt` (for `None`) carries no such
+                    // risk, and is explicit about which entries are absent rather than relying on
+                    // a silently-nullable `FooRef`.
+                    let mutability = op_ty.owner.mutability().unwrap_or(hir::Mutability::Mutable);
+                    let ref_type = self.formatter.fmt_opaque_ref(&type_name, mutability);
+                    self.formatter.fmt_optional(&ref_type).into()
+                } else {
+                    type_name.clone()
+                };
+
                 let ret = self
                     .formatter
-                    .fmt_borrowed_slice(&type_name, b.mutability());
+                    .fmt_borrowed_slice(&element_type, hir::Mutability::Mutable);
                 ret.into_owned().into()
             }
             Type::Callback(ref cb) => format!("std::function<{}>", self.gen_fn_sig(cb)).into(),
             Type::DiplomatOption(ref inner) => {
-                format!("std::optional<{}>", self.gen_type_name(inner)).into()
+                let inner_name = self.gen_type_name(inner, is_param);
+                self.formatter.fmt_optional(&inner_name).into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -890,29 +945,20 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .insert(self.formatter.fmt_impl_header_path(id.into()));
 
         let struct_ty = self.c.tcx.resolve_type(st.id());
-        let is_in_mut_struct =
-            def.attrs().mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
         if struct_ty.attrs().tuple && matches!(st.owner(), MaybeOwn::Own) {
+            // Must agree with gen_struct_def's own field_decls computation for this same tuple
+            // struct -- see gen_opaque_name's doc comment for why that's guaranteed here (both
+            // call gen_type_name with the same is_param, no extra flag needed).
             let field_names = match struct_ty {
                 TypeDef::Struct(st) => st
                     .fields
                     .iter()
-                    .map(|f| match &f.ty {
-                        Type::Opaque(op) if is_in_mut_struct && !op.is_owned() => {
-                            self.gen_opaque_name::<hir::Everywhere>(op, true)
-                        }
-                        _ => self.gen_type_name(&f.ty),
-                    })
+                    .map(|f| self.gen_type_name(&f.ty, false))
                     .collect::<Vec<_>>(),
                 TypeDef::OutStruct(st) => st
                     .fields
                     .iter()
-                    .map(|f| match &f.ty {
-                        Type::Opaque(op) if is_in_mut_struct && !op.is_owned() => {
-                            self.gen_opaque_name::<hir::OutputOnly>(op, true)
-                        }
-                        _ => self.gen_type_name(&f.ty),
-                    })
+                    .map(|f| self.gen_type_name(&f.ty, false))
                     .collect::<Vec<_>>(),
                 _ => unreachable!(),
             };
@@ -933,10 +979,39 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         }
     }
 
+    /// Computes the C++ type used to refer to an opaque type at a particular usage site.
+    ///
+    /// Owned paths are always `Foo` (optionally `Optional<Foo>`), regardless of position.
+    ///
+    /// Borrowed paths depend on `is_param`:
+    /// - `is_param = true` (parameter/self position, non-optional): `Foo&`/`const Foo&`. This is
+    ///   safe because the caller binds the reference directly to a real, caller-owned `Foo`; no
+    ///   conversion from a raw pointer is ever needed.
+    /// - `is_param = false` anywhere else (return position, struct field -- including a tuple
+    ///   struct's own field and its `std::tuple<...>` element type as seen by callers, see
+    ///   `gen_struct_name`'s tuple branch --, callback param/return): `Ref<Foo, const
+    ///   capi::Foo>`/`Ref<Foo, capi::Foo>` (aliased `FooRef`/`FooRefMut` -- mutability is encoded
+    ///   by the second argument's own const-qualification, see `Ref` in `runtime.hpp.jinja`), or
+    ///   `Optional<FooRef>`/`Optional<FooRefMut>` if the borrow itself is optional (`Option<&Foo>`
+    ///   on the Rust side). Unlike a raw `Foo&`, `Ref` is a self-contained, trivially-copyable,
+    ///   non-owning view (it holds the raw pointer itself rather than requiring an existing `Foo`
+    ///   object to bind to), so it's safe to store/return/pass through a `std::function` (or a
+    ///   `std::tuple`) and reassign freely, and can be reconstructed straight from a raw pointer
+    ///   via `Ref<Foo,...>::FromFFI` without ever constructing/destroying a `Foo`.
+    ///   `std::optional<Foo&>` isn't valid pre-C++23, which is why the wrapping happens around
+    ///   `Ref` (an ordinary value type) instead of around a real reference.
+    ///
+    ///   A tuple struct's element type is independently computed in two places that must agree
+    ///   exactly: the struct's own `AsTupleFFI`/`TupleFromFFI` (built from `gen_struct_def`'s
+    ///   `field_decls`) has to accept/return literally the same `std::tuple<...>` type that a
+    ///   caller elsewhere in the API declares as a parameter/return/field type (built from
+    ///   `gen_struct_name`'s tuple branch). Both go through this same function with the same
+    ///   `is_param`, so they agree automatically -- no extra flag needed, unlike the two
+    ///   `generating_struct_fields`-guarded cases above.
     fn gen_opaque_name<P: TyPosition>(
         &mut self,
         op: &OpaquePath<hir::Optional, P::OpaqueOwnership>,
-        use_mt_ptr: bool,
+        is_param: bool,
     ) -> Cow<'ccx, str> {
         let op_id = op.tcx_id.into();
         let type_name = self.formatter.fmt_type_name(op_id);
@@ -947,23 +1022,52 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             self.errors
                 .push_error(format!("Found usage of disabled type {type_name}"))
         }
-        let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
-        let ret = match (op.owner.is_owned(), op.is_optional()) {
-            // unique_ptr is nullable
-            (true, _) => self.formatter.fmt_owned(&type_name),
-            (false, true) if !use_mt_ptr => {
-                self.formatter.fmt_optional_borrowed(&type_name, mutability)
-            }
-            (false, false) if !use_mt_ptr => self.formatter.fmt_borrowed(&type_name, mutability),
-            _ => self.c.formatter.fmt_ptr(&type_name, Mutability::Mutable),
-        };
 
-        let ret = ret.into_owned().into();
+        let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
+        // A plain (non-optional) borrowed param can bind straight to a real `Foo&`/`const Foo&`
+        // (see the arm below), but an *optional* borrowed param can't -- `Optional<Foo&>` isn't
+        // representable (references can't be rebound/absent) -- so it needs the same
+        // `Ref`-based representation as every other borrowed, non-param position.
+        let using_opaque_ref = !op.owner.is_owned() && (!is_param || op.is_optional());
+        let ret: Cow<'ccx, str> = match (op.owner.is_owned(), op.is_optional(), is_param) {
+            (true, false, _) => type_name.clone(),
+            (true, true, _) => self.formatter.fmt_optional(&type_name).into(),
+            (false, false, true) => self
+                .formatter
+                .fmt_borrowed(&type_name, mutability)
+                .into_owned()
+                .into(),
+            (false, false, false) if using_opaque_ref => {
+                self.formatter.fmt_opaque_ref(&type_name, mutability).into()
+            }
+            (false, true, _) if using_opaque_ref => {
+                let opaque_ref = self.formatter.fmt_opaque_ref(&type_name, mutability);
+                self.formatter.fmt_optional(&opaque_ref).into()
+            }
+            (false, _, _) => {
+                let ctype = self.formatter.fmt_c_type_name(op_id);
+                self.c
+                    .formatter
+                    .fmt_ptr(&ctype, mutability)
+                    .into_owned()
+                    .into()
+            }
+        };
 
         // We don't append a header for this, since we already have a forward.
         // Note that we also need a forward for the C type in case of structs. The forward handling manages this.
         self.decl_header
             .append_forward(def, &type_name_unnamespaced);
+        if (self.generating_struct_fields && op.owner.is_owned()) || using_opaque_ref {
+            // Owned struct fields hold `Foo` by value, and `FooRef`/`FooRefMut` (used for every
+            // other borrowed, non-param position) are aliases declared inside `Foo.d.hpp` itself
+            // -- neither can work off just a forward declaration of `Foo`, so both need the decl
+            // header to fully include `Foo.d.hpp` (which already has the full class body --
+            // methods are declared but not defined there -- plus the aliases).
+            self.decl_header
+                .includes
+                .insert(self.formatter.fmt_decl_header_path(op_id.into()));
+        }
         self.impl_header
             .includes
             .insert(self.formatter.fmt_impl_header_path(op_id.into()));
@@ -979,7 +1083,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .get_inputs()
             .unwrap()
             .iter()
-            .map(|p| self.gen_type_name(&p.ty).to_string())
+            .map(|p| self.gen_type_name(&p.ty, false).to_string())
             .collect::<Vec<_>>()
             .join(", ");
 
@@ -1022,32 +1126,34 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Returns `NamedExpression`s whose `var_name` corresponds to the field of the C struct.
     ///
     /// `cpp_struct_access` should be code for referencing a field of the C++ struct.
-    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_cpp_to_c_for_field<'a, P: TyPosition>(
         &mut self,
-        is_in_mutable_struct: bool,
         tuple_idx: Option<usize>,
         field: &'a hir::StructField<P>,
         namespace: Option<String>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
-        let field_getter = if let Some(idx) = tuple_idx {
-            format!("std::get<{idx}>(tuple)")
+        // Tuple fields come from the caller-provided `std::tuple<...>` (by positional index);
+        // non-tuple fields come from `this`'s own named member. Either way, once we have that
+        // base expression, borrowed-opaque fields need the same `.AsFFI()` treatment (both
+        // `Ref<Foo,capi::Foo>` and `Optional<Ref<Foo,capi::Foo>>` -- the latter for an optional
+        // borrow -- expose `AsFFI()` directly, no ternary needed).
+        let base: Cow<str> = if let Some(idx) = tuple_idx {
+            format!("std::get<{idx}>(tuple)").into()
         } else {
-            var_name.clone().into()
+            var_name.clone()
         };
-        let expression: Cow<'_, str> = match &field.ty {
-            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
-            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to return as a pointer from C++ to C, rather than from a reference.
-            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
-                if op.is_optional() {
-                    format!("{field_getter}->AsFFI() : nullptr").into()
-                } else {
-                    format!("{field_getter}->AsFFI()").into()
-                }
+        let field_getter = if let Type::Opaque(op) = &field.ty {
+            if op.owner.is_owned() {
+                base
+            } else {
+                format!("{base}.AsFFI()").into()
             }
-            _ => self.gen_cpp_to_c_for_type(&field.ty, field_getter.into(), None, namespace),
+        } else {
+            base
         };
+        let expression =
+            self.gen_cpp_to_c_for_type(&field.ty, field_getter, None, namespace, false);
 
         NamedExpression {
             var_name,
@@ -1065,15 +1171,41 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         cpp_name: Cow<'a, str>,
         method_abi_name: Option<String>,
         namespace: Option<String>,
+        is_param: bool,
     ) -> Cow<'a, str> {
         let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
         match *ty {
             Type::Primitive(..) => cpp_name.clone(),
-            Type::Opaque(ref op) if op.is_optional() => {
-                format!("{cpp_name} ? {cpp_name}->AsFFI() : nullptr").into()
+            // `Foo`/`Optional<Foo>` are plain values (not `std::unique_ptr`), so this is member
+            // access, not `->` -- and both expose `AsFFI()` directly (`Optional<Foo>::AsFFI()`
+            // returns nullptr when empty), so the optional and non-optional cases need no ternary.
+            Type::Opaque(ref op) if op.owner.is_owned() => {
+                if is_param {
+                    format!("{cpp_name}.AsFFI()").into()
+                } else {
+                    // Field position: this runs inside a struct's `AsFFI() const`, so `cpp_name`
+                    // is const-qualified, but the C struct field needs the mutable pointer to
+                    // hand ownership back to Rust — const_cast to reach the non-const AsFFI().
+                    let type_name = self.formatter.fmt_type_name(op.tcx_id.into());
+                    let full_type_name: Cow<str> = if op.is_optional() {
+                        self.formatter.fmt_optional(&type_name).into()
+                    } else {
+                        type_name
+                    };
+                    format!("const_cast<{full_type_name}&>({cpp_name}).AsFFI()").into()
+                }
             }
-            Type::Opaque(ref path) if path.is_owned() => format!("{cpp_name}->AsFFI()").into(),
-            Type::Opaque(..) => format!("{cpp_name}.AsFFI()").into(),
+            // Borrowed, parameter position: `cpp_name` is a real `Foo&`/`const Foo&` (non-optional)
+            // or `Optional<FooRef>`/`Optional<FooRefMut>` (optional, since a reference itself can't
+            // be optional -- see gen_opaque_name), and both expose `AsFFI()` directly, same as the
+            // owned-opaque arm above.
+            Type::Opaque(_) if is_param => format!("{cpp_name}.AsFFI()").into(),
+            // Borrowed, non-parameter position (field/return/callback): `cpp_name` is already the
+            // raw `capi::Foo*`/`const capi::Foo*` pointer -- either because gen_opaque_name itself
+            // produces one directly, or because the caller (e.g. gen_cpp_to_c_for_field) already
+            // called `.AsFFI()` on the `Ref`/`Optional<Ref>` before reaching here -- so no
+            // conversion is needed.
+            Type::Opaque(..) => cpp_name,
             Type::Struct(ref s) => {
                 let attrs = match self.c.tcx.resolve_type(s.id()) {
                     TypeDef::OutStruct(s) => &s.attrs,
@@ -1130,13 +1262,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 )
                 .into()
             }
-            Type::Slice(Slice::Opaque(b, ref op)) => format!(
-                "{{reinterpret_cast<{}{}**>({cpp_name}.data()), {cpp_name}.size()}}",
-                if b.mutability().is_mutable() {
-                    ""
-                } else {
-                    "const "
-                },
+            // The C ABI's DiplomatFooView struct always declares `data` as `const capi::Foo**`
+            // (mutable outer pointer, const-qualified pointee), regardless of slice mutability.
+            // The span container itself is generated non-`const` (see gen_type_name), so
+            // `.data()` is a non-`const`-qualified `FooRef*`/`FooRefMut*`/`Optional<FooRef>*`/
+            // `Optional<FooRefMut>*` here (all four single-pointer, ABI-compatible with a
+            // (possibly-null) `capi::Foo*`); reinterpret_cast is legal since neither that source
+            // pointee nor `const capi::Foo*` (the target's pointee) is itself top-level
+            // cv-qualified.
+            Type::Slice(Slice::Opaque(_, ref op)) => format!(
+                "{{reinterpret_cast<const {}**>({cpp_name}.data()), {cpp_name}.size()}}",
                 self.formatter.namespace_c_name(
                     op.id().into(),
                     &self.formatter.fmt_type_name_unnamespaced(op.id())
@@ -1145,26 +1280,44 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             .into(),
             Type::Slice(..) => format!("{{{cpp_name}.data(), {cpp_name}.size()}}").into(),
             Type::DiplomatOption(ref inner) => {
+                // `.value()` is non-const (matching `Ref`/`Optional`'s pointer-like
+                // specializations elsewhere -- see gen_opaque_name's doc comment), so field
+                // position (running inside a struct's `AsFFI() const`, where `cpp_name` is
+                // const-qualified) needs the same const_cast dance as owned-opaque fields do.
+                let value_access: Cow<str> = if is_param {
+                    format!("{cpp_name}.value()").into()
+                } else {
+                    let inner_type_name = self.gen_type_name(inner, is_param);
+                    let optional_type_name = self.formatter.fmt_optional(&inner_type_name);
+                    format!("const_cast<{optional_type_name}&>({cpp_name}).value()").into()
+                };
                 let conversion = self.gen_cpp_to_c_for_type(
                     inner,
-                    format!("{cpp_name}.value()").into(),
+                    value_access,
                     method_abi_name,
                     namespace,
+                    is_param,
                 );
                 let copt = self.c.gen_ty_name(ty, &mut Default::default());
                 format!("{cpp_name}.has_value() ? ({copt}{{ {{ {conversion} }}, true }}) : ({copt}{{ {{}}, false }})").into()
             }
             Type::Callback(ref c) => {
+                // The ok/err/success types computed below are explicit template arguments for
+                // c_run_callback_result/c_run_callback_diplomat_option, and must exactly match
+                // the std::function's actual Ret (result<T,E>/optional<T>) that gen_fn_sig
+                // already produced for this same callback. Both go through the same
+                // gen_type_name(_, false) codepath with no extra flags needed, so they agree by
+                // construction.
                 let run_callback = match c.get_output_type().unwrap() {
                     ReturnType::Fallible(ref ok, ref err) => {
                         let ok_type_name = match ok {
                             hir::SuccessType::Unit => "std::monostate".into(),
-                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o, false),
                             _ => unreachable!("unknown AST/HIR variant"),
                         };
 
                         let err_type_name = match err {
-                            Some(o) => self.gen_type_name(o),
+                            Some(o) => self.gen_type_name(o, false),
                             None => "std::monostate".into(),
                         };
 
@@ -1183,7 +1336,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     ReturnType::Nullable(ref success) => {
                         let type_name = match success {
                             hir::SuccessType::Unit => "std::monostate".into(),
-                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o, false),
                             _ => unreachable!("unknown AST/HIR variant"),
                         };
 
@@ -1234,17 +1387,17 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
             ReturnType::Infallible(SuccessType::Write) if is_generic_write => "void".into(),
             ReturnType::Infallible(SuccessType::Write) => self.formatter.fmt_owned_str(),
-            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name(o),
+            ReturnType::Infallible(SuccessType::OutType(ref o)) => self.gen_type_name(o, false),
             ReturnType::Fallible(ref ok, ref err) => {
                 let ok_type_name = match ok {
                     SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    SuccessType::OutType(o) => self.gen_type_name(o, false),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
+                    Some(o) => self.gen_type_name(o, false),
                     None => "std::monostate".into(),
                 };
                 format!("{lib_name_ns_prefix}diplomat::result<{ok_type_name}, {err_type_name}>")
@@ -1255,7 +1408,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    SuccessType::OutType(o) => self.gen_type_name(o, false),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 self.formatter.fmt_optional(&type_name).into()
@@ -1267,30 +1420,17 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
     /// Generates a C++ expression that converts from a C field to the corresponding C++ field.
     ///
     /// `c_struct_access` should be code for referencing a field of the C struct.
-    /// `is_in_mutable_struct` notes if the struct definition can be mutated by methods (some field types are altered if this is true).
     fn gen_c_to_cpp_for_field<'a, P: TyPosition>(
         &self,
         c_struct_access: &str,
-        is_in_mutable_struct: bool,
         field: &'a hir::StructField<P>,
     ) -> NamedExpression<'a> {
         let var_name = self.formatter.fmt_param_name(field.name.as_str());
         let field_getter = format!("{c_struct_access}{var_name}");
-        let expression: Cow<'_, str> = match &field.ty {
-            // For mutable struct references, opaque references cannot be copy constructed. [`Self::gen_field_ty_decl`] makes these fields pointers,
-            // so every field inside a struct that is capable of mutation, we ensure we have a carve-out to grab as a pointer from C to C++, rather than a reference.
-            Type::Opaque(op) if is_in_mutable_struct && !op.is_owned() => {
-                let type_name = self.formatter.fmt_type_name(op.id());
-                let var_name = self.formatter.fmt_identifier(field_getter.into());
-                let convert = if op.owner.mutability().is_some_and(|i| i.is_immutable()) {
-                    format!("({type_name}*)")
-                } else {
-                    "".into()
-                };
-                format!("{convert}{type_name}::FromFFI({var_name})").into()
-            }
-            _ => self.gen_c_to_cpp_for_type(&field.ty, field_getter.into()),
-        };
+        // Borrowed-opaque fields (tuple element or not) are Ref<Foo,const capi::Foo>/
+        // Ref<Foo,capi::Foo>, reconstructed via their own FromFFI -- gen_c_to_cpp_for_type
+        // already handles this uniformly for every non-param position, tuple or not.
+        let expression = self.gen_c_to_cpp_for_type(&field.ty, field_getter.into());
         NamedExpression {
             var_name,
             expression,
@@ -1307,31 +1447,40 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         var_name: Cow<'a, str>,
     ) -> Cow<'a, str> {
         let var_name = self.formatter.fmt_identifier(var_name);
+        let lib_name_ns_prefix = &self.formatter.lib_name_ns_prefix;
 
         match *ty {
             Type::Primitive(..) => var_name,
+            // `Foo`/`Optional<Foo>` both have their own `FromFFI` (the latter treating a null
+            // pointer as empty), so no ternary is needed regardless of optionality.
+            // Note: The impl file is imported in gen_type_name().
             Type::Opaque(ref op) if op.owner.is_owned() => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("std::unique_ptr<{type_name}>({type_name}::FromFFI({var_name}))").into()
-            }
-            Type::Opaque(ref op) if op.is_optional() => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                if op.is_owned() {
-                    // Note: The impl file is imported in gen_type_name().
-                    format!("{var_name} ? {{ *{type_name}::FromFFI({var_name}) }} : std::nullopt")
-                        .into()
+                let type_name = self.formatter.fmt_type_name(op.tcx_id.into());
+                let full_type_name: Cow<str> = if op.is_optional() {
+                    self.formatter.fmt_optional(&type_name).into()
                 } else {
-                    format!("{type_name}::FromFFI({var_name})").into()
-                }
+                    type_name
+                };
+                format!("{full_type_name}::FromFFI({var_name})").into()
             }
+            // Borrowed: this function is only ever used at return/field position (this is the
+            // "C to C++" direction; parameters go the other way, via gen_cpp_to_c_for_type).
+            // Matches gen_opaque_name's declared type for the same position: Ref (`FooRef`/
+            // `FooRefMut`), or `Optional<Ref<...>>` for an optional borrow -- both reconstructed
+            // via their own FromFFI, no ternary needed. (Tuple-struct fields are the one
+            // borrowed-opaque, non-param position that stays a raw pointer -- gen_c_to_cpp_for_field
+            // handles those directly without delegating here, since it has the `is_tuple` context
+            // this function doesn't.)
             Type::Opaque(ref op) => {
-                let id = op.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                // Note: The impl file is imported in gen_type_name().
-                format!("*{type_name}::FromFFI({var_name})").into()
+                let type_name = self.formatter.fmt_type_name(op.tcx_id.into());
+                let mutability = op.owner.mutability().unwrap_or(hir::Mutability::Mutable);
+                let ref_type = self.formatter.fmt_opaque_ref(&type_name, mutability);
+                let full_type_name: Cow<str> = if op.is_optional() {
+                    self.formatter.fmt_optional(&ref_type).into()
+                } else {
+                    ref_type.into()
+                };
+                format!("{full_type_name}::FromFFI({var_name})").into()
             }
             Type::Struct(ref st) => {
                 let (is_zst, is_tuple) = match self.c.tcx.resolve_type(ty.id().unwrap()) {
@@ -1380,8 +1529,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 .into()
             }
             Type::DiplomatOption(ref inner) => {
+                // `gen_c_to_cpp_for_type` is `&self` (no side-effecting include/forward-declare
+                // tracking), so the inner type's name isn't available here the way it is in
+                // `gen_c_to_cpp_for_return_type` (which computes it anyway as part of the return
+                // type). `decltype` sidesteps needing it: it's never evaluated, so repeating
+                // `conversion`'s text inside it is free, and it gives the exact `Optional<T>` type
+                // CTAD would have deduced for the value branch, for the `Optional<T>(std::nullopt)`
+                // branch to construct explicitly.
                 let conversion = self.gen_c_to_cpp_for_type(inner, format!("{var_name}.ok").into());
-                format!("{var_name}.is_ok ? std::optional({conversion}) : std::nullopt").into()
+                format!("{var_name}.is_ok ? {lib_name_ns_prefix}diplomat::Optional({conversion}) : decltype({lib_name_ns_prefix}diplomat::Optional({conversion}))(std::nullopt)").into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1409,11 +1565,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(ref o) => self.gen_type_name(o),
+                    SuccessType::OutType(ref o) => self.gen_type_name(o, false),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
                 let err_type_name = match err {
-                    Some(o) => self.gen_type_name(o),
+                    Some(o) => self.gen_type_name(o, false),
                     None => "std::monostate".into(),
                 };
                 let ok_conversion = match ok {
@@ -1439,7 +1595,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     SuccessType::Write if is_generic_write => "std::monostate".into(),
                     SuccessType::Write => self.formatter.fmt_owned_str(),
                     SuccessType::Unit => "std::monostate".into(),
-                    SuccessType::OutType(o) => self.gen_type_name(o),
+                    SuccessType::OutType(o) => self.gen_type_name(o, false),
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
@@ -1454,7 +1610,8 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     _ => unreachable!("unknown AST/HIR variant"),
                 };
 
-                Some(format!("{var_name}.is_ok ? std::optional<{type_name}>({conversion}) : std::nullopt").into())
+                let optional_type_name = self.formatter.fmt_optional(&type_name);
+                Some(format!("{var_name}.is_ok ? {optional_type_name}({conversion}) : {optional_type_name}(std::nullopt)").into())
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }

@@ -32,9 +32,9 @@ namespace capi {
 
 namespace somelib {
 struct OptionInputStruct {
-    std::optional<uint8_t> a;
-    std::optional<char32_t> b;
-    std::optional<somelib::OptionEnum> c;
+    somelib::diplomat::Optional<uint8_t> a;
+    somelib::diplomat::Optional<char32_t> b;
+    somelib::diplomat::Optional<somelib::OptionEnum> c;
 
     inline somelib::capi::OptionInputStruct AsFFI() const;
     inline static somelib::OptionInputStruct FromFFI(somelib::capi::OptionInputStruct c_struct);

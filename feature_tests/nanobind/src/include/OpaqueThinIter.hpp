@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::OpaqueThin* somelib::OpaqueThinIter::next() DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::OpaqueThinRef> somelib::OpaqueThinIter::next() DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinIter_next(this->AsFFI());
-    return somelib::OpaqueThin::FromFFI(result);
-}
-
-inline const somelib::capi::OpaqueThinIter* somelib::OpaqueThinIter::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OpaqueThinIter*>(this);
-}
-
-inline somelib::capi::OpaqueThinIter* somelib::OpaqueThinIter::AsFFI() {
-    return reinterpret_cast<somelib::capi::OpaqueThinIter*>(this);
-}
-
-inline const somelib::OpaqueThinIter* somelib::OpaqueThinIter::FromFFI(const somelib::capi::OpaqueThinIter* ptr) {
-    return reinterpret_cast<const somelib::OpaqueThinIter*>(ptr);
-}
-
-inline somelib::OpaqueThinIter* somelib::OpaqueThinIter::FromFFI(somelib::capi::OpaqueThinIter* ptr) {
-    return reinterpret_cast<somelib::OpaqueThinIter*>(ptr);
-}
-
-inline void somelib::OpaqueThinIter::operator delete(void* ptr) {
-    somelib::capi::OpaqueThinIter_destroy(reinterpret_cast<somelib::capi::OpaqueThinIter*>(ptr));
+    return somelib::diplomat::Optional<somelib::OpaqueThinRef>::FromFFI(result);
 }
 
 

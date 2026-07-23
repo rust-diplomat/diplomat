@@ -430,7 +430,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     where
         'ccx: 'a,
     {
-        let named_type_cpp = self.cpp.gen_field_ty_decl(true, ty, var_name);
+        let named_type_cpp = self.cpp.gen_field_ty_decl(ty, var_name);
         NamedType {
             name: named_type_cpp.var_name,
             type_name: named_type_cpp.type_name,
@@ -523,7 +523,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
                     }
                     NamedType {
                         name: self.formatter.cxx.fmt_param_name(p.name.as_str()),
-                        type_name: self.cpp.gen_type_name(&p.ty),
+                        type_name: self.cpp.gen_type_name(&p.ty, true),
                         ty: &p.ty,
                         default_value: p.attrs.default_value.clone(),
                         docstring: None,

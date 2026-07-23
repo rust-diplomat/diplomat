@@ -8,9 +8,9 @@
 namespace somelib {
 void add_StructOfOpaque_binding(nb::module_ mod) {
     nb::class_<somelib::StructOfOpaque> st(mod, "StructOfOpaque");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
-        .def(nb::init<somelib::Opaque*, somelib::OpaqueMut*>(), "i"_a.none(),  "j"_a.none())
+        .def(nb::init<somelib::OpaqueRef, somelib::OpaqueMutRefMut>(), "i"_a.none(),  "j"_a.none())
         .def_rw("i", &somelib::StructOfOpaque::i)
         .def_rw("j", &somelib::StructOfOpaque::j)
         .def("take_in", &somelib::StructOfOpaque::take_in, "other"_a);

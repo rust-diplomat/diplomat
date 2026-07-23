@@ -20,29 +20,24 @@ class CallbackHolder;
 namespace somelib {
 namespace capi {
     struct CallbackHolder;
+    extern "C" {
+    void CallbackHolder_destroy(CallbackHolder* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class CallbackHolder {
+class CallbackHolder;
+using CallbackHolderRef = somelib::diplomat::Ref<CallbackHolder, const somelib::capi::CallbackHolder>;
+using CallbackHolderRefMut = somelib::diplomat::Ref<CallbackHolder, somelib::capi::CallbackHolder>;
+
+class CallbackHolder : public somelib::diplomat::OpaquePointer<CallbackHolder, somelib::capi::CallbackHolder, somelib::capi::CallbackHolder_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::CallbackHolder> new_(std::function<int32_t(int32_t)> func);
+  inline static somelib::CallbackHolder new_(std::function<int32_t(int32_t)> func);
 
   inline int32_t call(int32_t a) const;
 
-    inline const somelib::capi::CallbackHolder* AsFFI() const;
-    inline somelib::capi::CallbackHolder* AsFFI();
-    inline static const somelib::CallbackHolder* FromFFI(const somelib::capi::CallbackHolder* ptr);
-    inline static somelib::CallbackHolder* FromFFI(somelib::capi::CallbackHolder* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    CallbackHolder() = delete;
-    CallbackHolder(const somelib::CallbackHolder&) = delete;
-    CallbackHolder(somelib::CallbackHolder&&) noexcept = delete;
-    CallbackHolder operator=(const somelib::CallbackHolder&) = delete;
-    CallbackHolder operator=(somelib::CallbackHolder&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

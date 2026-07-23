@@ -25,10 +25,10 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::optional<int8_t> somelib::ns::RenamedPartialComparableSlice::partial_cmp(const somelib::ns::RenamedPartialComparableSlice& other) const {
+inline somelib::diplomat::Optional<int8_t> somelib::ns::RenamedPartialComparableSlice::partial_cmp(const somelib::ns::RenamedPartialComparableSlice& other) const {
     auto result = somelib::ns::capi::namespace_PartialComparableSlice_partial_cmp(reinterpret_cast<const somelib::ns::capi::RenamedPartialComparableSlice*>(this),
         reinterpret_cast<const somelib::ns::capi::RenamedPartialComparableSlice*>(&other));
-    return result.is_ok ? std::optional<int8_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<int8_t>(result.ok) : somelib::diplomat::Optional<int8_t>(std::nullopt);
 }
 inline std::optional<bool> somelib::ns::RenamedPartialComparableSlice::operator==(const somelib::ns::RenamedPartialComparableSlice& other) const {
     auto val = this->partial_cmp(other);

@@ -31,25 +31,5 @@ inline void somelib::OptionOpaqueChar::assert_char(char32_t ch) const {
         ch);
 }
 
-inline const somelib::capi::OptionOpaqueChar* somelib::OptionOpaqueChar::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OptionOpaqueChar*>(this);
-}
-
-inline somelib::capi::OptionOpaqueChar* somelib::OptionOpaqueChar::AsFFI() {
-    return reinterpret_cast<somelib::capi::OptionOpaqueChar*>(this);
-}
-
-inline const somelib::OptionOpaqueChar* somelib::OptionOpaqueChar::FromFFI(const somelib::capi::OptionOpaqueChar* ptr) {
-    return reinterpret_cast<const somelib::OptionOpaqueChar*>(ptr);
-}
-
-inline somelib::OptionOpaqueChar* somelib::OptionOpaqueChar::FromFFI(somelib::capi::OptionOpaqueChar* ptr) {
-    return reinterpret_cast<somelib::OptionOpaqueChar*>(ptr);
-}
-
-inline void somelib::OptionOpaqueChar::operator delete(void* ptr) {
-    somelib::capi::OptionOpaqueChar_destroy(reinterpret_cast<somelib::capi::OptionOpaqueChar*>(ptr));
-}
-
 
 #endif // SOMELIB_OptionOpaqueChar_HPP

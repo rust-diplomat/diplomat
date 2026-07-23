@@ -10,6 +10,7 @@
 #include <optional>
 #include <cstdlib>
 #include "MyStruct.d.hpp"
+#include "Opaque.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct Opaque; }
@@ -40,18 +41,18 @@ struct TupleStruct {
     int32_t x;
     int32_t y;
     somelib::MyStruct st;
-    const somelib::Opaque& op;
+    somelib::OpaqueRef op;
 
-  inline static int32_t takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> a);
+  inline static int32_t takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef> a);
 
-  inline static int32_t takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> a, int32_t i);
+  inline static int32_t takes_st_as_tuple(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef> a, int32_t i);
 
-  inline static char32_t takes_containing(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>> c);
+  inline static char32_t takes_containing(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>> c);
 
     inline somelib::capi::TupleStruct AsFFI() const;
     inline static somelib::TupleStruct FromFFI(somelib::capi::TupleStruct c_struct);
-    inline static somelib::capi::TupleStruct AsTupleFFI(std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> tuple);
-    inline static std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&> TupleFromFFI(somelib::capi::TupleStruct c_struct);
+    inline static somelib::capi::TupleStruct AsTupleFFI(std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef> tuple);
+    inline static std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef> TupleFromFFI(somelib::capi::TupleStruct c_struct);
 };
 
 } // namespace

@@ -51,14 +51,14 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1Renamed::new_overload(int32_t _i) {
+inline somelib::ns::AttrOpaque1Renamed somelib::ns::AttrOpaque1Renamed::new_overload(int32_t _i) {
     auto result = somelib::ns::capi::namespace_AttrOpaque1_new_overload(_i);
-    return std::unique_ptr<somelib::ns::AttrOpaque1Renamed>(somelib::ns::AttrOpaque1Renamed::FromFFI(result));
+    return somelib::ns::AttrOpaque1Renamed::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1Renamed::totally_not_new() {
+inline somelib::ns::AttrOpaque1Renamed somelib::ns::AttrOpaque1Renamed::totally_not_new() {
     auto result = somelib::ns::capi::namespace_AttrOpaque1_new();
-    return std::unique_ptr<somelib::ns::AttrOpaque1Renamed>(somelib::ns::AttrOpaque1Renamed::FromFFI(result));
+    return somelib::ns::AttrOpaque1Renamed::FromFFI(result);
 }
 
 inline void somelib::ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t) {
@@ -93,26 +93,6 @@ inline void somelib::ns::AttrOpaque1Renamed::use_unnamespaced(const somelib::Unn
 inline void somelib::ns::AttrOpaque1Renamed::use_namespaced(somelib::ns::RenamedAttrEnum _n) const {
     somelib::ns::capi::namespace_AttrOpaque1_use_namespaced(this->AsFFI(),
         _n.AsFFI());
-}
-
-inline const somelib::ns::capi::AttrOpaque1Renamed* somelib::ns::AttrOpaque1Renamed::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::AttrOpaque1Renamed*>(this);
-}
-
-inline somelib::ns::capi::AttrOpaque1Renamed* somelib::ns::AttrOpaque1Renamed::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::AttrOpaque1Renamed*>(this);
-}
-
-inline const somelib::ns::AttrOpaque1Renamed* somelib::ns::AttrOpaque1Renamed::FromFFI(const somelib::ns::capi::AttrOpaque1Renamed* ptr) {
-    return reinterpret_cast<const somelib::ns::AttrOpaque1Renamed*>(ptr);
-}
-
-inline somelib::ns::AttrOpaque1Renamed* somelib::ns::AttrOpaque1Renamed::FromFFI(somelib::ns::capi::AttrOpaque1Renamed* ptr) {
-    return reinterpret_cast<somelib::ns::AttrOpaque1Renamed*>(ptr);
-}
-
-inline void somelib::ns::AttrOpaque1Renamed::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_AttrOpaque1_destroy(reinterpret_cast<somelib::ns::capi::AttrOpaque1Renamed*>(ptr));
 }
 
 

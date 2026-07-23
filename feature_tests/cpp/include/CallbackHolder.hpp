@@ -33,35 +33,15 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::CallbackHolder> somelib::CallbackHolder::new_(std::function<int32_t(int32_t)> func) {
+inline somelib::CallbackHolder somelib::CallbackHolder::new_(std::function<int32_t(int32_t)> func) {
     auto result = somelib::capi::CallbackHolder_new({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).c_run_callback, somelib::diplomat::fn_traits(func).c_delete});
-    return std::unique_ptr<somelib::CallbackHolder>(somelib::CallbackHolder::FromFFI(result));
+    return somelib::CallbackHolder::FromFFI(result);
 }
 
 inline int32_t somelib::CallbackHolder::call(int32_t a) const {
     auto result = somelib::capi::CallbackHolder_call(this->AsFFI(),
         a);
     return result;
-}
-
-inline const somelib::capi::CallbackHolder* somelib::CallbackHolder::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::CallbackHolder*>(this);
-}
-
-inline somelib::capi::CallbackHolder* somelib::CallbackHolder::AsFFI() {
-    return reinterpret_cast<somelib::capi::CallbackHolder*>(this);
-}
-
-inline const somelib::CallbackHolder* somelib::CallbackHolder::FromFFI(const somelib::capi::CallbackHolder* ptr) {
-    return reinterpret_cast<const somelib::CallbackHolder*>(ptr);
-}
-
-inline somelib::CallbackHolder* somelib::CallbackHolder::FromFFI(somelib::capi::CallbackHolder* ptr) {
-    return reinterpret_cast<somelib::CallbackHolder*>(ptr);
-}
-
-inline void somelib::CallbackHolder::operator delete(void* ptr) {
-    somelib::capi::CallbackHolder_destroy(reinterpret_cast<somelib::capi::CallbackHolder*>(ptr));
 }
 
 

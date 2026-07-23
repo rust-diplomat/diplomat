@@ -24,14 +24,14 @@ namespace capi {
 } // namespace
 
 
-inline somelib::capi::ContainingTuple somelib::ContainingTuple::AsTupleFFI(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>> tuple) {
+inline somelib::capi::ContainingTuple somelib::ContainingTuple::AsTupleFFI(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>> tuple) {
     return somelib::capi::ContainingTuple {
         /* .inner = */ somelib::TupleStruct::AsTupleFFI(std::get<0>(tuple)),
     };
 }
 
-inline std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>> somelib::ContainingTuple::TupleFromFFI(somelib::capi::ContainingTuple c_struct) {
-    return std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,const somelib::Opaque&>>{
+inline std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>> somelib::ContainingTuple::TupleFromFFI(somelib::capi::ContainingTuple c_struct) {
+    return std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>>{
         /* .inner = */ somelib::TupleStruct::TupleFromFFI(c_struct.inner),
     };
 }

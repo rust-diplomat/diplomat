@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::Foo& somelib::Bar::foo() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::FooRef somelib::Bar::foo() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Bar_foo(this->AsFFI());
-    return *somelib::Foo::FromFFI(result);
-}
-
-inline const somelib::capi::Bar* somelib::Bar::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::Bar*>(this);
-}
-
-inline somelib::capi::Bar* somelib::Bar::AsFFI() {
-    return reinterpret_cast<somelib::capi::Bar*>(this);
-}
-
-inline const somelib::Bar* somelib::Bar::FromFFI(const somelib::capi::Bar* ptr) {
-    return reinterpret_cast<const somelib::Bar*>(ptr);
-}
-
-inline somelib::Bar* somelib::Bar::FromFFI(somelib::capi::Bar* ptr) {
-    return reinterpret_cast<somelib::Bar*>(ptr);
-}
-
-inline void somelib::Bar::operator delete(void* ptr) {
-    somelib::capi::Bar_destroy(reinterpret_cast<somelib::capi::Bar*>(ptr));
+    return somelib::FooRef::FromFFI(result);
 }
 
 

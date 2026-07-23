@@ -24,26 +24,6 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::ns::capi::RenamedStringList* somelib::ns::RenamedStringList::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedStringList*>(this);
-}
-
-inline somelib::ns::capi::RenamedStringList* somelib::ns::RenamedStringList::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedStringList*>(this);
-}
-
-inline const somelib::ns::RenamedStringList* somelib::ns::RenamedStringList::FromFFI(const somelib::ns::capi::RenamedStringList* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedStringList*>(ptr);
-}
-
-inline somelib::ns::RenamedStringList* somelib::ns::RenamedStringList::FromFFI(somelib::ns::capi::RenamedStringList* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedStringList*>(ptr);
-}
-
-inline void somelib::ns::RenamedStringList::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_StringList_destroy(reinterpret_cast<somelib::ns::capi::RenamedStringList*>(ptr));
-}
-
 extern "C" {
     void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
 

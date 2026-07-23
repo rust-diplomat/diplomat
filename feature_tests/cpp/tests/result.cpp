@@ -14,9 +14,8 @@ struct NonTrivial{
 
 int main(int argc, char *argv[])
 {
-    std::unique_ptr<ResultOpaque> r;
-    std::unique_ptr<ResultOpaque> r2 = ResultOpaque::new_(5).ok().value();
-    r2->assert_integer(5);
+    ResultOpaque r = ResultOpaque::new_(5).ok().value();
+    r.assert_integer(5);
     auto foo = ResultOpaque::new_failing_foo().err().value();
     simple_assert_eq("foo error", (int)foo.AsFFI(), (int)ErrorEnum(ErrorEnum::Foo).AsFFI());
 
@@ -33,13 +32,13 @@ int main(int argc, char *argv[])
     simple_assert_eq("int ok", integer, 109);
 
     auto in_err = ResultOpaque::new_in_err(198).err().value();
-    in_err->assert_integer(198);
+    in_err.assert_integer(198);
 
     auto in_enum_err = ResultOpaque::new_in_enum_err(989).err().value();
-    in_enum_err->assert_integer(989);
+    in_enum_err.assert_integer(989);
 
-    auto str_result = r2->takes_str("fish").ok();
-    simple_assert_eq("Did not return a chaining value correctly", &str_result.value().get(), r2.get());
+    auto str_result = r.takes_str("fish").ok();
+    simple_assert_eq("Did not return a chaining value correctly", str_result.value().AsFFI(), r.AsFFI());
 
     // check r and l value construction
     auto trivial_lvalue = diplomat::Ok(std::monostate());

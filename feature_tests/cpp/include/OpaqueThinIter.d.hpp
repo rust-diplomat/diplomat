@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "OpaqueThin.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct OpaqueThin; }
@@ -20,27 +21,22 @@ class OpaqueThin;
 namespace somelib {
 namespace capi {
     struct OpaqueThinIter;
+    extern "C" {
+    void OpaqueThinIter_destroy(OpaqueThinIter* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueThinIter {
+class OpaqueThinIter;
+using OpaqueThinIterRef = somelib::diplomat::Ref<OpaqueThinIter, const somelib::capi::OpaqueThinIter>;
+using OpaqueThinIterRefMut = somelib::diplomat::Ref<OpaqueThinIter, somelib::capi::OpaqueThinIter>;
+
+class OpaqueThinIter : public somelib::diplomat::OpaquePointer<OpaqueThinIter, somelib::capi::OpaqueThinIter, somelib::capi::OpaqueThinIter_destroy> {
 public:
 
-  inline const somelib::OpaqueThin* next() DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::OpaqueThinRef> next() DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::capi::OpaqueThinIter* AsFFI() const;
-    inline somelib::capi::OpaqueThinIter* AsFFI();
-    inline static const somelib::OpaqueThinIter* FromFFI(const somelib::capi::OpaqueThinIter* ptr);
-    inline static somelib::OpaqueThinIter* FromFFI(somelib::capi::OpaqueThinIter* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueThinIter() = delete;
-    OpaqueThinIter(const somelib::OpaqueThinIter&) = delete;
-    OpaqueThinIter(somelib::OpaqueThinIter&&) noexcept = delete;
-    OpaqueThinIter operator=(const somelib::OpaqueThinIter&) = delete;
-    OpaqueThinIter operator=(somelib::OpaqueThinIter&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

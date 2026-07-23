@@ -27,16 +27,23 @@ struct FixedDecimalFormatterOptions;
 namespace icu4x {
 namespace capi {
     struct FixedDecimalFormatter;
+    extern "C" {
+    void icu4x_FixedDecimalFormatter_destroy_mv1(FixedDecimalFormatter* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace icu4x {
+class FixedDecimalFormatter;
+using FixedDecimalFormatterRef = icu4x::diplomat::Ref<FixedDecimalFormatter, const icu4x::capi::FixedDecimalFormatter>;
+using FixedDecimalFormatterRefMut = icu4x::diplomat::Ref<FixedDecimalFormatter, icu4x::capi::FixedDecimalFormatter>;
+
 /**
  * An  Fixed Decimal Format object, capable of formatting a {@link FixedDecimal} as a string.
  *
  * See the [Rust documentation for `FixedDecimalFormatter`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html) for more information.
  */
-class FixedDecimalFormatter {
+class FixedDecimalFormatter : public icu4x::diplomat::OpaquePointer<FixedDecimalFormatter, icu4x::capi::FixedDecimalFormatter, icu4x::capi::icu4x_FixedDecimalFormatter_destroy_mv1> {
 public:
 
   /**
@@ -44,7 +51,7 @@ public:
    *
    * See the [Rust documentation for `try_new`](https://docs.rs/icu/latest/icu/decimal/struct.FixedDecimalFormatter.html#method.try_new) for more information.
    */
-  inline static icu4x::diplomat::result<std::unique_ptr<icu4x::FixedDecimalFormatter>, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
+  inline static icu4x::diplomat::result<icu4x::FixedDecimalFormatter, std::monostate> try_new(const icu4x::Locale& locale, const icu4x::DataProvider& provider, icu4x::FixedDecimalFormatterOptions options);
 
   /**
    * Formats a {@link FixedDecimal} to a string.
@@ -55,18 +62,6 @@ public:
   template<typename W>
   inline void format_write_write(const icu4x::FixedDecimal& value, W& writeable_output) const;
 
-    inline const icu4x::capi::FixedDecimalFormatter* AsFFI() const;
-    inline icu4x::capi::FixedDecimalFormatter* AsFFI();
-    inline static const icu4x::FixedDecimalFormatter* FromFFI(const icu4x::capi::FixedDecimalFormatter* ptr);
-    inline static icu4x::FixedDecimalFormatter* FromFFI(icu4x::capi::FixedDecimalFormatter* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    FixedDecimalFormatter() = delete;
-    FixedDecimalFormatter(const icu4x::FixedDecimalFormatter&) = delete;
-    FixedDecimalFormatter(icu4x::FixedDecimalFormatter&&) noexcept = delete;
-    FixedDecimalFormatter operator=(const icu4x::FixedDecimalFormatter&) = delete;
-    FixedDecimalFormatter operator=(icu4x::FixedDecimalFormatter&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

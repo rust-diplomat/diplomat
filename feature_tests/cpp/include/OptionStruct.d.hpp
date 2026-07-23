@@ -9,6 +9,8 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "OptionOpaque.d.hpp"
+#include "OptionOpaqueChar.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct OptionOpaque; }
@@ -35,10 +37,10 @@ namespace capi {
 
 namespace somelib {
 struct OptionStruct {
-    std::unique_ptr<somelib::OptionOpaque> a;
-    std::unique_ptr<somelib::OptionOpaqueChar> b;
+    somelib::diplomat::Optional<somelib::OptionOpaque> a;
+    somelib::diplomat::Optional<somelib::OptionOpaqueChar> b;
     uint32_t c;
-    std::unique_ptr<somelib::OptionOpaque> d;
+    somelib::OptionOpaque d;
 
     inline somelib::capi::OptionStruct AsFFI() const;
     inline static somelib::OptionStruct FromFFI(somelib::capi::OptionStruct c_struct);

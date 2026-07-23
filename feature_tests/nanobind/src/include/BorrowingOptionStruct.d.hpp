@@ -25,7 +25,7 @@ namespace capi {
 
 namespace somelib {
 struct BorrowingOptionStruct {
-    std::optional<std::string_view> a;
+    somelib::diplomat::Optional<std::string_view> a;
 
     inline somelib::capi::BorrowingOptionStruct AsFFI() const;
     inline static somelib::BorrowingOptionStruct FromFFI(somelib::capi::BorrowingOptionStruct c_struct);

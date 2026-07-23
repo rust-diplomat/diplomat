@@ -6,8 +6,8 @@
 namespace somelib::ns {
 void add_RenamedDeprecatedStruct_binding(nb::module_ mod) {
     nb::class_<somelib::ns::RenamedDeprecatedStruct> st(mod, "RenamedDeprecatedStruct", ".. deprecated:: use Foo\n");
-    st
-        .def(nb::init<>());
+    maybe_bind_default_init(st);
+    st;
 }
 
 } 

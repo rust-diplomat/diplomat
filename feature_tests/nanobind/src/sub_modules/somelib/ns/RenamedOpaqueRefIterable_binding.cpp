@@ -5,12 +5,7 @@
 
 namespace somelib::ns {
 void add_RenamedOpaqueRefIterable_binding(nb::module_ mod) {
-    PyType_Slot somelib_ns_RenamedOpaqueRefIterable_slots[] = {
-        {Py_tp_free, (void *)somelib::ns::RenamedOpaqueRefIterable::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ns::RenamedOpaqueRefIterable> opaque(mod, "RenamedOpaqueRefIterable", nb::type_slots(somelib_ns_RenamedOpaqueRefIterable_slots));
+    nb::class_<somelib::ns::RenamedOpaqueRefIterable> opaque(mod, "RenamedOpaqueRefIterable");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueRefIterable::new_))), "size"_a)
         .def("__iter__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueRefIterable::iter)), nb::keep_alive<0, 1>());

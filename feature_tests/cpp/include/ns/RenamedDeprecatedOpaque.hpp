@@ -24,25 +24,5 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::ns::capi::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedDeprecatedOpaque*>(this);
-}
-
-inline somelib::ns::capi::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedDeprecatedOpaque*>(this);
-}
-
-inline const somelib::ns::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::FromFFI(const somelib::ns::capi::RenamedDeprecatedOpaque* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedDeprecatedOpaque*>(ptr);
-}
-
-inline somelib::ns::RenamedDeprecatedOpaque* somelib::ns::RenamedDeprecatedOpaque::FromFFI(somelib::ns::capi::RenamedDeprecatedOpaque* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedDeprecatedOpaque*>(ptr);
-}
-
-inline void somelib::ns::RenamedDeprecatedOpaque::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_DeprecatedOpaque_destroy(reinterpret_cast<somelib::ns::capi::RenamedDeprecatedOpaque*>(ptr));
-}
-
 
 #endif // SOMELIB_ns_RenamedDeprecatedOpaque_HPP

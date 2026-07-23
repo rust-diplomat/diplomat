@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_OpaqueThinVec_binding(nb::module_ mod) {
-    PyType_Slot somelib_OpaqueThinVec_slots[] = {
-        {Py_tp_free, (void *)somelib::OpaqueThinVec::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::OpaqueThinVec> opaque(mod, "OpaqueThinVec", nb::type_slots(somelib_OpaqueThinVec_slots));
+    nb::class_<somelib::OpaqueThinVec> opaque(mod, "OpaqueThinVec");
     opaque
         .def("__len__", &somelib::OpaqueThinVec::__len__)
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::OpaqueThinVec::create))), "a"_a, "b"_a, "c"_a)

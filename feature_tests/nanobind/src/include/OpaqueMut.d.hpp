@@ -20,27 +20,22 @@ class OpaqueMut;
 namespace somelib {
 namespace capi {
     struct OpaqueMut;
+    extern "C" {
+    void OpaqueMut_destroy(OpaqueMut* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueMut {
+class OpaqueMut;
+using OpaqueMutRef = somelib::diplomat::Ref<OpaqueMut, const somelib::capi::OpaqueMut>;
+using OpaqueMutRefMut = somelib::diplomat::Ref<OpaqueMut, somelib::capi::OpaqueMut>;
+
+class OpaqueMut : public somelib::diplomat::OpaquePointer<OpaqueMut, somelib::capi::OpaqueMut, somelib::capi::OpaqueMut_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::OpaqueMut> new_();
+  inline static somelib::OpaqueMut new_();
 
-    inline const somelib::capi::OpaqueMut* AsFFI() const;
-    inline somelib::capi::OpaqueMut* AsFFI();
-    inline static const somelib::OpaqueMut* FromFFI(const somelib::capi::OpaqueMut* ptr);
-    inline static somelib::OpaqueMut* FromFFI(somelib::capi::OpaqueMut* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueMut() = delete;
-    OpaqueMut(const somelib::OpaqueMut&) = delete;
-    OpaqueMut(somelib::OpaqueMut&&) noexcept = delete;
-    OpaqueMut operator=(const somelib::OpaqueMut&) = delete;
-    OpaqueMut operator=(somelib::OpaqueMut&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::RenamedOpaqueIterator::next() {
+inline somelib::diplomat::Optional<somelib::ns::AttrOpaque1Renamed> somelib::ns::RenamedOpaqueIterator::next() {
     auto result = somelib::ns::capi::namespace_OpaqueIterator_next(this->AsFFI());
-    return std::unique_ptr<somelib::ns::AttrOpaque1Renamed>(somelib::ns::AttrOpaque1Renamed::FromFFI(result));
-}
-
-inline const somelib::ns::capi::RenamedOpaqueIterator* somelib::ns::RenamedOpaqueIterator::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueIterator*>(this);
-}
-
-inline somelib::ns::capi::RenamedOpaqueIterator* somelib::ns::RenamedOpaqueIterator::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueIterator*>(this);
-}
-
-inline const somelib::ns::RenamedOpaqueIterator* somelib::ns::RenamedOpaqueIterator::FromFFI(const somelib::ns::capi::RenamedOpaqueIterator* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedOpaqueIterator*>(ptr);
-}
-
-inline somelib::ns::RenamedOpaqueIterator* somelib::ns::RenamedOpaqueIterator::FromFFI(somelib::ns::capi::RenamedOpaqueIterator* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedOpaqueIterator*>(ptr);
-}
-
-inline void somelib::ns::RenamedOpaqueIterator::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_OpaqueIterator_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueIterator*>(ptr));
+    return somelib::diplomat::Optional<somelib::ns::AttrOpaque1Renamed>::FromFFI(result);
 }
 
 

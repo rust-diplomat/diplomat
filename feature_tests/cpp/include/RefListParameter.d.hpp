@@ -15,25 +15,20 @@
 namespace somelib {
 namespace capi {
     struct RefListParameter;
+    extern "C" {
+    void RefListParameter_destroy(RefListParameter* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class RefListParameter {
+class RefListParameter;
+using RefListParameterRef = somelib::diplomat::Ref<RefListParameter, const somelib::capi::RefListParameter>;
+using RefListParameterRefMut = somelib::diplomat::Ref<RefListParameter, somelib::capi::RefListParameter>;
+
+class RefListParameter : public somelib::diplomat::OpaquePointer<RefListParameter, somelib::capi::RefListParameter, somelib::capi::RefListParameter_destroy> {
 public:
 
-    inline const somelib::capi::RefListParameter* AsFFI() const;
-    inline somelib::capi::RefListParameter* AsFFI();
-    inline static const somelib::RefListParameter* FromFFI(const somelib::capi::RefListParameter* ptr);
-    inline static somelib::RefListParameter* FromFFI(somelib::capi::RefListParameter* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RefListParameter() = delete;
-    RefListParameter(const somelib::RefListParameter&) = delete;
-    RefListParameter(somelib::RefListParameter&&) noexcept = delete;
-    RefListParameter operator=(const somelib::RefListParameter&) = delete;
-    RefListParameter operator=(somelib::RefListParameter&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

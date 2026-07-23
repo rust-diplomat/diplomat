@@ -43,9 +43,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::PrimitiveStructVec> somelib::PrimitiveStructVec::new_() {
+inline somelib::PrimitiveStructVec somelib::PrimitiveStructVec::new_() {
     auto result = somelib::capi::PrimitiveStructVec_new();
-    return std::unique_ptr<somelib::PrimitiveStructVec>(somelib::PrimitiveStructVec::FromFFI(result));
+    return somelib::PrimitiveStructVec::FromFFI(result);
 }
 
 inline void somelib::PrimitiveStructVec::push(somelib::PrimitiveStruct value) {
@@ -68,39 +68,19 @@ inline somelib::diplomat::span<somelib::PrimitiveStruct> somelib::PrimitiveStruc
     return somelib::diplomat::span<somelib::PrimitiveStruct>(reinterpret_cast<somelib::PrimitiveStruct*>(result.data), result.len);
 }
 
-inline std::optional<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::get(size_t idx) const {
+inline somelib::diplomat::Optional<somelib::PrimitiveStruct> somelib::PrimitiveStructVec::get(size_t idx) const {
     auto result = somelib::capi::PrimitiveStructVec_get(this->AsFFI(),
         idx);
-    return result.is_ok ? std::optional<somelib::PrimitiveStruct>(somelib::PrimitiveStruct::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::PrimitiveStruct>(somelib::PrimitiveStruct::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::PrimitiveStruct>(std::nullopt);
 }
 
 inline void somelib::PrimitiveStructVec::take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl) {
     somelib::capi::PrimitiveStructVec_take_slice_from_other_namespace({reinterpret_cast<const somelib::ns::capi::RenamedStructWithAttrs*>(_sl.data()), _sl.size()});
 }
 
-inline std::unique_ptr<somelib::PrimitiveStructVec> somelib::PrimitiveStructVec::take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a) {
+inline somelib::PrimitiveStructVec somelib::PrimitiveStructVec::take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a) {
     auto result = somelib::capi::PrimitiveStructVec_take_in_slice({reinterpret_cast<const somelib::capi::PrimitiveStruct*>(a.data()), a.size()});
-    return std::unique_ptr<somelib::PrimitiveStructVec>(somelib::PrimitiveStructVec::FromFFI(result));
-}
-
-inline const somelib::capi::PrimitiveStructVec* somelib::PrimitiveStructVec::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::PrimitiveStructVec*>(this);
-}
-
-inline somelib::capi::PrimitiveStructVec* somelib::PrimitiveStructVec::AsFFI() {
-    return reinterpret_cast<somelib::capi::PrimitiveStructVec*>(this);
-}
-
-inline const somelib::PrimitiveStructVec* somelib::PrimitiveStructVec::FromFFI(const somelib::capi::PrimitiveStructVec* ptr) {
-    return reinterpret_cast<const somelib::PrimitiveStructVec*>(ptr);
-}
-
-inline somelib::PrimitiveStructVec* somelib::PrimitiveStructVec::FromFFI(somelib::capi::PrimitiveStructVec* ptr) {
-    return reinterpret_cast<somelib::PrimitiveStructVec*>(ptr);
-}
-
-inline void somelib::PrimitiveStructVec::operator delete(void* ptr) {
-    somelib::capi::PrimitiveStructVec_destroy(reinterpret_cast<somelib::capi::PrimitiveStructVec*>(ptr));
+    return somelib::PrimitiveStructVec::FromFFI(result);
 }
 
 

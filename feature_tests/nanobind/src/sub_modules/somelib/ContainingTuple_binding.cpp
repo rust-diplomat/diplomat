@@ -9,9 +9,9 @@
 namespace somelib {
 void add_ContainingTuple_binding(nb::module_ mod) {
     nb::class_<somelib::ContainingTuple> st(mod, "ContainingTuple");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
-        .def(nb::init<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*>>(), "inner"_a.none())
+        .def(nb::init<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>>(), "inner"_a.none())
         .def_rw("inner", &somelib::ContainingTuple::inner);
 }
 

@@ -28,35 +28,15 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer> somelib::ns::RenamedOpaqueZSTIndexer::new_() {
+inline somelib::ns::RenamedOpaqueZSTIndexer somelib::ns::RenamedOpaqueZSTIndexer::new_() {
     auto result = somelib::ns::capi::namespace_OpaqueZSTIndexer_new();
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer>(somelib::ns::RenamedOpaqueZSTIndexer::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZSTIndexer::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer> somelib::ns::RenamedOpaqueZSTIndexer::operator[](size_t idx) const {
+inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZSTIndexer> somelib::ns::RenamedOpaqueZSTIndexer::operator[](size_t idx) const {
     auto result = somelib::ns::capi::namespace_OpaqueZSTIndexer_index(this->AsFFI(),
         idx);
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer>(somelib::ns::RenamedOpaqueZSTIndexer::FromFFI(result));
-}
-
-inline const somelib::ns::capi::RenamedOpaqueZSTIndexer* somelib::ns::RenamedOpaqueZSTIndexer::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueZSTIndexer*>(this);
-}
-
-inline somelib::ns::capi::RenamedOpaqueZSTIndexer* somelib::ns::RenamedOpaqueZSTIndexer::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueZSTIndexer*>(this);
-}
-
-inline const somelib::ns::RenamedOpaqueZSTIndexer* somelib::ns::RenamedOpaqueZSTIndexer::FromFFI(const somelib::ns::capi::RenamedOpaqueZSTIndexer* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedOpaqueZSTIndexer*>(ptr);
-}
-
-inline somelib::ns::RenamedOpaqueZSTIndexer* somelib::ns::RenamedOpaqueZSTIndexer::FromFFI(somelib::ns::capi::RenamedOpaqueZSTIndexer* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedOpaqueZSTIndexer*>(ptr);
-}
-
-inline void somelib::ns::RenamedOpaqueZSTIndexer::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_OpaqueZSTIndexer_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueZSTIndexer*>(ptr));
+    return somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZSTIndexer>::FromFFI(result);
 }
 
 

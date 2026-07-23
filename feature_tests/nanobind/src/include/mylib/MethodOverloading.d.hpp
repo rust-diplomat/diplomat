@@ -22,31 +22,26 @@ class MethodOverloading;
 namespace somelib::mylib {
 namespace capi {
     struct MethodOverloading;
+    extern "C" {
+    void MethodOverloading_destroy(MethodOverloading* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::mylib {
-class MethodOverloading {
+class MethodOverloading;
+using MethodOverloadingRef = somelib::diplomat::Ref<MethodOverloading, const somelib::mylib::capi::MethodOverloading>;
+using MethodOverloadingRefMut = somelib::diplomat::Ref<MethodOverloading, somelib::mylib::capi::MethodOverloading>;
+
+class MethodOverloading : public somelib::diplomat::OpaquePointer<MethodOverloading, somelib::mylib::capi::MethodOverloading, somelib::mylib::capi::MethodOverloading_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::mylib::MethodOverloading> from(int32_t _v);
+  inline static somelib::mylib::MethodOverloading from(int32_t _v);
 
-  inline static std::unique_ptr<somelib::mylib::MethodOverloading> from(int64_t _v);
+  inline static somelib::mylib::MethodOverloading from(int64_t _v);
 
-  inline static std::unique_ptr<somelib::mylib::MethodOverloading> from(uint32_t _v);
+  inline static somelib::mylib::MethodOverloading from(uint32_t _v);
 
-    inline const somelib::mylib::capi::MethodOverloading* AsFFI() const;
-    inline somelib::mylib::capi::MethodOverloading* AsFFI();
-    inline static const somelib::mylib::MethodOverloading* FromFFI(const somelib::mylib::capi::MethodOverloading* ptr);
-    inline static somelib::mylib::MethodOverloading* FromFFI(somelib::mylib::capi::MethodOverloading* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    MethodOverloading() = delete;
-    MethodOverloading(const somelib::mylib::MethodOverloading&) = delete;
-    MethodOverloading(somelib::mylib::MethodOverloading&&) noexcept = delete;
-    MethodOverloading operator=(const somelib::mylib::MethodOverloading&) = delete;
-    MethodOverloading operator=(somelib::mylib::MethodOverloading&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

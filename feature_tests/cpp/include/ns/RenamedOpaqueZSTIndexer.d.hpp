@@ -22,29 +22,24 @@ class RenamedOpaqueZSTIndexer;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueZSTIndexer;
+    extern "C" {
+    void namespace_OpaqueZSTIndexer_destroy(RenamedOpaqueZSTIndexer* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedOpaqueZSTIndexer {
+class RenamedOpaqueZSTIndexer;
+using RenamedOpaqueZSTIndexerRef = somelib::diplomat::Ref<RenamedOpaqueZSTIndexer, const somelib::ns::capi::RenamedOpaqueZSTIndexer>;
+using RenamedOpaqueZSTIndexerRefMut = somelib::diplomat::Ref<RenamedOpaqueZSTIndexer, somelib::ns::capi::RenamedOpaqueZSTIndexer>;
+
+class RenamedOpaqueZSTIndexer : public somelib::diplomat::OpaquePointer<RenamedOpaqueZSTIndexer, somelib::ns::capi::RenamedOpaqueZSTIndexer, somelib::ns::capi::namespace_OpaqueZSTIndexer_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer> new_();
+  inline static somelib::ns::RenamedOpaqueZSTIndexer new_();
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIndexer> operator[](size_t idx) const;
+  inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZSTIndexer> operator[](size_t idx) const;
 
-    inline const somelib::ns::capi::RenamedOpaqueZSTIndexer* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueZSTIndexer* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueZSTIndexer* FromFFI(const somelib::ns::capi::RenamedOpaqueZSTIndexer* ptr);
-    inline static somelib::ns::RenamedOpaqueZSTIndexer* FromFFI(somelib::ns::capi::RenamedOpaqueZSTIndexer* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueZSTIndexer() = delete;
-    RenamedOpaqueZSTIndexer(const somelib::ns::RenamedOpaqueZSTIndexer&) = delete;
-    RenamedOpaqueZSTIndexer(somelib::ns::RenamedOpaqueZSTIndexer&&) noexcept = delete;
-    RenamedOpaqueZSTIndexer operator=(const somelib::ns::RenamedOpaqueZSTIndexer&) = delete;
-    RenamedOpaqueZSTIndexer operator=(somelib::ns::RenamedOpaqueZSTIndexer&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

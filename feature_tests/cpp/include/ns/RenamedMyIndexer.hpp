@@ -32,41 +32,21 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedMyIndexer> somelib::ns::RenamedMyIndexer::new_(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
+inline somelib::ns::RenamedMyIndexer somelib::ns::RenamedMyIndexer::new_(somelib::diplomat::span<const diplomat::string_view_for_slice> v) {
     auto result = somelib::ns::capi::namespace_MyIndexer_new({reinterpret_cast<const somelib::diplomat::capi::DiplomatStringView*>(v.data()), v.size()});
-    return std::unique_ptr<somelib::ns::RenamedMyIndexer>(somelib::ns::RenamedMyIndexer::FromFFI(result));
+    return somelib::ns::RenamedMyIndexer::FromFFI(result);
 }
 
-inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](size_t i) const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](size_t i) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIndexer_get(this->AsFFI(),
         i);
-    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : somelib::diplomat::Optional<std::string_view>(std::nullopt);
 }
 
-inline std::optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](std::string_view s) const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<std::string_view> somelib::ns::RenamedMyIndexer::operator[](std::string_view s) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_MyIndexer_get_str(this->AsFFI(),
         {s.data(), s.size()});
-    return result.is_ok ? std::optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : std::nullopt;
-}
-
-inline const somelib::ns::capi::RenamedMyIndexer* somelib::ns::RenamedMyIndexer::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedMyIndexer*>(this);
-}
-
-inline somelib::ns::capi::RenamedMyIndexer* somelib::ns::RenamedMyIndexer::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedMyIndexer*>(this);
-}
-
-inline const somelib::ns::RenamedMyIndexer* somelib::ns::RenamedMyIndexer::FromFFI(const somelib::ns::capi::RenamedMyIndexer* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedMyIndexer*>(ptr);
-}
-
-inline somelib::ns::RenamedMyIndexer* somelib::ns::RenamedMyIndexer::FromFFI(somelib::ns::capi::RenamedMyIndexer* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedMyIndexer*>(ptr);
-}
-
-inline void somelib::ns::RenamedMyIndexer::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_MyIndexer_destroy(reinterpret_cast<somelib::ns::capi::RenamedMyIndexer*>(ptr));
+    return result.is_ok ? somelib::diplomat::Optional<std::string_view>(std::string_view(result.ok.data, result.ok.len)) : somelib::diplomat::Optional<std::string_view>(std::nullopt);
 }
 
 

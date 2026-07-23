@@ -15,11 +15,18 @@
 namespace somelib {
 namespace capi {
     struct OpaqueThin;
+    extern "C" {
+    void OpaqueThin_destroy(OpaqueThin* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueThin {
+class OpaqueThin;
+using OpaqueThinRef = somelib::diplomat::Ref<OpaqueThin, const somelib::capi::OpaqueThin>;
+using OpaqueThinRefMut = somelib::diplomat::Ref<OpaqueThin, somelib::capi::OpaqueThin>;
+
+class OpaqueThin : public somelib::diplomat::OpaquePointer<OpaqueThin, somelib::capi::OpaqueThin, somelib::capi::OpaqueThin_destroy> {
 public:
 
   inline int32_t a() const;
@@ -30,18 +37,6 @@ public:
   template<typename W>
   inline void c_write(W& writeable_output) const;
 
-    inline const somelib::capi::OpaqueThin* AsFFI() const;
-    inline somelib::capi::OpaqueThin* AsFFI();
-    inline static const somelib::OpaqueThin* FromFFI(const somelib::capi::OpaqueThin* ptr);
-    inline static somelib::OpaqueThin* FromFFI(somelib::capi::OpaqueThin* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueThin() = delete;
-    OpaqueThin(const somelib::OpaqueThin&) = delete;
-    OpaqueThin(somelib::OpaqueThin&&) noexcept = delete;
-    OpaqueThin operator=(const somelib::OpaqueThin&) = delete;
-    OpaqueThin operator=(somelib::OpaqueThin&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

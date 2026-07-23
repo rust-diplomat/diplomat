@@ -54,25 +54,5 @@ inline void somelib::OpaqueThin::c_write(W& writeable) const {
         &write);
 }
 
-inline const somelib::capi::OpaqueThin* somelib::OpaqueThin::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OpaqueThin*>(this);
-}
-
-inline somelib::capi::OpaqueThin* somelib::OpaqueThin::AsFFI() {
-    return reinterpret_cast<somelib::capi::OpaqueThin*>(this);
-}
-
-inline const somelib::OpaqueThin* somelib::OpaqueThin::FromFFI(const somelib::capi::OpaqueThin* ptr) {
-    return reinterpret_cast<const somelib::OpaqueThin*>(ptr);
-}
-
-inline somelib::OpaqueThin* somelib::OpaqueThin::FromFFI(somelib::capi::OpaqueThin* ptr) {
-    return reinterpret_cast<somelib::OpaqueThin*>(ptr);
-}
-
-inline void somelib::OpaqueThin::operator delete(void* ptr) {
-    somelib::capi::OpaqueThin_destroy(reinterpret_cast<somelib::capi::OpaqueThin*>(ptr));
-}
-
 
 #endif // SOMELIB_OpaqueThin_HPP

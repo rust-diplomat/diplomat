@@ -9,6 +9,8 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "MyString.d.hpp"
+#include "Opaque.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct MyString; }
@@ -48,7 +50,7 @@ struct CallbackWrapper {
 
   inline static int32_t test_str_cb_arg(std::function<int32_t(std::string_view)> f);
 
-  inline static void test_opaque_cb_arg(std::function<void(somelib::MyString&)> cb, somelib::MyString& a);
+  inline static void test_opaque_cb_arg(std::function<void(somelib::MyStringRefMut)> cb, somelib::MyString& a);
 
   inline static void test_slice_cb_arg(somelib::diplomat::span<const uint8_t> arg, std::function<void(somelib::diplomat::span<const uint8_t>)> f);
 
@@ -56,21 +58,21 @@ struct CallbackWrapper {
 
   inline static void test_result_usize_output(std::function<somelib::diplomat::result<size_t, std::monostate>()> t);
 
-  inline static void test_option_output(std::function<std::optional<std::monostate>()> t);
+  inline static void test_option_output(std::function<somelib::diplomat::Optional<std::monostate>()> t);
 
-  inline static void test_diplomat_option_output(std::function<std::optional<uint32_t>()> t);
+  inline static void test_diplomat_option_output(std::function<somelib::diplomat::Optional<uint32_t>()> t);
 
-  inline static std::string test_option_opaque(std::function<const somelib::Opaque*()> t);
+  inline static std::string test_option_opaque(std::function<somelib::diplomat::Optional<somelib::OpaqueRef>()> t);
   template<typename W>
-  inline static void test_option_opaque_write(std::function<const somelib::Opaque*()> t, W& writeable_output);
+  inline static void test_option_opaque_write(std::function<somelib::diplomat::Optional<somelib::OpaqueRef>()> t, W& writeable_output);
 
-  inline static void test_owned_opaque(std::function<void(std::unique_ptr<somelib::Opaque>)> t);
+  inline static void test_owned_opaque(std::function<void(somelib::Opaque)> t);
 
   inline static void test_diplomat_result(std::function<somelib::diplomat::result<size_t, size_t>()> t);
 
-  inline static std::string test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t);
+  inline static std::string test_result_opaque(std::function<somelib::diplomat::result<somelib::OpaqueRef, std::monostate>()> t);
   template<typename W>
-  inline static void test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t, W& writeable_output);
+  inline static void test_result_opaque_write(std::function<somelib::diplomat::result<somelib::OpaqueRef, std::monostate>()> t, W& writeable_output);
 
   inline static void test_inner_conversion(std::function<somelib::diplomat::result<somelib::MyStructContainingAnOption, size_t>()> t);
 
@@ -78,13 +80,13 @@ struct CallbackWrapper {
 
   inline static void test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, std::monostate>()> t);
 
-  inline static void test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t);
+  inline static void test_result_option_struct_conversion(std::function<somelib::diplomat::result<somelib::diplomat::Optional<somelib::MyStruct>, std::monostate>()> t);
 
   inline static void test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t);
 
-  inline static std::string test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t);
+  inline static std::string test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, somelib::OpaqueRef>()> t);
   template<typename W>
-  inline static void test_opaque_result_error_write(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t, W& writeable_output);
+  inline static void test_opaque_result_error_write(std::function<somelib::diplomat::result<std::monostate, somelib::OpaqueRef>()> t, W& writeable_output);
 
     inline somelib::capi::CallbackWrapper AsFFI() const;
     inline static somelib::CallbackWrapper FromFFI(somelib::capi::CallbackWrapper c_struct);

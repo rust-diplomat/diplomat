@@ -24,25 +24,5 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::capi::RefListParameter* somelib::RefListParameter::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::RefListParameter*>(this);
-}
-
-inline somelib::capi::RefListParameter* somelib::RefListParameter::AsFFI() {
-    return reinterpret_cast<somelib::capi::RefListParameter*>(this);
-}
-
-inline const somelib::RefListParameter* somelib::RefListParameter::FromFFI(const somelib::capi::RefListParameter* ptr) {
-    return reinterpret_cast<const somelib::RefListParameter*>(ptr);
-}
-
-inline somelib::RefListParameter* somelib::RefListParameter::FromFFI(somelib::capi::RefListParameter* ptr) {
-    return reinterpret_cast<somelib::RefListParameter*>(ptr);
-}
-
-inline void somelib::RefListParameter::operator delete(void* ptr) {
-    somelib::capi::RefListParameter_destroy(reinterpret_cast<somelib::capi::RefListParameter*>(ptr));
-}
-
 
 #endif // SOMELIB_RefListParameter_HPP

@@ -15,25 +15,20 @@
 namespace somelib {
 namespace capi {
     struct Two;
+    extern "C" {
+    void Two_destroy(Two* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Two {
+class Two;
+using TwoRef = somelib::diplomat::Ref<Two, const somelib::capi::Two>;
+using TwoRefMut = somelib::diplomat::Ref<Two, somelib::capi::Two>;
+
+class Two : public somelib::diplomat::OpaquePointer<Two, somelib::capi::Two, somelib::capi::Two_destroy> {
 public:
 
-    inline const somelib::capi::Two* AsFFI() const;
-    inline somelib::capi::Two* AsFFI();
-    inline static const somelib::Two* FromFFI(const somelib::capi::Two* ptr);
-    inline static somelib::Two* FromFFI(somelib::capi::Two* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Two() = delete;
-    Two(const somelib::Two&) = delete;
-    Two(somelib::Two&&) noexcept = delete;
-    Two operator=(const somelib::Two&) = delete;
-    Two operator=(somelib::Two&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

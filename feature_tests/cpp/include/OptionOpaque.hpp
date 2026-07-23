@@ -81,39 +81,39 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::OptionOpaque> somelib::OptionOpaque::new_(int32_t i) {
+inline somelib::diplomat::Optional<somelib::OptionOpaque> somelib::OptionOpaque::new_(int32_t i) {
     auto result = somelib::capi::OptionOpaque_new(i);
-    return std::unique_ptr<somelib::OptionOpaque>(somelib::OptionOpaque::FromFFI(result));
+    return somelib::diplomat::Optional<somelib::OptionOpaque>::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::OptionOpaque> somelib::OptionOpaque::new_none() {
+inline somelib::diplomat::Optional<somelib::OptionOpaque> somelib::OptionOpaque::new_none() {
     auto result = somelib::capi::OptionOpaque_new_none();
-    return std::unique_ptr<somelib::OptionOpaque>(somelib::OptionOpaque::FromFFI(result));
+    return somelib::diplomat::Optional<somelib::OptionOpaque>::FromFFI(result);
 }
 
-inline std::optional<somelib::OptionStruct> somelib::OptionOpaque::returns() {
+inline somelib::diplomat::Optional<somelib::OptionStruct> somelib::OptionOpaque::returns() {
     auto result = somelib::capi::OptionOpaque_returns();
-    return result.is_ok ? std::optional<somelib::OptionStruct>(somelib::OptionStruct::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::OptionStruct>(somelib::OptionStruct::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::OptionStruct>(std::nullopt);
 }
 
-inline std::optional<intptr_t> somelib::OptionOpaque::option_isize() const {
+inline somelib::diplomat::Optional<intptr_t> somelib::OptionOpaque::option_isize() const {
     auto result = somelib::capi::OptionOpaque_option_isize(this->AsFFI());
-    return result.is_ok ? std::optional<intptr_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<intptr_t>(result.ok) : somelib::diplomat::Optional<intptr_t>(std::nullopt);
 }
 
-inline std::optional<size_t> somelib::OptionOpaque::option_usize() const {
+inline somelib::diplomat::Optional<size_t> somelib::OptionOpaque::option_usize() const {
     auto result = somelib::capi::OptionOpaque_option_usize(this->AsFFI());
-    return result.is_ok ? std::optional<size_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<size_t>(result.ok) : somelib::diplomat::Optional<size_t>(std::nullopt);
 }
 
-inline std::optional<int32_t> somelib::OptionOpaque::option_i32() const {
+inline somelib::diplomat::Optional<int32_t> somelib::OptionOpaque::option_i32() const {
     auto result = somelib::capi::OptionOpaque_option_i32(this->AsFFI());
-    return result.is_ok ? std::optional<int32_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<int32_t>(result.ok) : somelib::diplomat::Optional<int32_t>(std::nullopt);
 }
 
-inline std::optional<uint32_t> somelib::OptionOpaque::option_u32() const {
+inline somelib::diplomat::Optional<uint32_t> somelib::OptionOpaque::option_u32() const {
     auto result = somelib::capi::OptionOpaque_option_u32(this->AsFFI());
-    return result.is_ok ? std::optional<uint32_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<uint32_t>(result.ok) : somelib::diplomat::Optional<uint32_t>(std::nullopt);
 }
 
 inline somelib::OptionStruct somelib::OptionOpaque::new_struct() {
@@ -126,14 +126,14 @@ inline somelib::OptionStruct somelib::OptionOpaque::new_struct_nones() {
     return somelib::OptionStruct::FromFFI(result);
 }
 
-inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_none_self() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::OptionOpaqueRef> somelib::OptionOpaque::returns_none_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionOpaque_returns_none_self(this->AsFFI());
-    return somelib::OptionOpaque::FromFFI(result);
+    return somelib::diplomat::Optional<somelib::OptionOpaqueRef>::FromFFI(result);
 }
 
-inline const somelib::OptionOpaque* somelib::OptionOpaque::returns_some_self() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::OptionOpaqueRef> somelib::OptionOpaque::returns_some_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OptionOpaque_returns_some_self(this->AsFFI());
-    return somelib::OptionOpaque::FromFFI(result);
+    return somelib::diplomat::Optional<somelib::OptionOpaqueRef>::FromFFI(result);
 }
 
 inline void somelib::OptionOpaque::assert_integer(int32_t i) const {
@@ -141,40 +141,40 @@ inline void somelib::OptionOpaque::assert_integer(int32_t i) const {
         i);
 }
 
-inline bool somelib::OptionOpaque::option_opaque_argument(const somelib::OptionOpaque* arg) {
-    auto result = somelib::capi::OptionOpaque_option_opaque_argument(arg ? arg->AsFFI() : nullptr);
+inline bool somelib::OptionOpaque::option_opaque_argument(somelib::diplomat::Optional<somelib::OptionOpaqueRef> arg) {
+    auto result = somelib::capi::OptionOpaque_option_opaque_argument(arg.AsFFI());
     return result;
 }
 
-inline std::optional<uint8_t> somelib::OptionOpaque::accepts_option_u8(std::optional<uint8_t> arg, uint8_t sentinel) {
+inline somelib::diplomat::Optional<uint8_t> somelib::OptionOpaque::accepts_option_u8(somelib::diplomat::Optional<uint8_t> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_u8(arg.has_value() ? (somelib::diplomat::capi::OptionU8{ { arg.value() }, true }) : (somelib::diplomat::capi::OptionU8{ {}, false }),
         sentinel);
-    return result.is_ok ? std::optional<uint8_t>(result.ok) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<uint8_t>(result.ok) : somelib::diplomat::Optional<uint8_t>(std::nullopt);
 }
 
-inline std::optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_option_enum(std::optional<somelib::OptionEnum> arg, uint8_t sentinel) {
+inline somelib::diplomat::Optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_option_enum(somelib::diplomat::Optional<somelib::OptionEnum> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_enum(arg.has_value() ? (somelib::capi::OptionEnum_option{ { arg.value().AsFFI() }, true }) : (somelib::capi::OptionEnum_option{ {}, false }),
         sentinel);
-    return result.is_ok ? std::optional<somelib::OptionEnum>(somelib::OptionEnum::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::OptionEnum>(somelib::OptionEnum::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::OptionEnum>(std::nullopt);
 }
 
 inline void somelib::OptionOpaque::accepts_borrowing_option_struct(somelib::BorrowingOptionStruct arg) {
     somelib::capi::OptionOpaque_accepts_borrowing_option_struct(arg.AsFFI());
 }
 
-inline std::optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_multiple_option_enum(uint8_t sentinel1, std::optional<somelib::OptionEnum> arg1, std::optional<somelib::OptionEnum> arg2, std::optional<somelib::OptionEnum> arg3, uint8_t sentinel2) {
+inline somelib::diplomat::Optional<somelib::OptionEnum> somelib::OptionOpaque::accepts_multiple_option_enum(uint8_t sentinel1, somelib::diplomat::Optional<somelib::OptionEnum> arg1, somelib::diplomat::Optional<somelib::OptionEnum> arg2, somelib::diplomat::Optional<somelib::OptionEnum> arg3, uint8_t sentinel2) {
     auto result = somelib::capi::OptionOpaque_accepts_multiple_option_enum(sentinel1,
         arg1.has_value() ? (somelib::capi::OptionEnum_option{ { arg1.value().AsFFI() }, true }) : (somelib::capi::OptionEnum_option{ {}, false }),
         arg2.has_value() ? (somelib::capi::OptionEnum_option{ { arg2.value().AsFFI() }, true }) : (somelib::capi::OptionEnum_option{ {}, false }),
         arg3.has_value() ? (somelib::capi::OptionEnum_option{ { arg3.value().AsFFI() }, true }) : (somelib::capi::OptionEnum_option{ {}, false }),
         sentinel2);
-    return result.is_ok ? std::optional<somelib::OptionEnum>(somelib::OptionEnum::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::OptionEnum>(somelib::OptionEnum::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::OptionEnum>(std::nullopt);
 }
 
-inline std::optional<somelib::OptionInputStruct> somelib::OptionOpaque::accepts_option_input_struct(std::optional<somelib::OptionInputStruct> arg, uint8_t sentinel) {
+inline somelib::diplomat::Optional<somelib::OptionInputStruct> somelib::OptionOpaque::accepts_option_input_struct(somelib::diplomat::Optional<somelib::OptionInputStruct> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_input_struct(arg.has_value() ? (somelib::capi::OptionInputStruct_option{ { arg.value().AsFFI() }, true }) : (somelib::capi::OptionInputStruct_option{ {}, false }),
         sentinel);
-    return result.is_ok ? std::optional<somelib::OptionInputStruct>(somelib::OptionInputStruct::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::OptionInputStruct>(somelib::OptionInputStruct::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::OptionInputStruct>(std::nullopt);
 }
 
 inline somelib::OptionInputStruct somelib::OptionOpaque::returns_option_input_struct() {
@@ -182,42 +182,22 @@ inline somelib::OptionInputStruct somelib::OptionOpaque::returns_option_input_st
     return somelib::OptionInputStruct::FromFFI(result);
 }
 
-inline size_t somelib::OptionOpaque::accepts_option_str(std::optional<std::string_view> arg, uint8_t sentinel) {
+inline size_t somelib::OptionOpaque::accepts_option_str(somelib::diplomat::Optional<std::string_view> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_str(arg.has_value() ? (somelib::diplomat::capi::OptionStringView{ { {arg.value().data(), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionStringView{ {}, false }),
         sentinel);
     return result;
 }
 
-inline bool somelib::OptionOpaque::accepts_option_str_slice(std::optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel) {
+inline bool somelib::OptionOpaque::accepts_option_str_slice(somelib::diplomat::Optional<somelib::diplomat::span<const diplomat::string_view_for_slice>> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_str_slice(arg.has_value() ? (somelib::diplomat::capi::OptionStringsView{ { {reinterpret_cast<const somelib::diplomat::capi::DiplomatStringView*>(arg.value().data()), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionStringsView{ {}, false }),
         sentinel);
     return result;
 }
 
-inline int64_t somelib::OptionOpaque::accepts_option_primitive(std::optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel) {
+inline int64_t somelib::OptionOpaque::accepts_option_primitive(somelib::diplomat::Optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_primitive(arg.has_value() ? (somelib::diplomat::capi::OptionU32View{ { {arg.value().data(), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionU32View{ {}, false }),
         sentinel);
     return result;
-}
-
-inline const somelib::capi::OptionOpaque* somelib::OptionOpaque::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OptionOpaque*>(this);
-}
-
-inline somelib::capi::OptionOpaque* somelib::OptionOpaque::AsFFI() {
-    return reinterpret_cast<somelib::capi::OptionOpaque*>(this);
-}
-
-inline const somelib::OptionOpaque* somelib::OptionOpaque::FromFFI(const somelib::capi::OptionOpaque* ptr) {
-    return reinterpret_cast<const somelib::OptionOpaque*>(ptr);
-}
-
-inline somelib::OptionOpaque* somelib::OptionOpaque::FromFFI(somelib::capi::OptionOpaque* ptr) {
-    return reinterpret_cast<somelib::OptionOpaque*>(ptr);
-}
-
-inline void somelib::OptionOpaque::operator delete(void* ptr) {
-    somelib::capi::OptionOpaque_destroy(reinterpret_cast<somelib::capi::OptionOpaque*>(ptr));
 }
 
 

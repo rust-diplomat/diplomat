@@ -13,8 +13,8 @@ void add_CyclicStructA_binding(nb::module_ mod) {
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::CyclicStructA>>(mod, "CyclicStructASlice"); 
     nb::class_<somelib::CyclicStructA> st(mod, "CyclicStructA");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<somelib::CyclicStructB>(), "a"_a.none())
         .def_rw("a", &somelib::CyclicStructA::a)
         .def("cyclic_out", &somelib::CyclicStructA::cyclic_out)

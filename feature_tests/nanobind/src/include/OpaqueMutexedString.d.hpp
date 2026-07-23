@@ -22,43 +22,38 @@ class Utf16Wrap;
 namespace somelib {
 namespace capi {
     struct OpaqueMutexedString;
+    extern "C" {
+    void OpaqueMutexedString_destroy(OpaqueMutexedString* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueMutexedString {
+class OpaqueMutexedString;
+using OpaqueMutexedStringRef = somelib::diplomat::Ref<OpaqueMutexedString, const somelib::capi::OpaqueMutexedString>;
+using OpaqueMutexedStringRefMut = somelib::diplomat::Ref<OpaqueMutexedString, somelib::capi::OpaqueMutexedString>;
+
+class OpaqueMutexedString : public somelib::diplomat::OpaquePointer<OpaqueMutexedString, somelib::capi::OpaqueMutexedString, somelib::capi::OpaqueMutexedString_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::OpaqueMutexedString> from_usize(size_t number);
+  inline static somelib::OpaqueMutexedString from_usize(size_t number);
 
   inline void change(size_t number) const;
 
-  inline const somelib::OpaqueMutexedString& borrow() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::OpaqueMutexedStringRef borrow() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline static const somelib::OpaqueMutexedString& borrow_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND);
+  inline static somelib::OpaqueMutexedStringRef borrow_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND);
 
-  inline const somelib::OpaqueMutexedString& borrow_self_or_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND) const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::OpaqueMutexedStringRef borrow_self_or_other(const somelib::OpaqueMutexedString& other DIPLOMAT_LIFETIME_BOUND) const DIPLOMAT_LIFETIME_BOUND;
 
   inline size_t get_len_and_add(size_t other) const;
 
   inline std::string_view dummy_str() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline std::unique_ptr<somelib::Utf16Wrap> wrapper() const;
+  inline somelib::Utf16Wrap wrapper() const;
 
   inline uint16_t to_unsigned_from_unsigned(uint16_t input) const;
 
-    inline const somelib::capi::OpaqueMutexedString* AsFFI() const;
-    inline somelib::capi::OpaqueMutexedString* AsFFI();
-    inline static const somelib::OpaqueMutexedString* FromFFI(const somelib::capi::OpaqueMutexedString* ptr);
-    inline static somelib::OpaqueMutexedString* FromFFI(somelib::capi::OpaqueMutexedString* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueMutexedString() = delete;
-    OpaqueMutexedString(const somelib::OpaqueMutexedString&) = delete;
-    OpaqueMutexedString(somelib::OpaqueMutexedString&&) noexcept = delete;
-    OpaqueMutexedString operator=(const somelib::OpaqueMutexedString&) = delete;
-    OpaqueMutexedString operator=(somelib::OpaqueMutexedString&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

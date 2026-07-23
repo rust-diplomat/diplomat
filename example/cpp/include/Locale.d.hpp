@@ -20,35 +20,30 @@ class Locale;
 namespace icu4x {
 namespace capi {
     struct Locale;
+    extern "C" {
+    void icu4x_Locale_destroy_mv1(Locale* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace icu4x {
+class Locale;
+using LocaleRef = icu4x::diplomat::Ref<Locale, const icu4x::capi::Locale>;
+using LocaleRefMut = icu4x::diplomat::Ref<Locale, icu4x::capi::Locale>;
+
 /**
  * An  Locale, capable of representing strings like `"en-US"`.
  *
  * See the [Rust documentation for `Locale`](https://docs.rs/icu/latest/icu/locid/struct.Locale.html) for more information.
  */
-class Locale {
+class Locale : public icu4x::diplomat::OpaquePointer<Locale, icu4x::capi::Locale, icu4x::capi::icu4x_Locale_destroy_mv1> {
 public:
 
   /**
    * Construct an {@link Locale} from a locale identifier represented as a string.
    */
-  inline static std::unique_ptr<icu4x::Locale> new_(std::string_view name);
+  inline static icu4x::Locale new_(std::string_view name);
 
-    inline const icu4x::capi::Locale* AsFFI() const;
-    inline icu4x::capi::Locale* AsFFI();
-    inline static const icu4x::Locale* FromFFI(const icu4x::capi::Locale* ptr);
-    inline static icu4x::Locale* FromFFI(icu4x::capi::Locale* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Locale() = delete;
-    Locale(const icu4x::Locale&) = delete;
-    Locale(icu4x::Locale&&) noexcept = delete;
-    Locale operator=(const icu4x::Locale&) = delete;
-    Locale operator=(icu4x::Locale&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -7,8 +7,8 @@
 namespace somelib {
 void add_CyclicStructC_binding(nb::module_ mod) {
     nb::class_<somelib::CyclicStructC> st(mod, "CyclicStructC");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<somelib::CyclicStructA>(), "a"_a.none())
         .def_rw("a", &somelib::CyclicStructC::a)
         .def("cyclic_out", &somelib::CyclicStructC::cyclic_out)

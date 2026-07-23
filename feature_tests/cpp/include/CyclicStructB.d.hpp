@@ -33,7 +33,7 @@ struct CyclicStructB {
 
   inline static somelib::CyclicStructA get_a();
 
-  inline static std::optional<somelib::CyclicStructA> get_a_option();
+  inline static somelib::diplomat::Optional<somelib::CyclicStructA> get_a_option();
 
     inline somelib::capi::CyclicStructB AsFFI() const;
     inline static somelib::CyclicStructB FromFFI(somelib::capi::CyclicStructB c_struct);

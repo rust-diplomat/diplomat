@@ -524,16 +524,35 @@ pub mod ffi {
     #[diplomat::attr(
         nanobind,
         custom_extra_code(
+            // Identical to the cpp declaration above -- both backends declare return_new() as
+            // returning std::vector<std::string>, they just implement it differently below.
+            file = "custom_binds/cpp/RenamedStringList.d.hpp",
+            location = "def_block"
+        )
+    )]
+    #[diplomat::attr(
+        nanobind,
+        custom_extra_code(
             file = "custom_binds/nanobind/RenamedStringList.hpp",
             location = "impl_block"
+        )
+    )]
+    #[diplomat::attr(
+        nanobind,
+        custom_extra_code(
+            file = "custom_binds/nanobind/RenamedStringList_init.hpp",
+            location = "init_block"
         )
     )]
     #[repr(C)]
     pub struct StringList(DiplomatOwnedStrSlice);
 
     impl StringList {
-        // We want to generate the bindings for this ourselves:
-        #[diplomat::attr(cpp, disable)]
+        // We want to generate the bindings for this ourselves: a bound opaque class and a bound
+        // type_caster for the exact same C++ type can't coexist in nanobind, so return_new() must
+        // return std::vector<std::string> directly rather than the opaque wrapper class, for both
+        // backends (not just cpp).
+        #[diplomat::attr(any(cpp, nanobind), disable)]
         pub fn return_new() -> Box<Self> {
             let sl: Box<[u8]> = Box::new(*b"Test!");
             Box::new(Self(sl.into()))

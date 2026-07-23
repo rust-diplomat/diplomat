@@ -7,12 +7,7 @@
 
 namespace somelib {
 void add_Foo_binding(nb::module_ mod) {
-    PyType_Slot somelib_Foo_slots[] = {
-        {Py_tp_free, (void *)somelib::Foo::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::Foo> opaque(mod, "Foo", nb::type_slots(somelib_Foo_slots));
+    nb::class_<somelib::Foo> opaque(mod, "Foo");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::Foo::new_))), "x"_a, nb::keep_alive<1, 2>())
         .def("as_returning", &somelib::Foo::as_returning, nb::keep_alive<0, 1>())

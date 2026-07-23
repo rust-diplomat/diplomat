@@ -26,27 +26,27 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> somelib::OutTupleStruct::new_() {
+inline std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> somelib::OutTupleStruct::new_() {
     auto result = somelib::capi::OutTupleStruct_new();
     return somelib::OutTupleStruct::TupleFromFFI(result);
 }
 
 
-inline somelib::capi::OutTupleStruct somelib::OutTupleStruct::AsTupleFFI(std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> tuple) {
+inline somelib::capi::OutTupleStruct somelib::OutTupleStruct::AsTupleFFI(std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> tuple) {
     return somelib::capi::OutTupleStruct {
         /* .x = */ std::get<0>(tuple),
         /* .y = */ std::get<1>(tuple),
         /* .primitive = */ std::get<2>(tuple).AsFFI(),
-        /* .opaque = */ std::get<3>(tuple)->AsFFI(),
+        /* .opaque = */ const_cast<somelib::Opaque&>(std::get<3>(tuple)).AsFFI(),
     };
 }
 
-inline std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>> somelib::OutTupleStruct::TupleFromFFI(somelib::capi::OutTupleStruct c_struct) {
-    return std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,std::unique_ptr<somelib::Opaque>>{
+inline std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque> somelib::OutTupleStruct::TupleFromFFI(somelib::capi::OutTupleStruct c_struct) {
+    return std::tuple<int32_t,int32_t,somelib::PrimitiveStruct,somelib::Opaque>{
         /* .x = */ c_struct.x,
         /* .y = */ c_struct.y,
         /* .primitive = */ somelib::PrimitiveStruct::FromFFI(c_struct.primitive),
-        /* .opaque = */ std::unique_ptr<somelib::Opaque>(somelib::Opaque::FromFFI(c_struct.opaque)),
+        /* .opaque = */ somelib::Opaque::FromFFI(c_struct.opaque),
     };
 }
 

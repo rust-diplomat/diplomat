@@ -33,9 +33,9 @@ inline somelib::CyclicStructA somelib::CyclicStructB::get_a() {
     return somelib::CyclicStructA::FromFFI(result);
 }
 
-inline std::optional<somelib::CyclicStructA> somelib::CyclicStructB::get_a_option() {
+inline somelib::diplomat::Optional<somelib::CyclicStructA> somelib::CyclicStructB::get_a_option() {
     auto result = somelib::capi::CyclicStructB_get_a_option();
-    return result.is_ok ? std::optional<somelib::CyclicStructA>(somelib::CyclicStructA::FromFFI(result.ok)) : std::nullopt;
+    return result.is_ok ? somelib::diplomat::Optional<somelib::CyclicStructA>(somelib::CyclicStructA::FromFFI(result.ok)) : somelib::diplomat::Optional<somelib::CyclicStructA>(std::nullopt);
 }
 
 

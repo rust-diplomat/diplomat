@@ -6,8 +6,8 @@
 namespace somelib {
 void add_MyZst_binding(nb::module_ mod) {
     nb::class_<somelib::MyZst> st(mod, "MyZst");
-    st
-        .def(nb::init<>());
+    maybe_bind_default_init(st);
+    st;
 }
 
 } 

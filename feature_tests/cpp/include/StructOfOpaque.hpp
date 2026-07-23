@@ -36,15 +36,15 @@ inline void somelib::StructOfOpaque::take_in(const somelib::Opaque& other) {
 
 inline somelib::capi::StructOfOpaque somelib::StructOfOpaque::AsFFI() const {
     return somelib::capi::StructOfOpaque {
-        /* .i = */ i->AsFFI(),
-        /* .j = */ j->AsFFI(),
+        /* .i = */ i.AsFFI(),
+        /* .j = */ j.AsFFI(),
     };
 }
 
 inline somelib::StructOfOpaque somelib::StructOfOpaque::FromFFI(somelib::capi::StructOfOpaque c_struct) {
     return somelib::StructOfOpaque {
-        /* .i = */ (somelib::Opaque*)somelib::Opaque::FromFFI(c_struct.i),
-        /* .j = */ somelib::OpaqueMut::FromFFI(c_struct.j),
+        /* .i = */ somelib::OpaqueRef::FromFFI(c_struct.i),
+        /* .j = */ somelib::OpaqueMutRefMut::FromFFI(c_struct.j),
     };
 }
 

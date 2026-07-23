@@ -27,29 +27,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::ns::AttrOpaque1Renamed* somelib::ns::RenamedOpaqueRefIterator::next() DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::ns::AttrOpaque1RenamedRef> somelib::ns::RenamedOpaqueRefIterator::next() DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::ns::capi::namespace_OpaqueRefIterator_next(this->AsFFI());
-    return somelib::ns::AttrOpaque1Renamed::FromFFI(result);
-}
-
-inline const somelib::ns::capi::RenamedOpaqueRefIterator* somelib::ns::RenamedOpaqueRefIterator::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueRefIterator*>(this);
-}
-
-inline somelib::ns::capi::RenamedOpaqueRefIterator* somelib::ns::RenamedOpaqueRefIterator::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueRefIterator*>(this);
-}
-
-inline const somelib::ns::RenamedOpaqueRefIterator* somelib::ns::RenamedOpaqueRefIterator::FromFFI(const somelib::ns::capi::RenamedOpaqueRefIterator* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedOpaqueRefIterator*>(ptr);
-}
-
-inline somelib::ns::RenamedOpaqueRefIterator* somelib::ns::RenamedOpaqueRefIterator::FromFFI(somelib::ns::capi::RenamedOpaqueRefIterator* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedOpaqueRefIterator*>(ptr);
-}
-
-inline void somelib::ns::RenamedOpaqueRefIterator::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_OpaqueRefIterator_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueRefIterator*>(ptr));
+    return somelib::diplomat::Optional<somelib::ns::AttrOpaque1RenamedRef>::FromFFI(result);
 }
 
 

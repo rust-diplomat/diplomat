@@ -6,12 +6,7 @@
 
 namespace somelib {
 void add_MyString_binding(nb::module_ mod) {
-    PyType_Slot somelib_MyString_slots[] = {
-        {Py_tp_free, (void *)somelib::MyString::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::MyString> opaque(mod, "MyString", nb::type_slots(somelib_MyString_slots));
+    nb::class_<somelib::MyString> opaque(mod, "MyString");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::MyString::new_))), "v"_a='T')
         .def("borrow", &somelib::MyString::borrow)

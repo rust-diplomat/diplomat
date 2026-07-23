@@ -13,8 +13,8 @@ void add_BigStructWithStuff_binding(nb::module_ mod) {
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::BigStructWithStuff>>(mod, "BigStructWithStuffSlice"); 
     nb::class_<somelib::BigStructWithStuff> st(mod, "BigStructWithStuff", "Testing JS-specific layout/padding behavior\nAlso being used to test CPP backends taking structs with primitive values.");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<uint8_t, uint16_t, uint16_t, somelib::ScalarPairWithPadding, uint8_t>(), "first"_a.none(),  "second"_a.none(),  "third"_a.none(),  "fourth"_a.none(),  "fifth"_a.none())
         .def_rw("first", &somelib::BigStructWithStuff::first)
         .def_rw("second", &somelib::BigStructWithStuff::second)

@@ -15,29 +15,24 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedMixinTest;
+    extern "C" {
+    void namespace_MixinTest_destroy(RenamedMixinTest* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedMixinTest {
+class RenamedMixinTest;
+using RenamedMixinTestRef = somelib::diplomat::Ref<RenamedMixinTest, const somelib::ns::capi::RenamedMixinTest>;
+using RenamedMixinTestRefMut = somelib::diplomat::Ref<RenamedMixinTest, somelib::ns::capi::RenamedMixinTest>;
+
+class RenamedMixinTest : public somelib::diplomat::OpaquePointer<RenamedMixinTest, somelib::ns::capi::RenamedMixinTest, somelib::ns::capi::namespace_MixinTest_destroy> {
 public:
 
   inline static std::string hello();
   template<typename W>
   inline static void hello_write(W& writeable_output);
 
-    inline const somelib::ns::capi::RenamedMixinTest* AsFFI() const;
-    inline somelib::ns::capi::RenamedMixinTest* AsFFI();
-    inline static const somelib::ns::RenamedMixinTest* FromFFI(const somelib::ns::capi::RenamedMixinTest* ptr);
-    inline static somelib::ns::RenamedMixinTest* FromFFI(somelib::ns::capi::RenamedMixinTest* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedMixinTest() = delete;
-    RenamedMixinTest(const somelib::ns::RenamedMixinTest&) = delete;
-    RenamedMixinTest(somelib::ns::RenamedMixinTest&&) noexcept = delete;
-    RenamedMixinTest operator=(const somelib::ns::RenamedMixinTest&) = delete;
-    RenamedMixinTest operator=(somelib::ns::RenamedMixinTest&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

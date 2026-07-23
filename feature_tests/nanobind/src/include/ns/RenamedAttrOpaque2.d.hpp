@@ -15,25 +15,20 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedAttrOpaque2;
+    extern "C" {
+    void namespace_AttrOpaque2_destroy(RenamedAttrOpaque2* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedAttrOpaque2 {
+class RenamedAttrOpaque2;
+using RenamedAttrOpaque2Ref = somelib::diplomat::Ref<RenamedAttrOpaque2, const somelib::ns::capi::RenamedAttrOpaque2>;
+using RenamedAttrOpaque2RefMut = somelib::diplomat::Ref<RenamedAttrOpaque2, somelib::ns::capi::RenamedAttrOpaque2>;
+
+class RenamedAttrOpaque2 : public somelib::diplomat::OpaquePointer<RenamedAttrOpaque2, somelib::ns::capi::RenamedAttrOpaque2, somelib::ns::capi::namespace_AttrOpaque2_destroy> {
 public:
 
-    inline const somelib::ns::capi::RenamedAttrOpaque2* AsFFI() const;
-    inline somelib::ns::capi::RenamedAttrOpaque2* AsFFI();
-    inline static const somelib::ns::RenamedAttrOpaque2* FromFFI(const somelib::ns::capi::RenamedAttrOpaque2* ptr);
-    inline static somelib::ns::RenamedAttrOpaque2* FromFFI(somelib::ns::capi::RenamedAttrOpaque2* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedAttrOpaque2() = delete;
-    RenamedAttrOpaque2(const somelib::ns::RenamedAttrOpaque2&) = delete;
-    RenamedAttrOpaque2(somelib::ns::RenamedAttrOpaque2&&) noexcept = delete;
-    RenamedAttrOpaque2 operator=(const somelib::ns::RenamedAttrOpaque2&) = delete;
-    RenamedAttrOpaque2 operator=(somelib::ns::RenamedAttrOpaque2&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

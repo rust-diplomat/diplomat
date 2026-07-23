@@ -12,7 +12,6 @@
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/detail/nb_list.h>
 #include <nanobind/ndarray.h>
-#include <../src/nb_internals.h>  // Required for shimming
 #include "diplomat_runtime.hpp"
 
 namespace nb = nanobind;
@@ -100,13 +99,45 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
     };
 
-    template<typename E>
-    void set_py_error(E err, rv_policy p, cleanup_list* cl) noexcept {
-        using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
-        using ErrCaster = make_caster<V>;
-        
-        // Convert the error into a Python object:
-        auto errorPyV = ErrCaster::from_cpp(forward_like_<V>(std::move(err)), p, cl);
+    // Creates the Python object for a borrowed opaque view: a `Foo`-typed Python instance whose
+    // pointer-sized `Foo` is placement-constructed directly inside the nanobind instance's own
+    // inline storage, marked ready-with-destructor-disabled. No separate C++ allocation is needed
+    // (the view's storage simply lives and dies with the Python object), and `~Foo()` -- which
+    // would call the Rust destructor on data this view doesn't own -- never runs.
+    //
+    // This is the moral successor of the pre-rework model, where `Foo*` aliased the FFI pointer
+    // itself (AsFFI() returned `reinterpret_cast<capi::Foo*>(this)`) so Python objects were backed
+    // by the Rust allocation directly with no C++-side storage at all. The rework gave `Foo` a
+    // pointer member, so that member now needs a home; the Python object itself is that home.
+    //
+    // The normal nb_type_put path can't express this: rv_policy::reference would retain the
+    // address of a transient view, and take_ownership/move/copy would delete, destruct, or fail to
+    // copy the move-only wrapper. Since nb_type_put is bypassed, its reference_internal handling
+    // (tying the returned object's keep-alive to the bound method's `self`, e.g. an indexer's
+    // container -- see nb_type.cpp) is replicated manually.
+    template <typename ValueType, typename CP>
+    handle opaque_view_to_python(CP* ptr, rv_policy policy, cleanup_list* cleanup) noexcept {
+        using Plain = std::remove_const_t<ValueType>;
+        nb::handle tp = nb::type<Plain>();
+        if (!tp.is_valid()) {
+            return {};
+        }
+        try {
+            nb::object o = nb::inst_alloc(tp);
+            new ((void*) nb::inst_ptr<Plain>(o)) Plain(Plain::FromFFI(const_cast<std::remove_const_t<CP>*>(ptr)));
+            nb::inst_set_state(o, /*ready=*/true, /*destruct=*/false);
+            if (policy == rv_policy::reference_internal && cleanup != nullptr && cleanup->self() != nullptr) {
+                keep_alive(o.ptr(), cleanup->self());
+            }
+            return o.release();
+        } catch (...) {
+            return {};
+        }
+    }
+
+    // Raises `errorPyV` (a new reference, e.g. from a caster's from_cpp) as a Python exception,
+    // falling back to a generic message naming `err_type_name` if it's invalid.
+    inline void raise_py_error(handle errorPyV, const char* err_type_name) noexcept {
         if (errorPyV.is_valid())
         {
             PyErr_SetObject(PyExc_Exception, errorPyV.ptr());
@@ -117,9 +148,21 @@ namespace nanobind::detail
         else
         {
             char error_msg[512];
-            snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to python exception.", typeid(E).name());
+            snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to python exception.", err_type_name);
             PyErr_SetString(PyExc_Exception, error_msg);
         }
+    }
+
+    template<typename E>
+    void set_py_error(E&& err, rv_policy p, cleanup_list* cl) noexcept {
+        using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
+        using ErrCaster = make_caster<V>;
+
+        // Convert the error into a Python object. `err` is a forwarding reference (not taken by
+        // value) so a borrowed, possibly-const view of a move-only opaque error (e.g.
+        // Optional<Ref<Foo,...>>::value() on a result's error variant) doesn't need to be
+        // copied/moved into a new local just to pass it along.
+        raise_py_error(ErrCaster::from_cpp(forward_like_<V>(std::forward<E>(err)), p, cl), typeid(E).name());
     }
 
     template <typename T, typename E>
@@ -147,19 +190,42 @@ namespace nanobind::detail
             if (value.is_ok()) {
                 if constexpr (std::is_same_v<U, std::monostate>) {
                     return none().release();
-                } else {
+                } else if constexpr (std::is_reference_v<T>) {
                     return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
+                } else if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
+                    // Ref-shaped `T` (a borrowed opaque success value): the `Optional<T>` that
+                    // `.ok()` returns is itself just the pointer-sized view (see the Ref-based
+                    // `Optional` specialization in runtime.hpp.jinja), so hand its raw pointer to
+                    // opaque_view_to_python rather than casting a reference into the temporary
+                    // Optional's own storage.
+                    using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                    auto ok_opt = std::move(value).ok();
+                    return opaque_view_to_python<OkValueType>(ok_opt.AsFFI(), p, cl);
+                } else {
+                    // `.ok().value()` doesn't always hand back a `T` -- for owned-opaque `T`,
+                    // `Optional<T>::value_type` is `T` itself, so this is unchanged from before.
+                    using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                    return make_caster<OkValueType>::from_cpp(forward_like_<OkValueType>(std::move(value).ok().value()), p, cl);
                 }
             }
 
-            set_py_error(std::move(value).err().value(), p, cl);
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<E> && std::is_copy_constructible_v<E>) {
+                // Ref-shaped `E`: same view-not-object situation as the ok branch above, so build
+                // the exception object through opaque_view_to_python as well.
+                using ErrValueType = typename {{lib_name}}::diplomat::Optional<E>::value_type;
+                auto err_opt = std::move(value).err();
+                raise_py_error(opaque_view_to_python<ErrValueType>(err_opt.AsFFI(), rv_policy::reference, cl),
+                               typeid(ErrValueType).name());
+            } else {
+                set_py_error(std::move(value).err().value(), p, cl);
+            }
 
             return nullptr;
         }
-        
+
         template <typename T_>
         using Cast = Value;
-        operator Value() { 
+        operator Value() {
             if (is_ok) {
                 return {{lib_name}}::diplomat::Ok<T>(forward_like_<U>(ok_val.value()));
             } else {
@@ -200,6 +266,88 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
     };
 
+    // `Ref<Foo, CPtr>` (`FooRef`/`FooRefMut`) used directly -- e.g. a struct field, callback
+    // param/return, or tuple element, anywhere `Optional<Ref<...>>`'s value_type trick (see below)
+    // doesn't apply since there's no Optional wrapping it -- is a distinct C++ type from `Foo`.
+    // Without a caster of its own, nanobind's fallback caster would treat it as its own,
+    // never-registered Python type (producing a raw C++ type name like
+    // "somelib::diplomat::Ref<somelib::Foo, somelib::capi::Foo const>" in stubs/errors, and
+    // failing to actually produce a `Foo` object at runtime). Delegate straight to `Foo`'s own
+    // already-registered caster via `AsFFI()`/`FromFFI()` instead.
+    template <typename T, typename CPtr>
+    struct type_caster<{{lib_name}}::diplomat::Ref<T, CPtr>> {
+        using Value = {{lib_name}}::diplomat::Ref<T, CPtr>;
+        using Caster = make_caster<T>;
+
+        static constexpr auto Name = Caster::Name;
+        template <typename T_>
+        using Cast = Value;
+        template <typename T_>
+        static constexpr bool can_cast() { return true; }
+
+        // `Ref`'s own default constructor is private (a `Ref` should never point at nothing), so
+        // default-initialize via `FromFFI(nullptr)` instead -- overwritten by from_python below on
+        // success, and otherwise never observed since a failed cast reports failure regardless.
+        Value value = Value::FromFFI(nullptr);
+        operator Value() { return value; }
+
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
+            Caster caster;
+            if (!caster.from_python(src, flags, cleanup) || !caster.template can_cast<T>()) {
+                return false;
+            }
+            T& ref = caster;
+            value = Value::FromFFI(ref.AsFFI());
+            return true;
+        }
+
+        static handle from_cpp(Value src, rv_policy policy, cleanup_list* cleanup) {
+            // `src` is a transient pointer-sized view (a by-value parameter, dead when this
+            // returns), not an object nanobind can point a Python instance at -- see
+            // opaque_view_to_python for how the view gets a stable home inside the Python object
+            // itself.
+            return opaque_view_to_python<T>(src.AsFFI(), policy, cleanup);
+        }
+    };
+
+    // `diplomat::Optional<T>` is used everywhere `std::optional<T>` would otherwise appear in
+    // generated signatures (see runtime.hpp.jinja for why: it niche-optimizes pointer-like T --
+    // owned opaques and Ref<Foo, CPtr> -- to a single pointer instead of paying for a separate
+    // presence flag). Its API surface (`value_type`, `operator bool()`, `reset()`, `emplace()`,
+    // `operator*()`) intentionally mirrors `std::optional<T>`'s closely enough that nanobind's own
+    // `optional_caster` (normally used for `std::optional<T>`, but generic over any type shaped
+    // like it) works here unmodified -- so `Optional<Foo>`/`Optional<FooRef>` get exactly the same
+    // `Optional[...]` Python typing and `None`/value conversion as `std::optional<Foo>` would,
+    // with no separate caster logic to maintain. For the pointer-like specializations,
+    // `Optional<T>::value_type` is deliberately the wrapped opaque type itself (`Foo`/`const Foo`),
+    // not `Ref<Foo, CPtr>`, so this reuses `Foo`'s own already-registered `nb::class_<Foo>` caster
+    // rather than needing separate knowledge of `Ref`.
+    template <typename T>
+    struct type_caster<{{lib_name}}::diplomat::Optional<T>>
+        : optional_caster<{{lib_name}}::diplomat::Optional<T>> {
+        // `optional_caster::from_cpp` (nanobind's stock implementation, inherited above) does
+        // `Caster::from_cpp(forward_like_<T_>(*value), ...)`, where `*value` reinterprets the
+        // Optional's own pointer-sized storage as a `Foo&` -- fine to read momentarily while the
+        // Optional itself is alive, but not a real, independently-addressable `Foo`. For the
+        // Ref-based specialization (see runtime.hpp.jinja) that leaves nanobind holding a dangling
+        // pointer the instant the (usually temporary) Optional is destroyed. Override from_cpp for
+        // that case only, going through opaque_view_to_python like the bare `Ref<T, CPtr>` caster
+        // above; everything else (from_python, Name, ...) still comes from `optional_caster`
+        // unmodified.
+        template <typename T_>
+        static handle from_cpp(T_&& value, rv_policy policy, cleanup_list* cleanup) noexcept {
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
+                if (!value) {
+                    return none().release();
+                }
+                using ValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                return opaque_view_to_python<ValueType>(value.AsFFI(), policy, cleanup);
+            } else {
+                return optional_caster<{{lib_name}}::diplomat::Optional<T>>::from_cpp(std::forward<T_>(value), policy, cleanup);
+            }
+        }
+    };
+
     template <typename T, std::size_t E>
     class type_caster<{{lib_name}}::diplomat::span<T, E>> {
         // The type referenced by the span, with const removed.
@@ -237,37 +385,84 @@ namespace nanobind::detail
                 }
             }
 
-            // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
-            using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<value_type> && !std::is_copy_constructible_v<value_type>) {
+                // `value_type` is an owned opaque wrapper here (e.g. a generated class, not a
+                // `Ref`): it can't be copied, and moving it out of the Python objects in the
+                // sequence would leave them empty and later double-free their Rust-owned
+                // pointee. A span only ever borrows, so instead of building a temporary
+                // std::vector<value_type>, just collect each element's existing pointer.
+                using RawPtr = decltype(std::declval<value_type&>().AsFFI());
 
+                size_t size;
+                PyObject* temp;
+                PyObject** o = seq_get(src.ptr(), &size, &temp);
+                bool success = o != nullptr;
 
-            // Are we a bound vector type? If so, we can pass over data directly.
-            if (nb::inst_check(src)) {
-                PyTypeObject *tp = Py_TYPE(src.ptr());
-                const std::type_info& inf = *(nb_type_data(tp)->type);
-                if (inf == typeid(U)) {
+                auto* ptrs = new std::vector<RawPtr>();
+                if (success) {
+                    ptrs->reserve(size);
+                    for (size_t i = 0; i < size && success; ++i) {
+                        make_caster<value_type> item_caster;
+                        success = item_caster.from_python(o[i], local_flags, cleanup) &&
+                                  item_caster.template can_cast<value_type>();
+                        if (success) {
+                            ptrs->push_back(item_caster.operator value_type&().AsFFI());
+                        }
+                    }
+                }
+                Py_XDECREF(temp);
+
+                if (success) {
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(ptrs->data()), ptrs->size());
+                    nb::capsule deleter(ptrs, [](void* data) noexcept {
+                        delete (std::vector<RawPtr>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+                    return true;
+                }
+
+                delete ptrs;
+                return false;
+            } else {
+                // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
+                using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+
+                // Are we a bound vector type? If so, we can pass over data directly.
+                //
+                // Can't use nb::isinstance<U>(src) here: <nanobind/stl/vector.h> (included above)
+                // unconditionally specializes type_caster<std::vector<T>> to the generic
+                // list_caster, so it's never a "base caster" -- nb::isinstance falls back to
+                // attempting a full list-to-vector conversion and reports whether *that* would
+                // succeed, not whether src is actually an instance of the nb::bind_vector-bound
+                // type. That's true for any Python sequence-like object convertible to
+                // std::vector<T> (e.g. another opaque type with __len__/__getitem__), not just
+                // real bound-vector instances -- inst_ptr<U> on one of those reads garbage (wrong
+                // object layout), which for us showed up as corrupted spans handed to Rust.
+                // nb::type<U>() + PyObject_IsInstance is the actual, strict runtime type check.
+                handle bound_type = nb::type<U>();
+                if (bound_type.is_valid() && PyObject_IsInstance(src.ptr(), bound_type.ptr()) > 0) {
                     U* bound_vec = nb::inst_ptr<U>(src);
                     value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
                     return true;
                 }
+
+                // Attempt to convert a native sequence. We must convert all elements & store
+                // them in a temporary object which will be cleaned up
+                ListCaster caster;
+                if (caster.from_python(src, local_flags, cleanup)) {
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                    // Move the owning std::vector into a capsule that will live for the duration of the function call.
+                    // The address of the vector will change, the address of the region it references won't.
+                    nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
+                        delete (std::vector<vector_value_type>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+
+                    return true;
+                }
+
+                return false; // Python type cannot be loaded into a span.
             }
-
-            // Attempt to convert a native sequence. We must convert all elements & store
-            // them in a temporary object which will be cleaned up 
-            ListCaster caster;
-            if (caster.from_python(src, local_flags, cleanup)) {
-                value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
-                // Move the owning std::vector into a capsule that will live for the duration of the function call.
-                // The address of the vector will change, the address of the region it references won't.
-                nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
-                    delete (std::vector<vector_value_type>*)data;
-                    });
-                cleanup->append(deleter.release().ptr());
-
-                return true;
-            }
-
-            return false; // Python type cannot be loaded into a span.
         }
 
         // Cast C++ -> Python (when returning a span from a C++ function)
@@ -330,41 +525,38 @@ extern void (*nb_tp_dealloc)(void *);
 void diplomat_tp_dealloc(PyObject *self);
 
 // Templating for handling Opaque ZSTs.
-// Nanobind cannot handle pointers of Rust ZSTs if they're wrapped behind a std::unique_ptr.
-// By Rust's own standard, pointers to ZSTs are always the same address.
-// Nanobind always assumes that any unique_ptr it sees contains an address that is *never* repeated.
-// So Nanobind handles the first conversion from std::unique_ptr->Python just fine,
-// but if a function returns a std::unique_ptr of the same address as one it has seen before, then Nanobind panics.
+// Nanobind cannot handle owned opaques of Rust ZSTs, since by Rust's own standard, pointers to
+// ZSTs are always the same address, but Nanobind always assumes that any owned opaque it sees
+// contains an address that is *never* repeated.
+// So Nanobind handles the first conversion from an owned opaque -> Python just fine,
+// but if a function returns an owned opaque at the same ZST address as one it has seen before, then Nanobind panics.
 //
 // The solution then (without modifying the rest of Diplomat to provide information on what is/isn't an opaque ZST)
-// is to hijack functions which return std::unique_ptr and check if they have ZSTs. This chain starts with maybe_op_unwrap 
-// and ends with maybe_alloc_zst.
+// is to hijack functions which return an owned opaque and check if they have ZSTs. This chain starts with
+// maybe_op_unwrap and ends with maybe_alloc_zst.
+template <class T>
+struct is_owned_opaque : std::bool_constant<{{lib_name}}::diplomat::is_pointer_like_v<T> && !std::is_copy_constructible_v<T>> {};
+
 template<typename Return>
-inline std::unique_ptr<Return> maybe_alloc_zst(std::unique_ptr<Return> pointer) {
+inline std::enable_if_t<is_owned_opaque<Return>::value, Return>
+maybe_alloc_zst(Return value) {
     // Are we at address 1? Then we're a ZST.
     // Per the Rust allocator (https://github.com/rust-lang/rust/blob/18d13b5332916ffca8eadb9106d54b5b434e9978/library/alloc/src/alloc.rs#L187)
-    if ((void*)pointer.get() == (void*)0x1) {
+    auto* ptr = value.AsFFI();
+    if ((void*)ptr == (void*)0x1) {
         // We don't need to free or drop the pointer, the pointer we allocate below serves the same purpose.
-        pointer.release();
+        value.release();
         // We are a ZST, so C++ expects a 0-sized malloc (guaranteed to be a unique pointer):
-        return std::unique_ptr<Return>((Return*)malloc(0));
+        return Return::FromFFI((decltype(ptr))malloc(0));
     } else {
-        return pointer;
+        return value;
     }
 }
 
-
-// Helper for determining if we have a unique_ptr type.
-template <class T>
-struct get_unique_ptr : std::false_type {};
-
-template <class T>
-struct get_unique_ptr<std::unique_ptr<T>> : std::true_type{};
-
 // Given a Return type, map that inner type with maybe_alloc_zst (by unwrapping and re-wrapping the Return type).
-// Default implementation for plain unique_ptr types.
+// Default implementation for plain owned-opaque types.
 template<typename Return>
-inline typename std::enable_if_t<get_unique_ptr<Return>::value, Return>
+inline typename std::enable_if_t<is_owned_opaque<Return>::value, Return>
 map_inner(Return to_wrap) {
     return maybe_alloc_zst(std::move(to_wrap));
 }
@@ -377,7 +569,7 @@ struct get_diplomat_result<{{lib_name}}::diplomat::result<T, E>> : std::true_typ
     typedef {{lib_name}}::diplomat::Ok<T> ok;
     typedef {{lib_name}}::diplomat::Err<E> err;
 
-    typedef T success; 
+    typedef T success;
     typedef E error;
 };
 
@@ -385,15 +577,15 @@ template<typename Return, typename... Args>
 inline typename std::enable_if_t<get_diplomat_result<Return>::value, Return>
 map_inner(Return to_wrap) {
     using Result = get_diplomat_result<Return>;
-    // Either the success type, the error type, or both are unique_ptrs.
+    // Either the success type, the error type, or both are owned opaques.
     if (to_wrap.is_ok()) {
-        if constexpr(get_unique_ptr<typename Result::success>::value) {
+        if constexpr(is_owned_opaque<typename Result::success>::value) {
             return typename Result::ok(maybe_alloc_zst(std::move(to_wrap).ok().value()));
         } else {
             return to_wrap;
         }
     } else {
-        if constexpr(get_unique_ptr<typename Result::error>::value) {
+        if constexpr(is_owned_opaque<typename Result::error>::value) {
             return typename Result::err(maybe_alloc_zst(std::move(to_wrap).err().value()));
         } else {
             return to_wrap;
@@ -401,7 +593,7 @@ map_inner(Return to_wrap) {
     }
 }
 
-// Helper for taking a function of a signature and returning a new function which 
+// Helper for taking a function of a signature and returning a new function which
 // potentially modifies the returned type (if it's a ZST opaque).
 template<typename Func>
 struct maybe_op_unwrapper {};
@@ -433,7 +625,7 @@ struct maybe_op_unwrapper<Return(Class::*)(Args...)> {
         auto out = (c->*f)(args...);
         return map_inner<Return>(std::move(out));
     }
-    
+
     static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...)) {
         std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...)>::bound_map, f);
         return out;
@@ -449,7 +641,7 @@ struct maybe_op_unwrapper<Return(Class::*)(Args...) const> {
         auto out = (c->*f)(args...);
         return map_inner<Return>(std::move(out));
     }
-    
+
     static std::function<Return(Class*, Args...)> get_bound_mapper(Return (Class::*f)(Args...) const) {
         std::function<Return(Class*, Args...)> out = std::bind_front(maybe_op_unwrapper<Return(Class::*)(Args...) const>::bound_map, f);
         return out;
@@ -491,11 +683,11 @@ struct lvalue_to_ptr<T&> {
 template<typename T>
 struct get_cb_with_lvalue_arg {
     typedef T Type;
-    
+
     static Type&& get_arg(std::remove_reference_t<Type>&& a) {
         return std::forward<Type>(a);
     }
-    
+
     static Type&& get_arg(std::remove_reference_t<Type>& a) {
         return std::forward<Type>(a);
     }
@@ -504,7 +696,7 @@ struct get_cb_with_lvalue_arg {
 template<typename Return, typename... Args>
 struct get_cb_with_lvalue_arg<std::function<Return(Args...)>> {
     typedef std::function<Return(typename lvalue_to_ptr<Args>::Type ...)> Type;
-    
+
     // Nanobind provides us with a callback that accepts Opaque pointers.
     // C++ will call the returned function with Opaque l-values.
     static std::function<Return(Args...)> get_arg(Type f) {
@@ -594,4 +786,15 @@ struct swap_lvalue_wrapper<std::function<Return(Args...)>> {
 template<typename Func>
 swap_lvalue_wrapper<Func>::result swap_lvalue_wrap(Func&& f) {
     return swap_lvalue_wrapper<Func>::get_converted_func((nanobind::detail::forward_t<Func>)f);
+}
+
+// Structs with a field that's an opaque Ref (directly, or nested in e.g. a tuple) aren't
+// default-constructible, since Ref's own default constructor is private. Binding nb::init<>()
+// unconditionally would then fail to compile, so gate it behind a template so the disabled
+// branch is never instantiated.
+template <typename T, typename... Ts>
+inline void maybe_bind_default_init(nb::class_<T, Ts...>& cls) {
+    if constexpr (std::is_default_constructible_v<T>) {
+        cls.def(nb::init<>());
+    }
 }

@@ -22,18 +22,25 @@ struct MyStruct;
 namespace somelib {
 namespace capi {
     struct Opaque;
+    extern "C" {
+    void Opaque_destroy(Opaque* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Opaque {
+class Opaque;
+using OpaqueRef = somelib::diplomat::Ref<Opaque, const somelib::capi::Opaque>;
+using OpaqueRefMut = somelib::diplomat::Ref<Opaque, somelib::capi::Opaque>;
+
+class Opaque : public somelib::diplomat::OpaquePointer<Opaque, somelib::capi::Opaque, somelib::capi::Opaque_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::Opaque> new_();
+  inline static somelib::Opaque new_();
 
-  inline static std::unique_ptr<somelib::Opaque> try_from_utf8(std::string_view input);
+  inline static somelib::diplomat::Optional<somelib::Opaque> try_from_utf8(std::string_view input);
 
-  inline static somelib::diplomat::result<std::unique_ptr<somelib::Opaque>, somelib::diplomat::Utf8Error> from_str(std::string_view input);
+  inline static somelib::diplomat::result<somelib::Opaque, somelib::diplomat::Utf8Error> from_str(std::string_view input);
 
   inline std::string get_debug_str() const;
   template<typename W>
@@ -54,18 +61,6 @@ public:
 
   inline static int8_t cmp();
 
-    inline const somelib::capi::Opaque* AsFFI() const;
-    inline somelib::capi::Opaque* AsFFI();
-    inline static const somelib::Opaque* FromFFI(const somelib::capi::Opaque* ptr);
-    inline static somelib::Opaque* FromFFI(somelib::capi::Opaque* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Opaque() = delete;
-    Opaque(const somelib::Opaque&) = delete;
-    Opaque(somelib::Opaque&&) noexcept = delete;
-    Opaque operator=(const somelib::Opaque&) = delete;
-    Opaque operator=(somelib::Opaque&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

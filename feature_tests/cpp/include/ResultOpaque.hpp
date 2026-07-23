@@ -60,34 +60,34 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum> somelib::ResultOpaque::new_(int32_t i) {
+inline somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum> somelib::ResultOpaque::new_(int32_t i) {
     auto result = somelib::capi::ResultOpaque_new(i);
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Ok<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Ok<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum> somelib::ResultOpaque::new_failing_foo() {
+inline somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum> somelib::ResultOpaque::new_failing_foo() {
     auto result = somelib::capi::ResultOpaque_new_failing_foo();
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Ok<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Ok<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum> somelib::ResultOpaque::new_failing_bar() {
+inline somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum> somelib::ResultOpaque::new_failing_bar() {
     auto result = somelib::capi::ResultOpaque_new_failing_bar();
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Ok<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Ok<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorEnum>(somelib::diplomat::Err<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, std::monostate> somelib::ResultOpaque::new_failing_unit() {
+inline somelib::diplomat::result<somelib::ResultOpaque, std::monostate> somelib::ResultOpaque::new_failing_unit() {
     auto result = somelib::capi::ResultOpaque_new_failing_unit();
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, std::monostate>(somelib::diplomat::Ok<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, std::monostate>(somelib::diplomat::Err<std::monostate>());
+    return result.is_ok ? somelib::diplomat::result<somelib::ResultOpaque, std::monostate>(somelib::diplomat::Ok<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ResultOpaque, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorStruct> somelib::ResultOpaque::new_failing_struct(int32_t i) {
+inline somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorStruct> somelib::ResultOpaque::new_failing_struct(int32_t i) {
     auto result = somelib::capi::ResultOpaque_new_failing_struct(i);
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorStruct>(somelib::diplomat::Ok<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ResultOpaque>, somelib::ErrorStruct>(somelib::diplomat::Err<somelib::ErrorStruct>(somelib::ErrorStruct::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorStruct>(somelib::diplomat::Ok<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ResultOpaque, somelib::ErrorStruct>(somelib::diplomat::Err<somelib::ErrorStruct>(somelib::ErrorStruct::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ResultOpaque>> somelib::ResultOpaque::new_in_err(int32_t i) {
+inline somelib::diplomat::result<std::monostate, somelib::ResultOpaque> somelib::ResultOpaque::new_in_err(int32_t i) {
     auto result = somelib::capi::ResultOpaque_new_in_err(i);
-    return result.is_ok ? somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Err<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err))));
+    return result.is_ok ? somelib::diplomat::result<std::monostate, somelib::ResultOpaque>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, somelib::ResultOpaque>(somelib::diplomat::Err<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err)));
 }
 
 inline somelib::diplomat::result<int32_t, std::monostate> somelib::ResultOpaque::new_int(int32_t i) {
@@ -95,63 +95,43 @@ inline somelib::diplomat::result<int32_t, std::monostate> somelib::ResultOpaque:
     return result.is_ok ? somelib::diplomat::result<int32_t, std::monostate>(somelib::diplomat::Ok<int32_t>(result.ok)) : somelib::diplomat::result<int32_t, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>> somelib::ResultOpaque::new_in_enum_err(int32_t i) {
+inline somelib::diplomat::result<somelib::ErrorEnum, somelib::ResultOpaque> somelib::ResultOpaque::new_in_enum_err(int32_t i) {
     auto result = somelib::capi::ResultOpaque_new_in_enum_err(i);
-    return result.is_ok ? somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Ok<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ErrorEnum, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Err<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err))));
+    return result.is_ok ? somelib::diplomat::result<somelib::ErrorEnum, somelib::ResultOpaque>(somelib::diplomat::Ok<somelib::ErrorEnum>(somelib::ErrorEnum::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ErrorEnum, somelib::ResultOpaque>(somelib::diplomat::Err<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::give_self() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef> somelib::ResultOpaque::give_self() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::ResultOpaque_give_self(this->AsFFI());
-    return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef>(somelib::diplomat::Err<somelib::ResultOpaqueRef>(somelib::ResultOpaqueRef::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::result<somelib::ResultOpaqueRefMut, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) DIPLOMAT_LIFETIME_BOUND {
     if (!somelib::diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::ResultOpaque_takes_str(this->AsFFI(),
         {_v.data(), _v.size()});
-    return somelib::diplomat::Ok<somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result));
+    return somelib::diplomat::Ok<somelib::ResultOpaqueRefMut>(somelib::ResultOpaqueRefMut::FromFFI(result));
 }
 
-inline somelib::diplomat::result<std::string, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::result<std::string, somelib::ResultOpaqueRef> somelib::ResultOpaque::stringify_error() const DIPLOMAT_LIFETIME_BOUND {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
     auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
         &write);
-    return result.is_ok ? somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<std::string, somelib::ResultOpaqueRef>(somelib::diplomat::Ok<std::string>(std::move(output))) : somelib::diplomat::result<std::string, somelib::ResultOpaqueRef>(somelib::diplomat::Err<somelib::ResultOpaqueRef>(somelib::ResultOpaqueRef::FromFFI(result.err)));
 }
 template<typename W>
-inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> somelib::ResultOpaque::stringify_error_write(W& writeable) const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef> somelib::ResultOpaque::stringify_error_write(W& writeable) const DIPLOMAT_LIFETIME_BOUND {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     auto result = somelib::capi::ResultOpaque_stringify_error(this->AsFFI(),
         &write);
-    return result.is_ok ? somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&>(somelib::diplomat::Err<const somelib::ResultOpaque&>(*somelib::ResultOpaque::FromFFI(result.err)));
+    return result.is_ok ? somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, somelib::ResultOpaqueRef>(somelib::diplomat::Err<somelib::ResultOpaqueRef>(somelib::ResultOpaqueRef::FromFFI(result.err)));
 }
 
 inline void somelib::ResultOpaque::assert_integer(int32_t i) const {
     somelib::capi::ResultOpaque_assert_integer(this->AsFFI(),
         i);
-}
-
-inline const somelib::capi::ResultOpaque* somelib::ResultOpaque::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::ResultOpaque*>(this);
-}
-
-inline somelib::capi::ResultOpaque* somelib::ResultOpaque::AsFFI() {
-    return reinterpret_cast<somelib::capi::ResultOpaque*>(this);
-}
-
-inline const somelib::ResultOpaque* somelib::ResultOpaque::FromFFI(const somelib::capi::ResultOpaque* ptr) {
-    return reinterpret_cast<const somelib::ResultOpaque*>(ptr);
-}
-
-inline somelib::ResultOpaque* somelib::ResultOpaque::FromFFI(somelib::capi::ResultOpaque* ptr) {
-    return reinterpret_cast<somelib::ResultOpaque*>(ptr);
-}
-
-inline void somelib::ResultOpaque::operator delete(void* ptr) {
-    somelib::capi::ResultOpaque_destroy(reinterpret_cast<somelib::capi::ResultOpaque*>(ptr));
 }
 
 

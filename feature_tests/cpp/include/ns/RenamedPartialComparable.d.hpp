@@ -22,16 +22,23 @@ class RenamedPartialComparable;
 namespace somelib::ns {
 namespace capi {
     struct RenamedPartialComparable;
+    extern "C" {
+    void namespace_PartialComparable_destroy(RenamedPartialComparable* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedPartialComparable {
+class RenamedPartialComparable;
+using RenamedPartialComparableRef = somelib::diplomat::Ref<RenamedPartialComparable, const somelib::ns::capi::RenamedPartialComparable>;
+using RenamedPartialComparableRefMut = somelib::diplomat::Ref<RenamedPartialComparable, somelib::ns::capi::RenamedPartialComparable>;
+
+class RenamedPartialComparable : public somelib::diplomat::OpaquePointer<RenamedPartialComparable, somelib::ns::capi::RenamedPartialComparable, somelib::ns::capi::namespace_PartialComparable_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedPartialComparable> new_(float float_);
+  inline static somelib::ns::RenamedPartialComparable new_(float float_);
 
-  inline std::optional<int8_t> partial_cmp(const somelib::ns::RenamedPartialComparable& other) const;
+  inline somelib::diplomat::Optional<int8_t> partial_cmp(const somelib::ns::RenamedPartialComparable& other) const;
 
   inline std::optional<bool> operator==(const somelib::ns::RenamedPartialComparable& other) const;
   inline std::optional<bool> operator!=(const somelib::ns::RenamedPartialComparable& other) const;
@@ -40,20 +47,8 @@ public:
   inline std::optional<bool> operator<(const somelib::ns::RenamedPartialComparable& other) const;
   inline std::optional<bool> operator>(const somelib::ns::RenamedPartialComparable& other) const;
 
-  inline std::optional<int8_t> test_nonstd(const somelib::ns::RenamedPartialComparable& other) const;
+  inline somelib::diplomat::Optional<int8_t> test_nonstd(const somelib::ns::RenamedPartialComparable& other) const;
 
-    inline const somelib::ns::capi::RenamedPartialComparable* AsFFI() const;
-    inline somelib::ns::capi::RenamedPartialComparable* AsFFI();
-    inline static const somelib::ns::RenamedPartialComparable* FromFFI(const somelib::ns::capi::RenamedPartialComparable* ptr);
-    inline static somelib::ns::RenamedPartialComparable* FromFFI(somelib::ns::capi::RenamedPartialComparable* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedPartialComparable() = delete;
-    RenamedPartialComparable(const somelib::ns::RenamedPartialComparable&) = delete;
-    RenamedPartialComparable(somelib::ns::RenamedPartialComparable&&) noexcept = delete;
-    RenamedPartialComparable operator=(const somelib::ns::RenamedPartialComparable&) = delete;
-    RenamedPartialComparable operator=(somelib::ns::RenamedPartialComparable&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

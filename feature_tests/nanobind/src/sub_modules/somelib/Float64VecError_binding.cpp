@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_Float64VecError_binding(nb::module_ mod) {
-    PyType_Slot somelib_Float64VecError_slots[] = {
-        {Py_tp_free, (void *)somelib::Float64VecError::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::Float64VecError> opaque(mod, "Float64VecError", nb::type_slots(somelib_Float64VecError_slots));
+    nb::class_<somelib::Float64VecError> opaque(mod, "Float64VecError");
     opaque
         .def("__getitem__", [](somelib::Float64VecError* self, size_t index) {
                 auto out = self->operator[] (index);if (!out.is_ok()) {

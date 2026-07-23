@@ -20,31 +20,26 @@ class MyOpaqueEnum;
 namespace somelib {
 namespace capi {
     struct MyOpaqueEnum;
+    extern "C" {
+    void MyOpaqueEnum_destroy(MyOpaqueEnum* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class MyOpaqueEnum {
+class MyOpaqueEnum;
+using MyOpaqueEnumRef = somelib::diplomat::Ref<MyOpaqueEnum, const somelib::capi::MyOpaqueEnum>;
+using MyOpaqueEnumRefMut = somelib::diplomat::Ref<MyOpaqueEnum, somelib::capi::MyOpaqueEnum>;
+
+class MyOpaqueEnum : public somelib::diplomat::OpaquePointer<MyOpaqueEnum, somelib::capi::MyOpaqueEnum, somelib::capi::MyOpaqueEnum_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::MyOpaqueEnum> new_();
+  inline static somelib::MyOpaqueEnum new_();
 
   inline std::string to_string() const;
   template<typename W>
   inline void to_string_write(W& writeable_output) const;
 
-    inline const somelib::capi::MyOpaqueEnum* AsFFI() const;
-    inline somelib::capi::MyOpaqueEnum* AsFFI();
-    inline static const somelib::MyOpaqueEnum* FromFFI(const somelib::capi::MyOpaqueEnum* ptr);
-    inline static somelib::MyOpaqueEnum* FromFFI(somelib::capi::MyOpaqueEnum* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    MyOpaqueEnum() = delete;
-    MyOpaqueEnum(const somelib::MyOpaqueEnum&) = delete;
-    MyOpaqueEnum(somelib::MyOpaqueEnum&&) noexcept = delete;
-    MyOpaqueEnum operator=(const somelib::MyOpaqueEnum&) = delete;
-    MyOpaqueEnum operator=(somelib::MyOpaqueEnum&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -27,24 +27,31 @@ class RenamedAttrEnum;
 namespace somelib::ns {
 namespace capi {
     struct AttrOpaque1Renamed;
+    extern "C" {
+    void namespace_AttrOpaque1_destroy(AttrOpaque1Renamed* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
+class AttrOpaque1Renamed;
+using AttrOpaque1RenamedRef = somelib::diplomat::Ref<AttrOpaque1Renamed, const somelib::ns::capi::AttrOpaque1Renamed>;
+using AttrOpaque1RenamedRefMut = somelib::diplomat::Ref<AttrOpaque1Renamed, somelib::ns::capi::AttrOpaque1Renamed>;
+
 /**
  * Some example docs
  * Some Nanobind/C++ example docs
  * Back to all docs
  */
-class AttrOpaque1Renamed {
+class AttrOpaque1Renamed : public somelib::diplomat::OpaquePointer<AttrOpaque1Renamed, somelib::ns::capi::AttrOpaque1Renamed, somelib::ns::capi::namespace_AttrOpaque1_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> new_overload(int32_t _i);
+  inline static somelib::ns::AttrOpaque1Renamed new_overload(int32_t _i);
 
   /**
    * More example docs
    */
-  inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> totally_not_new();
+  inline static somelib::ns::AttrOpaque1Renamed totally_not_new();
 
   inline static void test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t);
 
@@ -60,18 +67,6 @@ public:
 
   inline void use_namespaced(somelib::ns::RenamedAttrEnum _n) const;
 
-    inline const somelib::ns::capi::AttrOpaque1Renamed* AsFFI() const;
-    inline somelib::ns::capi::AttrOpaque1Renamed* AsFFI();
-    inline static const somelib::ns::AttrOpaque1Renamed* FromFFI(const somelib::ns::capi::AttrOpaque1Renamed* ptr);
-    inline static somelib::ns::AttrOpaque1Renamed* FromFFI(somelib::ns::capi::AttrOpaque1Renamed* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    AttrOpaque1Renamed() = delete;
-    AttrOpaque1Renamed(const somelib::ns::AttrOpaque1Renamed&) = delete;
-    AttrOpaque1Renamed(somelib::ns::AttrOpaque1Renamed&&) noexcept = delete;
-    AttrOpaque1Renamed operator=(const somelib::ns::AttrOpaque1Renamed&) = delete;
-    AttrOpaque1Renamed operator=(somelib::ns::AttrOpaque1Renamed&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

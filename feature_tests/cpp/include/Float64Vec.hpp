@@ -51,39 +51,39 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_(somelib::diplomat::span<const double> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_(somelib::diplomat::span<const double> v) {
     auto result = somelib::capi::Float64Vec_new({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_bool(somelib::diplomat::span<const bool> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_bool(somelib::diplomat::span<const bool> v) {
     auto result = somelib::capi::Float64Vec_new_bool({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_i16(somelib::diplomat::span<const int16_t> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_i16(somelib::diplomat::span<const int16_t> v) {
     auto result = somelib::capi::Float64Vec_new_i16({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_u16(somelib::diplomat::span<const uint16_t> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_u16(somelib::diplomat::span<const uint16_t> v) {
     auto result = somelib::capi::Float64Vec_new_u16({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_isize(somelib::diplomat::span<const intptr_t> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_isize(somelib::diplomat::span<const intptr_t> v) {
     auto result = somelib::capi::Float64Vec_new_isize({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_usize(somelib::diplomat::span<const size_t> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_usize(somelib::diplomat::span<const size_t> v) {
     auto result = somelib::capi::Float64Vec_new_usize({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::Float64Vec> somelib::Float64Vec::new_f64_be_bytes(somelib::diplomat::span<const uint8_t> v) {
+inline somelib::Float64Vec somelib::Float64Vec::new_f64_be_bytes(somelib::diplomat::span<const uint8_t> v) {
     auto result = somelib::capi::Float64Vec_new_f64_be_bytes({v.data(), v.size()});
-    return std::unique_ptr<somelib::Float64Vec>(somelib::Float64Vec::FromFFI(result));
+    return somelib::Float64Vec::FromFFI(result);
 }
 
 inline somelib::diplomat::span<const double> somelib::Float64Vec::as_slice() const DIPLOMAT_LIFETIME_BOUND {
@@ -120,30 +120,10 @@ inline somelib::diplomat::span<const double> somelib::Float64Vec::borrow() const
     return somelib::diplomat::span<const double>(result.data, result.len);
 }
 
-inline std::optional<double> somelib::Float64Vec::operator[](size_t i) const {
+inline somelib::diplomat::Optional<double> somelib::Float64Vec::operator[](size_t i) const {
     auto result = somelib::capi::Float64Vec_get(this->AsFFI(),
         i);
-    return result.is_ok ? std::optional<double>(result.ok) : std::nullopt;
-}
-
-inline const somelib::capi::Float64Vec* somelib::Float64Vec::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::Float64Vec*>(this);
-}
-
-inline somelib::capi::Float64Vec* somelib::Float64Vec::AsFFI() {
-    return reinterpret_cast<somelib::capi::Float64Vec*>(this);
-}
-
-inline const somelib::Float64Vec* somelib::Float64Vec::FromFFI(const somelib::capi::Float64Vec* ptr) {
-    return reinterpret_cast<const somelib::Float64Vec*>(ptr);
-}
-
-inline somelib::Float64Vec* somelib::Float64Vec::FromFFI(somelib::capi::Float64Vec* ptr) {
-    return reinterpret_cast<somelib::Float64Vec*>(ptr);
-}
-
-inline void somelib::Float64Vec::operator delete(void* ptr) {
-    somelib::capi::Float64Vec_destroy(reinterpret_cast<somelib::capi::Float64Vec*>(ptr));
+    return result.is_ok ? somelib::diplomat::Optional<double>(result.ok) : somelib::diplomat::Optional<double>(std::nullopt);
 }
 
 
