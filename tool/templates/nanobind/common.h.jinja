@@ -99,6 +99,16 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
     };
 
+    // A heap-allocated, permanently "leaked" view wrapper (see e.g. Ref<T,CPtr>'s from_cpp below)
+    // never owns the data it points at, so it must never be deleted/copied/moved by nanobind --
+    // but rv_policy::reference_internal also ties the *keep-alive* of the returned object to a
+    // "self" argument (e.g. __getitem__ binding to the container), which matters for correctness
+    // and must be preserved when the caller asks for it. Map any other incoming policy to plain
+    // reference (never take_ownership/move/copy), keeping reference_internal as-is otherwise.
+    inline rv_policy safe_view_policy(rv_policy policy) {
+        return policy == rv_policy::reference_internal ? rv_policy::reference_internal : rv_policy::reference;
+    }
+
     template<typename E>
     void set_py_error(E&& err, rv_policy p, cleanup_list* cl) noexcept {
         using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
@@ -157,13 +167,14 @@ namespace nanobind::detail
                     // part of the temporary `Optional<T>` this whole expression produced --
                     // dangling the instant this function returns. Heap-allocate a small,
                     // permanently "leaked" `Foo` wrapper holding the same pointer instead
-                    // (mirroring the `Ref<T,CPtr>`/`Optional<T>` casters above); rv_policy::reference
-                    // means nanobind never deletes it.
+                    // (mirroring the `Ref<T,CPtr>`/`Optional<T>` casters above); safe_view_policy
+                    // keeps this non-owning (nanobind never deletes it) while still honoring
+                    // reference_internal if the caller asked for it.
                     using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
                     OkValueType&& ok_ref = std::move(value).ok().value();
                     using CPtr = std::remove_pointer_t<decltype(ok_ref.AsFFI())>;
                     auto* heap_view = new OkValueType(OkValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(ok_ref.AsFFI())));
-                    return make_caster<OkValueType>::from_cpp(heap_view, rv_policy::reference, cl);
+                    return make_caster<OkValueType>::from_cpp(heap_view, safe_view_policy(p), cl);
                 } else {
                     // `.ok().value()` doesn't always hand back a `T` -- for owned-opaque `T`,
                     // `Optional<T>::value_type` is `T` itself, so this is unchanged from before.
@@ -273,17 +284,19 @@ namespace nanobind::detail
             return true;
         }
 
-        static handle from_cpp(Value src, rv_policy, cleanup_list* cleanup) {
+        static handle from_cpp(Value src, rv_policy policy, cleanup_list* cleanup) {
             // `src.get()`'s address is `&(src.ptr_)` -- part of `src` itself, a by-value parameter
             // that's destroyed the instant this function returns. Handing that address to nanobind
             // (as a plain reference) would leave it dangling as soon as the caller looks at the
             // returned Python object. `Ref` never owns its referent anyway, so heap-allocate a
             // small, permanently "leaked" `Foo` wrapper holding the same pointer instead (mirroring
-            // the accepted ZST malloc(0) leak elsewhere in this file); rv_policy::reference means
-            // nanobind never deletes it, so only that tiny wrapper leaks, never the Rust-owned data
-            // it points at.
+            // the accepted ZST malloc(0) leak elsewhere in this file). safe_view_policy keeps this
+            // non-owning (nanobind never deletes it, so only that tiny wrapper leaks, never the
+            // Rust-owned data it points at) while still honoring reference_internal -- e.g. an
+            // indexer binding a returned Ref's keep-alive to its container -- if the caller asked
+            // for it.
             T* heap_view = new T(T::FromFFI(const_cast<std::remove_const_t<CPtr>*>(src.AsFFI())));
-            return Caster::from_cpp(heap_view, rv_policy::reference, cleanup);
+            return Caster::from_cpp(heap_view, safe_view_policy(policy), cleanup);
         }
     };
 
@@ -320,7 +333,10 @@ namespace nanobind::detail
                 using ValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
                 using CPtr = std::remove_pointer_t<decltype(value.AsFFI())>;
                 auto* heap_view = new ValueType(ValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(value.AsFFI())));
-                return make_caster<ValueType>::from_cpp(heap_view, rv_policy::reference, cleanup);
+                // safe_view_policy keeps this non-owning while still honoring reference_internal
+                // (e.g. an indexer binding a returned Optional<Ref<...>>'s keep-alive to its
+                // container) if the caller asked for it.
+                return make_caster<ValueType>::from_cpp(heap_view, safe_view_policy(policy), cleanup);
             } else {
                 return optional_caster<{{lib_name}}::diplomat::Optional<T>>::from_cpp(std::forward<T_>(value), policy, cleanup);
             }
