@@ -99,14 +99,58 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<T>(); }
     };
 
-    // A heap-allocated, permanently "leaked" view wrapper (see e.g. Ref<T,CPtr>'s from_cpp below)
-    // never owns the data it points at, so it must never be deleted/copied/moved by nanobind --
-    // but rv_policy::reference_internal also ties the *keep-alive* of the returned object to a
-    // "self" argument (e.g. __getitem__ binding to the container), which matters for correctness
-    // and must be preserved when the caller asks for it. Map any other incoming policy to plain
-    // reference (never take_ownership/move/copy), keeping reference_internal as-is otherwise.
-    inline rv_policy safe_view_policy(rv_policy policy) {
-        return policy == rv_policy::reference_internal ? rv_policy::reference_internal : rv_policy::reference;
+    // Creates the Python object for a borrowed opaque view: a `Foo`-typed Python instance whose
+    // pointer-sized `Foo` is placement-constructed directly inside the nanobind instance's own
+    // inline storage, marked ready-with-destructor-disabled. No separate C++ allocation is needed
+    // (the view's storage simply lives and dies with the Python object), and `~Foo()` -- which
+    // would call the Rust destructor on data this view doesn't own -- never runs.
+    //
+    // This is the moral successor of the pre-rework model, where `Foo*` aliased the FFI pointer
+    // itself (AsFFI() returned `reinterpret_cast<capi::Foo*>(this)`) so Python objects were backed
+    // by the Rust allocation directly with no C++-side storage at all. The rework gave `Foo` a
+    // pointer member, so that member now needs a home; the Python object itself is that home.
+    //
+    // The normal nb_type_put path can't express this: rv_policy::reference would retain the
+    // address of a transient view, and take_ownership/move/copy would delete, destruct, or fail to
+    // copy the move-only wrapper. Since nb_type_put is bypassed, its reference_internal handling
+    // (tying the returned object's keep-alive to the bound method's `self`, e.g. an indexer's
+    // container -- see nb_type.cpp) is replicated manually.
+    template <typename ValueType, typename CP>
+    handle opaque_view_to_python(CP* ptr, rv_policy policy, cleanup_list* cleanup) noexcept {
+        using Plain = std::remove_const_t<ValueType>;
+        nb::handle tp = nb::type<Plain>();
+        if (!tp.is_valid()) {
+            return {};
+        }
+        try {
+            nb::object o = nb::inst_alloc(tp);
+            new ((void*) nb::inst_ptr<Plain>(o)) Plain(Plain::FromFFI(const_cast<std::remove_const_t<CP>*>(ptr)));
+            nb::inst_set_state(o, /*ready=*/true, /*destruct=*/false);
+            if (policy == rv_policy::reference_internal && cleanup != nullptr && cleanup->self() != nullptr) {
+                keep_alive(o.ptr(), cleanup->self());
+            }
+            return o.release();
+        } catch (...) {
+            return {};
+        }
+    }
+
+    // Raises `errorPyV` (a new reference, e.g. from a caster's from_cpp) as a Python exception,
+    // falling back to a generic message naming `err_type_name` if it's invalid.
+    inline void raise_py_error(handle errorPyV, const char* err_type_name) noexcept {
+        if (errorPyV.is_valid())
+        {
+            PyErr_SetObject(PyExc_Exception, errorPyV.ptr());
+            // PyErr_SetObject takes ownership (https://github.com/python/cpython/blob/fa73fd473f00dd231f59e44798a3d00a46322658/Python/errors.c#L151)
+            // but Nanobind expects Python to take ownership directly. So we decref after PyErr_SetObject takes ownership, to remove Nanobind's reference:
+            Py_DECREF(errorPyV.ptr());
+        }
+        else
+        {
+            char error_msg[512];
+            snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to python exception.", err_type_name);
+            PyErr_SetString(PyExc_Exception, error_msg);
+        }
     }
 
     template<typename E>
@@ -118,20 +162,7 @@ namespace nanobind::detail
         // value) so a borrowed, possibly-const view of a move-only opaque error (e.g.
         // Optional<Ref<Foo,...>>::value() on a result's error variant) doesn't need to be
         // copied/moved into a new local just to pass it along.
-        auto errorPyV = ErrCaster::from_cpp(forward_like_<V>(std::forward<E>(err)), p, cl);
-        if (errorPyV.is_valid())
-        {
-            PyErr_SetObject(PyExc_Exception, errorPyV.ptr());
-            // PyErr_SetObject takes ownership (https://github.com/python/cpython/blob/fa73fd473f00dd231f59e44798a3d00a46322658/Python/errors.c#L151)
-            // but Nanobind expects Python to take ownership directly. So we decref after PyErr_SetObject takes ownership, to remove Nanobind's reference:
-            Py_DECREF(errorPyV.ptr());
-        }
-        else
-        {
-            char error_msg[512];
-            snprintf(error_msg, sizeof(error_msg), "Cannot convert unknown type %s to python exception.", typeid(E).name());
-            PyErr_SetString(PyExc_Exception, error_msg);
-        }
+        raise_py_error(ErrCaster::from_cpp(forward_like_<V>(std::forward<E>(err)), p, cl), typeid(E).name());
     }
 
     template <typename T, typename E>
@@ -162,19 +193,14 @@ namespace nanobind::detail
                 } else if constexpr (std::is_reference_v<T>) {
                     return Caster::from_cpp(forward_like_<U>(std::move(value).ok().value()), p, cl);
                 } else if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
-                    // Ref-shaped `T`: `.ok().value()` hands back the dereferenced `Foo&&` (see the
-                    // Ref-based `Optional` specialization in runtime.hpp.jinja), whose address is
-                    // part of the temporary `Optional<T>` this whole expression produced --
-                    // dangling the instant this function returns. Heap-allocate a small,
-                    // permanently "leaked" `Foo` wrapper holding the same pointer instead
-                    // (mirroring the `Ref<T,CPtr>`/`Optional<T>` casters above); safe_view_policy
-                    // keeps this non-owning (nanobind never deletes it) while still honoring
-                    // reference_internal if the caller asked for it.
+                    // Ref-shaped `T` (a borrowed opaque success value): the `Optional<T>` that
+                    // `.ok()` returns is itself just the pointer-sized view (see the Ref-based
+                    // `Optional` specialization in runtime.hpp.jinja), so hand its raw pointer to
+                    // opaque_view_to_python rather than casting a reference into the temporary
+                    // Optional's own storage.
                     using OkValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
-                    OkValueType&& ok_ref = std::move(value).ok().value();
-                    using CPtr = std::remove_pointer_t<decltype(ok_ref.AsFFI())>;
-                    auto* heap_view = new OkValueType(OkValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(ok_ref.AsFFI())));
-                    return make_caster<OkValueType>::from_cpp(heap_view, safe_view_policy(p), cl);
+                    auto ok_opt = std::move(value).ok();
+                    return opaque_view_to_python<OkValueType>(ok_opt.AsFFI(), p, cl);
                 } else {
                     // `.ok().value()` doesn't always hand back a `T` -- for owned-opaque `T`,
                     // `Optional<T>::value_type` is `T` itself, so this is unchanged from before.
@@ -184,21 +210,12 @@ namespace nanobind::detail
             }
 
             if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<E> && std::is_copy_constructible_v<E>) {
-                // Same dangling-temporary concern as the Ref-shaped `T` branch above, for the error
-                // variant.
+                // Ref-shaped `E`: same view-not-object situation as the ok branch above, so build
+                // the exception object through opaque_view_to_python as well.
                 using ErrValueType = typename {{lib_name}}::diplomat::Optional<E>::value_type;
-                ErrValueType&& err_ref = std::move(value).err().value();
-                using CPtr = std::remove_pointer_t<decltype(err_ref.AsFFI())>;
-                auto* heap_view = new ErrValueType(ErrValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(err_ref.AsFFI())));
-                // Pass the raw pointer, as an xvalue (not `*heap_view`, and not the bare lvalue
-                // `heap_view`) -- set_py_error's forwarding-reference parameter would otherwise
-                // deduce a reference type (to the pointee, or to the pointer variable itself),
-                // which its own is_reference_v<E> check (a plain std::is_reference_v, unlike
-                // nanobind's own reference-stripping is_pointer_v used elsewhere in this file) can't
-                // tell apart from the genuine-Rust-&T convention it's designed for. A pointer
-                // argument also keeps rv_policy::reference from being downgraded to `move` by
-                // infer_policy, which only pointer arguments are exempt from.
-                set_py_error(std::move(heap_view), rv_policy::reference, cl);
+                auto err_opt = std::move(value).err();
+                raise_py_error(opaque_view_to_python<ErrValueType>(err_opt.AsFFI(), rv_policy::reference, cl),
+                               typeid(ErrValueType).name());
             } else {
                 set_py_error(std::move(value).err().value(), p, cl);
             }
@@ -285,18 +302,11 @@ namespace nanobind::detail
         }
 
         static handle from_cpp(Value src, rv_policy policy, cleanup_list* cleanup) {
-            // `src.get()`'s address is `&(src.ptr_)` -- part of `src` itself, a by-value parameter
-            // that's destroyed the instant this function returns. Handing that address to nanobind
-            // (as a plain reference) would leave it dangling as soon as the caller looks at the
-            // returned Python object. `Ref` never owns its referent anyway, so heap-allocate a
-            // small, permanently "leaked" `Foo` wrapper holding the same pointer instead (mirroring
-            // the accepted ZST malloc(0) leak elsewhere in this file). safe_view_policy keeps this
-            // non-owning (nanobind never deletes it, so only that tiny wrapper leaks, never the
-            // Rust-owned data it points at) while still honoring reference_internal -- e.g. an
-            // indexer binding a returned Ref's keep-alive to its container -- if the caller asked
-            // for it.
-            T* heap_view = new T(T::FromFFI(const_cast<std::remove_const_t<CPtr>*>(src.AsFFI())));
-            return Caster::from_cpp(heap_view, safe_view_policy(policy), cleanup);
+            // `src` is a transient pointer-sized view (a by-value parameter, dead when this
+            // returns), not an object nanobind can point a Python instance at -- see
+            // opaque_view_to_python for how the view gets a stable home inside the Python object
+            // itself.
+            return opaque_view_to_python<T>(src.AsFFI(), policy, cleanup);
         }
     };
 
@@ -321,9 +331,9 @@ namespace nanobind::detail
         // Optional itself is alive, but not a real, independently-addressable `Foo`. For the
         // Ref-based specialization (see runtime.hpp.jinja) that leaves nanobind holding a dangling
         // pointer the instant the (usually temporary) Optional is destroyed. Override from_cpp for
-        // that case only, using the same heap-allocate-and-leak approach as the bare
-        // `Ref<T, CPtr>` caster above; everything else (from_python, Name, ...) still comes from
-        // `optional_caster` unmodified.
+        // that case only, going through opaque_view_to_python like the bare `Ref<T, CPtr>` caster
+        // above; everything else (from_python, Name, ...) still comes from `optional_caster`
+        // unmodified.
         template <typename T_>
         static handle from_cpp(T_&& value, rv_policy policy, cleanup_list* cleanup) noexcept {
             if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
@@ -331,12 +341,7 @@ namespace nanobind::detail
                     return none().release();
                 }
                 using ValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
-                using CPtr = std::remove_pointer_t<decltype(value.AsFFI())>;
-                auto* heap_view = new ValueType(ValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(value.AsFFI())));
-                // safe_view_policy keeps this non-owning while still honoring reference_internal
-                // (e.g. an indexer binding a returned Optional<Ref<...>>'s keep-alive to its
-                // container) if the caller asked for it.
-                return make_caster<ValueType>::from_cpp(heap_view, safe_view_policy(policy), cleanup);
+                return opaque_view_to_python<ValueType>(value.AsFFI(), policy, cleanup);
             } else {
                 return optional_caster<{{lib_name}}::diplomat::Optional<T>>::from_cpp(std::forward<T_>(value), policy, cleanup);
             }
