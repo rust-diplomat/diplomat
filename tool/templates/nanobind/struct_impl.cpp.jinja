@@ -12,9 +12,11 @@ nb::bind_vector<std::vector<{{type_name}}>>(mod, "{{type_name_unnamespaced}}Slic
 {% endif -%}
 
 nb::class_<{{type_name}}> st(mod, "{{type_name_unnamespaced}}"{% if let Some(docs) = docs %}, {{docs}}{% endif %});
+{%- if !has_constructor && !is_out %}
+maybe_bind_default_init(st);
+{%- endif %}
 st
     {%- if !has_constructor && !is_out %}
-    .def(nb::init<>())
 
     {%- if fields.len() > 0 && !is_out %}
     .def(nb::init<

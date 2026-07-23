@@ -603,3 +603,14 @@ template<typename Func>
 swap_lvalue_wrapper<Func>::result swap_lvalue_wrap(Func&& f) {
     return swap_lvalue_wrapper<Func>::get_converted_func((nanobind::detail::forward_t<Func>)f);
 }
+
+// Structs with a field that's an opaque Ref (directly, or nested in e.g. a tuple) aren't
+// default-constructible, since Ref's own default constructor is private. Binding nb::init<>()
+// unconditionally would then fail to compile, so gate it behind a template so the disabled
+// branch is never instantiated.
+template <typename T, typename... Ts>
+inline void maybe_bind_default_init(nb::class_<T, Ts...>& cls) {
+    if constexpr (std::is_default_constructible_v<T>) {
+        cls.def(nb::init<>());
+    }
+}
