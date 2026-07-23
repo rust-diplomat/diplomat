@@ -202,6 +202,46 @@ namespace nanobind::detail
         NB_INLINE bool can_cast() const noexcept { return Caster::template can_cast<U>(); }
     };
 
+    // `Ref<Foo, CPtr>` (`FooRef`/`FooRefMut`) used directly -- e.g. a struct field, callback
+    // param/return, or tuple element, anywhere `Optional<Ref<...>>`'s value_type trick (see below)
+    // doesn't apply since there's no Optional wrapping it -- is a distinct C++ type from `Foo`.
+    // Without a caster of its own, nanobind's fallback caster would treat it as its own,
+    // never-registered Python type (producing a raw C++ type name like
+    // "somelib::diplomat::Ref<somelib::Foo, somelib::capi::Foo const>" in stubs/errors, and
+    // failing to actually produce a `Foo` object at runtime). Delegate straight to `Foo`'s own
+    // already-registered caster via `AsFFI()`/`FromFFI()` instead.
+    template <typename T, typename CPtr>
+    struct type_caster<{{lib_name}}::diplomat::Ref<T, CPtr>> {
+        using Value = {{lib_name}}::diplomat::Ref<T, CPtr>;
+        using Caster = make_caster<T>;
+
+        static constexpr auto Name = Caster::Name;
+        template <typename T_>
+        using Cast = Value;
+        template <typename T_>
+        static constexpr bool can_cast() { return true; }
+
+        // `Ref`'s own default constructor is private (a `Ref` should never point at nothing), so
+        // default-initialize via `FromFFI(nullptr)` instead -- overwritten by from_python below on
+        // success, and otherwise never observed since a failed cast reports failure regardless.
+        Value value = Value::FromFFI(nullptr);
+        operator Value() { return value; }
+
+        bool from_python(handle src, uint8_t flags, cleanup_list* cleanup) noexcept {
+            Caster caster;
+            if (!caster.from_python(src, flags, cleanup) || !caster.template can_cast<T>()) {
+                return false;
+            }
+            T& ref = caster;
+            value = Value::FromFFI(ref.AsFFI());
+            return true;
+        }
+
+        static handle from_cpp(Value src, rv_policy policy, cleanup_list* cleanup) {
+            return Caster::from_cpp(src.get(), policy, cleanup);
+        }
+    };
+
     // `diplomat::Optional<T>` is used everywhere `std::optional<T>` would otherwise appear in
     // generated signatures (see runtime.hpp.jinja for why: it niche-optimizes pointer-like T --
     // owned opaques and Ref<Foo, CPtr> -- to a single pointer instead of paying for a separate
