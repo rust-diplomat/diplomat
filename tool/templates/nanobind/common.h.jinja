@@ -100,12 +100,15 @@ namespace nanobind::detail
     };
 
     template<typename E>
-    void set_py_error(E err, rv_policy p, cleanup_list* cl) noexcept {
+    void set_py_error(E&& err, rv_policy p, cleanup_list* cl) noexcept {
         using V = std::conditional_t<std::is_reference_v<E>, std::reference_wrapper<std::remove_reference_t<E>>, E>;
         using ErrCaster = make_caster<V>;
 
-        // Convert the error into a Python object:
-        auto errorPyV = ErrCaster::from_cpp(forward_like_<V>(std::move(err)), p, cl);
+        // Convert the error into a Python object. `err` is a forwarding reference (not taken by
+        // value) so a borrowed, possibly-const view of a move-only opaque error (e.g.
+        // Optional<Ref<Foo,...>>::value() on a result's error variant) doesn't need to be
+        // copied/moved into a new local just to pass it along.
+        auto errorPyV = ErrCaster::from_cpp(forward_like_<V>(std::forward<E>(err)), p, cl);
         if (errorPyV.is_valid())
         {
             PyErr_SetObject(PyExc_Exception, errorPyV.ptr());
