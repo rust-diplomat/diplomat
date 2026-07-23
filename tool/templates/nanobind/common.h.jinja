@@ -407,7 +407,19 @@ namespace nanobind::detail
                 using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
 
                 // Are we a bound vector type? If so, we can pass over data directly.
-                if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                //
+                // Can't use nb::isinstance<U>(src) here: <nanobind/stl/vector.h> (included above)
+                // unconditionally specializes type_caster<std::vector<T>> to the generic
+                // list_caster, so it's never a "base caster" -- nb::isinstance falls back to
+                // attempting a full list-to-vector conversion and reports whether *that* would
+                // succeed, not whether src is actually an instance of the nb::bind_vector-bound
+                // type. That's true for any Python sequence-like object convertible to
+                // std::vector<T> (e.g. another opaque type with __len__/__getitem__), not just
+                // real bound-vector instances -- inst_ptr<U> on one of those reads garbage (wrong
+                // object layout), which for us showed up as corrupted spans handed to Rust.
+                // nb::type<U>() + PyObject_IsInstance is the actual, strict runtime type check.
+                handle bound_type = nb::type<U>();
+                if (bound_type.is_valid() && PyObject_IsInstance(src.ptr(), bound_type.ptr()) > 0) {
                     U* bound_vec = nb::inst_ptr<U>(src);
                     value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
                     return true;
