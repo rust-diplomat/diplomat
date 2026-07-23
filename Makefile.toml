@@ -227,7 +227,7 @@ dependencies = ["copy-kotlin-feature"]
 script = '''
 exit_on_error true
 cd feature_tests/kotlin/somelib
-exec --fail-on-error gradle test  --warning-mode all 
+exec --fail-on-error gradle test  --warning-mode all
 '''
 
 [tasks.test-kotlin-feature-mvn]
@@ -470,7 +470,7 @@ script_runner = "@duckscript"
 script = '''
 exit_on_error true
 !include_files ./support/functions.ds
-generate_generic feature_tests cpp include 
+generate_generic feature_tests cpp include
 '''
 
 [tasks.gen-cpp-example]
@@ -559,7 +559,7 @@ exit_on_error true
 generate_generic example dart lib/src
 '''
 
-# this task generates all of the kotlin code but does not copy generated project files over 
+# this task generates all of the kotlin code but does not copy generated project files over
 # we only copy the generated main src files to preserve the tests
 [tasks.gen-kotlin-feature]
 category = "Code generation"
@@ -609,7 +609,7 @@ cd feature_tests/nanobind
 
 # Build the lib so that Nanobind can read `__nb_signature__`
 exec --fail-on-error cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-exec --fail-on-error cmake --build build --target somelib --config Debug
+exec --fail-on-error cmake --build build --target somelib --config Debug -j ${cpu_count}
 
 # Generate stubs
 writefile src/somelib/__init__.py "from .somelib import *"
