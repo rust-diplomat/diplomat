@@ -273,8 +273,17 @@ namespace nanobind::detail
             return true;
         }
 
-        static handle from_cpp(Value src, rv_policy policy, cleanup_list* cleanup) {
-            return Caster::from_cpp(src.get(), policy, cleanup);
+        static handle from_cpp(Value src, rv_policy, cleanup_list* cleanup) {
+            // `src.get()`'s address is `&(src.ptr_)` -- part of `src` itself, a by-value parameter
+            // that's destroyed the instant this function returns. Handing that address to nanobind
+            // (as a plain reference) would leave it dangling as soon as the caller looks at the
+            // returned Python object. `Ref` never owns its referent anyway, so heap-allocate a
+            // small, permanently "leaked" `Foo` wrapper holding the same pointer instead (mirroring
+            // the accepted ZST malloc(0) leak elsewhere in this file); rv_policy::reference means
+            // nanobind never deletes it, so only that tiny wrapper leaks, never the Rust-owned data
+            // it points at.
+            T* heap_view = new T(T::FromFFI(const_cast<std::remove_const_t<CPtr>*>(src.AsFFI())));
+            return Caster::from_cpp(heap_view, rv_policy::reference, cleanup);
         }
     };
 
