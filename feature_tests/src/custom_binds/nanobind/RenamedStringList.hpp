@@ -1,29 +1,26 @@
-namespace nanobind::detail {
-    template<>
-    struct type_caster<std::unique_ptr<somelib::ns::RenamedStringList>>
-    {
-        Py_ssize_t size;
-        using Caster = list_caster<std::vector<std::string>, std::string>;
-        static constexpr auto Name = Caster::Name;
+extern "C" {
+    void namespace_StringList_destroy(somelib::ns::capi::RenamedStringList* self);
 
-        NB_INLINE bool can_cast() const noexcept { return true; }
+    somelib::ns::capi::RenamedStringList* namespace_StringList_return_new(void);
+}
 
-        static handle from_cpp(std::unique_ptr<somelib::ns::RenamedStringList> value, rv_policy p, cleanup_list* cl) noexcept {
-            somelib::ns::RenamedStringList* val = value.release();
-            auto ptr = (somelib::diplomat::capi::DiplomatStringView*) val;
-            std::string test = std::string(ptr->data, ptr->len);
+namespace somelib::ns {
+    // Returns std::vector<std::string> (nanobind already knows how to cast that) rather than the
+    // opaque wrapper class itself: nanobind doesn't allow a bound class and a type_caster for the
+    // exact same C++ type to coexist, so the class-caster route the old std::unique_ptr-keyed
+    // caster used pre-rework isn't available anymore.
+    std::vector<std::string> RenamedStringList::return_new() {
+        somelib::ns::capi::RenamedStringList* self = namespace_StringList_return_new();
 
-            somelib::ns::capi::namespace_StringList_destroy((somelib::ns::capi::RenamedStringList*)val);
+        auto ptr = (somelib::diplomat::capi::DiplomatStringView*) self;
+        std::string test = std::string(ptr->data, ptr->len);
 
-            std::vector<std::string> vec = {test};
-            for (char c : test) {
-                vec.push_back(std::string{c});
-            }
-            return Caster::from_cpp(vec, p, cl);
+        namespace_StringList_destroy(self);
+
+        std::vector<std::string> vec = {test};
+        for (char c : test) {
+            vec.push_back(std::string{c});
         }
-
-        bool from_python(handle src, uint8_t flags, cleanup_list* cl) noexcept {
-            return false;
-        }
-    };
+        return vec;
+    }
 }
