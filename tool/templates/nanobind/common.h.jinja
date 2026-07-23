@@ -252,33 +252,72 @@ namespace nanobind::detail
                 }
             }
 
-            // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
-            using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<value_type> && !std::is_copy_constructible_v<value_type>) {
+                // `value_type` is an owned opaque wrapper here (e.g. a generated class, not a
+                // `Ref`): it can't be copied, and moving it out of the Python objects in the
+                // sequence would leave them empty and later double-free their Rust-owned
+                // pointee. A span only ever borrows, so instead of building a temporary
+                // std::vector<value_type>, just collect each element's existing pointer.
+                using RawPtr = decltype(std::declval<value_type&>().AsFFI());
 
+                size_t size;
+                PyObject* temp;
+                PyObject** o = seq_get(src.ptr(), &size, &temp);
+                bool success = o != nullptr;
 
-            // Are we a bound vector type? If so, we can pass over data directly.
-            if (nb::inst_check(src) && nb::isinstance<U>(src)) {
-                U* bound_vec = nb::inst_ptr<U>(src);
-                value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
-                return true;
+                auto* ptrs = new std::vector<RawPtr>();
+                if (success) {
+                    ptrs->reserve(size);
+                    for (size_t i = 0; i < size && success; ++i) {
+                        make_caster<value_type> item_caster;
+                        success = item_caster.from_python(o[i], local_flags, cleanup) &&
+                                  item_caster.template can_cast<value_type>();
+                        if (success) {
+                            ptrs->push_back(item_caster.operator value_type&().AsFFI());
+                        }
+                    }
+                }
+                Py_XDECREF(temp);
+
+                if (success) {
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(ptrs->data()), ptrs->size());
+                    nb::capsule deleter(ptrs, [](void* data) noexcept {
+                        delete (std::vector<RawPtr>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+                    return true;
+                }
+
+                delete ptrs;
+                return false;
+            } else {
+                // C++ std::vector<bool> is not allowed, so we convert it to std::vector<uint8_t> for the compiler's sake.
+                using U = std::conditional_t<!std::is_same_v<std::remove_cv_t<T>, bool>, std::vector<std::remove_cv_t<T>>, std::vector<uint8_t>>;
+
+                // Are we a bound vector type? If so, we can pass over data directly.
+                if (nb::inst_check(src) && nb::isinstance<U>(src)) {
+                    U* bound_vec = nb::inst_ptr<U>(src);
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(bound_vec->data()), bound_vec->size());
+                    return true;
+                }
+
+                // Attempt to convert a native sequence. We must convert all elements & store
+                // them in a temporary object which will be cleaned up
+                ListCaster caster;
+                if (caster.from_python(src, local_flags, cleanup)) {
+                    value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
+                    // Move the owning std::vector into a capsule that will live for the duration of the function call.
+                    // The address of the vector will change, the address of the region it references won't.
+                    nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
+                        delete (std::vector<vector_value_type>*)data;
+                        });
+                    cleanup->append(deleter.release().ptr());
+
+                    return true;
+                }
+
+                return false; // Python type cannot be loaded into a span.
             }
-
-            // Attempt to convert a native sequence. We must convert all elements & store
-            // them in a temporary object which will be cleaned up
-            ListCaster caster;
-            if (caster.from_python(src, local_flags, cleanup)) {
-                value = {{lib_name}}::diplomat::span<T, E>(reinterpret_cast<T*>(caster.value.data()), caster.value.size());
-                // Move the owning std::vector into a capsule that will live for the duration of the function call.
-                // The address of the vector will change, the address of the region it references won't.
-                nb::capsule deleter(new std::vector<vector_value_type>(std::move(caster.value)), [](void* data) noexcept {
-                    delete (std::vector<vector_value_type>*)data;
-                    });
-                cleanup->append(deleter.release().ptr());
-
-                return true;
-            }
-
-            return false; // Python type cannot be loaded into a span.
         }
 
         // Cast C++ -> Python (when returning a span from a C++ function)
