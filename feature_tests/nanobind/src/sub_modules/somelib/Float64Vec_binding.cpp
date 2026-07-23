@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_Float64Vec_binding(nb::module_ mod) {
-    PyType_Slot somelib_Float64Vec_slots[] = {
-        {Py_tp_free, (void *)somelib::Float64Vec::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::Float64Vec> opaque(mod, "Float64Vec", nb::type_slots(somelib_Float64Vec_slots));
+    nb::class_<somelib::Float64Vec> opaque(mod, "Float64Vec");
     opaque
         .def_prop_ro("asSlice", &somelib::Float64Vec::as_slice)
         .def("borrow", &somelib::Float64Vec::borrow)

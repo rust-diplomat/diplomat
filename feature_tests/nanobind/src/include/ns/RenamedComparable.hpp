@@ -28,9 +28,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedComparable> somelib::ns::RenamedComparable::new_(uint8_t int_) {
+inline somelib::ns::RenamedComparable somelib::ns::RenamedComparable::new_(uint8_t int_) {
     auto result = somelib::ns::capi::namespace_Comparable_new(int_);
-    return std::unique_ptr<somelib::ns::RenamedComparable>(somelib::ns::RenamedComparable::FromFFI(result));
+    return somelib::ns::RenamedComparable::FromFFI(result);
 }
 
 inline int8_t somelib::ns::RenamedComparable::cmp(const somelib::ns::RenamedComparable& other) const {
@@ -66,26 +66,6 @@ inline bool somelib::ns::RenamedComparable::operator<(const somelib::ns::Renamed
 inline bool somelib::ns::RenamedComparable::operator>(const somelib::ns::RenamedComparable& other) const {
     auto val = this->cmp(other);
     return val > 0;
-}
-
-inline const somelib::ns::capi::RenamedComparable* somelib::ns::RenamedComparable::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedComparable*>(this);
-}
-
-inline somelib::ns::capi::RenamedComparable* somelib::ns::RenamedComparable::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedComparable*>(this);
-}
-
-inline const somelib::ns::RenamedComparable* somelib::ns::RenamedComparable::FromFFI(const somelib::ns::capi::RenamedComparable* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedComparable*>(ptr);
-}
-
-inline somelib::ns::RenamedComparable* somelib::ns::RenamedComparable::FromFFI(somelib::ns::capi::RenamedComparable* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedComparable*>(ptr);
-}
-
-inline void somelib::ns::RenamedComparable::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_Comparable_destroy(reinterpret_cast<somelib::ns::capi::RenamedComparable*>(ptr));
 }
 
 

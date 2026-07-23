@@ -36,19 +36,20 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::OpaqueThinVec> somelib::OpaqueThinVec::create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c) {
+inline somelib::OpaqueThinVec somelib::OpaqueThinVec::create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c) {
     auto result = somelib::capi::OpaqueThinVec_create({a.data(), a.size()},
         {b.data(), b.size()},
         {c.data(), c.size()});
-    return std::unique_ptr<somelib::OpaqueThinVec>(somelib::OpaqueThinVec::FromFFI(result));
+    return somelib::OpaqueThinVec::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::OpaqueThinIter> somelib::OpaqueThinVec::iter() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::OpaqueThinIter somelib::OpaqueThinVec::iter() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_iter(this->AsFFI());
-    return std::unique_ptr<somelib::OpaqueThinIter>(somelib::OpaqueThinIter::FromFFI(result));
+    return somelib::OpaqueThinIter::FromFFI(result);
 }
 
-inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter>somelib::OpaqueThinVec::begin() const {
+
+inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter> somelib::OpaqueThinVec::begin() const {
     return iter();
 }
 
@@ -57,35 +58,15 @@ inline size_t somelib::OpaqueThinVec::__len__() const {
     return result;
 }
 
-inline const somelib::OpaqueThin* somelib::OpaqueThinVec::operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::OpaqueThinRef> somelib::OpaqueThinVec::operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_get(this->AsFFI(),
         idx);
-    return somelib::OpaqueThin::FromFFI(result);
+    return somelib::diplomat::Optional<somelib::OpaqueThinRef>::FromFFI(result);
 }
 
-inline const somelib::OpaqueThin* somelib::OpaqueThinVec::first() const DIPLOMAT_LIFETIME_BOUND {
+inline somelib::diplomat::Optional<somelib::OpaqueThinRef> somelib::OpaqueThinVec::first() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::OpaqueThinVec_first(this->AsFFI());
-    return somelib::OpaqueThin::FromFFI(result);
-}
-
-inline const somelib::capi::OpaqueThinVec* somelib::OpaqueThinVec::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::OpaqueThinVec*>(this);
-}
-
-inline somelib::capi::OpaqueThinVec* somelib::OpaqueThinVec::AsFFI() {
-    return reinterpret_cast<somelib::capi::OpaqueThinVec*>(this);
-}
-
-inline const somelib::OpaqueThinVec* somelib::OpaqueThinVec::FromFFI(const somelib::capi::OpaqueThinVec* ptr) {
-    return reinterpret_cast<const somelib::OpaqueThinVec*>(ptr);
-}
-
-inline somelib::OpaqueThinVec* somelib::OpaqueThinVec::FromFFI(somelib::capi::OpaqueThinVec* ptr) {
-    return reinterpret_cast<somelib::OpaqueThinVec*>(ptr);
-}
-
-inline void somelib::OpaqueThinVec::operator delete(void* ptr) {
-    somelib::capi::OpaqueThinVec_destroy(reinterpret_cast<somelib::capi::OpaqueThinVec*>(ptr));
+    return somelib::diplomat::Optional<somelib::OpaqueThinRef>::FromFFI(result);
 }
 
 

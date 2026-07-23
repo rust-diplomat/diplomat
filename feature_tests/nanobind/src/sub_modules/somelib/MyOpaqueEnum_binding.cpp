@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_MyOpaqueEnum_binding(nb::module_ mod) {
-    PyType_Slot somelib_MyOpaqueEnum_slots[] = {
-        {Py_tp_free, (void *)somelib::MyOpaqueEnum::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::MyOpaqueEnum> opaque(mod, "MyOpaqueEnum", nb::type_slots(somelib_MyOpaqueEnum_slots));
+    nb::class_<somelib::MyOpaqueEnum> opaque(mod, "MyOpaqueEnum");
     opaque
         .def_static("new", std::move(maybe_op_unwrap(&somelib::MyOpaqueEnum::new_)))
         .def("__str__", &somelib::MyOpaqueEnum::to_string);

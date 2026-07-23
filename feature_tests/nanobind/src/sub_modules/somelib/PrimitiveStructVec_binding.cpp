@@ -7,12 +7,7 @@
 
 namespace somelib {
 void add_PrimitiveStructVec_binding(nb::module_ mod) {
-    PyType_Slot somelib_PrimitiveStructVec_slots[] = {
-        {Py_tp_free, (void *)somelib::PrimitiveStructVec::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::PrimitiveStructVec> opaque(mod, "PrimitiveStructVec", nb::type_slots(somelib_PrimitiveStructVec_slots));
+    nb::class_<somelib::PrimitiveStructVec> opaque(mod, "PrimitiveStructVec");
     opaque
         .def("__len__", &somelib::PrimitiveStructVec::__len__)
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::PrimitiveStructVec::new_))))

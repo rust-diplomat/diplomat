@@ -9,6 +9,8 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "Opaque.d.hpp"
+#include "OpaqueMut.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct Opaque; }
@@ -33,8 +35,8 @@ namespace capi {
 
 namespace somelib {
 struct StructOfOpaque {
-    somelib::Opaque* i;
-    somelib::OpaqueMut* j;
+    somelib::OpaqueRef i;
+    somelib::OpaqueMutRefMut j;
 
   inline void take_in(const somelib::Opaque& other);
 

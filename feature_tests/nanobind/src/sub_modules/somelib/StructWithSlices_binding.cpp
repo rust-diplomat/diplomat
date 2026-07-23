@@ -6,8 +6,8 @@
 namespace somelib {
 void add_StructWithSlices_binding(nb::module_ mod) {
     nb::class_<somelib::StructWithSlices> st(mod, "StructWithSlices");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<std::string_view, somelib::diplomat::span<const uint16_t>>(), "first"_a.none(),  "second"_a.none())
         .def_rw("first", &somelib::StructWithSlices::first)
         .def_rw("second", &somelib::StructWithSlices::second)

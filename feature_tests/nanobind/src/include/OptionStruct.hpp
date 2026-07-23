@@ -25,19 +25,19 @@ namespace capi {
 
 inline somelib::capi::OptionStruct somelib::OptionStruct::AsFFI() const {
     return somelib::capi::OptionStruct {
-        /* .a = */ a ? a->AsFFI() : nullptr,
-        /* .b = */ b ? b->AsFFI() : nullptr,
+        /* .a = */ const_cast<somelib::diplomat::Optional<somelib::OptionOpaque>&>(a).AsFFI(),
+        /* .b = */ const_cast<somelib::diplomat::Optional<somelib::OptionOpaqueChar>&>(b).AsFFI(),
         /* .c = */ c,
-        /* .d = */ d->AsFFI(),
+        /* .d = */ const_cast<somelib::OptionOpaque&>(d).AsFFI(),
     };
 }
 
 inline somelib::OptionStruct somelib::OptionStruct::FromFFI(somelib::capi::OptionStruct c_struct) {
     return somelib::OptionStruct {
-        /* .a = */ std::unique_ptr<somelib::OptionOpaque>(somelib::OptionOpaque::FromFFI(c_struct.a)),
-        /* .b = */ std::unique_ptr<somelib::OptionOpaqueChar>(somelib::OptionOpaqueChar::FromFFI(c_struct.b)),
+        /* .a = */ somelib::diplomat::Optional<somelib::OptionOpaque>::FromFFI(c_struct.a),
+        /* .b = */ somelib::diplomat::Optional<somelib::OptionOpaqueChar>::FromFFI(c_struct.b),
         /* .c = */ c_struct.c,
-        /* .d = */ std::unique_ptr<somelib::OptionOpaque>(somelib::OptionOpaque::FromFFI(c_struct.d)),
+        /* .d = */ somelib::OptionOpaque::FromFFI(c_struct.d),
     };
 }
 

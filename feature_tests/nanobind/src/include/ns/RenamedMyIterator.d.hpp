@@ -15,27 +15,22 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedMyIterator;
+    extern "C" {
+    void namespace_MyIterator_destroy(RenamedMyIterator* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedMyIterator {
+class RenamedMyIterator;
+using RenamedMyIteratorRef = somelib::diplomat::Ref<RenamedMyIterator, const somelib::ns::capi::RenamedMyIterator>;
+using RenamedMyIteratorRefMut = somelib::diplomat::Ref<RenamedMyIterator, somelib::ns::capi::RenamedMyIterator>;
+
+class RenamedMyIterator : public somelib::diplomat::OpaquePointer<RenamedMyIterator, somelib::ns::capi::RenamedMyIterator, somelib::ns::capi::namespace_MyIterator_destroy> {
 public:
 
-  inline std::optional<uint8_t> next();
+  inline somelib::diplomat::Optional<uint8_t> next();
 
-    inline const somelib::ns::capi::RenamedMyIterator* AsFFI() const;
-    inline somelib::ns::capi::RenamedMyIterator* AsFFI();
-    inline static const somelib::ns::RenamedMyIterator* FromFFI(const somelib::ns::capi::RenamedMyIterator* ptr);
-    inline static somelib::ns::RenamedMyIterator* FromFFI(somelib::ns::capi::RenamedMyIterator* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedMyIterator() = delete;
-    RenamedMyIterator(const somelib::ns::RenamedMyIterator&) = delete;
-    RenamedMyIterator(somelib::ns::RenamedMyIterator&&) noexcept = delete;
-    RenamedMyIterator operator=(const somelib::ns::RenamedMyIterator&) = delete;
-    RenamedMyIterator operator=(somelib::ns::RenamedMyIterator&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

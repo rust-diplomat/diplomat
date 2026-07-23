@@ -20,14 +20,21 @@ class Utf16Wrap;
 namespace somelib {
 namespace capi {
     struct Utf16Wrap;
+    extern "C" {
+    void Utf16Wrap_destroy(Utf16Wrap* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class Utf16Wrap {
+class Utf16Wrap;
+using Utf16WrapRef = somelib::diplomat::Ref<Utf16Wrap, const somelib::capi::Utf16Wrap>;
+using Utf16WrapRefMut = somelib::diplomat::Ref<Utf16Wrap, somelib::capi::Utf16Wrap>;
+
+class Utf16Wrap : public somelib::diplomat::OpaquePointer<Utf16Wrap, somelib::capi::Utf16Wrap, somelib::capi::Utf16Wrap_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::Utf16Wrap> from_utf16(std::u16string_view input);
+  inline static somelib::Utf16Wrap from_utf16(std::u16string_view input);
 
   inline std::string get_debug_str() const;
   template<typename W>
@@ -35,18 +42,6 @@ public:
 
   inline std::u16string_view borrow_cont() const DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::capi::Utf16Wrap* AsFFI() const;
-    inline somelib::capi::Utf16Wrap* AsFFI();
-    inline static const somelib::Utf16Wrap* FromFFI(const somelib::capi::Utf16Wrap* ptr);
-    inline static somelib::Utf16Wrap* FromFFI(somelib::capi::Utf16Wrap* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    Utf16Wrap() = delete;
-    Utf16Wrap(const somelib::Utf16Wrap&) = delete;
-    Utf16Wrap(somelib::Utf16Wrap&&) noexcept = delete;
-    Utf16Wrap operator=(const somelib::Utf16Wrap&) = delete;
-    Utf16Wrap operator=(somelib::Utf16Wrap&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

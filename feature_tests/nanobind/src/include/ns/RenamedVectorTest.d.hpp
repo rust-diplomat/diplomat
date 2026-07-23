@@ -22,33 +22,28 @@ class RenamedVectorTest;
 namespace somelib::ns {
 namespace capi {
     struct RenamedVectorTest;
+    extern "C" {
+    void namespace_VectorTest_destroy(RenamedVectorTest* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedVectorTest {
+class RenamedVectorTest;
+using RenamedVectorTestRef = somelib::diplomat::Ref<RenamedVectorTest, const somelib::ns::capi::RenamedVectorTest>;
+using RenamedVectorTestRefMut = somelib::diplomat::Ref<RenamedVectorTest, somelib::ns::capi::RenamedVectorTest>;
+
+class RenamedVectorTest : public somelib::diplomat::OpaquePointer<RenamedVectorTest, somelib::ns::capi::RenamedVectorTest, somelib::ns::capi::namespace_VectorTest_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedVectorTest> new_();
+  inline static somelib::ns::RenamedVectorTest new_();
 
   inline size_t len() const;
 
-  inline std::optional<double> operator[](size_t idx) const;
+  inline somelib::diplomat::Optional<double> operator[](size_t idx) const;
 
   inline void push(double value);
 
-    inline const somelib::ns::capi::RenamedVectorTest* AsFFI() const;
-    inline somelib::ns::capi::RenamedVectorTest* AsFFI();
-    inline static const somelib::ns::RenamedVectorTest* FromFFI(const somelib::ns::capi::RenamedVectorTest* ptr);
-    inline static somelib::ns::RenamedVectorTest* FromFFI(somelib::ns::capi::RenamedVectorTest* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedVectorTest() = delete;
-    RenamedVectorTest(const somelib::ns::RenamedVectorTest&) = delete;
-    RenamedVectorTest(somelib::ns::RenamedVectorTest&&) noexcept = delete;
-    RenamedVectorTest operator=(const somelib::ns::RenamedVectorTest&) = delete;
-    RenamedVectorTest operator=(somelib::ns::RenamedVectorTest&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

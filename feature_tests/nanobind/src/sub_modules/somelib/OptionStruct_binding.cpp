@@ -9,16 +9,10 @@ namespace somelib {
 void add_OptionStruct_binding(nb::module_ mod) {
     nb::class_<somelib::OptionStruct> st(mod, "OptionStruct");
     st
-        .def_prop_ro("a",
-            [](const somelib::OptionStruct& self) { return self.a.get(); }
-        )
-        .def_prop_ro("b",
-            [](const somelib::OptionStruct& self) { return self.b.get(); }
-        )
+        .def_ro("a", &somelib::OptionStruct::a)
+        .def_ro("b", &somelib::OptionStruct::b)
         .def_ro("c", &somelib::OptionStruct::c)
-        .def_prop_ro("d",
-            [](const somelib::OptionStruct& self) { return self.d.get(); }
-        );
+        .def_ro("d", &somelib::OptionStruct::d);
 }
 
 } 

@@ -24,31 +24,26 @@ class RenamedOpaqueIterator;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueIterable;
+    extern "C" {
+    void namespace_OpaqueIterable_destroy(RenamedOpaqueIterable* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedOpaqueIterable {
+class RenamedOpaqueIterable;
+using RenamedOpaqueIterableRef = somelib::diplomat::Ref<RenamedOpaqueIterable, const somelib::ns::capi::RenamedOpaqueIterable>;
+using RenamedOpaqueIterableRefMut = somelib::diplomat::Ref<RenamedOpaqueIterable, somelib::ns::capi::RenamedOpaqueIterable>;
+
+class RenamedOpaqueIterable : public somelib::diplomat::OpaquePointer<RenamedOpaqueIterable, somelib::ns::capi::RenamedOpaqueIterable, somelib::ns::capi::namespace_OpaqueIterable_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueIterable> new_(size_t size);
+  inline static somelib::ns::RenamedOpaqueIterable new_(size_t size);
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueIterator> iter() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::ns::RenamedOpaqueIterator iter() const DIPLOMAT_LIFETIME_BOUND;
   inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueIterator> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
-    inline const somelib::ns::capi::RenamedOpaqueIterable* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueIterable* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueIterable* FromFFI(const somelib::ns::capi::RenamedOpaqueIterable* ptr);
-    inline static somelib::ns::RenamedOpaqueIterable* FromFFI(somelib::ns::capi::RenamedOpaqueIterable* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueIterable() = delete;
-    RenamedOpaqueIterable(const somelib::ns::RenamedOpaqueIterable&) = delete;
-    RenamedOpaqueIterable(somelib::ns::RenamedOpaqueIterable&&) noexcept = delete;
-    RenamedOpaqueIterable operator=(const somelib::ns::RenamedOpaqueIterable&) = delete;
-    RenamedOpaqueIterable operator=(somelib::ns::RenamedOpaqueIterable&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

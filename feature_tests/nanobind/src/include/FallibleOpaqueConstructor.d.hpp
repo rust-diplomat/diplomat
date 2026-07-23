@@ -33,7 +33,7 @@ namespace somelib {
 struct FallibleOpaqueConstructor {
     int32_t x;
 
-  inline static somelib::diplomat::result<somelib::FallibleOpaqueConstructor, std::unique_ptr<somelib::ResultOpaque>> ctor();
+  inline static somelib::diplomat::result<somelib::FallibleOpaqueConstructor, somelib::ResultOpaque> ctor();
 
     inline somelib::capi::FallibleOpaqueConstructor AsFFI() const;
     inline static somelib::FallibleOpaqueConstructor FromFFI(somelib::capi::FallibleOpaqueConstructor c_struct);

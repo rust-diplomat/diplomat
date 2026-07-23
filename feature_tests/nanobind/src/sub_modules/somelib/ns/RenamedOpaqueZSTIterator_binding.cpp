@@ -5,12 +5,7 @@
 
 namespace somelib::ns {
 void add_RenamedOpaqueZSTIterator_binding(nb::module_ mod) {
-    PyType_Slot somelib_ns_RenamedOpaqueZSTIterator_slots[] = {
-        {Py_tp_free, (void *)somelib::ns::RenamedOpaqueZSTIterator::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ns::RenamedOpaqueZSTIterator> opaque(mod, "RenamedOpaqueZSTIterator", nb::type_slots(somelib_ns_RenamedOpaqueZSTIterator_slots), "Tests for https://github.com/rust-diplomat/diplomat/issues/1050.");
+    nb::class_<somelib::ns::RenamedOpaqueZSTIterator> opaque(mod, "RenamedOpaqueZSTIterator", "Tests for https://github.com/rust-diplomat/diplomat/issues/1050.");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZSTIterator::ctor))))
         .def("__next__", [](somelib::ns::RenamedOpaqueZSTIterator& self){
@@ -23,7 +18,7 @@ void add_RenamedOpaqueZSTIterator_binding(nb::module_ mod) {
             .def("__iter__", [](nb::handle self) { return self; })
         .def("__getitem__", [](somelib::ns::RenamedOpaqueZSTIterator* self, size_t index) {
                 auto out = map_inner(self->operator[] (index));
-                if (out.get() == nullptr) {
+                if (out == nullptr) {
                     throw nb::index_error("Could not get index.");
                 } else {
                     return out;

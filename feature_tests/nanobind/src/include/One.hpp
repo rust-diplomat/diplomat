@@ -47,107 +47,87 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::One> somelib::One::transitivity(const somelib::One& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::transitivity(const somelib::One& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_transitivity(hold.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::cycle(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::cycle(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_cycle(hold.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::many_dependents(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::Two& c DIPLOMAT_LIFETIME_BOUND, const somelib::Two& d DIPLOMAT_LIFETIME_BOUND, const somelib::Two& nohold) {
+inline somelib::One somelib::One::many_dependents(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::Two& c DIPLOMAT_LIFETIME_BOUND, const somelib::Two& d DIPLOMAT_LIFETIME_BOUND, const somelib::Two& nohold) {
     auto result = somelib::capi::One_many_dependents(a.AsFFI(),
         b.AsFFI(),
         c.AsFFI(),
         d.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::return_outlives_param(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::return_outlives_param(const somelib::Two& hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_return_outlives_param(hold.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::diamond_top(const somelib::One& top DIPLOMAT_LIFETIME_BOUND, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
+inline somelib::One somelib::One::diamond_top(const somelib::One& top DIPLOMAT_LIFETIME_BOUND, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::One_diamond_top(top.AsFFI(),
         left.AsFFI(),
         right.AsFFI(),
         bottom.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::diamond_left(const somelib::One& top, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
+inline somelib::One somelib::One::diamond_left(const somelib::One& top, const somelib::One& left DIPLOMAT_LIFETIME_BOUND, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::One_diamond_left(top.AsFFI(),
         left.AsFFI(),
         right.AsFFI(),
         bottom.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::diamond_right(const somelib::One& top, const somelib::One& left, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
+inline somelib::One somelib::One::diamond_right(const somelib::One& top, const somelib::One& left, const somelib::One& right DIPLOMAT_LIFETIME_BOUND, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::One_diamond_right(top.AsFFI(),
         left.AsFFI(),
         right.AsFFI(),
         bottom.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::diamond_bottom(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
+inline somelib::One somelib::One::diamond_bottom(const somelib::One& top, const somelib::One& left, const somelib::One& right, const somelib::One& bottom DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::One_diamond_bottom(top.AsFFI(),
         left.AsFFI(),
         right.AsFFI(),
         bottom.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::diamond_and_nested_types(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::One& c DIPLOMAT_LIFETIME_BOUND, const somelib::One& d DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::diamond_and_nested_types(const somelib::One& a DIPLOMAT_LIFETIME_BOUND, const somelib::One& b DIPLOMAT_LIFETIME_BOUND, const somelib::One& c DIPLOMAT_LIFETIME_BOUND, const somelib::One& d DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_diamond_and_nested_types(a.AsFFI(),
         b.AsFFI(),
         c.AsFFI(),
         d.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::implicit_bounds(const somelib::One& explicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::implicit_bounds(const somelib::One& explicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_hold DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_implicit_bounds(explicit_hold.AsFFI(),
         implicit_hold.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
+    return somelib::One::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::One> somelib::One::implicit_bounds_deep(const somelib::One& explicit_ DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_1 DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_2 DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
+inline somelib::One somelib::One::implicit_bounds_deep(const somelib::One& explicit_ DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_1 DIPLOMAT_LIFETIME_BOUND, const somelib::One& implicit_2 DIPLOMAT_LIFETIME_BOUND, const somelib::One& nohold) {
     auto result = somelib::capi::One_implicit_bounds_deep(explicit_.AsFFI(),
         implicit_1.AsFFI(),
         implicit_2.AsFFI(),
         nohold.AsFFI());
-    return std::unique_ptr<somelib::One>(somelib::One::FromFFI(result));
-}
-
-inline const somelib::capi::One* somelib::One::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::One*>(this);
-}
-
-inline somelib::capi::One* somelib::One::AsFFI() {
-    return reinterpret_cast<somelib::capi::One*>(this);
-}
-
-inline const somelib::One* somelib::One::FromFFI(const somelib::capi::One* ptr) {
-    return reinterpret_cast<const somelib::One*>(ptr);
-}
-
-inline somelib::One* somelib::One::FromFFI(somelib::capi::One* ptr) {
-    return reinterpret_cast<somelib::One*>(ptr);
-}
-
-inline void somelib::One::operator delete(void* ptr) {
-    somelib::capi::One_destroy(reinterpret_cast<somelib::capi::One*>(ptr));
+    return somelib::One::FromFFI(result);
 }
 
 

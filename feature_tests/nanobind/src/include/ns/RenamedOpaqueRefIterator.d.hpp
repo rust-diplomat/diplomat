@@ -10,6 +10,7 @@
 #include <optional>
 #include <cstdlib>
 #include "../diplomat_runtime.hpp"
+#include "AttrOpaque1Renamed.d.hpp"
 namespace somelib {
 namespace ns {
 namespace capi { struct AttrOpaque1Renamed; }
@@ -22,27 +23,22 @@ class AttrOpaque1Renamed;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueRefIterator;
+    extern "C" {
+    void namespace_OpaqueRefIterator_destroy(RenamedOpaqueRefIterator* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedOpaqueRefIterator {
+class RenamedOpaqueRefIterator;
+using RenamedOpaqueRefIteratorRef = somelib::diplomat::Ref<RenamedOpaqueRefIterator, const somelib::ns::capi::RenamedOpaqueRefIterator>;
+using RenamedOpaqueRefIteratorRefMut = somelib::diplomat::Ref<RenamedOpaqueRefIterator, somelib::ns::capi::RenamedOpaqueRefIterator>;
+
+class RenamedOpaqueRefIterator : public somelib::diplomat::OpaquePointer<RenamedOpaqueRefIterator, somelib::ns::capi::RenamedOpaqueRefIterator, somelib::ns::capi::namespace_OpaqueRefIterator_destroy> {
 public:
 
-  inline const somelib::ns::AttrOpaque1Renamed* next() DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::ns::AttrOpaque1RenamedRef> next() DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::ns::capi::RenamedOpaqueRefIterator* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueRefIterator* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueRefIterator* FromFFI(const somelib::ns::capi::RenamedOpaqueRefIterator* ptr);
-    inline static somelib::ns::RenamedOpaqueRefIterator* FromFFI(somelib::ns::capi::RenamedOpaqueRefIterator* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueRefIterator() = delete;
-    RenamedOpaqueRefIterator(const somelib::ns::RenamedOpaqueRefIterator&) = delete;
-    RenamedOpaqueRefIterator(somelib::ns::RenamedOpaqueRefIterator&&) noexcept = delete;
-    RenamedOpaqueRefIterator operator=(const somelib::ns::RenamedOpaqueRefIterator&) = delete;
-    RenamedOpaqueRefIterator operator=(somelib::ns::RenamedOpaqueRefIterator&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

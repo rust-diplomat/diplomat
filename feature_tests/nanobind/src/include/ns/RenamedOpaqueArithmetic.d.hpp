@@ -22,18 +22,25 @@ class RenamedOpaqueArithmetic;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueArithmetic;
+    extern "C" {
+    void namespace_OpaqueArithmetic_destroy(RenamedOpaqueArithmetic* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedOpaqueArithmetic {
+class RenamedOpaqueArithmetic;
+using RenamedOpaqueArithmeticRef = somelib::diplomat::Ref<RenamedOpaqueArithmetic, const somelib::ns::capi::RenamedOpaqueArithmetic>;
+using RenamedOpaqueArithmeticRefMut = somelib::diplomat::Ref<RenamedOpaqueArithmetic, somelib::ns::capi::RenamedOpaqueArithmetic>;
+
+class RenamedOpaqueArithmetic : public somelib::diplomat::OpaquePointer<RenamedOpaqueArithmetic, somelib::ns::capi::RenamedOpaqueArithmetic, somelib::ns::capi::namespace_OpaqueArithmetic_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(int32_t x, int32_t y = 12);
+  inline static somelib::ns::RenamedOpaqueArithmetic make(int32_t x, int32_t y = 12);
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, float y = 14.48, std::optional<float> z = 0);
+  inline static somelib::ns::RenamedOpaqueArithmetic make(float x, float y = 14.48, somelib::diplomat::Optional<float> z = somelib::diplomat::Optional<float>(0));
 
-  inline static std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> make(float x, bool z);
+  inline static somelib::ns::RenamedOpaqueArithmetic make(float x, bool z);
 
   inline int32_t x() const;
 
@@ -41,13 +48,13 @@ public:
 
   inline int32_t y() const;
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> operator+(const somelib::ns::RenamedOpaqueArithmetic& o) const;
+  inline somelib::ns::RenamedOpaqueArithmetic operator+(const somelib::ns::RenamedOpaqueArithmetic& o) const;
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> operator-(const somelib::ns::RenamedOpaqueArithmetic& o) const;
+  inline somelib::ns::RenamedOpaqueArithmetic operator-(const somelib::ns::RenamedOpaqueArithmetic& o) const;
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> operator*(const somelib::ns::RenamedOpaqueArithmetic& o) const;
+  inline somelib::ns::RenamedOpaqueArithmetic operator*(const somelib::ns::RenamedOpaqueArithmetic& o) const;
 
-  inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> operator/(const somelib::ns::RenamedOpaqueArithmetic& o) const;
+  inline somelib::ns::RenamedOpaqueArithmetic operator/(const somelib::ns::RenamedOpaqueArithmetic& o) const;
 
   inline void operator+=(const somelib::ns::RenamedOpaqueArithmetic& o);
 
@@ -57,18 +64,6 @@ public:
 
   inline void operator/=(const somelib::ns::RenamedOpaqueArithmetic& o);
 
-    inline const somelib::ns::capi::RenamedOpaqueArithmetic* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueArithmetic* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueArithmetic* FromFFI(const somelib::ns::capi::RenamedOpaqueArithmetic* ptr);
-    inline static somelib::ns::RenamedOpaqueArithmetic* FromFFI(somelib::ns::capi::RenamedOpaqueArithmetic* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueArithmetic() = delete;
-    RenamedOpaqueArithmetic(const somelib::ns::RenamedOpaqueArithmetic&) = delete;
-    RenamedOpaqueArithmetic(somelib::ns::RenamedOpaqueArithmetic&&) noexcept = delete;
-    RenamedOpaqueArithmetic operator=(const somelib::ns::RenamedOpaqueArithmetic&) = delete;
-    RenamedOpaqueArithmetic operator=(somelib::ns::RenamedOpaqueArithmetic&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

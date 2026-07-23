@@ -10,6 +10,7 @@
 #include <optional>
 #include <cstdlib>
 #include "MyStruct.d.hpp"
+#include "Opaque.d.hpp"
 #include "TupleStruct.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
@@ -34,12 +35,12 @@ namespace capi {
 
 namespace somelib {
 struct ContainingTuple {
-    std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*> inner;
+    std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef> inner;
 
     inline somelib::capi::ContainingTuple AsFFI() const;
     inline static somelib::ContainingTuple FromFFI(somelib::capi::ContainingTuple c_struct);
-    inline static somelib::capi::ContainingTuple AsTupleFFI(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*>> tuple);
-    inline static std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::Opaque*>> TupleFromFFI(somelib::capi::ContainingTuple c_struct);
+    inline static somelib::capi::ContainingTuple AsTupleFFI(std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>> tuple);
+    inline static std::tuple<std::tuple<int32_t,int32_t,somelib::MyStruct,somelib::OpaqueRef>> TupleFromFFI(somelib::capi::ContainingTuple c_struct);
 };
 
 } // namespace

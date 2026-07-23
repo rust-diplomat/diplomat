@@ -9,6 +9,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "OpaqueThin.d.hpp"
 #include "diplomat_runtime.hpp"
 namespace somelib {
 namespace capi { struct OpaqueThin; }
@@ -24,37 +25,32 @@ class OpaqueThinVec;
 namespace somelib {
 namespace capi {
     struct OpaqueThinVec;
+    extern "C" {
+    void OpaqueThinVec_destroy(OpaqueThinVec* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OpaqueThinVec {
+class OpaqueThinVec;
+using OpaqueThinVecRef = somelib::diplomat::Ref<OpaqueThinVec, const somelib::capi::OpaqueThinVec>;
+using OpaqueThinVecRefMut = somelib::diplomat::Ref<OpaqueThinVec, somelib::capi::OpaqueThinVec>;
+
+class OpaqueThinVec : public somelib::diplomat::OpaquePointer<OpaqueThinVec, somelib::capi::OpaqueThinVec, somelib::capi::OpaqueThinVec_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::OpaqueThinVec> create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c);
+  inline static somelib::OpaqueThinVec create(somelib::diplomat::span<const int32_t> a, somelib::diplomat::span<const float> b, std::string_view c);
 
-  inline std::unique_ptr<somelib::OpaqueThinIter> iter() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::OpaqueThinIter iter() const DIPLOMAT_LIFETIME_BOUND;
   inline somelib::diplomat::next_to_iter_helper<somelib::OpaqueThinIter> begin() const;
   inline std::nullopt_t end() const { return std::nullopt; }
 
   inline size_t __len__() const;
 
-  inline const somelib::OpaqueThin* operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::OpaqueThinRef> operator[](size_t idx) const DIPLOMAT_LIFETIME_BOUND;
 
-  inline const somelib::OpaqueThin* first() const DIPLOMAT_LIFETIME_BOUND;
+  inline somelib::diplomat::Optional<somelib::OpaqueThinRef> first() const DIPLOMAT_LIFETIME_BOUND;
 
-    inline const somelib::capi::OpaqueThinVec* AsFFI() const;
-    inline somelib::capi::OpaqueThinVec* AsFFI();
-    inline static const somelib::OpaqueThinVec* FromFFI(const somelib::capi::OpaqueThinVec* ptr);
-    inline static somelib::OpaqueThinVec* FromFFI(somelib::capi::OpaqueThinVec* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OpaqueThinVec() = delete;
-    OpaqueThinVec(const somelib::OpaqueThinVec&) = delete;
-    OpaqueThinVec(somelib::OpaqueThinVec&&) noexcept = delete;
-    OpaqueThinVec operator=(const somelib::OpaqueThinVec&) = delete;
-    OpaqueThinVec operator=(somelib::OpaqueThinVec&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

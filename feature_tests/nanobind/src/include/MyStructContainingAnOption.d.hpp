@@ -34,8 +34,8 @@ namespace capi {
 
 namespace somelib {
 struct MyStructContainingAnOption {
-    std::optional<somelib::MyStruct> a;
-    std::optional<somelib::DefaultEnum> b;
+    somelib::diplomat::Optional<somelib::MyStruct> a;
+    somelib::diplomat::Optional<somelib::DefaultEnum> b;
 
   inline static somelib::MyStructContainingAnOption new_();
 

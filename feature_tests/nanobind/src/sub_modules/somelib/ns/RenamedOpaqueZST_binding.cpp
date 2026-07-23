@@ -5,12 +5,7 @@
 
 namespace somelib::ns {
 void add_RenamedOpaqueZST_binding(nb::module_ mod) {
-    PyType_Slot somelib_ns_RenamedOpaqueZST_slots[] = {
-        {Py_tp_free, (void *)somelib::ns::RenamedOpaqueZST::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ns::RenamedOpaqueZST> opaque(mod, "RenamedOpaqueZST", nb::type_slots(somelib_ns_RenamedOpaqueZST_slots), "Tests for https://github.com/rust-diplomat/diplomat/issues/1050.\nC++ generates unique_ptrs for Opaque ZSTs, and Nanobind\nexpects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.\nThis is not the case, as in Rust pointers to ZSTs are always the same address.");
+    nb::class_<somelib::ns::RenamedOpaqueZST> opaque(mod, "RenamedOpaqueZST", "Tests for https://github.com/rust-diplomat/diplomat/issues/1050.\nC++ generates unique_ptrs for Opaque ZSTs, and Nanobind\nexpects every unique_ptr it converts to wrap a unique pointer type. It errors otherwise.\nThis is not the case, as in Rust pointers to ZSTs are always the same address.");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::ctor))))
         .def("__add__", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::operator+)), nb::is_operator())
@@ -19,7 +14,7 @@ void add_RenamedOpaqueZST_binding(nb::module_ mod) {
         .def_prop_rw("getter", std::move(maybe_op_unwrap(&somelib::ns::RenamedOpaqueZST::getter)), &somelib::ns::RenamedOpaqueZST::setter)
         .def("__getitem__", [](somelib::ns::RenamedOpaqueZST* self, size_t index) {
                 auto out = map_inner(self->operator[] (index));
-                if (out.get() == nullptr) {
+                if (out == nullptr) {
                     throw nb::index_error("Could not get index.");
                 } else {
                     return out;

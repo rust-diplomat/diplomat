@@ -8,12 +8,7 @@
 
 namespace somelib {
 void add_OptionOpaque_binding(nb::module_ mod) {
-    PyType_Slot somelib_OptionOpaque_slots[] = {
-        {Py_tp_free, (void *)somelib::OptionOpaque::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::OptionOpaque> opaque(mod, "OptionOpaque", nb::type_slots(somelib_OptionOpaque_slots));
+    nb::class_<somelib::OptionOpaque> opaque(mod, "OptionOpaque");
     opaque
         .def_static("accepts_borrowing_option_struct", &somelib::OptionOpaque::accepts_borrowing_option_struct, "arg"_a)
         .def_static("accepts_multiple_option_enum", &somelib::OptionOpaque::accepts_multiple_option_enum, "sentinel1"_a, "arg1"_a= nb::none(), "arg2"_a= nb::none(), "arg3"_a= nb::none(), "sentinel2"_a)

@@ -22,27 +22,22 @@ class RefListParameter;
 namespace somelib {
 namespace capi {
     struct RefList;
+    extern "C" {
+    void RefList_destroy(RefList* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class RefList {
+class RefList;
+using RefListRef = somelib::diplomat::Ref<RefList, const somelib::capi::RefList>;
+using RefListRefMut = somelib::diplomat::Ref<RefList, somelib::capi::RefList>;
+
+class RefList : public somelib::diplomat::OpaquePointer<RefList, somelib::capi::RefList, somelib::capi::RefList_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::RefList> node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND);
+  inline static somelib::RefList node(const somelib::RefListParameter& data DIPLOMAT_LIFETIME_BOUND);
 
-    inline const somelib::capi::RefList* AsFFI() const;
-    inline somelib::capi::RefList* AsFFI();
-    inline static const somelib::RefList* FromFFI(const somelib::capi::RefList* ptr);
-    inline static somelib::RefList* FromFFI(somelib::capi::RefList* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RefList() = delete;
-    RefList(const somelib::RefList&) = delete;
-    RefList(somelib::RefList&&) noexcept = delete;
-    RefList operator=(const somelib::RefList&) = delete;
-    RefList operator=(somelib::RefList&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

@@ -66,14 +66,14 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::ctor() {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::ctor() {
     auto result = somelib::ns::capi::namespace_OpaqueZST_ctor();
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::make() {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::make() {
     auto result = somelib::ns::capi::namespace_OpaqueZST_make();
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
 inline std::string somelib::ns::RenamedOpaqueZST::out_string() {
@@ -88,72 +88,72 @@ inline void somelib::ns::RenamedOpaqueZST::out_string_write(W& writeable) {
     somelib::ns::capi::namespace_OpaqueZST_out_string(&write);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::member() const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::member() const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_member(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::mut_member() {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::mut_member() {
     auto result = somelib::ns::capi::namespace_OpaqueZST_mut_member(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator+(const somelib::ns::RenamedOpaqueZST& _o) const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::operator+(const somelib::ns::RenamedOpaqueZST& _o) const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_add(this->AsFFI(),
         _o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator-(const somelib::ns::RenamedOpaqueZST& _o) const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::operator-(const somelib::ns::RenamedOpaqueZST& _o) const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_sub(this->AsFFI(),
         _o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator*(const somelib::ns::RenamedOpaqueZST& _o) const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::operator*(const somelib::ns::RenamedOpaqueZST& _o) const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_mul(this->AsFFI(),
         _o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator/(const somelib::ns::RenamedOpaqueZST& _o) const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::operator/(const somelib::ns::RenamedOpaqueZST& _o) const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_div(this->AsFFI(),
         _o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::monostate> somelib::ns::RenamedOpaqueZST::success_zst(bool return_success) {
+inline somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, std::monostate> somelib::ns::RenamedOpaqueZST::success_zst(bool return_success) {
     auto result = somelib::ns::capi::namespace_OpaqueZST_success_zst(return_success);
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::monostate>(somelib::diplomat::Ok<std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::monostate>(somelib::diplomat::Err<std::monostate>());
+    return result.is_ok ? somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, std::monostate>(somelib::diplomat::Ok<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, std::monostate>(somelib::diplomat::Err<std::monostate>());
 }
 
-inline somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ns::RenamedOpaqueZST>> somelib::ns::RenamedOpaqueZST::fail_zst(bool return_success) {
+inline somelib::diplomat::result<std::monostate, somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::fail_zst(bool return_success) {
     auto result = somelib::ns::capi::namespace_OpaqueZST_fail_zst(return_success);
-    return result.is_ok ? somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(somelib::diplomat::Err<std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.err))));
+    return result.is_ok ? somelib::diplomat::result<std::monostate, somelib::ns::RenamedOpaqueZST>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, somelib::ns::RenamedOpaqueZST>(somelib::diplomat::Err<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.err)));
 }
 
-inline somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::unique_ptr<somelib::ns::RenamedOpaqueZST>> somelib::ns::RenamedOpaqueZST::success_fail_zst(bool return_success) {
+inline somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::success_fail_zst(bool return_success) {
     auto result = somelib::ns::capi::namespace_OpaqueZST_success_fail_zst(return_success);
-    return result.is_ok ? somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(somelib::diplomat::Ok<std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.ok)))) : somelib::diplomat::result<std::unique_ptr<somelib::ns::RenamedOpaqueZST>, std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(somelib::diplomat::Err<std::unique_ptr<somelib::ns::RenamedOpaqueZST>>(std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.err))));
+    return result.is_ok ? somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, somelib::ns::RenamedOpaqueZST>(somelib::diplomat::Ok<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.ok))) : somelib::diplomat::result<somelib::ns::RenamedOpaqueZST, somelib::ns::RenamedOpaqueZST>(somelib::diplomat::Err<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result.err)));
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::optional_zst(bool is_some) {
+inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::optional_zst(bool is_some) {
     auto result = somelib::ns::capi::namespace_OpaqueZST_optional_zst(is_some);
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZST>::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::static_getter() {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::static_getter() {
     auto result = somelib::ns::capi::namespace_OpaqueZST_static_getter();
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
 inline void somelib::ns::RenamedOpaqueZST::static_setter(const somelib::ns::RenamedOpaqueZST& _a) {
     somelib::ns::capi::namespace_OpaqueZST_static_setter(_a.AsFFI());
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::getter() const {
+inline somelib::ns::RenamedOpaqueZST somelib::ns::RenamedOpaqueZST::getter() const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_getter(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZST::FromFFI(result);
 }
 
 inline void somelib::ns::RenamedOpaqueZST::setter(const somelib::ns::RenamedOpaqueZST& _a) const {
@@ -161,39 +161,20 @@ inline void somelib::ns::RenamedOpaqueZST::setter(const somelib::ns::RenamedOpaq
         _a.AsFFI());
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZSTIterator> somelib::ns::RenamedOpaqueZST::iter() const {
+inline somelib::ns::RenamedOpaqueZSTIterator somelib::ns::RenamedOpaqueZST::iter() const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_iter(this->AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZSTIterator>(somelib::ns::RenamedOpaqueZSTIterator::FromFFI(result));
+    return somelib::ns::RenamedOpaqueZSTIterator::FromFFI(result);
 }
 
-inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueZSTIterator>somelib::ns::RenamedOpaqueZST::begin() const {
+
+inline somelib::diplomat::next_to_iter_helper<somelib::ns::RenamedOpaqueZSTIterator> somelib::ns::RenamedOpaqueZST::begin() const {
     return iter();
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator[](size_t _idx) const {
+inline somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZST> somelib::ns::RenamedOpaqueZST::operator[](size_t _idx) const {
     auto result = somelib::ns::capi::namespace_OpaqueZST_indexer(this->AsFFI(),
         _idx);
-    return std::unique_ptr<somelib::ns::RenamedOpaqueZST>(somelib::ns::RenamedOpaqueZST::FromFFI(result));
-}
-
-inline const somelib::ns::capi::RenamedOpaqueZST* somelib::ns::RenamedOpaqueZST::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueZST*>(this);
-}
-
-inline somelib::ns::capi::RenamedOpaqueZST* somelib::ns::RenamedOpaqueZST::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueZST*>(this);
-}
-
-inline const somelib::ns::RenamedOpaqueZST* somelib::ns::RenamedOpaqueZST::FromFFI(const somelib::ns::capi::RenamedOpaqueZST* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedOpaqueZST*>(ptr);
-}
-
-inline somelib::ns::RenamedOpaqueZST* somelib::ns::RenamedOpaqueZST::FromFFI(somelib::ns::capi::RenamedOpaqueZST* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedOpaqueZST*>(ptr);
-}
-
-inline void somelib::ns::RenamedOpaqueZST::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_OpaqueZST_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueZST*>(ptr));
+    return somelib::diplomat::Optional<somelib::ns::RenamedOpaqueZST>::FromFFI(result);
 }
 
 

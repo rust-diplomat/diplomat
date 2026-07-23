@@ -15,25 +15,20 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedTestOpaque;
+    extern "C" {
+    void namespace_TestOpaque_destroy(RenamedTestOpaque* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedTestOpaque {
+class RenamedTestOpaque;
+using RenamedTestOpaqueRef = somelib::diplomat::Ref<RenamedTestOpaque, const somelib::ns::capi::RenamedTestOpaque>;
+using RenamedTestOpaqueRefMut = somelib::diplomat::Ref<RenamedTestOpaque, somelib::ns::capi::RenamedTestOpaque>;
+
+class RenamedTestOpaque : public somelib::diplomat::OpaquePointer<RenamedTestOpaque, somelib::ns::capi::RenamedTestOpaque, somelib::ns::capi::namespace_TestOpaque_destroy> {
 public:
 
-    inline const somelib::ns::capi::RenamedTestOpaque* AsFFI() const;
-    inline somelib::ns::capi::RenamedTestOpaque* AsFFI();
-    inline static const somelib::ns::RenamedTestOpaque* FromFFI(const somelib::ns::capi::RenamedTestOpaque* ptr);
-    inline static somelib::ns::RenamedTestOpaque* FromFFI(somelib::ns::capi::RenamedTestOpaque* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedTestOpaque() = delete;
-    RenamedTestOpaque(const somelib::ns::RenamedTestOpaque&) = delete;
-    RenamedTestOpaque(somelib::ns::RenamedTestOpaque&&) noexcept = delete;
-    RenamedTestOpaque operator=(const somelib::ns::RenamedTestOpaque&) = delete;
-    RenamedTestOpaque operator=(somelib::ns::RenamedTestOpaque&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

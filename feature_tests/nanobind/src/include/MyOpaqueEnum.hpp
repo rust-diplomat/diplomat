@@ -28,9 +28,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::MyOpaqueEnum> somelib::MyOpaqueEnum::new_() {
+inline somelib::MyOpaqueEnum somelib::MyOpaqueEnum::new_() {
     auto result = somelib::capi::MyOpaqueEnum_new();
-    return std::unique_ptr<somelib::MyOpaqueEnum>(somelib::MyOpaqueEnum::FromFFI(result));
+    return somelib::MyOpaqueEnum::FromFFI(result);
 }
 
 inline std::string somelib::MyOpaqueEnum::to_string() const {
@@ -45,26 +45,6 @@ inline void somelib::MyOpaqueEnum::to_string_write(W& writeable) const {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
     somelib::capi::MyOpaqueEnum_to_string(this->AsFFI(),
         &write);
-}
-
-inline const somelib::capi::MyOpaqueEnum* somelib::MyOpaqueEnum::AsFFI() const {
-    return reinterpret_cast<const somelib::capi::MyOpaqueEnum*>(this);
-}
-
-inline somelib::capi::MyOpaqueEnum* somelib::MyOpaqueEnum::AsFFI() {
-    return reinterpret_cast<somelib::capi::MyOpaqueEnum*>(this);
-}
-
-inline const somelib::MyOpaqueEnum* somelib::MyOpaqueEnum::FromFFI(const somelib::capi::MyOpaqueEnum* ptr) {
-    return reinterpret_cast<const somelib::MyOpaqueEnum*>(ptr);
-}
-
-inline somelib::MyOpaqueEnum* somelib::MyOpaqueEnum::FromFFI(somelib::capi::MyOpaqueEnum* ptr) {
-    return reinterpret_cast<somelib::MyOpaqueEnum*>(ptr);
-}
-
-inline void somelib::MyOpaqueEnum::operator delete(void* ptr) {
-    somelib::capi::MyOpaqueEnum_destroy(reinterpret_cast<somelib::capi::MyOpaqueEnum*>(ptr));
 }
 
 

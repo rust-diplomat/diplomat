@@ -12,8 +12,8 @@ void add_PrimitiveStruct_binding(nb::module_ mod) {
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::PrimitiveStruct>>(mod, "PrimitiveStructSlice"); 
     nb::class_<somelib::PrimitiveStruct> st(mod, "PrimitiveStruct");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<float, bool, char32_t, int64_t, intptr_t, uint8_t>(), "x"_a.none(),  "a"_a.none(),  "b"_a.none(),  "c"_a.none(),  "d"_a.none(),  "e"_a.none())
         .def_rw("x", &somelib::PrimitiveStruct::x)
         .def_rw("a", &somelib::PrimitiveStruct::a)

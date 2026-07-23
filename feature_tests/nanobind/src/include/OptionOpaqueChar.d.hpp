@@ -15,27 +15,22 @@
 namespace somelib {
 namespace capi {
     struct OptionOpaqueChar;
+    extern "C" {
+    void OptionOpaqueChar_destroy(OptionOpaqueChar* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class OptionOpaqueChar {
+class OptionOpaqueChar;
+using OptionOpaqueCharRef = somelib::diplomat::Ref<OptionOpaqueChar, const somelib::capi::OptionOpaqueChar>;
+using OptionOpaqueCharRefMut = somelib::diplomat::Ref<OptionOpaqueChar, somelib::capi::OptionOpaqueChar>;
+
+class OptionOpaqueChar : public somelib::diplomat::OpaquePointer<OptionOpaqueChar, somelib::capi::OptionOpaqueChar, somelib::capi::OptionOpaqueChar_destroy> {
 public:
 
   inline void assert_char(char32_t ch) const;
 
-    inline const somelib::capi::OptionOpaqueChar* AsFFI() const;
-    inline somelib::capi::OptionOpaqueChar* AsFFI();
-    inline static const somelib::OptionOpaqueChar* FromFFI(const somelib::capi::OptionOpaqueChar* ptr);
-    inline static somelib::OptionOpaqueChar* FromFFI(somelib::capi::OptionOpaqueChar* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    OptionOpaqueChar() = delete;
-    OptionOpaqueChar(const somelib::OptionOpaqueChar&) = delete;
-    OptionOpaqueChar(somelib::OptionOpaqueChar&&) noexcept = delete;
-    OptionOpaqueChar operator=(const somelib::OptionOpaqueChar&) = delete;
-    OptionOpaqueChar operator=(somelib::OptionOpaqueChar&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

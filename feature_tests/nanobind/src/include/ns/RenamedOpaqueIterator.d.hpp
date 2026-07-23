@@ -22,27 +22,22 @@ class AttrOpaque1Renamed;
 namespace somelib::ns {
 namespace capi {
     struct RenamedOpaqueIterator;
+    extern "C" {
+    void namespace_OpaqueIterator_destroy(RenamedOpaqueIterator* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedOpaqueIterator {
+class RenamedOpaqueIterator;
+using RenamedOpaqueIteratorRef = somelib::diplomat::Ref<RenamedOpaqueIterator, const somelib::ns::capi::RenamedOpaqueIterator>;
+using RenamedOpaqueIteratorRefMut = somelib::diplomat::Ref<RenamedOpaqueIterator, somelib::ns::capi::RenamedOpaqueIterator>;
+
+class RenamedOpaqueIterator : public somelib::diplomat::OpaquePointer<RenamedOpaqueIterator, somelib::ns::capi::RenamedOpaqueIterator, somelib::ns::capi::namespace_OpaqueIterator_destroy> {
 public:
 
-  inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> next();
+  inline somelib::diplomat::Optional<somelib::ns::AttrOpaque1Renamed> next();
 
-    inline const somelib::ns::capi::RenamedOpaqueIterator* AsFFI() const;
-    inline somelib::ns::capi::RenamedOpaqueIterator* AsFFI();
-    inline static const somelib::ns::RenamedOpaqueIterator* FromFFI(const somelib::ns::capi::RenamedOpaqueIterator* ptr);
-    inline static somelib::ns::RenamedOpaqueIterator* FromFFI(somelib::ns::capi::RenamedOpaqueIterator* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedOpaqueIterator() = delete;
-    RenamedOpaqueIterator(const somelib::ns::RenamedOpaqueIterator&) = delete;
-    RenamedOpaqueIterator(somelib::ns::RenamedOpaqueIterator&&) noexcept = delete;
-    RenamedOpaqueIterator operator=(const somelib::ns::RenamedOpaqueIterator&) = delete;
-    RenamedOpaqueIterator operator=(somelib::ns::RenamedOpaqueIterator&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

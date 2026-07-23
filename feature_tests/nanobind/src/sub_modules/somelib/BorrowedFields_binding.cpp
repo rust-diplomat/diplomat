@@ -7,8 +7,8 @@
 namespace somelib {
 void add_BorrowedFields_binding(nb::module_ mod) {
     nb::class_<somelib::BorrowedFields> st(mod, "BorrowedFields");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<std::u16string_view, std::string_view, std::string_view>(), "a"_a.none(),  "b"_a.none(),  "c"_a.none())
         .def_rw("a", &somelib::BorrowedFields::a)
         .def_rw("b", &somelib::BorrowedFields::b)

@@ -52,23 +52,23 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::make(int32_t x, int32_t y) {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::make(int32_t x, int32_t y) {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_make(x,
         y);
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::make(float x, float y, std::optional<float> z) {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::make(float x, float y, somelib::diplomat::Optional<float> z) {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_make_overload(x,
         y,
         z.has_value() ? (somelib::diplomat::capi::OptionF32{ { z.value() }, true }) : (somelib::diplomat::capi::OptionF32{ {}, false }));
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::make(float x, bool z) {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::make(float x, bool z) {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_make_overload_rename_arg(x,
         z);
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
 inline int32_t somelib::ns::RenamedOpaqueArithmetic::x() const {
@@ -87,28 +87,28 @@ inline int32_t somelib::ns::RenamedOpaqueArithmetic::y() const {
     return result;
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::operator+(const somelib::ns::RenamedOpaqueArithmetic& o) const {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::operator+(const somelib::ns::RenamedOpaqueArithmetic& o) const {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_add(this->AsFFI(),
         o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::operator-(const somelib::ns::RenamedOpaqueArithmetic& o) const {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::operator-(const somelib::ns::RenamedOpaqueArithmetic& o) const {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_sub(this->AsFFI(),
         o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::operator*(const somelib::ns::RenamedOpaqueArithmetic& o) const {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::operator*(const somelib::ns::RenamedOpaqueArithmetic& o) const {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_mul(this->AsFFI(),
         o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
-inline std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic> somelib::ns::RenamedOpaqueArithmetic::operator/(const somelib::ns::RenamedOpaqueArithmetic& o) const {
+inline somelib::ns::RenamedOpaqueArithmetic somelib::ns::RenamedOpaqueArithmetic::operator/(const somelib::ns::RenamedOpaqueArithmetic& o) const {
     auto result = somelib::ns::capi::namespace_OpaqueArithmetic_div(this->AsFFI(),
         o.AsFFI());
-    return std::unique_ptr<somelib::ns::RenamedOpaqueArithmetic>(somelib::ns::RenamedOpaqueArithmetic::FromFFI(result));
+    return somelib::ns::RenamedOpaqueArithmetic::FromFFI(result);
 }
 
 inline void somelib::ns::RenamedOpaqueArithmetic::operator+=(const somelib::ns::RenamedOpaqueArithmetic& o) {
@@ -129,26 +129,6 @@ inline void somelib::ns::RenamedOpaqueArithmetic::operator*=(const somelib::ns::
 inline void somelib::ns::RenamedOpaqueArithmetic::operator/=(const somelib::ns::RenamedOpaqueArithmetic& o) {
     somelib::ns::capi::namespace_OpaqueArithmetic_divassign(this->AsFFI(),
         o.AsFFI());
-}
-
-inline const somelib::ns::capi::RenamedOpaqueArithmetic* somelib::ns::RenamedOpaqueArithmetic::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedOpaqueArithmetic*>(this);
-}
-
-inline somelib::ns::capi::RenamedOpaqueArithmetic* somelib::ns::RenamedOpaqueArithmetic::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedOpaqueArithmetic*>(this);
-}
-
-inline const somelib::ns::RenamedOpaqueArithmetic* somelib::ns::RenamedOpaqueArithmetic::FromFFI(const somelib::ns::capi::RenamedOpaqueArithmetic* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedOpaqueArithmetic*>(ptr);
-}
-
-inline somelib::ns::RenamedOpaqueArithmetic* somelib::ns::RenamedOpaqueArithmetic::FromFFI(somelib::ns::capi::RenamedOpaqueArithmetic* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedOpaqueArithmetic*>(ptr);
-}
-
-inline void somelib::ns::RenamedOpaqueArithmetic::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_OpaqueArithmetic_destroy(reinterpret_cast<somelib::ns::capi::RenamedOpaqueArithmetic*>(ptr));
 }
 
 

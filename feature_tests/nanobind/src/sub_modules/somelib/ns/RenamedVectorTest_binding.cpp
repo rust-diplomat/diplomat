@@ -5,12 +5,7 @@
 
 namespace somelib::ns {
 void add_RenamedVectorTest_binding(nb::module_ mod) {
-    PyType_Slot somelib_ns_RenamedVectorTest_slots[] = {
-        {Py_tp_free, (void *)somelib::ns::RenamedVectorTest::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ns::RenamedVectorTest> opaque(mod, "RenamedVectorTest", nb::type_slots(somelib_ns_RenamedVectorTest_slots));
+    nb::class_<somelib::ns::RenamedVectorTest> opaque(mod, "RenamedVectorTest");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ns::RenamedVectorTest::new_))))
         .def("__getitem__", [](somelib::ns::RenamedVectorTest* self, size_t index) {

@@ -15,28 +15,24 @@
 namespace somelib::ns {
 namespace capi {
     struct RenamedBlockOverride;
+    extern "C" {
+    void namespace_BlockOverride_destroy(RenamedBlockOverride* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
 
 //Pre Test
-class RenamedBlockOverride {
+class RenamedBlockOverride;
+using RenamedBlockOverrideRef = somelib::diplomat::Ref<RenamedBlockOverride, const somelib::ns::capi::RenamedBlockOverride>;
+using RenamedBlockOverrideRefMut = somelib::diplomat::Ref<RenamedBlockOverride, somelib::ns::capi::RenamedBlockOverride>;
+
+class RenamedBlockOverride : public somelib::diplomat::OpaquePointer<RenamedBlockOverride, somelib::ns::capi::RenamedBlockOverride, somelib::ns::capi::namespace_BlockOverride_destroy> {
 public:
 
-    inline const somelib::ns::capi::RenamedBlockOverride* AsFFI() const;
-    inline somelib::ns::capi::RenamedBlockOverride* AsFFI();
-    inline static const somelib::ns::RenamedBlockOverride* FromFFI(const somelib::ns::capi::RenamedBlockOverride* ptr);
-    inline static somelib::ns::RenamedBlockOverride* FromFFI(somelib::ns::capi::RenamedBlockOverride* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedBlockOverride() = delete;
-    RenamedBlockOverride(const somelib::ns::RenamedBlockOverride&) = delete;
-    RenamedBlockOverride(somelib::ns::RenamedBlockOverride&&) noexcept = delete;
-    RenamedBlockOverride operator=(const somelib::ns::RenamedBlockOverride&) = delete;
-    RenamedBlockOverride operator=(somelib::ns::RenamedBlockOverride&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 
+private:
 public:
     const static bool custom_bool = false;
     static std::string special_function();

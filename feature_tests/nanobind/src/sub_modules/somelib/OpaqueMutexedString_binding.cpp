@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_OpaqueMutexedString_binding(nb::module_ mod) {
-    PyType_Slot somelib_OpaqueMutexedString_slots[] = {
-        {Py_tp_free, (void *)somelib::OpaqueMutexedString::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::OpaqueMutexedString> opaque(mod, "OpaqueMutexedString", nb::type_slots(somelib_OpaqueMutexedString_slots));
+    nb::class_<somelib::OpaqueMutexedString> opaque(mod, "OpaqueMutexedString");
     opaque
         .def("borrow", &somelib::OpaqueMutexedString::borrow, nb::rv_policy::reference_internal)
         .def_static("borrow_other", &somelib::OpaqueMutexedString::borrow_other, "other"_a, nb::rv_policy::reference)

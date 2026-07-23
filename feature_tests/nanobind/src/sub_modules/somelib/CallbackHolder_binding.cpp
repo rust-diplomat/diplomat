@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_CallbackHolder_binding(nb::module_ mod) {
-    PyType_Slot somelib_CallbackHolder_slots[] = {
-        {Py_tp_free, (void *)somelib::CallbackHolder::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::CallbackHolder> opaque(mod, "CallbackHolder", nb::type_slots(somelib_CallbackHolder_slots));
+    nb::class_<somelib::CallbackHolder> opaque(mod, "CallbackHolder");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::CallbackHolder::new_))), "func"_a)
         .def("call", &somelib::CallbackHolder::call, "a"_a);

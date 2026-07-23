@@ -33,7 +33,7 @@ namespace somelib::ns {
 struct RenamedPartialComparableSlice {
     float f;
 
-  inline std::optional<int8_t> partial_cmp(const somelib::ns::RenamedPartialComparableSlice& other) const;
+  inline somelib::diplomat::Optional<int8_t> partial_cmp(const somelib::ns::RenamedPartialComparableSlice& other) const;
 
   inline std::optional<bool> operator==(const somelib::ns::RenamedPartialComparableSlice& other) const;
   inline std::optional<bool> operator!=(const somelib::ns::RenamedPartialComparableSlice& other) const;

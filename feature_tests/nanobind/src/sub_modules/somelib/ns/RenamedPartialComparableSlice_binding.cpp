@@ -13,8 +13,8 @@ void add_RenamedPartialComparableSlice_binding(nb::module_ mod) {
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::ns::RenamedPartialComparableSlice>>(mod, "RenamedPartialComparableSliceSlice"); 
     nb::class_<somelib::ns::RenamedPartialComparableSlice> st(mod, "RenamedPartialComparableSlice");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<float>(), "f"_a.none())
         .def_rw("f", &somelib::ns::RenamedPartialComparableSlice::f)
         .def(nb::self == nb::self)

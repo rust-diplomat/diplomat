@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_OpaqueThinIter_binding(nb::module_ mod) {
-    PyType_Slot somelib_OpaqueThinIter_slots[] = {
-        {Py_tp_free, (void *)somelib::OpaqueThinIter::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::OpaqueThinIter> opaque(mod, "OpaqueThinIter", nb::type_slots(somelib_OpaqueThinIter_slots));
+    nb::class_<somelib::OpaqueThinIter> opaque(mod, "OpaqueThinIter");
     opaque
         .def("__next__", [](somelib::OpaqueThinIter& self){
                 auto next = self.next();

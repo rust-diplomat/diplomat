@@ -12,8 +12,8 @@ void add_ScalarPairWithPadding_binding(nb::module_ mod) {
     // TL;DR: this creates a faux list type that makes it easier to pass vectors of this type in Python without copying. 
     nb::bind_vector<std::vector<somelib::ScalarPairWithPadding>>(mod, "ScalarPairWithPaddingSlice"); 
     nb::class_<somelib::ScalarPairWithPadding> st(mod, "ScalarPairWithPadding", "Testing JS-specific layout/padding behavior");
+    maybe_bind_default_init(st);
     st
-        .def(nb::init<>())
         .def(nb::init<uint8_t, uint32_t>(), "first"_a.none(),  "second"_a.none())
         .def_rw("first", &somelib::ScalarPairWithPadding::first)
         .def_rw("second", &somelib::ScalarPairWithPadding::second)

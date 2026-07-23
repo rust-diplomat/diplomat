@@ -22,14 +22,21 @@ class RenamedComparable;
 namespace somelib::ns {
 namespace capi {
     struct RenamedComparable;
+    extern "C" {
+    void namespace_Comparable_destroy(RenamedComparable* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib::ns {
-class RenamedComparable {
+class RenamedComparable;
+using RenamedComparableRef = somelib::diplomat::Ref<RenamedComparable, const somelib::ns::capi::RenamedComparable>;
+using RenamedComparableRefMut = somelib::diplomat::Ref<RenamedComparable, somelib::ns::capi::RenamedComparable>;
+
+class RenamedComparable : public somelib::diplomat::OpaquePointer<RenamedComparable, somelib::ns::capi::RenamedComparable, somelib::ns::capi::namespace_Comparable_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::ns::RenamedComparable> new_(uint8_t int_);
+  inline static somelib::ns::RenamedComparable new_(uint8_t int_);
 
   inline int8_t cmp(const somelib::ns::RenamedComparable& other) const;
 
@@ -40,18 +47,6 @@ public:
   inline bool operator<(const somelib::ns::RenamedComparable& other) const;
   inline bool operator>(const somelib::ns::RenamedComparable& other) const;
 
-    inline const somelib::ns::capi::RenamedComparable* AsFFI() const;
-    inline somelib::ns::capi::RenamedComparable* AsFFI();
-    inline static const somelib::ns::RenamedComparable* FromFFI(const somelib::ns::capi::RenamedComparable* ptr);
-    inline static somelib::ns::RenamedComparable* FromFFI(somelib::ns::capi::RenamedComparable* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    RenamedComparable() = delete;
-    RenamedComparable(const somelib::ns::RenamedComparable&) = delete;
-    RenamedComparable(somelib::ns::RenamedComparable&&) noexcept = delete;
-    RenamedComparable operator=(const somelib::ns::RenamedComparable&) = delete;
-    RenamedComparable operator=(somelib::ns::RenamedComparable&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

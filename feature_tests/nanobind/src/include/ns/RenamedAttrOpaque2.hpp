@@ -24,25 +24,5 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline const somelib::ns::capi::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::AsFFI() const {
-    return reinterpret_cast<const somelib::ns::capi::RenamedAttrOpaque2*>(this);
-}
-
-inline somelib::ns::capi::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::AsFFI() {
-    return reinterpret_cast<somelib::ns::capi::RenamedAttrOpaque2*>(this);
-}
-
-inline const somelib::ns::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::FromFFI(const somelib::ns::capi::RenamedAttrOpaque2* ptr) {
-    return reinterpret_cast<const somelib::ns::RenamedAttrOpaque2*>(ptr);
-}
-
-inline somelib::ns::RenamedAttrOpaque2* somelib::ns::RenamedAttrOpaque2::FromFFI(somelib::ns::capi::RenamedAttrOpaque2* ptr) {
-    return reinterpret_cast<somelib::ns::RenamedAttrOpaque2*>(ptr);
-}
-
-inline void somelib::ns::RenamedAttrOpaque2::operator delete(void* ptr) {
-    somelib::ns::capi::namespace_AttrOpaque2_destroy(reinterpret_cast<somelib::ns::capi::RenamedAttrOpaque2*>(ptr));
-}
-
 
 #endif // SOMELIB_ns_RenamedAttrOpaque2_HPP

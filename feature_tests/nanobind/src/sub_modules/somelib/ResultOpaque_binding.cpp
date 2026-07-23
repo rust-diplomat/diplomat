@@ -5,12 +5,7 @@
 
 namespace somelib {
 void add_ResultOpaque_binding(nb::module_ mod) {
-    PyType_Slot somelib_ResultOpaque_slots[] = {
-        {Py_tp_free, (void *)somelib::ResultOpaque::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ResultOpaque> opaque(mod, "ResultOpaque", nb::type_slots(somelib_ResultOpaque_slots));
+    nb::class_<somelib::ResultOpaque> opaque(mod, "ResultOpaque");
     opaque
         .def(nb::new_(std::move(maybe_op_unwrap(&somelib::ResultOpaque::new_))), "i"_a)
         .def("assert_integer", &somelib::ResultOpaque::assert_integer, "i"_a)

@@ -26,14 +26,21 @@ struct RenamedStructWithAttrs;
 namespace somelib {
 namespace capi {
     struct PrimitiveStructVec;
+    extern "C" {
+    void PrimitiveStructVec_destroy(PrimitiveStructVec* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class PrimitiveStructVec {
+class PrimitiveStructVec;
+using PrimitiveStructVecRef = somelib::diplomat::Ref<PrimitiveStructVec, const somelib::capi::PrimitiveStructVec>;
+using PrimitiveStructVecRefMut = somelib::diplomat::Ref<PrimitiveStructVec, somelib::capi::PrimitiveStructVec>;
+
+class PrimitiveStructVec : public somelib::diplomat::OpaquePointer<PrimitiveStructVec, somelib::capi::PrimitiveStructVec, somelib::capi::PrimitiveStructVec_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::PrimitiveStructVec> new_();
+  inline static somelib::PrimitiveStructVec new_();
 
   inline void append(somelib::PrimitiveStruct value);
 
@@ -41,24 +48,12 @@ public:
 
   inline somelib::diplomat::span<const somelib::PrimitiveStruct> as_slice() const DIPLOMAT_LIFETIME_BOUND;
 
-  inline std::optional<somelib::PrimitiveStruct> operator[](size_t idx) const;
+  inline somelib::diplomat::Optional<somelib::PrimitiveStruct> operator[](size_t idx) const;
 
   inline static void take_slice_from_other_namespace(somelib::diplomat::span<const somelib::ns::RenamedStructWithAttrs> _sl);
 
-  inline static std::unique_ptr<somelib::PrimitiveStructVec> take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a);
+  inline static somelib::PrimitiveStructVec take_in_slice(somelib::diplomat::span<const somelib::PrimitiveStruct> a);
 
-    inline const somelib::capi::PrimitiveStructVec* AsFFI() const;
-    inline somelib::capi::PrimitiveStructVec* AsFFI();
-    inline static const somelib::PrimitiveStructVec* FromFFI(const somelib::capi::PrimitiveStructVec* ptr);
-    inline static somelib::PrimitiveStructVec* FromFFI(somelib::capi::PrimitiveStructVec* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    PrimitiveStructVec() = delete;
-    PrimitiveStructVec(const somelib::PrimitiveStructVec&) = delete;
-    PrimitiveStructVec(somelib::PrimitiveStructVec&&) noexcept = delete;
-    PrimitiveStructVec operator=(const somelib::PrimitiveStructVec&) = delete;
-    PrimitiveStructVec operator=(somelib::PrimitiveStructVec&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

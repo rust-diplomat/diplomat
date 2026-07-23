@@ -20,29 +20,24 @@ class MutableCallbackHolder;
 namespace somelib {
 namespace capi {
     struct MutableCallbackHolder;
+    extern "C" {
+    void MutableCallbackHolder_destroy(MutableCallbackHolder* self);
+    }
 } // namespace capi
 } // namespace
 
 namespace somelib {
-class MutableCallbackHolder {
+class MutableCallbackHolder;
+using MutableCallbackHolderRef = somelib::diplomat::Ref<MutableCallbackHolder, const somelib::capi::MutableCallbackHolder>;
+using MutableCallbackHolderRefMut = somelib::diplomat::Ref<MutableCallbackHolder, somelib::capi::MutableCallbackHolder>;
+
+class MutableCallbackHolder : public somelib::diplomat::OpaquePointer<MutableCallbackHolder, somelib::capi::MutableCallbackHolder, somelib::capi::MutableCallbackHolder_destroy> {
 public:
 
-  inline static std::unique_ptr<somelib::MutableCallbackHolder> new_(std::function<int32_t(int32_t)> func);
+  inline static somelib::MutableCallbackHolder new_(std::function<int32_t(int32_t)> func);
 
   inline int32_t call(int32_t a);
 
-    inline const somelib::capi::MutableCallbackHolder* AsFFI() const;
-    inline somelib::capi::MutableCallbackHolder* AsFFI();
-    inline static const somelib::MutableCallbackHolder* FromFFI(const somelib::capi::MutableCallbackHolder* ptr);
-    inline static somelib::MutableCallbackHolder* FromFFI(somelib::capi::MutableCallbackHolder* ptr);
-    inline static void operator delete(void* ptr);
-private:
-    MutableCallbackHolder() = delete;
-    MutableCallbackHolder(const somelib::MutableCallbackHolder&) = delete;
-    MutableCallbackHolder(somelib::MutableCallbackHolder&&) noexcept = delete;
-    MutableCallbackHolder operator=(const somelib::MutableCallbackHolder&) = delete;
-    MutableCallbackHolder operator=(somelib::MutableCallbackHolder&&) noexcept = delete;
-    static void operator delete[](void*, size_t) = delete;
 };
 
 } // namespace

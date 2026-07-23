@@ -26,9 +26,9 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline somelib::diplomat::result<somelib::FallibleOpaqueConstructor, std::unique_ptr<somelib::ResultOpaque>> somelib::FallibleOpaqueConstructor::ctor() {
+inline somelib::diplomat::result<somelib::FallibleOpaqueConstructor, somelib::ResultOpaque> somelib::FallibleOpaqueConstructor::ctor() {
     auto result = somelib::capi::FallibleOpaqueConstructor_ctor();
-    return result.is_ok ? somelib::diplomat::result<somelib::FallibleOpaqueConstructor, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Ok<somelib::FallibleOpaqueConstructor>(somelib::FallibleOpaqueConstructor::FromFFI(result.ok))) : somelib::diplomat::result<somelib::FallibleOpaqueConstructor, std::unique_ptr<somelib::ResultOpaque>>(somelib::diplomat::Err<std::unique_ptr<somelib::ResultOpaque>>(std::unique_ptr<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err))));
+    return result.is_ok ? somelib::diplomat::result<somelib::FallibleOpaqueConstructor, somelib::ResultOpaque>(somelib::diplomat::Ok<somelib::FallibleOpaqueConstructor>(somelib::FallibleOpaqueConstructor::FromFFI(result.ok))) : somelib::diplomat::result<somelib::FallibleOpaqueConstructor, somelib::ResultOpaque>(somelib::diplomat::Err<somelib::ResultOpaque>(somelib::ResultOpaque::FromFFI(result.err)));
 }
 
 

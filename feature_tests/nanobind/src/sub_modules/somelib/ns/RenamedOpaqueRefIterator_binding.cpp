@@ -5,12 +5,7 @@
 
 namespace somelib::ns {
 void add_RenamedOpaqueRefIterator_binding(nb::module_ mod) {
-    PyType_Slot somelib_ns_RenamedOpaqueRefIterator_slots[] = {
-        {Py_tp_free, (void *)somelib::ns::RenamedOpaqueRefIterator::operator delete },
-        {Py_tp_dealloc, (void *)diplomat_tp_dealloc},
-        {0, nullptr}};
-    
-    nb::class_<somelib::ns::RenamedOpaqueRefIterator> opaque(mod, "RenamedOpaqueRefIterator", nb::type_slots(somelib_ns_RenamedOpaqueRefIterator_slots));
+    nb::class_<somelib::ns::RenamedOpaqueRefIterator> opaque(mod, "RenamedOpaqueRefIterator");
     opaque
         .def("__next__", [](somelib::ns::RenamedOpaqueRefIterator& self){
                 auto next = self.next();
