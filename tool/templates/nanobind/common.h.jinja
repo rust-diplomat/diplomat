@@ -301,7 +301,31 @@ namespace nanobind::detail
     // rather than needing separate knowledge of `Ref`.
     template <typename T>
     struct type_caster<{{lib_name}}::diplomat::Optional<T>>
-        : optional_caster<{{lib_name}}::diplomat::Optional<T>> {};
+        : optional_caster<{{lib_name}}::diplomat::Optional<T>> {
+        // `optional_caster::from_cpp` (nanobind's stock implementation, inherited above) does
+        // `Caster::from_cpp(forward_like_<T_>(*value), ...)`, where `*value` reinterprets the
+        // Optional's own pointer-sized storage as a `Foo&` -- fine to read momentarily while the
+        // Optional itself is alive, but not a real, independently-addressable `Foo`. For the
+        // Ref-based specialization (see runtime.hpp.jinja) that leaves nanobind holding a dangling
+        // pointer the instant the (usually temporary) Optional is destroyed. Override from_cpp for
+        // that case only, using the same heap-allocate-and-leak approach as the bare
+        // `Ref<T, CPtr>` caster above; everything else (from_python, Name, ...) still comes from
+        // `optional_caster` unmodified.
+        template <typename T_>
+        static handle from_cpp(T_&& value, rv_policy policy, cleanup_list* cleanup) noexcept {
+            if constexpr ({{lib_name}}::diplomat::is_pointer_like_v<T> && std::is_copy_constructible_v<T>) {
+                if (!value) {
+                    return none().release();
+                }
+                using ValueType = typename {{lib_name}}::diplomat::Optional<T>::value_type;
+                using CPtr = std::remove_pointer_t<decltype(value.AsFFI())>;
+                auto* heap_view = new ValueType(ValueType::FromFFI(const_cast<std::remove_const_t<CPtr>*>(value.AsFFI())));
+                return make_caster<ValueType>::from_cpp(heap_view, rv_policy::reference, cleanup);
+            } else {
+                return optional_caster<{{lib_name}}::diplomat::Optional<T>>::from_cpp(std::forward<T_>(value), policy, cleanup);
+            }
+        }
+    };
 
     template <typename T, std::size_t E>
     class type_caster<{{lib_name}}::diplomat::span<T, E>> {
