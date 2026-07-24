@@ -27,6 +27,10 @@ internal partial struct Opaque
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Opaque_returns_usize", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint ReturnsUsize();
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "Opaque_echo_bool", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool EchoBool([MarshalAs(UnmanagedType.U1)] bool x);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "Opaque_returns_imported", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ImportedStruct ReturnsImported();
 

@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace Somelib.Raw;
 
 using Somelib;
+using Somelib.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct DiplomatResultIntBorrowingError
@@ -17,8 +18,7 @@ internal partial struct DiplomatResultIntBorrowingError
 
     private InnerUnion _inner;
 
-    [MarshalAs(UnmanagedType.U1)]
-    public bool IsOk;
+    public DiplomatBool IsOk;
     public int Ok => IsOk ? _inner.ok : throw new InvalidOperationException("Result does not contain Ok value");
     public unsafe BorrowingError* Err => !IsOk ? _inner.err : throw new InvalidOperationException("Result does not contain Err value");
 }

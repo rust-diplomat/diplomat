@@ -62,4 +62,11 @@ public class OpaqueTests
         // Disposed arg must throw, not feed a freed pointer to native (UAF).
         Assert.Throws<ObjectDisposedException>(() => OptionOpaque.OptionOpaqueArgument(arg));
     }
+
+    [Fact]
+    public void EchoBool_RoundTripsBothDirections()
+    {
+        Assert.True(Opaque.EchoBool(true));
+        Assert.False(Opaque.EchoBool(false));
+    }
 }

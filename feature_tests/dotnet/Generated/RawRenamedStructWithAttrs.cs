@@ -9,8 +9,7 @@ namespace Somelib.Raw;
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct RenamedStructWithAttrs
 {
-    [MarshalAs(UnmanagedType.U1)]
-    public bool A;
+    public DiplomatBool A;
     public uint B;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "namespace_StructWithAttrs_new_fallible", CallingConvention = CallingConvention.Cdecl)]

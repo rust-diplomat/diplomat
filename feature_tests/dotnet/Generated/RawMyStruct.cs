@@ -10,8 +10,7 @@ namespace Somelib.Raw;
 internal partial struct MyStruct
 {
     public byte A;
-    [MarshalAs(UnmanagedType.U1)]
-    public bool B;
+    public DiplomatBool B;
     public byte C;
     public ulong D;
     public int E;

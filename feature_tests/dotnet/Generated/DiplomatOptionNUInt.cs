@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace Somelib.Raw;
 
 using Somelib;
+using Somelib.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct DiplomatOptionNUInt
@@ -16,8 +17,7 @@ internal partial struct DiplomatOptionNUInt
 
     private InnerUnion _inner;
 
-    [MarshalAs(UnmanagedType.U1)]
-    public bool IsSome;
+    public DiplomatBool IsSome;
 
     public nuint Value => IsSome ? _inner.value : throw new InvalidOperationException("Option is None");
 }

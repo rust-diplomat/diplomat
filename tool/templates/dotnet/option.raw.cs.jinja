@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace {{ namespace }}.Raw;
 
 using {{ namespace }};
+using {{ namespace }}.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct {{ option_struct_name }}
@@ -19,8 +20,7 @@ internal partial struct {{ option_struct_name }}
 
     private InnerUnion _inner;
 
-    [MarshalAs(UnmanagedType.U1)]
-    public bool IsSome;
+    public DiplomatBool IsSome;
 
     public {{ inner.raw() }} Value => IsSome ? {{ inner.read_union_field("_inner.value") }} : throw new InvalidOperationException("Option is None");
 }
