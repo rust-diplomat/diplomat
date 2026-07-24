@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace {{ namespace }}.Raw;
 
 using {{ namespace }};
+using {{ namespace }}.Diplomat;
 
 [StructLayout(LayoutKind.Sequential)]
 internal partial struct {{ result_struct_name }}
@@ -28,8 +29,7 @@ internal partial struct {{ result_struct_name }}
     private InnerUnion _inner;
     {%- endif %}
 
-    [MarshalAs(UnmanagedType.U1)]
-    public bool IsOk;
+    public DiplomatBool IsOk;
 
     {%- if !ok_result.is_void() %}
     public {% if ok_result.is_opaque() %}unsafe {% endif %}{{ ok_result.raw() }} Ok => IsOk ? {{ ok_result.read_union_field("_inner.ok") }} : throw new InvalidOperationException("Result does not contain Ok value");

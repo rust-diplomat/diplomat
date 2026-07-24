@@ -147,6 +147,14 @@ public partial class Opaque: IDisposable
         }
     }
 
+    public static bool EchoBool(bool x)
+    {
+        unsafe
+        {
+            return Raw.Opaque.EchoBool(x);
+        }
+    }
+
     public static ImportedStruct ReturnsImported()
     {
         unsafe

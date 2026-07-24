@@ -16,7 +16,12 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- net48 runs the suite on the legacy .NET Framework CLR, where
+         non-blittable-by-value marshalling (the Result/Option/struct bool tags)
+         has to keep working. It only builds on Windows, so Linux/macOS (and CI's
+         ubuntu leg) get net8 alone. -->
+    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('Windows'))">net8.0;net48</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -48,9 +53,25 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- .NET Framework only. net8 ignores all of this; it's here so the same
+       sources also run on the legacy CLR. net48 has no Span/Memory in the BCL
+       (System.Memory backfills it), and the vstest host needs binding redirects
+       (net48.config) to load a single System.Memory version. -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <AppConfig>net48.config</AppConfig>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
   <!-- Copy the Rust-built cdylib next to the test assembly so P/Invoke
        (DllImport "diplomat_feature_tests") resolves it at runtime. -->
-  <Target Name="CopyNativeLib" BeforeTargets="Build">
+  <!-- Only in the per-TFM inner build: the multi-target outer build has no
+       $(TargetFramework)/$(OutDir), so the copy has nowhere to go. -->
+  <Target Name="CopyNativeLib" BeforeTargets="Build" Condition="'$(TargetFramework)' != ''">
     <Copy SourceFiles="$(NativeLibPath)"
           DestinationFolder="$(OutDir)"
           Condition="Exists('$(NativeLibPath)')"
