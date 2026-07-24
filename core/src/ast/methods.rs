@@ -248,25 +248,21 @@ pub struct SelfParam {
     pub attrs: Attrs,
 }
 
-fn receiver_to_reference(rec : &syn::Receiver, module_location : &SpanLocation) -> Option<(Lifetime, Mutability)> {
+fn receiver_to_reference(
+    rec: &syn::Receiver,
+    module_location: &SpanLocation,
+) -> Option<(Lifetime, Mutability)> {
     match &rec.kind {
         syn::ReceiverKind::Reference(_, lt, mt) => {
-            Some(
-                (
-                    lt.spanned_into(module_location),
-                    Mutability::from_syn(mt),
-                )
-            )
+            Some((lt.spanned_into(module_location), Mutability::from_syn(mt)))
         }
-        syn::ReceiverKind::Value => {
-            None
-        }
+        syn::ReceiverKind::Value => None,
         _ => create_report(AstReport::new(
             "Unsupported receiver".into(),
             Some(rec.span().spanned_into(module_location)),
             "Diplomat only supports `&[mut] self` references or `[mut] self` values.".into(),
-            vec![]
-        ))
+            vec![],
+        )),
     }
 }
 

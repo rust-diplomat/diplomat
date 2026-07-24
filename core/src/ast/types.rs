@@ -127,7 +127,11 @@ impl PathType {
             }
         }
 
-        syn::TypePath { qself: None, path, attrs: vec![] }
+        syn::TypePath {
+            qself: None,
+            path,
+            attrs: vec![],
+        }
     }
 
     pub fn new(path: Path) -> Self {
