@@ -420,7 +420,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "syn 2.0.99",
+ "syn 3.0.3",
  "syn-inline-mod",
  "toml 0.8.20",
 ]
