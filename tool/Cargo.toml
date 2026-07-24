@@ -18,7 +18,8 @@ path = "src/main.rs"
 [dependencies]
 diplomat_core = { workspace = true, features = ["hir", "pretty-print"] }
 syn = { version = "3.0", features = ["full", "extra-traits"] }
-syn-inline-mod = "0.6.0"
+# FIXME: Temp pointer to fork
+syn-inline-mod = {git = "https://github.com/rust-diplomat/syn-inline-mod.git", rev = "6f9024324bcae233ee4ba2987ab463f151813da6"}
 quote = "1.0"
 indenter = "0.3.3"
 clap = { features = ["color", "derive", "std", "suggestions"], version = "4.2" }
