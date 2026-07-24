@@ -46,8 +46,9 @@ impl Trait {
         let self_path_trait = PathType::spanned_from(
             &syn::TraitBound {
                 paren_token: None,
-                modifier: syn::TraitBoundModifier::None,
+                modifiers: syn::TraitBoundModifiers::default(),
                 lifetimes: None, // todo this is an assumption
+                maybe: None,
                 path: syn::PathSegment {
                     ident: self_ident.clone(),
                     arguments: syn::PathArguments::None,

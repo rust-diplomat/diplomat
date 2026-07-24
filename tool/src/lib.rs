@@ -100,7 +100,7 @@ pub fn gen(
 
     // Config:
     // Just search the top-level lib.rs for the Config attributes for now. We can re-configure this to use AST to search ALL modules if need be.
-    let cfg = find_top_level_attr(module.items.clone());
+    let cfg = find_top_level_attr(module.items.as_slice());
     for attr in cfg {
         for kvp in attr.key_value_pairs {
             config.set(&kvp.key, toml_value_from_str(&kvp.value));

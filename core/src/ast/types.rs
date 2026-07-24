@@ -127,7 +127,11 @@ impl PathType {
             }
         }
 
-        syn::TypePath { qself: None, path }
+        syn::TypePath {
+            qself: None,
+            path,
+            attrs: vec![],
+        }
     }
 
     pub fn new(path: Path) -> Self {
@@ -271,8 +275,9 @@ impl PathType {
         }
         syn::TraitBound {
             paren_token: None,
-            modifier: syn::TraitBoundModifier::None,
+            modifiers: syn::TraitBoundModifiers::default(),
             lifetimes: None, // todo this is an assumption
+            maybe: None,
             path,
         }
     }
@@ -1269,7 +1274,7 @@ impl TypeName {
                                         if let syn::Type::Reference(syn::TypeReference {
                                             lifetime: Some(in_lifetime),
                                             ..
-                                        }) = input_type
+                                        }) = &input_type.ty
                                         {
                                             create_report(AstReport::new(
                                                 "Lifetimes are not allowed on callback parameters"
@@ -1292,7 +1297,7 @@ impl TypeName {
                                         .iter()
                                         .map(|in_ty| {
                                             Box::new(TypeName::from_syn(
-                                                in_ty,
+                                                &in_ty.ty,
                                                 self_path_type.clone(),
                                                 module_location,
                                             ))
@@ -1329,8 +1334,9 @@ impl TypeName {
                                 ret_type = Some(TypeName::ImplTrait(
                                     (&syn::TraitBound {
                                         paren_token: None,
-                                        modifier: syn::TraitBoundModifier::None,
+                                        modifiers: syn::TraitBoundModifiers::default(),
                                         lifetimes: None, // todo this is an assumption
+                                        maybe: None,
                                         path: p.clone(),
                                     })
                                         .spanned_into(module_location),

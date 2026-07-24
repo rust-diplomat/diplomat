@@ -287,7 +287,7 @@ impl Parse for DiplomatBackendConfigKeyValue {
     }
 }
 
-pub(crate) fn find_top_level_attr(module_items: Vec<syn::Item>) -> Vec<DiplomatBackendConfigAttr> {
+pub(crate) fn find_top_level_attr(module_items: &[syn::Item]) -> Vec<DiplomatBackendConfigAttr> {
     let path = syn::parse_str("diplomat::config").unwrap();
 
     let attrs = module_items
