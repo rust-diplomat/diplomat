@@ -58,12 +58,9 @@
                   { {{type_name}}::{{setter_name}}(
                     {%- for p in m.param_decls.params -%}{%- if !loop.first -%}, {% endif -%}{{p.name}}{%- endfor -%}); }
             {%- endif -%}
-            {{- method_params::params(m.method.params, m.lifetime_args) }}
-        {%- else -%}
-            {#- Read-only getters still need their keep_alive/rv_policy annotations: a getter
-                returning a borrowed view must keep self alive while the view exists. -#}
-            {%- if let Some(lifetime_args) = m.lifetime_args %}, {{lifetime_args}}{% endif %}
         {%- endif -%}
+        {#- Always render the parameters/lifetime annotations after a property definition. -#}
+        {{- method_params::params(m.method.params, m.lifetime_args) }}
         {%- if let Some(doc) = m.docstring %}, {{doc}}{% endif -%})
     {%- when crate::hir::SpecialMethod::Constructor -%}
         {{- gen_constructor_body(m.cpp_method_name, m.param_decls.params.clone(), m.docstring.clone()) -}}
