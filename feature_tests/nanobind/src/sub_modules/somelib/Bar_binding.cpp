@@ -12,7 +12,7 @@ void add_Bar_binding(nb::module_ mod) {
     
     nb::class_<somelib::Bar> opaque(mod, "Bar", nb::type_slots(somelib_Bar_slots));
     opaque
-        .def_prop_ro("foo", &somelib::Bar::foo);
+        .def_prop_ro("foo", &somelib::Bar::foo, nb::rv_policy::reference_internal);
 }
 
 } 

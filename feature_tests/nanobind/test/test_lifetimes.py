@@ -38,3 +38,16 @@ def test_fill_lifetimes():
     gc.collect()
 
     assert c.c == "This is a test"
+
+def test_getter_borrow():
+    f = somelib.Foo("test")
+    # Bar should be kept alive as long as foo:
+    b = f.bar
+    assert b.foo.as_returning().bytes == 'test'
+    del f
+    # Fool the garbage collector again:
+    for i in range(0, 10000):
+        f = somelib.OpaqueThinVec([120, 2], [.1, .2], "This is adifferent test")
+    gc.collect()
+    # The memory underlying Foo is kept alive, even after deletion:
+    assert b.foo.as_returning().bytes == 'test'
