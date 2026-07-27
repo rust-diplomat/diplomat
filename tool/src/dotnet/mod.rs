@@ -250,7 +250,9 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.constructors = false;
     a.named_constructors = false;
     a.fallible_constructors = false;
-    a.accessors = false;
+    // Getters and setters become C# properties. Static ones stay off, matching
+    // the Dart and JS backends.
+    a.accessors = true;
     a.static_accessors = false;
     a.stringifiers = false;
     a.comparators = false;
@@ -279,10 +281,6 @@ pub struct DotnetConfig {
     pub exception_trim_suffix: Option<String>,
     /// Error method used for exception messages, e.g. `ToDisplay`.
     pub exception_message_method: Option<String>,
-    /// Prefix identifying property getters, e.g. `get_`.
-    pub getters_prefix: Option<String>,
-    /// Prefix identifying property setters, e.g. `set_`.
-    pub setters_prefix: Option<String>,
     /// If `true`, emit a `.csproj` scaffold next to the generated sources.
     pub scaffold: Option<bool>,
 }
@@ -301,12 +299,6 @@ impl DotnetConfig {
             }
             "exception_message_method" | "exceptions.error_message_method" if value.is_str() => {
                 self.exception_message_method = value.as_str().map(str::to_string);
-            }
-            "getters_prefix" | "properties.getters_prefix" if value.is_str() => {
-                self.getters_prefix = value.as_str().map(str::to_string);
-            }
-            "setters_prefix" | "properties.setters_prefix" if value.is_str() => {
-                self.setters_prefix = value.as_str().map(str::to_string);
             }
             "scaffold" => {
                 self.scaffold = value
@@ -380,8 +372,6 @@ pub(crate) fn run<'tcx>(
         namespace: &namespace,
         exception_trim_suffix: config.dotnet_config.exception_trim_suffix.as_deref(),
         exception_message_method: config.dotnet_config.exception_message_method.as_deref(),
-        getters_prefix: config.dotnet_config.getters_prefix.as_deref(),
-        setters_prefix: config.dotnet_config.setters_prefix.as_deref(),
         result_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         option_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
@@ -615,7 +605,7 @@ mod test {
     fn new_tcx(tk_stream: proc_macro2::TokenStream) -> TypeContext {
         let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
 
-        let mut attr_validator = BasicAttributeValidator::new("dotnet_test");
+        let mut attr_validator = BasicAttributeValidator::new("dotnet");
         attr_validator.support = super::attr_support();
 
         match TypeContext::from_syn(
@@ -644,7 +634,7 @@ mod test {
     ) -> Vec<String> {
         let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
 
-        let mut attr_validator = BasicAttributeValidator::new("dotnet_test");
+        let mut attr_validator = BasicAttributeValidator::new("dotnet");
         attr_validator.support = super::attr_support();
         attr_validator.support.owned_byte_slice_returns = owned_byte_slice_returns;
 
@@ -2101,6 +2091,956 @@ mod test {
             errors[0].contains("wrapping a borrowed span return"),
             "unexpected diagnostics: {}",
             errors.join("\n")
+        );
+    }
+
+    fn property_test_module(methods: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+        quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Config;
+
+                impl Config {
+                    #methods
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn getter_and_setter_pair_share_one_property() {
+        let (files, _errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn size(&self) -> usize {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size(&self, size: usize) {
+                unimplemented!()
+            }
+        }));
+
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public nuint Size"),
+            "expected a Size property, got:
+{config}"
+        );
+        assert!(
+            config.contains("        get") && config.contains("        set"),
+            "expected one property carrying both accessors, got:
+{config}"
+        );
+        // The accessor *is* the property: its body is inline and there is no
+        // second member to collide with, as in the Dart and JS backends.
+        assert!(
+            config.contains("Raw.Config.Size(AsFFI())"),
+            "expected the getter body inline in the property, got:
+{config}"
+        );
+        assert!(
+            !config.contains("nuint Size()") && !config.contains("void SetSize("),
+            "an accessor must not also emit a method, got:
+{config}"
+        );
+    }
+
+    // A setter with no getter to pair with still deserves a property — write-only
+    // properties are legal C#, and a Rust config object often only has setters.
+    #[test]
+    fn setter_without_a_getter_renders_a_write_only_property() {
+        let (files, _errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size(&self, size: usize) {
+                unimplemented!()
+            }
+        }));
+
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public nuint Size"),
+            "expected a write-only Size property, got:
+{config}"
+        );
+        assert!(
+            config.contains("        set"),
+            "expected a write-only property, got:
+{config}"
+        );
+        assert!(
+            !config.contains("        get"),
+            "there is no getter to read through, got:
+{config}"
+        );
+        assert!(
+            !config.contains("void SetSize("),
+            "the accessor must not also emit a method, got:
+{config}"
+        );
+    }
+
+    #[test]
+    fn getter_without_a_setter_renders_a_read_only_property() {
+        let (files, _errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn size(&self) -> usize {
+                unimplemented!()
+            }
+        }));
+
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public nuint Size"),
+            "expected a Size property, got:
+{config}"
+        );
+        assert!(
+            !config.contains("        set"),
+            "there is no setter to write through, got:
+{config}"
+        );
+        assert!(
+            !config.contains("nuint Size()"),
+            "the accessor must not also emit a method, got:
+{config}"
+        );
+    }
+
+    // Every string encoding presents as `string` in a property, so a pair can
+    // only disagree if the author declared two genuinely different types. C# has
+    // no way to express that as one property, so the backend refuses rather than
+    // silently dropping the setter.
+    #[test]
+    fn setter_whose_type_disagrees_with_the_getter_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn size(&self) -> usize {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size(&self, size: i32) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in [
+            "Config",
+            "property `Size` would need two types",
+            "`nuint`",
+            "`size`",
+            "`int`",
+            "`set_size`",
+        ] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must name {expected}; got: {error}"
+            );
+        }
+    }
+
+    // The two sides marshal differently — the getter hands out a view into
+    // Rust-owned memory the caller must not outlive, the setter takes a managed
+    // array Rust only reads during the call — so no single C# type serves both.
+    // The diagnostic has to say which marshal each side chose, because the C#
+    // types alone don't explain why they can't meet.
+    #[test]
+    fn byte_slice_accessors_that_marshal_differently_are_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn data<'a>(&'a self) -> &'a [u8] {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "data")]
+            pub fn set_data(&self, data: &[u8]) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in [
+            "DiplomatBorrowedSpan<byte>",
+            "byte[]",
+            "a borrowed view over Rust-owned memory",
+            "a managed array Rust reads during the call",
+        ] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must name {expected}; got: {error}"
+            );
+        }
+    }
+
+    // Two methods claiming one slot would be two C# members with one name
+    // (CS0102), which does not compile at all.
+    #[test]
+    fn two_getters_on_one_property_name_are_rejected() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "size")]
+            pub fn size(&self) -> usize {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, getter = "size")]
+            pub fn other_size(&self) -> usize {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in ["`get` of property `Size`", "`size`", "`other_size`"] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must name {expected}; got: {error}"
+            );
+        }
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert_eq!(
+            config.matches("public nuint Size").count(),
+            1,
+            "the losing accessor must not be emitted, got:
+{config}"
+        );
+    }
+
+    // A property and a method can collide just as easily as two properties, and
+    // the template's own members (`AsFFI`, `FromFFI`, `Dispose`) are in the same
+    // namespace.
+    #[test]
+    fn a_property_colliding_with_a_method_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "size")]
+            pub fn get_the_size(&self) -> usize {
+                unimplemented!()
+            }
+
+            pub fn size(&self) -> usize {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Size`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    // C# rejects a member sharing its enclosing type's name outright, so this
+    // needs its own message rather than the two-members one.
+    #[test]
+    fn a_property_named_after_its_own_type_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn config(&self) -> u32 {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in [
+            "property `Config` has the same name as `Config`",
+            "the type that contains it",
+        ] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must say {expected}; got: {error}"
+            );
+        }
+    }
+
+    // A `&mut self` getter may change what it reports, and a property gets read
+    // more than once — by a debugger watch, a serializer, or twice in a row. A
+    // one-shot `self.x.take()` behind a property drains to null on the second
+    // read, which is why the receiver has to be `&self`.
+    #[test]
+    fn a_mut_self_getter_is_rejected() {
+        let (_files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque_mut]
+                pub struct Config;
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "callback")]
+                    pub fn take_callback(&mut self) -> u32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in ["`take_callback`", "`&mut self`", "look idempotent"] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must mention {expected}; got: {error}"
+            );
+        }
+    }
+
+    // Assigning is the whole point of a setter, so it keeps `&mut self` —
+    // `feature_tests` has eight that depend on this.
+    #[test]
+    fn a_mut_self_setter_is_still_accepted() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque_mut]
+                pub struct Config;
+
+                impl Config {
+                    #[diplomat::attr(auto, setter = "size")]
+                    pub fn set_size(&mut self, value: usize) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public nuint Size") && config.contains("        set"),
+            "expected a write-only property, got:
+{config}"
+        );
+    }
+
+    // `Dispose` is only a member of an opaque, so a struct may use the name.
+    #[test]
+    fn a_struct_property_named_dispose_is_accepted() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Config {
+                    size: u8,
+                }
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "dispose")]
+                    pub fn is_disposed(self) -> bool {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Dispose"),
+            "a struct has no Dispose to collide with, got:
+{config}"
+        );
+    }
+
+    #[test]
+    fn a_property_colliding_with_dispose_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "dispose")]
+            pub fn is_disposed(&self) -> bool {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Dispose`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    // Accessors leave the method list before the run-level helper flags are
+    // folded, so a getter that needs a helper type must still pull it in.
+    #[test]
+    fn a_getter_returning_an_owned_byte_slice_still_emits_the_rustvec_helper() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn data(&self) -> Box<[u8]> {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join(
+                "
+"
+            )
+        );
+        assert!(
+            files.contains_key("RustVec.cs"),
+            "an owned byte-slice getter needs the RustVec helper"
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public RustVec Data"),
+            "expected a RustVec property, got:
+{config}"
+        );
+    }
+
+    #[test]
+    fn a_getter_returning_a_borrowed_span_still_emits_the_span_helper() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn data<'a>(&'a self) -> &'a [u8] {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join(
+                "
+"
+            )
+        );
+        assert!(
+            files.contains_key("DiplomatBorrowedSpan.cs"),
+            "a borrowed-span getter needs the span helper"
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public DiplomatBorrowedSpan<byte> Data"),
+            "expected a borrowed-span property, got:
+{config}"
+        );
+    }
+
+    // Every text encoding presents as `string`, which is the one place the
+    // marshal-to-property-type mapping collapses. Each has to arrive there by its
+    // own route, so each is checked for the marshalling that route implies.
+    #[test]
+    fn every_text_marshal_presents_as_a_string_property() {
+        // (setter param type, the marshalling only that encoding produces)
+        let cases = [
+            // `&str`: Rust may assume valid UTF-8, so a real string is transcoded.
+            (quote!(&str), "Diplomat.Utf8.Clone(value)"),
+            // `&DiplomatStr`: opaque bytes, but a property cannot read as
+            // `string` and write as `byte[]`, so it transcodes here too.
+            (quote!(&DiplomatStr), "Diplomat.Utf8.Clone(value)"),
+            // `&DiplomatStr16`: a C# string is already UTF-16, so it is pinned
+            // where it lies and nothing is allocated.
+            (quote!(&DiplomatStr16), "fixed (char* valuePtr = value)"),
+        ];
+
+        for (param, marshalling) in cases {
+            let (files, errors) = run_dotnet(property_test_module(quote! {
+                #[diplomat::attr(auto, getter)]
+                pub fn text(&self, w: &mut DiplomatWrite) {
+                    unimplemented!()
+                }
+
+                #[diplomat::attr(auto, setter = "text")]
+                pub fn set_text(&self, value: #param) {
+                    unimplemented!()
+                }
+            }));
+
+            assert!(
+                errors.is_empty(),
+                "{param} should pair with a written-UTF-8 getter: {}",
+                errors.join("\n")
+            );
+            let config = files.get("Config.cs").expect("expected Config.cs output");
+            assert!(
+                config.contains("public string Text"),
+                "{param} must present as a string property, got:
+{config}"
+            );
+            assert_eq!(
+                config.matches("        get").count(),
+                1,
+                "expected one getter for {param}, got:
+{config}"
+            );
+            assert_eq!(
+                config.matches("        set").count(),
+                1,
+                "expected one setter for {param}, got:
+{config}"
+            );
+            assert!(
+                config.contains(marshalling),
+                "{param} must marshal via `{marshalling}`, got:
+{config}"
+            );
+        }
+    }
+
+    // Each non-text marshal has to survive the round trip through
+    // `AccessorMarshal` -> `PropertyType` -> C# type, and a pair that agrees has
+    // to end up as one member with both accessors rather than two members.
+    #[test]
+    fn each_marshal_pairs_into_one_property() {
+        // (getter return, setter param, the C# property type)
+        let cases = [
+            (quote!(u32), quote!(u32), "public uint Value"),
+            (quote!(MyEnum), quote!(MyEnum), "public MyEnum Value"),
+            (quote!(MyStruct), quote!(MyStruct), "public MyStruct Value"),
+            // Owned out, borrowed in: ownership differs, the C# type does not.
+            (quote!(Box<Config>), quote!(&Config), "public Config Value"),
+        ];
+
+        for (returns, param, declaration) in cases {
+            let (files, errors) = run_dotnet(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    pub enum MyEnum { A, B }
+
+                    pub struct MyStruct { a: u8 }
+
+                    #[diplomat::opaque]
+                    pub struct Config;
+
+                    impl Config {
+                        #[diplomat::attr(auto, getter = "value")]
+                        pub fn get_value(&self) -> #returns {
+                            unimplemented!()
+                        }
+
+                        #[diplomat::attr(auto, setter = "value")]
+                        pub fn set_value(&self, value: #param) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            });
+
+            assert!(
+                errors.is_empty(),
+                "{returns} / {param} should pair: {}",
+                errors.join("\n")
+            );
+            let config = files.get("Config.cs").expect("expected Config.cs output");
+            assert!(
+                config.contains(declaration),
+                "expected `{declaration}`, got:
+{config}"
+            );
+            assert_eq!(
+                config.matches("        get").count(),
+                1,
+                "expected exactly one getter, got:
+{config}"
+            );
+            assert_eq!(
+                config.matches("        set").count(),
+                1,
+                "expected exactly one setter, got:
+{config}"
+            );
+        }
+    }
+
+    // Nullability is part of the property type, not decoration on it: `Config?`
+    // and `Config` are different C# types and cannot be one property.
+    #[test]
+    fn a_nullable_getter_and_a_non_nullable_setter_are_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "value")]
+            pub fn get_value(&self) -> Option<Box<Config>> {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "value")]
+            pub fn set_value(&self, value: &Config) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in ["`Config?`", "`Config`", "`get_value`", "`set_value`"] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must name {expected}; got: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_nullable_pair_agrees_and_renders_one_nullable_property() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "value")]
+            pub fn get_value(&self) -> Option<Box<Config>> {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "value")]
+            pub fn set_value(&self, value: Option<&Config>) {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public Config? Value"),
+            "expected a nullable property, got:
+{config}"
+        );
+    }
+
+    // A property is one member, so anything both accessors would document has to
+    // be said once. Two methods sharing an error type is the case that used to
+    // emit the tag twice.
+    #[test]
+    fn accessors_sharing_an_error_type_document_the_exception_once() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Config;
+
+                #[diplomat::opaque]
+                pub struct MyError;
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "value")]
+                    pub fn get_value(&self) -> Result<u32, Box<MyError>> {
+                        unimplemented!()
+                    }
+
+                    #[diplomat::attr(auto, setter = "value")]
+                    pub fn set_value(&self, value: u32) -> Result<(), Box<MyError>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert_eq!(
+            config.matches("/// <exception cref=").count(),
+            1,
+            "both accessors throw the same exception, so document it once, got:
+{config}"
+        );
+    }
+
+    // The `<returns>` tag went missing from properties when the block was
+    // copy-pasted into the two impl templates; it comes from the shared one now.
+    #[test]
+    fn an_opaque_property_documents_its_rust_allocated_return_once() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "value")]
+            pub fn get_value(&self) -> Box<Config> {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "value")]
+            pub fn set_value(&self, value: &Config) {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert_eq!(
+            config
+                .matches("/// A <c>Config</c> allocated on Rust side.")
+                .count(),
+            1,
+            "the property must carry its <returns> tag exactly once, got:
+{config}"
+        );
+    }
+
+    #[test]
+    fn two_setters_on_one_property_name_are_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size(&self, value: usize) {
+                unimplemented!()
+            }
+
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size_again(&self, value: usize) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        let error = &errors[0];
+        for expected in ["`set` of property `Size`", "`set_size`", "`set_size_again`"] {
+            assert!(
+                error.contains(expected),
+                "the diagnostic must name {expected}; got: {error}"
+            );
+        }
+    }
+
+    // A struct's fields are members too, and a property named after one is the
+    // same CS0102 as two methods with one name.
+    #[test]
+    fn a_property_colliding_with_a_struct_field_is_rejected() {
+        let (_files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Config {
+                    size: u8,
+                }
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "size")]
+                    pub fn get_size(self) -> u8 {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Size`") && errors[0].contains("a struct field"),
+            "the collision must name the field; got: {}",
+            errors[0]
+        );
+    }
+
+    // `#[diplomat::rename]` lands verbatim, after case conversion, so it is the
+    // one thing that can produce a name case-folding never would — including the
+    // exact spelling of a member the template always generates.
+    #[test]
+    fn a_renamed_property_colliding_with_as_ffi_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(dotnet, rename = "AsFFI")]
+            #[diplomat::attr(auto, getter)]
+            pub fn handle(&self) -> u8 {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `AsFFI`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    // Case conversion runs first and the rename is applied to the result, so an
+    // all-caps rename survives instead of being mangled to `UtcTime`. This is a
+    // deliberate divergence from Dart, which case-folds after renaming.
+    #[test]
+    fn a_renamed_property_keeps_its_name_verbatim() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(dotnet, rename = "UTCTime")]
+            #[diplomat::attr(auto, getter)]
+            pub fn utc_time(&self) -> u64 {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join(
+                "
+"
+            )
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public ulong UTCTime"),
+            "the rename must survive verbatim, got:
+{config}"
+        );
+    }
+
+    // `static_accessors` is off, so a static accessor is not a property here. It
+    // has to stay a plain static method rather than silently disappear.
+    #[test]
+    fn a_static_accessor_stays_a_method() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(supports = static_accessors, getter)]
+            pub fn origin() -> Box<Config> {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public static Config Origin()"),
+            "expected a static method, got:
+{config}"
+        );
+        assert!(
+            !config.contains("        get"),
+            "a static accessor must not become a property, got:
+{config}"
+        );
+    }
+
+    // HIR does not require a getter to return anything, so this reaches the
+    // backend: `void` is not a legal C# property type, and a property that reads
+    // as nothing is not what the author meant either.
+    #[test]
+    fn a_getter_returning_nothing_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter)]
+            pub fn size(&self) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("a getter has to return something"),
+            "the empty getter must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    // The P/Invoke layer is a plain method however the idiomatic layer presents
+    // it, so the setter's `value` alias must stop at the property.
+    #[test]
+    fn a_setters_raw_declaration_keeps_the_rust_parameter_name() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, setter = "size")]
+            pub fn set_size(&self, new_size: usize) {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join(
+                "
+"
+            )
+        );
+        let raw = files
+            .get("RawConfig.cs")
+            .expect("expected RawConfig.cs output");
+        assert!(
+            raw.contains("SetSize(Config* handle, nuint newSize)"),
+            "the raw declaration must keep the Rust parameter name, got:
+{raw}"
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("Raw.Config.SetSize(AsFFI(), value)"),
+            "the property must pass the implicit `value`, got:
+{config}"
+        );
+    }
+
+    // Properties come from the HIR accessor attributes, the same mechanism the
+    // Dart and JS backends use — not from how a method happens to be named.
+    #[test]
+    fn get_and_set_named_methods_without_attributes_stay_methods() {
+        let (files, _errors) = run_dotnet(property_test_module(quote! {
+            pub fn get_size(&self) -> usize {
+                unimplemented!()
+            }
+
+            pub fn set_size(&self, size: usize) {
+                unimplemented!()
+            }
+        }));
+
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public nuint GetSize()"),
+            "expected a plain GetSize method, got:
+{config}"
+        );
+        assert!(
+            !config.contains("public nuint Size"),
+            "an unannotated method must not become a property, got:
+{config}"
         );
     }
 }

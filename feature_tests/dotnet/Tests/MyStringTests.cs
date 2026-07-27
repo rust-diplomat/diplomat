@@ -28,7 +28,7 @@ public class MyStringTests
     {
         using MyString value = MyString.New(Utf8("hello 餐"));
 
-        Assert.Equal("hello 餐", value.GetStr());
+        Assert.Equal("hello 餐", value.Str);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class MyStringTests
     {
         using MyString value = MyString.NewUnsafe("unsafe 𐐷");
 
-        Assert.Equal("unsafe 𐐷", value.GetStr());
+        Assert.Equal("unsafe 𐐷", value.Str);
     }
 
     [Fact]
@@ -44,9 +44,9 @@ public class MyStringTests
     {
         using MyString value = MyString.New(Utf8("old"));
 
-        value.SetStr(Utf8("new 餐"));
+        value.Str = "new 餐";
 
-        Assert.Equal("new 餐", value.GetStr());
+        Assert.Equal("new 餐", value.Str);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class MyStringTests
         Assert.Throws<ArgumentNullException>(() => MyString.New(null!));
 
         using MyString value = MyString.New(Utf8("value"));
-        Assert.Throws<ArgumentNullException>(() => value.SetStr(null!));
+        Assert.Throws<ArgumentNullException>(() => value.Str = null!);
     }
 
     // `borrow` returns `&'a str` — a zero-copy `DiplomatBorrowedSpan<byte>`

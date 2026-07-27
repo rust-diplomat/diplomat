@@ -371,9 +371,11 @@ pub mod ffi {
         }
 
         // dotnet-only: the borrowed-return aliasing test replaces the owner's
-        // heap-backed `String` here and reads it back through `First()` to prove
-        // the borrow isn't a copy.
+        // heap-backed `String` here and reads it back through `first` to prove
+        // the borrow isn't a copy. There is no matching getter, so this is also
+        // the one accessor here that has to render as a write-only property.
         #[diplomat::attr(not(dotnet), disable)]
+        #[diplomat::attr(auto, setter = "first_c")]
         pub fn set_first_c(&mut self, value: &DiplomatStr) {
             if let Some(first) = self.0.first_mut() {
                 first.c = String::from_utf8(value.to_vec()).unwrap();

@@ -28,42 +28,12 @@ public partial struct {{ name }}
     };
 
     {%- for property in properties %}
-{% if property.lifetime_warning %}
-    /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
-    /// </remarks>
-{%- endif %}
-    public {{ property.property_type }} {{ property.name }}
-    {
-        {%- if let Some(getter) = property.getter %}
-        get => {{ getter }}();
-        {%- endif %}
-        {%- if let Some(setter) = property.setter %}
-        set => {{ setter }}(value);
-        {%- endif %}
-    }
-    {%- endfor %}
+{% include "dotnet/property.cs.jinja" %}    {%- endfor %}
 
     {%- for method in methods %}
-{% if let Some(info) = method.error_info %}
-    /// <exception cref="{{ info.exception_name }}"></exception>
-{%- endif %}
-{%- if method.return_type.is_opaque() %}
-    /// <returns>
-    /// A <c>{{ method.return_type }}</c> allocated on Rust side.
-    /// </returns>
-{%- endif %}
-{%- if method.lifetime_warning %}
-    /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
-{%- if method.has_pinned_inputs() %}
-    /// <br/>
-    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
-{%- endif %}
-    /// </remarks>
-{%- endif %}
+{%- let extra_indent = "" %}
+{%- let docs = method.docs() %}
+{% include "dotnet/member_docs.cs.jinja" %}
 
     public {{ method.static_kw }}{% if method.is_to_string_override() %}override {% endif %}{{ method.idiomatic_signature_return_type() }} {{ method.name }}({{ method.inputs.idiomatic_params }})
     {

@@ -20,6 +20,30 @@ public partial class Foo: IDisposable
 
     private static readonly unsafe RustDestructor<Raw.Foo> _destroy = Raw.Foo.Destroy;
 
+    /// <returns>
+    /// A <c>Bar</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public Bar Bar
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("Foo");
+                }
+                Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
+                GC.KeepAlive(this);
+                return new Bar(result, new object[] { this });
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>Foo</c> from a raw handle.
     /// </summary>
@@ -56,27 +80,6 @@ public partial class Foo: IDisposable
     {
         _inner = inner;
         _edges = edges;
-    }
-
-    /// <returns>
-    /// A <c>Bar</c> allocated on Rust side.
-    /// </returns>
-    /// <remarks>
-    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
-    /// </remarks>
-    public Bar GetBar()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("Foo");
-            }
-            Raw.Bar* result = Raw.Foo.GetBar(AsFFI());
-            GC.KeepAlive(this);
-            return new Bar(result, new object[] { this });
-        }
     }
 
     /// <summary>

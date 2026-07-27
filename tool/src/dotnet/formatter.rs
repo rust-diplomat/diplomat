@@ -166,11 +166,20 @@ impl<'tcx> DotnetFormatter<'tcx> {
         escape_keyword(name.into())
     }
 
-    /// Format a C# property name from the Rust method suffix after a
-    /// configured getter/setter prefix (e.g. `width` from `get_width`).
-    pub fn fmt_property_name<'a>(&self, ident: &'a str) -> Cow<'a, str> {
+    /// Format the C# property name an accessor lands on: the name given in the
+    /// `#[diplomat::attr(auto, getter/setter = "…")]` attribute if there is one,
+    /// otherwise the method's own name.
+    ///
+    /// `#[diplomat::rename]` is applied *after* case conversion, so its value
+    /// survives verbatim — the same order `fmt_method_name` and `fmt_type_name`
+    /// use, and the reason `#[rename = "UTCTime"]` stays `UTCTime` instead of
+    /// being mangled to `UtcTime`. Dart case-folds after renaming instead; this
+    /// backend deliberately does not, because its surface has to keep matching
+    /// the bindings already shipped.
+    pub fn fmt_accessor_name(&self, attr_name: Option<&str>, method: &Method) -> String {
+        let ident = attr_name.unwrap_or(method.name.as_str());
         let name = ident.to_upper_camel_case();
-        escape_keyword(name.into())
+        escape_keyword(method.attrs.rename.apply(name.into())).into_owned()
     }
 
     /// Format a HIR type's name as a C# class / struct / enum identifier.
