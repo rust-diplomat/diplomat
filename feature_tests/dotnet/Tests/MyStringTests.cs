@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Somelib;
@@ -13,6 +13,15 @@ public class MyStringTests
     // zero-copy `byte[]` param. `NewUnsafe` takes a validated `&str`, which
     // stays `string` and transcodes internally via `Diplomat.Utf8.Clone`.
     private static byte[] Utf8(string s) => Encoding.UTF8.GetBytes(s);
+
+    // .NET Framework's BCL has no span-taking GetString overload, so the
+    // legacy target copies out of the borrowed view first.
+    private static string Utf8String(ReadOnlySpan<byte> span) =>
+#if NETFRAMEWORK
+        Encoding.UTF8.GetString(span.ToArray());
+#else
+        Encoding.UTF8.GetString(span);
+#endif
 
     [Fact]
     public void New_GetStr_RoundTripsUtf8()
@@ -60,7 +69,7 @@ public class MyStringTests
         DiplomatBorrowedSpan<byte> view = value.Borrow();
 
         string decoded = "";
-        view.WithSpan(span => decoded = Encoding.UTF8.GetString(span));
+        view.WithSpan(span => decoded = Utf8String(span));
         Assert.Equal("hello 餐", decoded);
     }
 
@@ -69,7 +78,11 @@ public class MyStringTests
     // GC -> finalizer -> Destroy would free the owner out from under the
     // borrowed view. AggressiveOptimization forces that liveness so the race
     // can surface.
-    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.NoInlining
+#if !NETFRAMEWORK
+        | MethodImplOptions.AggressiveOptimization
+#endif
+    )]
     private static DiplomatBorrowedSpan<byte> BorrowAndDropOwner()
     {
         return MyString.New(Utf8("rooted 餐")).Borrow();
@@ -89,7 +102,7 @@ public class MyStringTests
 
         // If the owner had been finalized, this reads freed memory (UAF).
         string decoded = "";
-        view.WithSpan(span => decoded = Encoding.UTF8.GetString(span));
+        view.WithSpan(span => decoded = Utf8String(span));
         Assert.Equal("rooted 餐", decoded);
         GC.KeepAlive(view);
     }

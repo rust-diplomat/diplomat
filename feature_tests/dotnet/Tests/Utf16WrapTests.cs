@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using Somelib;
 using Somelib.Diplomat;
@@ -11,6 +11,15 @@ namespace Somelib.FeatureTests;
 // transcoding, unlike the UTF-8 (`&DiplomatStr`/`&str`) path.
 public class Utf16WrapTests
 {
+    // .NET Framework's BCL has no span-taking string constructor, so the
+    // legacy target copies out of the borrowed view first.
+    private static string Utf16String(ReadOnlySpan<char> span) =>
+#if NETFRAMEWORK
+        new string(span.ToArray());
+#else
+        new string(span);
+#endif
+
     [Fact]
     public void FromUtf16_GetDebugStr_ShowsUtf16CodeUnits()
     {
@@ -48,14 +57,18 @@ public class Utf16WrapTests
         DiplomatBorrowedSpan<char> view = value.BorrowCont();
 
         string decoded = "";
-        view.WithSpan(span => decoded = new string(span));
+        view.WithSpan(span => decoded = Utf16String(span));
         Assert.Equal("hello 𐐷", decoded);
     }
 
     // Same liveness trap as MyStringTests.Borrow_KeepsOwnerAliveAcrossGc: if
     // the borrowed view's `_edges` didn't root the owner, GC -> finalizer ->
     // Destroy would free it out from under the view.
-    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.NoInlining
+#if !NETFRAMEWORK
+        | MethodImplOptions.AggressiveOptimization
+#endif
+    )]
     private static DiplomatBorrowedSpan<char> BorrowContAndDropOwner()
     {
         return Utf16Wrap.FromUtf16("rooted 𐐷").BorrowCont();
@@ -74,7 +87,7 @@ public class Utf16WrapTests
         }
 
         string decoded = "";
-        view.WithSpan(span => decoded = new string(span));
+        view.WithSpan(span => decoded = Utf16String(span));
         Assert.Equal("rooted 𐐷", decoded);
         GC.KeepAlive(view);
     }

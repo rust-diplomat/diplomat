@@ -1,3 +1,4 @@
+﻿using System;
 using System.Text;
 using Somelib;
 using Somelib.Diplomat;
@@ -7,6 +8,15 @@ namespace Somelib.FeatureTests;
 
 public class OpaqueMutexedStringTests
 {
+    // .NET Framework's BCL has no span-taking GetString overload, so the
+    // legacy target copies out of the borrowed view first.
+    private static string Utf8String(ReadOnlySpan<byte> span) =>
+#if NETFRAMEWORK
+        Encoding.UTF8.GetString(span.ToArray());
+#else
+        Encoding.UTF8.GetString(span);
+#endif
+
     [Fact]
     public void Change_UpdatesStoredStringLength()
     {
@@ -51,7 +61,7 @@ public class OpaqueMutexedStringTests
         DiplomatBorrowedSpan<byte> view = value.DummyStr();
 
         string decoded = "";
-        view.WithSpan(span => decoded = Encoding.UTF8.GetString(span));
+        view.WithSpan(span => decoded = Utf8String(span));
         Assert.Equal("A const str with non byte char: 餐 which is a DiplomatChar,", decoded);
     }
 }
