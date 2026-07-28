@@ -10,8 +10,7 @@ namespace Somelib.Raw;
 internal partial struct PrimitiveStruct
 {
     public float X;
-    [MarshalAs(UnmanagedType.U1)]
-    public bool A;
+    public DiplomatBool A;
     public uint B;
     public long C;
     public nint D;

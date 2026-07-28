@@ -10,8 +10,7 @@ namespace Somelib.Raw;
 internal partial struct FixedDecimalFormatterOptions
 {
     public FixedDecimalGroupingStrategy GroupingStrategy;
-    [MarshalAs(UnmanagedType.U1)]
-    public bool SomeOtherConfig;
+    public DiplomatBool SomeOtherConfig;
 
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "icu4x_FixedDecimalFormatterOptions_default_mv1", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern FixedDecimalFormatterOptions Default();

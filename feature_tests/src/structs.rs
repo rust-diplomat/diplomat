@@ -106,6 +106,13 @@ pub mod ffi {
             412
         }
 
+        // Gives the .NET tests a bool to assert in both marshalling directions;
+        // `not(dotnet)` disable keeps the other backends' fixtures untouched.
+        #[diplomat::attr(not(dotnet), disable)]
+        pub fn echo_bool(x: bool) -> bool {
+            x
+        }
+
         pub fn returns_imported() -> ImportedStruct {
             unimplemented!()
         }

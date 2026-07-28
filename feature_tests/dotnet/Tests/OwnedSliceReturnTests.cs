@@ -135,7 +135,11 @@ public class OwnedSliceReturnTests
     }
 
     // Precise liveness must release the local so the finalizer path is observable.
-    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.NoInlining
+#if !NETFRAMEWORK
+        | MethodImplOptions.AggressiveOptimization
+#endif
+    )]
     private static void MakeAndDropWithoutDisposing(int len)
     {
         RustVec vec = OwnedSliceReturn.MakeBytes((uint)len);

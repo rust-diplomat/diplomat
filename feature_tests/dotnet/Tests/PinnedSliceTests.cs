@@ -28,7 +28,11 @@ public class PinnedSliceTests
     // Build and parse inside an AggressiveOptimization frame so Tier1's precise
     // liveness drops the byte[] local at its last use. The only thing keeping
     // it alive AND pinned afterwards is the view's DiplomatPinnedMemory edge.
-    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
+    [MethodImpl(MethodImplOptions.NoInlining
+#if !NETFRAMEWORK
+        | MethodImplOptions.AggressiveOptimization
+#endif
+    )]
     private static OpaqueSliceView ParseAndDropBuffer()
     {
         byte[] data = [10, 20, 30, 40];

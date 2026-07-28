@@ -32,6 +32,17 @@ pub(super) struct StructField {
     field_type: StructFieldType,
 }
 
+impl StructField {
+    /// Raw-layer field type: `bool` becomes the blittable `DiplomatBool` (see its docs).
+    pub(super) fn raw_field_type(&self) -> String {
+        if self.field_type.is_bool() {
+            "DiplomatBool".to_string()
+        } else {
+            self.field_type.to_string()
+        }
+    }
+}
+
 /// Field type that templates render verbatim. Enums use the same C# type
 /// name on both the raw and idiomatic side (they're declared once in the
 /// project namespace, not under `Raw.`), and they P/Invoke as their
@@ -43,9 +54,7 @@ enum StructFieldType {
 }
 
 impl StructFieldType {
-    /// True only for `bool` — used to gate `[MarshalAs(UnmanagedType.U1)]`
-    /// on the field. Enums never need this; C#'s default marshaling already
-    /// matches Rust's discriminant width.
+    /// True only for `bool`, which `raw_field_type` maps to `DiplomatBool`.
     fn is_bool(&self) -> bool {
         matches!(self, Self::Primitive(p) if p.is_bool())
     }
