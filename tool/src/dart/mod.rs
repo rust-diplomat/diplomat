@@ -233,13 +233,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> String {
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
-        let extends_class = if ty.attrs.bug {
-            Some("core.Error".to_string())
-        } else {
-            None
-        };
+        let mut extends_class = None;
         let mut implements = vec!["ffi.Finalizable".to_string()];
-        if ty.attrs.custom_errors {
+        if ty.attrs.bug {
+            extends_class = Some("core.Error".to_string());
+        } else if ty.attrs.custom_errors {
             implements.push("core.Exception".to_string());
         }
         if special.comparator {
@@ -296,13 +294,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     ) -> String {
         let special = self.gen_special_method_info(&ty.special_method_presence);
 
-        let extends_class = if ty.attrs.bug {
-            Some("core.Error".to_string())
-        } else {
-            None
-        };
+        let mut extends_class = None;
         let mut implements = Vec::new();
-        if ty.attrs.custom_errors {
+        if ty.attrs.bug {
+            extends_class = Some("core.Error".to_string());
+        } else if ty.attrs.custom_errors {
             implements.push("core.Exception".to_string());
         }
         if special.comparator {
