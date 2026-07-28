@@ -61,21 +61,20 @@ public partial class OpaqueThinVec: IDisposable
     /// <returns>
     /// A <c>OpaqueThinVec</c> allocated on Rust side.
     /// </returns>
-    public static OpaqueThinVec CreateSingle(int a, float b, string c)
+    public static OpaqueThinVec CreateSingle(int a, float b, byte[] c)
     {
         unsafe
         {
             if (c == null) throw new ArgumentNullException(nameof(c));
-            byte[] cBytes = System.Text.Encoding.UTF8.GetBytes(c);
-            fixed (byte* cPtr = cBytes)
+            fixed (byte* cPtr = c)
             {
-                Raw.OpaqueThinVec* result = Raw.OpaqueThinVec.CreateSingle(a, b, new DiplomatSliceU8 { Ptr = cPtr, Len = (nuint)cBytes.Length });
+                Raw.OpaqueThinVec* result = Raw.OpaqueThinVec.CreateSingle(a, b, new DiplomatSliceU8 { Ptr = cPtr, Len = (nuint)c.Length });
                 return new OpaqueThinVec(result);
             }
         }
     }
 
-    public void SetFirstC(string value)
+    public void SetFirstC(byte[] value)
     {
         unsafe
         {
@@ -84,10 +83,9 @@ public partial class OpaqueThinVec: IDisposable
                 throw new ObjectDisposedException("OpaqueThinVec");
             }
             if (value == null) throw new ArgumentNullException(nameof(value));
-            byte[] valueBytes = System.Text.Encoding.UTF8.GetBytes(value);
-            fixed (byte* valuePtr = valueBytes)
+            fixed (byte* valuePtr = value)
             {
-                Raw.OpaqueThinVec.SetFirstC(AsFFI(), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                Raw.OpaqueThinVec.SetFirstC(AsFFI(), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)value.Length });
                 GC.KeepAlive(this);
             }
         }

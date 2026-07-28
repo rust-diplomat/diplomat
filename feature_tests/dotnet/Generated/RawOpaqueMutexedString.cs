@@ -18,6 +18,9 @@ internal partial struct OpaqueMutexedString
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueMutexedString_get_len_and_add", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern nuint GetLenAndAdd(OpaqueMutexedString* handle, nuint other);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueMutexedString_dummy_str", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatSliceU8 DummyStr(OpaqueMutexedString* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OpaqueMutexedString_wrapper", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern Utf16Wrap* Wrapper(OpaqueMutexedString* handle);
 

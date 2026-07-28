@@ -162,7 +162,6 @@ pub mod ffi {
             guard.len() + other
         }
 
-        #[diplomat::attr(dotnet, disable)]
         pub fn dummy_str<'a>(&'a self) -> &'a DiplomatStr {
             "A const str with non byte char: 餐 which is a DiplomatChar,".as_bytes()
         }
@@ -181,7 +180,6 @@ pub mod ffi {
 
     impl Utf16Wrap {
         #[diplomat::attr(auto, constructor)]
-        #[diplomat::attr(dotnet, disable)]
         pub fn from_utf16(input: &DiplomatStr16) -> Box<Self> {
             Box::new(Self(input.into()))
         }
@@ -190,7 +188,6 @@ pub mod ffi {
             let _infallible = write!(write, "{:?}", self.0);
         }
 
-        #[diplomat::attr(dotnet, disable)]
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }

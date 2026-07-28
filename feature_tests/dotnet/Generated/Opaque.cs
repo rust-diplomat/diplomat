@@ -73,15 +73,14 @@ public partial class Opaque: IDisposable
     /// <returns>
     /// A <c>Opaque</c> allocated on Rust side.
     /// </returns>
-    public static Opaque? TryFromUtf8(string input)
+    public static Opaque? TryFromUtf8(byte[] input)
     {
         unsafe
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
-            fixed (byte* inputPtr = inputBytes)
+            fixed (byte* inputPtr = input)
             {
-                Raw.Opaque* result = Raw.Opaque.TryFromUtf8(new DiplomatSliceU8 { Ptr = inputPtr, Len = (nuint)inputBytes.Length });
+                Raw.Opaque* result = Raw.Opaque.TryFromUtf8(new DiplomatSliceU8 { Ptr = inputPtr, Len = (nuint)input.Length });
                 return result == null ? null : new Opaque(result);
             }
         }
@@ -95,7 +94,7 @@ public partial class Opaque: IDisposable
         unsafe
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
-            byte[] inputBytes = System.Text.Encoding.UTF8.GetBytes(input);
+            byte[] inputBytes = Diplomat.Utf8.Clone(input);
             fixed (byte* inputPtr = inputBytes)
             {
                 Raw.Opaque* result = Raw.Opaque.FromStr(new DiplomatSliceU8 { Ptr = inputPtr, Len = (nuint)inputBytes.Length });

@@ -24,6 +24,9 @@ internal partial struct MyString
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_string_transform", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void StringTransform(DiplomatSliceU8 foo, DiplomatWrite* writeable);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_borrow", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern DiplomatSliceU8 Borrow(MyString* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "MyString_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(MyString* handle);
 }

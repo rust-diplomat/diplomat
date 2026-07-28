@@ -61,15 +61,14 @@ public partial class MyString: IDisposable
     /// <returns>
     /// A <c>MyString</c> allocated on Rust side.
     /// </returns>
-    public static MyString New(string v)
+    public static MyString New(byte[] v)
     {
         unsafe
         {
             if (v == null) throw new ArgumentNullException(nameof(v));
-            byte[] vBytes = System.Text.Encoding.UTF8.GetBytes(v);
-            fixed (byte* vPtr = vBytes)
+            fixed (byte* vPtr = v)
             {
-                Raw.MyString* result = Raw.MyString.New(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)vBytes.Length });
+                Raw.MyString* result = Raw.MyString.New(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)v.Length });
                 return new MyString(result);
             }
         }
@@ -83,7 +82,7 @@ public partial class MyString: IDisposable
         unsafe
         {
             if (v == null) throw new ArgumentNullException(nameof(v));
-            byte[] vBytes = System.Text.Encoding.UTF8.GetBytes(v);
+            byte[] vBytes = Diplomat.Utf8.Clone(v);
             fixed (byte* vPtr = vBytes)
             {
                 Raw.MyString* result = Raw.MyString.NewUnsafe(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)vBytes.Length });
@@ -92,7 +91,7 @@ public partial class MyString: IDisposable
         }
     }
 
-    public void SetStr(string newStr)
+    public void SetStr(byte[] newStr)
     {
         unsafe
         {
@@ -101,10 +100,9 @@ public partial class MyString: IDisposable
                 throw new ObjectDisposedException("MyString");
             }
             if (newStr == null) throw new ArgumentNullException(nameof(newStr));
-            byte[] newStrBytes = System.Text.Encoding.UTF8.GetBytes(newStr);
-            fixed (byte* newStrPtr = newStrBytes)
+            fixed (byte* newStrPtr = newStr)
             {
-                Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStrBytes.Length });
+                Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStr.Length });
                 GC.KeepAlive(this);
             }
         }
@@ -137,7 +135,7 @@ public partial class MyString: IDisposable
         unsafe
         {
             if (foo == null) throw new ArgumentNullException(nameof(foo));
-            byte[] fooBytes = System.Text.Encoding.UTF8.GetBytes(foo);
+            byte[] fooBytes = Diplomat.Utf8.Clone(foo);
             fixed (byte* fooPtr = fooBytes)
             {
                 DiplomatWrite writeable = new DiplomatWrite();
@@ -151,6 +149,24 @@ public partial class MyString: IDisposable
                     writeable.Dispose();
                 }
             }
+        }
+    }
+
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public DiplomatBorrowedSpan<byte> Borrow()
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("MyString");
+            }
+            var result = Raw.MyString.Borrow(AsFFI());
+            GC.KeepAlive(this);
+            return new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new object[] { this });
         }
     }
 

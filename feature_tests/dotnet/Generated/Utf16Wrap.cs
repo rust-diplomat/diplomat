@@ -58,6 +58,22 @@ public partial class Utf16Wrap: IDisposable
         _edges = edges;
     }
 
+    /// <returns>
+    /// A <c>Utf16Wrap</c> allocated on Rust side.
+    /// </returns>
+    public static Utf16Wrap FromUtf16(string input)
+    {
+        unsafe
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            fixed (char* inputPtr = input)
+            {
+                Raw.Utf16Wrap* result = Raw.Utf16Wrap.FromUtf16(new DiplomatSliceU16 { Ptr = inputPtr, Len = (nuint)input.Length });
+                return new Utf16Wrap(result);
+            }
+        }
+    }
+
     public string GetDebugStr()
     {
         unsafe
@@ -77,6 +93,24 @@ public partial class Utf16Wrap: IDisposable
             {
                 writeable.Dispose();
             }
+        }
+    }
+
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+    /// </remarks>
+    public DiplomatBorrowedSpan<char> BorrowCont()
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("Utf16Wrap");
+            }
+            var result = Raw.Utf16Wrap.BorrowCont(AsFFI());
+            GC.KeepAlive(this);
+            return new DiplomatBorrowedSpan<char>(result.Ptr, result.Len, new object[] { this });
         }
     }
 
