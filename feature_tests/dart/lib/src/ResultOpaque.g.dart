@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-final class ResultOpaque implements ffi.Finalizable {
+final class ResultOpaque implements ffi.Finalizable, core.Exception {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive

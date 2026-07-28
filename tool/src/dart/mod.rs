@@ -171,23 +171,28 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         (
             self.formatter.fmt_file_name(&name),
             match ty {
-                TypeDef::Enum(e) => self.gen_enum(e, id, &name),
+                TypeDef::Enum(e) => self.gen_enum(e, &name),
                 TypeDef::Opaque(o) => self.gen_opaque_def(o, &name),
-                TypeDef::Struct(s) => self.gen_struct_def(s, id, false, &name, true),
-                TypeDef::OutStruct(s) => self.gen_struct_def(s, id, true, &name, false),
+                TypeDef::Struct(s) => self.gen_struct_def(s, false, &name, true),
+                TypeDef::OutStruct(s) => self.gen_struct_def(s, true, &name, false),
                 _ => unreachable!("unknown AST/HIR variant"),
             },
         )
     }
 
-    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, id: TypeId, type_name: &str) -> String {
-        let is_error = ty.attrs.custom_errors
-            || ty.usage.results.iter().any(|r| match &**r {
-                hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-                hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-                _ => false,
-            });
+    fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
+        let special = self.gen_special_method_info(&ty.special_method_presence);
         let is_bug = ty.attrs.bug;
+
+        let mut implements = Vec::new();
+        if is_bug {
+            implements.push("core.Error".to_string());
+        } else if ty.attrs.custom_errors {
+            implements.push("core.Exception".to_string());
+        }
+        if special.comparator {
+            implements.push(format!("core.Comparable<{type_name}>"));
+        }
 
         let methods = ty
             .methods
@@ -195,8 +200,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
-
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
@@ -208,7 +211,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             docs: String,
             is_contiguous: bool,
             is_bug: bool,
-            is_error: bool,
+            implements: Vec<String>,
             special: SpecialMethodGenInfo<'a>,
         }
 
@@ -220,7 +223,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
             is_bug,
-            is_error,
+            implements,
             special,
         }
         .render()
@@ -228,6 +231,24 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> String {
+        let special = self.gen_special_method_info(&ty.special_method_presence);
+
+        let extends_class = if ty.attrs.bug {
+            Some("core.Error".to_string())
+        } else {
+            None
+        };
+        let mut implements = vec!["ffi.Finalizable".to_string()];
+        if ty.attrs.custom_errors {
+            implements.push("core.Exception".to_string());
+        }
+        if special.comparator {
+            implements.push(format!("core.Comparable<{type_name}>"));
+        }
+        if let Some(ref it) = special.iterator {
+            implements.push(format!("core.Iterator<{it}>"));
+        }
+
         let methods = ty
             .methods
             .iter()
@@ -236,7 +257,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = &ty.dtor_abi_name;
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/opaque.dart.jinja", escape = "none")]
@@ -247,6 +267,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             deprecated: Option<&'a str>,
             destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
+            extends_class: Option<String>,
+            implements: Vec<String>,
             special: SpecialMethodGenInfo<'a>,
         }
 
@@ -257,6 +279,8 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
+            extends_class,
+            implements,
             special,
         }
         .render()
@@ -266,18 +290,24 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_struct_def<P: TyPosition>(
         &mut self,
         ty: &'cx hir::StructDef<P>,
-        id: TypeId,
         is_out: bool,
         type_name: &str,
         mutable: bool,
     ) -> String {
-        let is_error = ty.attrs.custom_errors
-            || ty.usage.results.iter().any(|r| match &**r {
-                hir::ResultUsage::Output(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-                hir::ResultUsage::Input(info) => info.err.as_ref().and_then(|e| e.id()) == Some(id),
-                _ => false,
-            });
-        let is_bug = ty.attrs.bug;
+        let special = self.gen_special_method_info(&ty.special_method_presence);
+
+        let extends_class = if ty.attrs.bug {
+            Some("core.Error".to_string())
+        } else {
+            None
+        };
+        let mut implements = Vec::new();
+        if ty.attrs.custom_errors {
+            implements.push("core.Exception".to_string());
+        }
+        if special.comparator {
+            implements.push(format!("core.Comparable<{type_name}>"));
+        }
         let fields = ty
             .fields
             .iter()
@@ -365,7 +395,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
         let default_constructor =
@@ -381,9 +410,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: Vec<MethodInfo<'a>>,
             deprecated: Option<&'a str>,
             docs: String,
-            is_bug: bool,
-            is_error: bool,
             lifetimes: &'a LifetimeEnv,
+            extends_class: Option<String>,
+            implements: Vec<String>,
             special: SpecialMethodGenInfo<'a>,
         }
 
@@ -395,9 +424,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods,
             deprecated: ty.attrs.deprecated.as_deref(),
             docs: self.formatter.fmt_docs(&ty.docs),
-            is_bug,
-            is_error,
             lifetimes: &ty.lifetimes,
+            extends_class,
+            implements,
             special,
         }
         .render()
