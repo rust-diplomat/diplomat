@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9cd96bb7.js";
+            window.path_to_searchindex_js = "searchindex-e982403e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9d6e84c7.js"></script>
@@ -2658,6 +2658,35 @@ no lifetime-carrying returns.</p>
 <p>Consumers are not required to call <code>Dispose()</code>; a finalizer is the documented last-resort
 cleanup path for owned handles. Native calls are followed by <code>GC.KeepAlive(this)</code> to
 prevent the finalizer from running mid-call and freeing memory a P/Invoke is still using.</p>
+<h2 id="string-encoding"><a class="header" href="#string-encoding">String encoding</a></h2>
+<p>The backend supports both UTF-8 and UTF-16 strings, zero-copy wherever the C# and Rust
+representations line up:</p>
+<ul>
+<li><code>&amp;DiplomatStr16</code> params and returns: a C# <code>string</code> is already a flat UTF-16 buffer, so
+these are always zero-copy — pinned directly with <code>fixed</code> (or, if the return value
+borrows it, via <code>ReadOnlyMemory&lt;char&gt;</code> + the same pinning holder slices use).</li>
+<li><code>&amp;DiplomatStr</code> params and returns (unvalidated UTF-8 — Rust places no validity
+requirement on the caller): treated exactly like <code>&amp;[u8]</code>, so these are also zero-copy —
+<code>byte[]</code> / <code>ReadOnlyMemory&lt;byte&gt;</code> pinned directly, no transcoding.</li>
+<li><code>&amp;str</code> params (validated UTF-8 — Rust requires the caller to guarantee well-formed
+UTF-8, undefined behavior otherwise): a transcode from the UTF-16 <code>string</code> is
+unavoidable here. That copy is always routed through the explicitly-named
+<code>Diplomat.Utf8.Clone(...)</code> helper rather than inlined, so it stays visible in the
+generated source instead of hiding inside generic marshalling.</li>
+</ul>
+<p>A borrowed string or slice return (<code>&amp;'a str</code> / <code>&amp;'a DiplomatStr</code> / <code>&amp;'a DiplomatStr16</code> /
+<code>&amp;'a [u8]</code> / <code>&amp;'a [u32]</code>) surfaces as <code>DiplomatBorrowedSpan&lt;T&gt;</code> — a zero-copy view over
+memory Rust still owns, rooted with the same keep-alive-edge mechanism as a borrowed
+opaque return. It intentionally does not expose a <code>Span</code>-returning property (nothing
+would keep the view rooted once the span escaped it); call <code>WithSpan(...)</code> for scoped,
+zero-copy, read-only access instead — the same pattern <code>RustVec</code> uses for owned returns
+(see below). Producing an independent <code>T[]</code> is a separate, explicit step: call <code>Clone()</code>.</p>
+<p>An owned <code>Box&lt;[u8]&gt;</code> return surfaces as <code>RustVec</code> — it owns the native allocation, is
+<code>IDisposable</code>, and offers the same <code>WithSpan(...)</code> / <code>Clone()</code> shape as
+<code>DiplomatBorrowedSpan&lt;T&gt;</code> (it deliberately avoids <code>MemoryManager&lt;T&gt;</code> for the same reason:
+<code>GetSpan()</code>’s result wouldn’t keep the owner alive). Other owned string/slice returns
+(<code>Box&lt;str&gt;</code>, <code>Box&lt;[T]&gt;</code> for <code>T</code> other than <code>u8</code>) and <code>&amp;[&amp;str]</code> (<code>&amp;[DiplomatStrSlice]</code>)
+parameters aren’t supported yet.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>The best way to learn to use the .NET backend is to first understand Diplomat generally
 by reading this <a href="SUMMARY.html">book</a>. Then look at the <code>example</code> and <code>feature_tests</code>
@@ -2684,7 +2713,7 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
