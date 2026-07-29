@@ -2,7 +2,7 @@
     return wrap. The caller is responsible for the method declaration line,
     the `unsafe { }` wrap, and (for opaque) the disposed check.
 
-    Body indent comes from `method.body_indent()`:
+    Body indent comes from `method.body_indent(extra_indent)`:
       - 12 spaces normally (inside `unsafe { }` inside a class method)
       - +4 when the method has pinned inputs (`try { ... }` wrapping —
         an exception between `Pin` and the returned wrapper taking
@@ -13,7 +13,7 @@
 
     Validation / to-bytes / pin-declaration statements stay at the
     method-body level (12 spaces) because they sit OUTSIDE the try/fixed
-    blocks; `fixed (...)` lines use `method.fix_indent()` (12, or 16 when
+    blocks; `fixed (...)` lines use `method.fix_indent(extra_indent)` (12, or 16 when
     nested in the pin try); only the code inside the blocks uses `bi`.
 
     Control tags below are indented to mirror C# nesting for readability.
@@ -25,33 +25,33 @@
       - method: MethodInfo
       - name:   the owner type's bare C# name (e.g. "Color", "Point2D")
 -#}
-{%- let bi = method.body_indent() -%}
+{%- let bi = method.body_indent(extra_indent) -%}
 {#- Validation (null / disposed checks) MUST precede the to-bytes encoding
     step: a string param's `Encoding.UTF8.GetBytes(arg)` would otherwise
     throw before our `ArgumentNullException(nameof(arg))` runs, surfacing
     the wrong parameter name. No validation statement depends on a
     to-bytes output, so this ordering is always safe. #}
 {%- for statement in method.inputs.validation_statements %}
-            {{ statement }}
+{{ extra_indent }}            {{ statement }}
 {%- endfor %}
 {%- for statement in method.inputs.to_bytes_statements %}
-            {{ statement }}
+{{ extra_indent }}            {{ statement }}
 {%- endfor %}
 {%- if method.has_pinned_inputs() %}
 {%- for statement in method.pin_declaration_statements() %}
-            {{ statement }}
+{{ extra_indent }}            {{ statement }}
 {%- endfor %}
-            try
-            {
+{{ extra_indent }}            try
+{{ extra_indent }}            {
 {%- for statement in method.pin_assignment_statements() %}
-                {{ statement }}
+{{ extra_indent }}                {{ statement }}
 {%- endfor %}
 {%- endif %}
 {%- if !method.inputs.fix_statements.is_empty() %}
     {%- for statement in method.inputs.fix_statements %}
-{{ method.fix_indent() }}{{ statement }}
+{{ method.fix_indent(extra_indent) }}{{ statement }}
     {%- endfor %}
-{{ method.fix_indent() }}{
+{{ method.fix_indent(extra_indent) }}{
 {%- endif %}
 {%- if method.return_type.is_write() %}
     {#- Write methods return `string`. Allocate the writer in this frame,
@@ -109,18 +109,18 @@
 {{ bi }}{{ method.success_return_statement("result") }}
 {%- endif %}
 {%- if !method.inputs.fix_statements.is_empty() %}
-{{ method.fix_indent() }}}
+{{ method.fix_indent(extra_indent) }}}
 {%- endif %}
 {#- The catch rethrows after disposing whatever was pinned — the success
     path returned from inside the try, so reaching here means the wrapper
     never took ownership of the pins. #}
 {%- if method.has_pinned_inputs() %}
-            }
-            catch
-            {
+{{ extra_indent }}            }
+{{ extra_indent }}            catch
+{{ extra_indent }}            {
 {%- for statement in method.pin_dispose_statements() %}
-                {{ statement }}
+{{ extra_indent }}                {{ statement }}
 {%- endfor %}
-                throw;
-            }
+{{ extra_indent }}                throw;
+{{ extra_indent }}            }
 {%- endif %}

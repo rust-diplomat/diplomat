@@ -20,6 +20,23 @@ public partial class RenamedVectorTest: IDisposable
 
     private static readonly unsafe RustDestructor<Raw.RenamedVectorTest> _destroy = Raw.RenamedVectorTest.Destroy;
 
+    public nuint Len
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("RenamedVectorTest");
+                }
+                var result = Raw.RenamedVectorTest.Len(AsFFI());
+                GC.KeepAlive(this);
+                return result;
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>RenamedVectorTest</c> from a raw handle.
     /// </summary>
@@ -67,20 +84,6 @@ public partial class RenamedVectorTest: IDisposable
         {
             Raw.RenamedVectorTest* result = Raw.RenamedVectorTest.New();
             return new RenamedVectorTest(result);
-        }
-    }
-
-    public nuint Len()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("RenamedVectorTest");
-            }
-            var result = Raw.RenamedVectorTest.Len(AsFFI());
-            GC.KeepAlive(this);
-            return result;
         }
     }
 

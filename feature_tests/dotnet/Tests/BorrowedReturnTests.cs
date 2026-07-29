@@ -20,11 +20,11 @@ public class BorrowedReturnTests
         using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hello"));
         Assert.Equal((nuint)1, vec.Len());
 
-        using OpaqueThin first = vec.First()!;
+        using OpaqueThin first = vec.First!;
         Assert.NotNull(first);
-        Assert.Equal(7, first.A());
-        Assert.Equal(1.5f, first.B());
-        Assert.Equal("hello", first.C());
+        Assert.Equal(7, first.A);
+        Assert.Equal(1.5f, first.B);
+        Assert.Equal("hello", first.C);
     }
 
     [Fact]
@@ -35,8 +35,8 @@ public class BorrowedReturnTests
         // The indexer `get` is a borrowed return just like `First()`: an
         // in-range index hands back a non-owning view into the Vec slot.
         using OpaqueThin at0 = vec.Get(0)!;
-        Assert.Equal(7, at0.A());
-        Assert.Equal("hi", at0.C());
+        Assert.Equal(7, at0.A);
+        Assert.Equal("hi", at0.C);
 
         Assert.Null(vec.Get(1));
     }
@@ -47,16 +47,16 @@ public class BorrowedReturnTests
         using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
 
         // The borrow is taken BEFORE the mutation and never refreshed.
-        using OpaqueThin borrow = vec.First()!;
-        Assert.Equal("before", borrow.C());
+        using OpaqueThin borrow = vec.First!;
+        Assert.Equal("before", borrow.C);
 
         // Replacing the heap-backed `String` on the owner (which drops the old
         // buffer) is observed through the same outstanding borrow, which
         // re-reads the field. If `First()` had handed back a copy, the borrow
         // would still read "before"; seeing "after" proves it is an interior
         // reference into the same Vec slot the owner just wrote.
-        vec.SetFirstC(Utf8("after"));
-        Assert.Equal("after", borrow.C());
+        vec.FirstC = "after";
+        Assert.Equal("after", borrow.C);
     }
 
     [Fact]
@@ -66,13 +66,13 @@ public class BorrowedReturnTests
 
         // A borrowed handle owns nothing, so Dispose must be a no-op on Rust's
         // pointer — even called twice, it must not double-free.
-        OpaqueThin first = vec.First()!;
+        OpaqueThin first = vec.First!;
         first.Dispose();
         first.Dispose();
 
         // The owner is untouched: a fresh borrow still reads correctly.
-        using OpaqueThin again = vec.First()!;
-        Assert.Equal(7, again.A());
+        using OpaqueThin again = vec.First!;
+        Assert.Equal(7, again.A);
     }
 
     // Tier1's precise liveness can drop the `OpaqueThinVec` local at its last
@@ -86,7 +86,7 @@ public class BorrowedReturnTests
     )]
     private static OpaqueThin BorrowAndDropOwner()
     {
-        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).First()!;
+        return OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("rooted")).First!;
     }
 
     [Fact]
@@ -103,8 +103,8 @@ public class BorrowedReturnTests
         }
 
         // If the owner had been finalized, these read freed memory (UAF).
-        Assert.Equal(42, borrow.A());
-        Assert.Equal("rooted", borrow.C());
+        Assert.Equal(42, borrow.A);
+        Assert.Equal("rooted", borrow.C);
         GC.KeepAlive(borrow);
     }
 
@@ -135,8 +135,8 @@ public class BorrowedReturnTests
 
         // The owner is referenced only through the Ok wrapper's edges; if those
         // weren't wired, the Vec would be finalized and this would be a UAF.
-        Assert.Equal(42, borrow.A());
-        Assert.Equal("rooted", borrow.C());
+        Assert.Equal(42, borrow.A);
+        Assert.Equal("rooted", borrow.C);
         GC.KeepAlive(borrow);
     }
 
@@ -155,7 +155,7 @@ public class BorrowedReturnTests
 
         // Result + Option + borrowing view: Ok(Some(_)) reads through the borrow.
         using OpaqueThin at0 = vec.TryGet(0, false)!;
-        Assert.Equal(7, at0.A());
+        Assert.Equal(7, at0.A);
 
         // Ok(None): out-of-range index is a null return, not a throw.
         Assert.Null(vec.TryGet(5, false));
@@ -186,8 +186,8 @@ public class BorrowedReturnTests
             GC.WaitForPendingFinalizers();
         }
 
-        Assert.Equal(42, borrow.A());
-        Assert.Equal("rooted", borrow.C());
+        Assert.Equal(42, borrow.A);
+        Assert.Equal("rooted", borrow.C);
         GC.KeepAlive(borrow);
     }
 
@@ -220,7 +220,7 @@ public class BorrowedReturnTests
         // that Vec alive is the owned iterator's edges. If they weren't wired,
         // the Vec would be finalized and this a UAF.
         using OpaqueThin first = iter.Next()!;
-        Assert.Equal(42, first.A());
+        Assert.Equal(42, first.A);
         Assert.Null(iter.Next()); // single-element vec: exhausted after first Next()
         GC.KeepAlive(iter);
     }
@@ -277,8 +277,8 @@ public class BorrowedReturnTests
         }
 
         using OpaqueThin first = iter.Next()!;
-        Assert.Equal(42, first.A());
-        Assert.Equal("rooted", first.C());
+        Assert.Equal(42, first.A);
+        Assert.Equal("rooted", first.C);
         Assert.Null(iter.Next());
         GC.KeepAlive(iter);
     }
@@ -302,8 +302,8 @@ public class BorrowedReturnTests
         BorrowingErrorException ex =
             Assert.Throws<BorrowingErrorException>(() => vec.TryBorrow(true));
         using OpaqueThin view = ex.Inner.OwnerFirst()!;
-        Assert.Equal(7, view.A());
-        Assert.Equal("hi", view.C());
+        Assert.Equal(7, view.A);
+        Assert.Equal("hi", view.C);
     }
 
     // The Ok arm of `try_borrow` is owned (`int`), so its edges are empty — the
@@ -345,8 +345,8 @@ public class BorrowedReturnTests
         // error: if the edges weren't wired, the Vec (and its heap-backed
         // String) would be finalized and `C()` here would be a use-after-free.
         using OpaqueThin view = ex.Inner.OwnerFirst()!;
-        Assert.Equal(42, view.A());
-        Assert.Equal("rooted", view.C());
+        Assert.Equal(42, view.A);
+        Assert.Equal("rooted", view.C);
         GC.KeepAlive(ex);
     }
 }

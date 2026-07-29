@@ -1,0 +1,18 @@
+{%- for exception_name in docs.exception_names %}
+    /// <exception cref="{{ exception_name }}"></exception>
+{%- endfor %}
+{%- if let Some(opaque_name) = docs.returns_opaque %}
+    /// <returns>
+    /// A <c>{{ opaque_name }}</c> allocated on Rust side.
+    /// </returns>
+{%- endif %}
+{%- if let Some(lifetime) = docs.lifetime %}
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The caller is responsible for keeping any borrowed backing storage alive and undisposed while the returned value is in use.
+{%- if lifetime.pinned_inputs %}
+    /// <br/>
+    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+{%- endif %}
+    /// </remarks>
+{%- endif %}

@@ -20,6 +20,48 @@ public partial class MyString: IDisposable
 
     private static readonly unsafe RustDestructor<Raw.MyString> _destroy = Raw.MyString.Destroy;
 
+    public string Str
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("MyString");
+                }
+                DiplomatWrite writeable = new DiplomatWrite();
+                try
+                {
+                    Raw.MyString.GetStr(AsFFI(), &writeable);
+                    GC.KeepAlive(this);
+                    return writeable.ToUnicode();
+                }
+                finally
+                {
+                    writeable.Dispose();
+                }
+            }
+        }
+        set
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("MyString");
+                }
+                if (value == null) throw new ArgumentNullException(nameof(value));
+                byte[] valueBytes = Diplomat.Utf8.Clone(value);
+                fixed (byte* valuePtr = valueBytes)
+                {
+                    Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
+                    GC.KeepAlive(this);
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>MyString</c> from a raw handle.
     /// </summary>
@@ -87,45 +129,6 @@ public partial class MyString: IDisposable
             {
                 Raw.MyString* result = Raw.MyString.NewUnsafe(new DiplomatSliceU8 { Ptr = vPtr, Len = (nuint)vBytes.Length });
                 return new MyString(result);
-            }
-        }
-    }
-
-    public void SetStr(byte[] newStr)
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("MyString");
-            }
-            if (newStr == null) throw new ArgumentNullException(nameof(newStr));
-            fixed (byte* newStrPtr = newStr)
-            {
-                Raw.MyString.SetStr(AsFFI(), new DiplomatSliceU8 { Ptr = newStrPtr, Len = (nuint)newStr.Length });
-                GC.KeepAlive(this);
-            }
-        }
-    }
-
-    public string GetStr()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("MyString");
-            }
-            DiplomatWrite writeable = new DiplomatWrite();
-            try
-            {
-                Raw.MyString.GetStr(AsFFI(), &writeable);
-                GC.KeepAlive(this);
-                return writeable.ToUnicode();
-            }
-            finally
-            {
-                writeable.Dispose();
             }
         }
     }

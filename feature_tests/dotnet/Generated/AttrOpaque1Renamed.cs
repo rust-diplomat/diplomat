@@ -20,6 +20,40 @@ public partial class AttrOpaque1Renamed: IDisposable
 
     private static readonly unsafe RustDestructor<Raw.AttrOpaque1Renamed> _destroy = Raw.AttrOpaque1Renamed.Destroy;
 
+    public byte Abirenamed
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("AttrOpaque1Renamed");
+                }
+                var result = Raw.AttrOpaque1Renamed.Abirenamed(AsFFI());
+                GC.KeepAlive(this);
+                return result;
+            }
+        }
+    }
+
+    public byte method_renamed
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("AttrOpaque1Renamed");
+                }
+                var result = Raw.AttrOpaque1Renamed.method_renamed(AsFFI());
+                GC.KeepAlive(this);
+                return result;
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>AttrOpaque1Renamed</c> from a raw handle.
     /// </summary>
@@ -95,34 +129,6 @@ public partial class AttrOpaque1Renamed: IDisposable
         unsafe
         {
             return Raw.AttrOpaque1Renamed.Hello();
-        }
-    }
-
-    public byte method_renamed()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("AttrOpaque1Renamed");
-            }
-            var result = Raw.AttrOpaque1Renamed.method_renamed(AsFFI());
-            GC.KeepAlive(this);
-            return result;
-        }
-    }
-
-    public byte Abirenamed()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("AttrOpaque1Renamed");
-            }
-            var result = Raw.AttrOpaque1Renamed.Abirenamed(AsFFI());
-            GC.KeepAlive(this);
-            return result;
         }
     }
 

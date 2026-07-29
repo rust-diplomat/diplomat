@@ -15,7 +15,8 @@
 use askama::Template;
 use diplomat_core::hir::{IdentBuf, OpaqueDef};
 
-use super::method::{self, MethodInfo, PropertyInfo};
+use super::accessor::PropertyInfo;
+use super::method::MethodInfo;
 use super::ItemGenContext;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -39,11 +40,15 @@ struct OpaqueImplTemplate<'ctx> {
     name: String,
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
-    properties: Vec<PropertyInfo>,
+    properties: Vec<PropertyInfo<'ctx>>,
     /// Run-level: true iff any type in this generation run pins a slice. Gates
     /// the `DiplomatPinnedMemory` Dispose sweep so a run with no pinned returns
     /// emits nothing referencing the (System.Memory-dependent) helper.
     uses_pinned_memory: bool,
+    /// True for an opaque: its instance members check `_inner` before calling
+    /// into Rust, which a struct has no need for. Read by `property.cs.jinja`,
+    /// which both impl templates include.
+    is_opaque: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,16 +81,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         &self,
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
+        properties: Vec<PropertyInfo<'tcx>>,
         uses_pinned_memory: bool,
     ) -> String {
-        let properties = method::collect_properties(&methods);
-
         OpaqueImplTemplate {
             name: display_name,
             namespace: self.namespace,
             methods,
             properties,
             uses_pinned_memory,
+            is_opaque: true,
         }
         .render()
         .unwrap()

@@ -11,8 +11,8 @@ public class AttrTests
     {
         using AttrOpaque1Renamed value = AttrOpaque1Renamed.totally_not_New();
 
-        Assert.Equal((byte)77, value.method_renamed());
-        Assert.Equal((byte)123, value.Abirenamed());
+        Assert.Equal((byte)77, value.method_renamed);
+        Assert.Equal((byte)123, value.Abirenamed);
         Assert.Equal(10, AttrOpaque1Renamed.MacTest());
         Assert.Equal(0, AttrOpaque1Renamed.Hello());
     }
@@ -35,7 +35,7 @@ public class AttrTests
 
         Assert.True(value.A);
         Assert.Equal(32u, value.B);
-        Assert.Equal(5u, value.C());
+        Assert.Equal(5u, value.C);
         Assert.Throws<InvalidOperationException>(() => RenamedStructWithAttrs.NewFallible(false, 2));
     }
 

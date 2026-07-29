@@ -17,7 +17,8 @@
 use askama::Template;
 use diplomat_core::hir::{self, StructDef};
 
-use crate::dotnet::r#gen::method::{self, MethodInfo, PropertyInfo};
+use crate::dotnet::r#gen::accessor::PropertyInfo;
+use crate::dotnet::r#gen::method::MethodInfo;
 use crate::dotnet::r#gen::{DotnetPrimitives, ItemGenContext};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ use crate::dotnet::r#gen::{DotnetPrimitives, ItemGenContext};
 pub(super) struct StructField {
     /// PascalCase C# field name (e.g. `X`, `Y`), already run through the
     /// formatter so the template can drop it in verbatim.
-    name: String,
+    pub(super) name: String,
     field_type: StructFieldType,
 }
 
@@ -91,7 +92,10 @@ struct ImplStructTemplate<'ctx, 'tcx> {
     namespace: &'ctx str,
     fields: Vec<StructField>,
     methods: Vec<MethodInfo<'tcx>>,
-    properties: Vec<PropertyInfo>,
+    properties: Vec<PropertyInfo<'tcx>>,
+    /// Always false: a struct is a value type, so there is no handle to check.
+    /// Read by `property.cs.jinja`, which both impl templates include.
+    is_opaque: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -122,15 +126,15 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: String,
         fields: Vec<StructField>,
         methods: Vec<MethodInfo<'tcx>>,
+        properties: Vec<PropertyInfo<'tcx>>,
     ) -> String {
-        let properties = method::collect_properties(&methods);
-
         ImplStructTemplate {
             name: display_name,
             namespace: self.namespace,
             fields,
             methods,
             properties,
+            is_opaque: false,
         }
         .render()
         .expect("Failed to render struct impl template")

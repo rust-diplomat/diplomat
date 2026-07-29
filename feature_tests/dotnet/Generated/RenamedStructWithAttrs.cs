@@ -24,6 +24,17 @@ public partial struct RenamedStructWithAttrs
         B = raw.B,
     };
 
+    public uint C
+    {
+        get
+        {
+            unsafe
+            {
+                return Raw.RenamedStructWithAttrs.C(this.AsFFI());
+            }
+        }
+    }
+
     /// <exception cref="InvalidOperationException"></exception>
 
     public static RenamedStructWithAttrs NewFallible(bool a, uint b)
@@ -36,15 +47,6 @@ public partial struct RenamedStructWithAttrs
                 throw new InvalidOperationException("FFI function failed with unit error");
             }
             return RenamedStructWithAttrs.FromFFI(result.Ok);
-        }
-    }
-
-
-    public uint C()
-    {
-        unsafe
-        {
-            return Raw.RenamedStructWithAttrs.C(this.AsFFI());
         }
     }
 

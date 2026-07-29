@@ -47,10 +47,10 @@ impl DotnetCallback {
     ) -> Self {
         let method_context = input_context.method();
         let method_abi_name = method_context.method_abi_name();
-        let param_name = if input_context.param_ident().is_empty() {
+        let param_name = if input_context.rust_ident().is_empty() {
             format!("arg{}", input_context.param_index())
         } else {
-            input_context.param_ident().to_string()
+            input_context.rust_ident().to_string()
         };
         let name = format!("DiplomatCallback_{method_abi_name}_{param_name}");
 

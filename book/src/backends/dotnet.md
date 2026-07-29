@@ -19,12 +19,69 @@ The configuration consists of these options:
   `FooException`.
 * `exception_message_method` (or `exceptions.error_message_method`) - the method on an
   error type used to populate the generated exception's message, e.g. `ToDisplay`.
-* `getters_prefix` (or `properties.getters_prefix`) - prefix identifying property getters,
-  e.g. `get_`.
-* `setters_prefix` (or `properties.setters_prefix`) - prefix identifying property setters,
-  e.g. `set_`.
 * `scaffold` - an optional binary value. If set to `true`, `diplomat-tool` will emit a
   `.csproj` scaffold next to the generated sources.
+
+## Properties
+
+`#[diplomat::attr(auto, getter)]` and `#[diplomat::attr(auto, setter = "name")]` render as
+C# properties. The accessor *is* the property — its body is generated inline, so no
+separate method is emitted:
+
+```rust
+#[diplomat::attr(auto, getter)]
+pub fn width(&self) -> u32 { self.0.width }
+```
+```csharp
+public uint Width
+{
+    get
+    {
+        unsafe
+        {
+            /* ... */
+        }
+    }
+}
+```
+
+A getter and a setter that resolve to the same property name are merged into one property
+with both accessors. C# cannot hold two members of the same name, so this merging is
+required — unlike Dart or JS, where a getter and setter are separate members.
+
+Two cases do not merge:
+
+* A setter with no matching getter becomes a **write-only** property.
+* A getter and setter whose types disagree are rejected with a diagnostic naming both
+  types, both Rust methods, and the marshal each side chose. A C# property has one type,
+  and silently dropping the setter would hide the mistake — make the two agree. A
+  byte-slice pair is the case you are most likely to hit: a `&'a [u8]` getter hands out a
+  `DiplomatBorrowedSpan<byte>` view over Rust-owned memory, while a `&[u8]` setter takes a
+  managed `byte[]` Rust only reads during the call. No single C# type serves both.
+
+A getter must take `&self`. A `&mut self` getter is rejected, because reading it could
+change the value: a property is read more than once — by a debugger watch, a serializer,
+or just twice in a row — and a one-shot `self.field.take()` behind a property would drain
+to null on the second read. Setters keep `&mut self`; assigning is the point.
+
+Names must not collide either. A property that would share its name with a method, a
+struct field, the type that contains it, or one of the members Diplomat always generates
+(`AsFFI`, `FromFFI`, and `Dispose` on opaques) is rejected, because C# would not compile
+the result.
+
+A getter that returns an opaque or an owned `Box<[u8]>` hands back a value you own, so
+dispose it — `using var x = thing.Held;`. It is not a cheap field read: each get crosses
+the FFI boundary and, for those two shapes, allocates.
+
+In accessor position a string-shaped parameter is always `string`, even for
+`&DiplomatStr` (which is `byte[]` everywhere else, zero-copy and unvalidated). A property
+cannot have one type for reading and another for writing, and every other backend already
+maps `&DiplomatStr` to its string type — `std::string_view` in C++/Nanobind, `String` in
+Dart, `string` in JS. Parameters outside accessors keep the zero-copy `byte[]` shape.
+
+`#[diplomat::rename]` is applied after case conversion, so its value is used verbatim
+(`#[rename = "UTCTime"]` stays `UTCTime`, not `UtcTime`) — matching how this backend names
+methods and types. Static accessors are not supported.
 
 ## Ownership and memory safety
 

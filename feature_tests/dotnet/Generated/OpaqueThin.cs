@@ -20,6 +20,65 @@ public partial class OpaqueThin: IDisposable
 
     private static readonly unsafe RustDestructor<Raw.OpaqueThin> _destroy = Raw.OpaqueThin.Destroy;
 
+    public int A
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("OpaqueThin");
+                }
+                var result = Raw.OpaqueThin.A(AsFFI());
+                GC.KeepAlive(this);
+                return result;
+            }
+        }
+    }
+
+    public float B
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("OpaqueThin");
+                }
+                var result = Raw.OpaqueThin.B(AsFFI());
+                GC.KeepAlive(this);
+                return result;
+            }
+        }
+    }
+
+    public string C
+    {
+        get
+        {
+            unsafe
+            {
+                if (_inner.IsNull)
+                {
+                    throw new ObjectDisposedException("OpaqueThin");
+                }
+                DiplomatWrite writeable = new DiplomatWrite();
+                try
+                {
+                    Raw.OpaqueThin.C(AsFFI(), &writeable);
+                    GC.KeepAlive(this);
+                    return writeable.ToUnicode();
+                }
+                finally
+                {
+                    writeable.Dispose();
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Creates a managed <c>OpaqueThin</c> from a raw handle.
     /// </summary>
@@ -56,56 +115,6 @@ public partial class OpaqueThin: IDisposable
     {
         _inner = inner;
         _edges = edges;
-    }
-
-    public int A()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("OpaqueThin");
-            }
-            var result = Raw.OpaqueThin.A(AsFFI());
-            GC.KeepAlive(this);
-            return result;
-        }
-    }
-
-    public float B()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("OpaqueThin");
-            }
-            var result = Raw.OpaqueThin.B(AsFFI());
-            GC.KeepAlive(this);
-            return result;
-        }
-    }
-
-    public string C()
-    {
-        unsafe
-        {
-            if (_inner.IsNull)
-            {
-                throw new ObjectDisposedException("OpaqueThin");
-            }
-            DiplomatWrite writeable = new DiplomatWrite();
-            try
-            {
-                Raw.OpaqueThin.C(AsFFI(), &writeable);
-                GC.KeepAlive(this);
-                return writeable.ToUnicode();
-            }
-            finally
-            {
-                writeable.Dispose();
-            }
-        }
     }
 
     /// <summary>
