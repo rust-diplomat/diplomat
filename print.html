@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e982403e.js";
+            window.path_to_searchindex_js = "searchindex-ae932642.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9d6e84c7.js"></script>
@@ -2638,13 +2638,61 @@ exception class names from error types, e.g. trimming <code>Error</code> so <cod
 <code>FooException</code>.</li>
 <li><code>exception_message_method</code> (or <code>exceptions.error_message_method</code>) - the method on an
 error type used to populate the generated exception’s message, e.g. <code>ToDisplay</code>.</li>
-<li><code>getters_prefix</code> (or <code>properties.getters_prefix</code>) - prefix identifying property getters,
-e.g. <code>get_</code>.</li>
-<li><code>setters_prefix</code> (or <code>properties.setters_prefix</code>) - prefix identifying property setters,
-e.g. <code>set_</code>.</li>
 <li><code>scaffold</code> - an optional binary value. If set to <code>true</code>, <code>diplomat-tool</code> will emit a
 <code>.csproj</code> scaffold next to the generated sources.</li>
 </ul>
+<h2 id="properties"><a class="header" href="#properties">Properties</a></h2>
+<p><code>#[diplomat::attr(auto, getter)]</code> and <code>#[diplomat::attr(auto, setter = "name")]</code> render as
+C# properties. The accessor <em>is</em> the property — its body is generated inline, so no
+separate method is emitted:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::attr(auto, getter)]
+pub fn width(&amp;self) -&gt; u32 { self.0.width }
+<span class="boring">}</span></code></pre>
+<pre><code class="language-csharp">public uint Width
+{
+    get
+    {
+        unsafe
+        {
+            /* ... */
+        }
+    }
+}
+</code></pre>
+<p>A getter and a setter that resolve to the same property name are merged into one property
+with both accessors. C# cannot hold two members of the same name, so this merging is
+required — unlike Dart or JS, where a getter and setter are separate members.</p>
+<p>Two cases do not merge:</p>
+<ul>
+<li>A setter with no matching getter becomes a <strong>write-only</strong> property.</li>
+<li>A getter and setter whose types disagree are rejected with a diagnostic naming both
+types, both Rust methods, and the marshal each side chose. A C# property has one type,
+and silently dropping the setter would hide the mistake — make the two agree. A
+byte-slice pair is the case you are most likely to hit: a <code>&amp;'a [u8]</code> getter hands out a
+<code>DiplomatBorrowedSpan&lt;byte&gt;</code> view over Rust-owned memory, while a <code>&amp;[u8]</code> setter takes a
+managed <code>byte[]</code> Rust only reads during the call. No single C# type serves both.</li>
+</ul>
+<p>A getter must take <code>&amp;self</code>. A <code>&amp;mut self</code> getter is rejected, because reading it could
+change the value: a property is read more than once — by a debugger watch, a serializer,
+or just twice in a row — and a one-shot <code>self.field.take()</code> behind a property would drain
+to null on the second read. Setters keep <code>&amp;mut self</code>; assigning is the point.</p>
+<p>Names must not collide either. A property that would share its name with a method, a
+struct field, the type that contains it, or one of the members Diplomat always generates
+(<code>AsFFI</code>, <code>FromFFI</code>, and <code>Dispose</code> on opaques) is rejected, because C# would not compile
+the result.</p>
+<p>A getter that returns an opaque or an owned <code>Box&lt;[u8]&gt;</code> hands back a value you own, so
+dispose it — <code>using var x = thing.Held;</code>. It is not a cheap field read: each get crosses
+the FFI boundary and, for those two shapes, allocates.</p>
+<p>In accessor position a string-shaped parameter is always <code>string</code>, even for
+<code>&amp;DiplomatStr</code> (which is <code>byte[]</code> everywhere else, zero-copy and unvalidated). A property
+cannot have one type for reading and another for writing, and every other backend already
+maps <code>&amp;DiplomatStr</code> to its string type — <code>std::string_view</code> in C++/Nanobind, <code>String</code> in
+Dart, <code>string</code> in JS. Parameters outside accessors keep the zero-copy <code>byte[]</code> shape.</p>
+<p><code>#[diplomat::rename]</code> is applied after case conversion, so its value is used verbatim
+(<code>#[rename = "UTCTime"]</code> stays <code>UTCTime</code>, not <code>UtcTime</code>) — matching how this backend names
+methods and types. Static accessors are not supported.</p>
 <h2 id="ownership-and-memory-safety"><a class="header" href="#ownership-and-memory-safety">Ownership and memory safety</a></h2>
 <p>Every opaque type is backed by a <code>RustHandle&lt;T&gt;</code> rather than a bare pointer. A handle
 remembers who owns the underlying memory: an <strong>owned</strong> handle carries the Rust destructor
@@ -2731,7 +2779,7 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox"> Fallible Constructors</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> <a href="#getters-and-setters">Getters/Setters</a></p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#getters-and-setters">Getters/Setters</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> Static Getters/Setters</p>
