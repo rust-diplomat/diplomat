@@ -225,11 +225,13 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     //     struct codegen.
     //   - `utf16_strings`: `&DiplomatStr16` inputs are zero-copy (call-scoped
     //     and borrowed-by-return); borrowed string *returns* (`&'a str` /
-    //     `&'a DiplomatStr` / `&'a DiplomatStr16`) work bare but not wrapped
-    //     in `Result`/`Option` yet; owned string returns (`Box<str>`) aren't
-    //     supported (see the separately-decided owned-slice-return design in
-    //     DECISIONS.md); `&[&str]` (`Slice::Strs`) is rejected regardless of
-    //     encoding.
+    //     `&'a DiplomatStr` / `&'a DiplomatStr16`) work bare when they borrow
+    //     an opaque owner, but not when they borrow a slice/string parameter
+    //     (no Dispose path to unpin) and not wrapped in `Result`/`Option`
+    //     yet; `'static` string/slice returns are rejected; owned string
+    //     returns (`Box<str>`) aren't supported (see the separately-decided
+    //     owned-slice-return design in DECISIONS.md); `&[&str]`
+    //     (`Slice::Strs`) is rejected regardless of encoding.
     // The granularity needed to express this in `attr_support` doesn't
     // exist (no per-primitive flag), so we keep the broad flags `true`
     // and document the gaps here + via the diagnostics themselves.
@@ -2089,6 +2091,67 @@ mod test {
         assert_eq!(errors.len(), 1);
         assert!(
             errors[0].contains("wrapping a borrowed span return"),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+    }
+
+    // A borrowed span that borrows a slice/string param would pin that
+    // buffer onto DiplomatBorrowedSpan._edges, but the span has no Dispose
+    // and the pin holder has no finalizer — permanent pin. Reject rather
+    // than generate a leaky binding. (Owned opaque success returns that
+    // borrow a slice param remain supported: their Dispose unpins.)
+    #[test]
+    fn borrowed_span_return_borrowing_slice_param_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+
+                #[diplomat::opaque]
+                pub struct MyString;
+
+                impl MyString {
+                    pub fn echo_str<'a>(&'a self, s: &'a DiplomatStr) -> &'a DiplomatStr {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("borrows from slice/string parameter"),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+    }
+
+    // `'static` string returns have no managed owner and no dispose path on
+    // the span — reject until there's an explicit static-slice design.
+    #[test]
+    fn static_string_return_is_rejected() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct MyString;
+
+                impl MyString {
+                    pub fn get_static_str() -> &'static str {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        // HIR may still lower `'static` returns; the .NET backend rejects them
+        // in lower_return (defense in depth on top of static_slices=false).
+        let (_files, errors) = run_dotnet(tk_stream);
+        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        assert!(
+            errors[0].contains("'static") || errors[0].contains("static"),
             "unexpected diagnostics: {}",
             errors.join("\n")
         );

@@ -945,17 +945,15 @@ impl MethodInfo<'_> {
     }
 
     pub(super) fn can_return_raw_call_directly(&self) -> bool {
+        // Only shapes whose raw value already IS the public value. A
+        // `BorrowedSpan` return does not qualify even though its wire struct
+        // needs no `Raw.` prefix: the raw call yields `DiplomatSliceU8`, and
+        // the public type is `DiplomatBorrowedSpan<T>` — returning the raw
+        // call directly is uncompilable C# (CS0029).
         self.option_info.is_none()
             && matches!(
                 self.return_type,
-                // `BorrowedSpan`'s raw type is a run-level wire struct
-                // (`DiplomatSliceU8`/`DiplomatSliceU16`/`DiplomatSliceU32`)
-                // living in the `Diplomat` namespace, not nested under the
-                // `Raw` static class like Opaque/Struct/Enum mirrors are —
-                // same "no `Raw.` mirror" situation as Primitive/Enum.
-                DotnetReturnType::Primitive(_)
-                    | DotnetReturnType::Enum(_)
-                    | DotnetReturnType::BorrowedSpan(_)
+                DotnetReturnType::Primitive(_) | DotnetReturnType::Enum(_)
             )
     }
 
@@ -968,11 +966,14 @@ impl MethodInfo<'_> {
             .is_some();
         // `var`, not `Raw.<T>`: primitive/enum returns have no `Raw.` mirror,
         // so capturing the result for the keep-alive case stays valid C#.
-        // `DiplomatOwnedSliceU8` is a runtime helper type in `{namespace}.Diplomat`,
-        // not a per-type `Raw.` mirror, so it takes the same `var` path.
+        // `DiplomatOwnedSliceU8` and the `BorrowedSpan` wire structs
+        // (`DiplomatSliceU8`/U16/U32) are runtime helper types in
+        // `{namespace}.Diplomat`, not per-type `Raw.` mirrors, so they take
+        // the same `var` path.
         if uses_tagged_option
             || self.can_return_raw_call_directly()
             || self.return_type.is_owned_byte_slice()
+            || matches!(self.return_type, DotnetReturnType::BorrowedSpan(_))
         {
             format!("var result = {raw_call};")
         } else {
@@ -1283,6 +1284,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     }
                     // A pinned param roots its holder; any other slice/string
                     // param is call-scoped, so a borrowing return would dangle.
+                    // BorrowedSpan is intentionally not a pin owner: it has no
+                    // Dispose, so a span return borrowing a slice/string param
+                    // is rejected here (only owned opaque success may root pins).
                     LifetimeEdgeKind::SliceParam => match arm.pin_for(&edge.param_name) {
                         Some(pin) => {
                             if !edges.contains(&pin.pin_local) {
@@ -1293,8 +1297,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             self.errors.push_error(format!(
                                     "[.NET backend] {what} borrows from slice/string parameter \
                                      `{}`; only owned opaque success returns borrowing from \
-                                     `&[u8]`/`&[u32]` parameters are supported — other slice/string \
-                                     borrow positions still pin only for the duration of the call",
+                                     `&[u8]`/`&[u32]`/`&DiplomatStr`/`&DiplomatStr16` parameters \
+                                     are supported — a borrowed span (`&str`/`&[T]`) has no \
+                                     Dispose path to unpin, and other positions still pin only \
+                                     for the duration of the call",
                                     edge.param_name
                                 ));
                             return None;
@@ -1486,7 +1492,19 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 DotnetReturnType::Enum(self.enum_name(p))
             }
             hir::SuccessType::OutType(hir::Type::Slice(slice)) => match slice {
-                hir::Slice::Str(Some(_), encoding) => {
+                hir::Slice::Str(Some(lifetime), encoding) => {
+                    // `'static` string returns have no managed owner to root
+                    // and no dispose path on DiplomatBorrowedSpan — reject
+                    // until there's an explicit static-slice design.
+                    if matches!(lifetime, hir::MaybeStatic::Static) {
+                        self.errors.push_error(
+                            "[.NET backend] `'static` string returns are not supported \
+                             today — return via `DiplomatWrite`, borrow from an opaque \
+                             owner, or disable this API for .NET."
+                                .to_string(),
+                        );
+                        return None;
+                    }
                     let elem = match encoding {
                         hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => {
                             BorrowedSpanElement::Byte
@@ -1500,6 +1518,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             return None;
                         }
                     };
+                    // Span never owns the bytes — pin holders must not ride
+                    // on it (no Dispose to unpin). Slice-param borrow edges
+                    // are rejected later via ownership == Borrowed.
+                    ownership = Ownership::Borrowed;
                     DotnetReturnType::BorrowedSpan(elem)
                 }
                 // Owned string returns (`Box<str>`) need the separately-decided
@@ -1513,7 +1535,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     );
                     return None;
                 }
-                hir::Slice::Primitive(MaybeOwn::Borrow(_), primitive_type) => {
+                hir::Slice::Primitive(MaybeOwn::Borrow(reference), primitive_type) => {
+                    if matches!(reference.lifetime, hir::MaybeStatic::Static) {
+                        self.errors.push_error(
+                            "[.NET backend] `'static` slice returns are not supported \
+                             today — borrow from an opaque owner, or disable this API \
+                             for .NET."
+                                .to_string(),
+                        );
+                        return None;
+                    }
                     let elem = match primitive_type {
                         hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8) => {
                             BorrowedSpanElement::Byte
@@ -1527,6 +1558,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                             return None;
                         }
                     };
+                    ownership = Ownership::Borrowed;
                     DotnetReturnType::BorrowedSpan(elem)
                 }
                 hir::Slice::Primitive(MaybeOwn::Own, primitive_type) => {
