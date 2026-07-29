@@ -1295,14 +1295,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         }
                         None => {
                             self.errors.push_error(format!(
-                                    "[.NET backend] {what} borrows from slice/string parameter \
+                                "[.NET backend] {what} borrows from slice/string parameter \
                                      `{}`; only owned opaque success returns borrowing from \
                                      `&[u8]`/`&[u32]`/`&DiplomatStr`/`&DiplomatStr16` parameters \
                                      are supported — a borrowed span (`&str`/`&[T]`) has no \
                                      Dispose path to unpin, and other positions still pin only \
                                      for the duration of the call",
-                                    edge.param_name
-                                ));
+                                edge.param_name
+                            ));
                             return None;
                         }
                     },
