@@ -814,6 +814,7 @@ mod tests {
             attrs: vec![],
             items: vec![item],
             shebang: None,
+            frontmatter: None,
         };
 
         prettyplease::unparse(&file)
