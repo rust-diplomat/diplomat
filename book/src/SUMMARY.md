@@ -33,6 +33,7 @@
     - [Comparators](attrs/comparators.md)
     - [Stringifiers](attrs/stringifiers.md)
     - [References](attrs/references.md)
+    - [Tuples](attrs/tuples.md)
     - [Custom Extra Code](attrs/custom_extra_code.md)
   - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)
