@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ae932642.js";
+            window.path_to_searchindex_js = "searchindex-7c453e55.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-9d6e84c7.js"></script>
+        <script src="toc-e5cc950d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1386,6 +1386,25 @@ mod ffi {
 </ol>
 <p>To assist in making mutable structs possible, some backends will codegen different structure field types from normal behavior. See the <a href="#c-backend-1">C++ backend’s docs for an example of why this might be</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="tuples"><a class="header" href="#tuples">Tuples</a></h1>
+<p>(Supported by <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=tuples)]</code>)</p>
+<p>In languages with tuples, Diplomat can treat structures as being tuples on the boundary between Rust and the backend when marked as such:</p>
+<pre><code class="language-rs">#[diplomat::attr(auto, tuple)]
+pub struct SomeStruct {
+    x: f32,
+    y: f32
+}
+
+impl SomeStruct {
+    pub fn some_fn() -&gt; SomeStruct;
+}
+</code></pre>
+<p>In C++, <code>SomeStruct</code> will be returned as</p>
+<pre><code class="language-cpp">std::tuple&lt;float, float&gt;
+</code></pre>
+<p>Tuples do not support non-static methods, since past the boundary a tuple is not the struct it was generated from.</p>
+<p>See https://github.com/rust-diplomat/diplomat/issues/1145 for the tracking issue for Tuples.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="custom-extra-code"><a class="header" href="#custom-extra-code">Custom Extra Code</a></h1>
 <p>Supported by <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=custom_bindings)]</code></p>
 <p>For developers who have a greater understanding of how Diplomat backends function, you are able to mark <code>enum</code> and <code>struct</code> definitions to insert custom extra binding code:</p>
@@ -2255,7 +2274,7 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2499,7 +2518,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2615,7 +2634,7 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2854,7 +2873,7 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2970,7 +2989,7 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3086,7 +3105,7 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3270,7 +3289,7 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox"> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox"> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3525,7 +3544,7 @@ somelib.run_callback(lambda: pass)
 <p><input disabled="" type="checkbox" checked=""> <a href="#opaques">Opaque Slices</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="attrs/tuples.html">tuples for more</a></p>
+<p><input disabled="" type="checkbox" checked=""> Tuples. See <a href="#tuples">tuples for more</a></p>
 </li>
 </ul>
 

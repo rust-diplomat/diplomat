@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Configuring Backends - The Diplomat Book</title>
+        <title>Tuples - The Diplomat Book</title>
 
 
         <!-- Custom HTML head -->
@@ -12,33 +12,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-e96d0476.css">
-        <link rel="stylesheet" href="css/chrome-d279d366.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7c453e55.js";
+            window.path_to_searchindex_js = "../searchindex-7c453e55.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-e5cc950d.js"></script>
+        <script src="../toc-e5cc950d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -105,7 +105,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -140,7 +140,7 @@
                     <h1 class="menu-title">The Diplomat Book</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
 
@@ -174,66 +174,34 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="configuring-diplomat"><a class="header" href="#configuring-diplomat">Configuring Diplomat</a></h1>
-<p>Some Diplomat backends have configurable parameters to change the behavior of their output.</p>
-<p>For instance, Kotlin requires a <code>domain</code> parameter and <code>lib_name</code> parameter. These two parameters are used to generate a package name and folder structure on generation.</p>
-<h2 id="configuration-structures"><a class="header" href="#configuration-structures">Configuration Structures</a></h2>
-<p>Documentation on what configuration options are available in <a href="https://github.com/rust-diplomat/diplomat/tree/main/tool/src/config.rs"><code>config.rs</code> on GitHub</a>.</p>
-<p>Note that every configuration option uses <code>snake_case</code> for consistency, and that the <code>SharedConfig</code> struct is flattened. So for setting <code>--config shared_config.lib_name="some_value"</code>, this would instead be <code>--config lib_name="some_value"</code>.</p>
-<h2 id="configuration-interfaces"><a class="header" href="#configuration-interfaces">Configuration Interfaces</a></h2>
-<p>Configuration information can be set in four ways:</p>
-<h3 id="configtoml"><a class="header" href="#configtoml"><code>config.toml</code></a></h3>
-<p>By default, Diplomat scans for a <code>config.toml</code> in the folder where <code>diplomat_tool</code> is being run. You can change the location of this folder with the <code>--config_file</code> parameter.</p>
-<p>The structure of <code>config.toml</code> is as follows:</p>
-<pre><code class="language-toml"># Top level table specifies Shared Config settings that apply to all backends:
-lib-name = "MyLibrary"
-
-[kotlin]
-# Individual tables can override Shared Config settings:
-lib-name = "LibraryNameOverride"
-# Along with backend specific settings:
-domain = "org.myOrganization"
-
-[demo_gen]
-explicit-generation = true
-
-[other-library-name]
-some-value = 100
-</code></pre>
-<h3 id="diplomat-tool-cli"><a class="header" href="#diplomat-tool-cli"><code>diplomat-tool</code> CLI</a></h3>
-<p>When running <code>diplomat-tool</code>, you may pass in the <code>--config</code> flag for each option you wish to set:</p>
-<pre><code>./diplomat-tool kotlin ./kotlin-folder --config lib_name="MyLibrary" --config kotlin.domain = "org.myOrganization"
-</code></pre>
-<p><code>diplomat-tool</code> flags take priority over <code>config.toml</code>.</p>
-<h3 id="diplomat_toolgen"><a class="header" href="#diplomat_toolgen"><code>diplomat_tool::gen</code></a></h3>
-<p>If you call <code>diplomat_tool::gen</code> manually, then you have the option of setting configuration yourself, with the <code>diplomat_tool::config::Config</code> struct.</p>
-<p>See <a href="#backend-structures">Backend Structures</a> for more on these structures.</p>
-<h3 id="diplomatconfig"><a class="header" href="#diplomatconfig"><code>#[diplomat::config(...)]</code></a></h3>
-<p>In <code>lib.rs</code>, any top-level <code>mod</code>ule, <code>struct</code>, or <code>impl</code> block can use the <code>#[diplomat::config]</code> attribute:</p>
-<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
-</span><span class="boring">fn main() {
-</span>#[diplomat::config(lib_name="MyLibrary")]
-struct SomeConfig;
-
-#[diplomat::config(kotlin.domain="org.myOrganization")]
-mod kotlin_specific_mod;
-
-#[diplomat::config(...)]
-impl SomeConfig {
-
+                        <h1 id="tuples"><a class="header" href="#tuples">Tuples</a></h1>
+<p>(Supported by <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=tuples)]</code>)</p>
+<p>In languages with tuples, Diplomat can treat structures as being tuples on the boundary between Rust and the backend when marked as such:</p>
+<pre><code class="language-rs">#[diplomat::attr(auto, tuple)]
+pub struct SomeStruct {
+    x: f32,
+    y: f32
 }
-<span class="boring">}</span></code></pre>
-<p>Due to a quirk of how Diplomat reads these attributes, <code>#[diplomat::config]</code> has priority over all other methods of setting configuration.</p>
+
+impl SomeStruct {
+    pub fn some_fn() -&gt; SomeStruct;
+}
+</code></pre>
+<p>In C++, <code>SomeStruct</code> will be returned as</p>
+<pre><code class="language-cpp">std::tuple&lt;float, float&gt;
+</code></pre>
+<p>Tuples do not support non-static methods, since past the boundary a tuple is not the struct it was generated from.</p>
+<p>See https://github.com/rust-diplomat/diplomat/issues/1145 for the tracking issue for Tuples.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="basics.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../attrs/references.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="types.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../attrs/custom_extra_code.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -243,11 +211,11 @@ impl SomeConfig {
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="basics.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../attrs/references.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="types.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../attrs/custom_extra_code.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -267,13 +235,13 @@ impl SomeConfig {
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-09f2665d.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-abc7f01d.js"></script>
-        <script src="book-609e4cb8.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
 
         <!-- Custom JS scripts -->
 
