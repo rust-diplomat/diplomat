@@ -129,7 +129,7 @@ pub(crate) fn run<'tcx>(
             },
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
-            generating_struct_fields: false,
+            generate_definition_includes: false,
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
@@ -189,7 +189,7 @@ pub(crate) fn run<'tcx>(
                 },
                 impl_header: &mut free_func_impl_header,
                 decl_header: &mut Header::new(Default::default(), None),
-                generating_struct_fields: false,
+                generate_definition_includes: false,
             };
 
             let c_header = ty_context
@@ -271,7 +271,7 @@ mod test {
                 },
                 decl_header: &mut decl_header,
                 impl_header: &mut impl_header,
-                generating_struct_fields: false,
+                generate_definition_includes: false,
             };
 
             ty_gen_cx.gen_opaque_def(id);

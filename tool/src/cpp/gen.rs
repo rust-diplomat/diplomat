@@ -116,8 +116,9 @@ pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
     pub c: CItemGenContext<'ccx, 'tcx, 'header>,
     pub impl_header: &'header mut Header<'ccx>,
     pub decl_header: &'header mut Header<'ccx>,
-    /// Are we currently generating struct fields?
-    pub generating_struct_fields: bool,
+    /// For generating type names, do we need to include headers to grab additional ctypes info?
+    /// (Used for struct fields and trait definitions)
+    pub generate_definition_includes: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
@@ -384,13 +385,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let is_in_mut_struct =
             def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
 
-        self.generating_struct_fields = true;
+        self.generate_definition_includes = true;
         let field_decls = def
             .fields
             .iter()
             .map(|field| self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
-        self.generating_struct_fields = false;
+        self.generate_definition_includes = false;
 
         let cpp_to_c_fields = def
             .fields
@@ -825,7 +826,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                if self.generating_struct_fields {
+                if self.generate_definition_includes {
                     self.decl_header
                         .includes
                         .insert(self.formatter.fmt_decl_header_path(id.into()));
@@ -880,7 +881,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         self.decl_header
             .append_forward(def, &type_name_unnamespaced);
-        if self.generating_struct_fields {
+        if self.generate_definition_includes {
             self.decl_header
                 .includes
                 .insert(self.formatter.fmt_decl_header_path(id.into()));
