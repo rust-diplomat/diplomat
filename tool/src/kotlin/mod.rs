@@ -1752,10 +1752,13 @@ returnVal.option() ?: return null
                     Type::Slice(_) => {
                         panic!("Non-primitive slices are not allowed as callback args")
                     }
-                    Type::Opaque(_) => (
-                        format!("{in_ty}({in_name}, listOf())"),
-                        format!("{in_name}: Pointer"),
-                    ),
+                    Type::Opaque(ref op) => {
+                        let is_owned = op.is_owned();
+                        (
+                            format!("{in_ty}({in_name}, listOf(), {is_owned})"),
+                            format!("{in_name}: Pointer"),
+                        )
+                    }
                     _ => (in_name.clone(), format!("{in_name}: {in_ty}")),
                 })
                 .unzip();

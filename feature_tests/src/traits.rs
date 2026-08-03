@@ -5,12 +5,14 @@ mod ffi {
         x: i32,
         y: i32,
     }
+
     pub trait TesterTrait {
         fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
         #[diplomat::attr(kotlin, disable)]
         fn test_result_output(&self) -> Result<u32, ()>;
+        fn test_taking_mutable_opaque(&self, mo: &mut MutableBytes);
     }
 
     #[diplomat::cfg(supports = "traits")]
@@ -32,6 +34,36 @@ mod ffi {
         #[diplomat::attr(kotlin, disable)]
         pub fn test_result_output(t: impl TesterTrait) {
             assert_eq!(t.test_result_output(), Ok(0));
+        }
+
+        pub fn test_taking_mutable_opaque(t: impl TesterTrait) {
+            let mut mutable_bytes = MutableBytes::new();
+            t.test_taking_mutable_opaque(&mut mutable_bytes);
+            assert_eq!(mutable_bytes.get_as_bytes(), &[1, 2, 3]);
+        }
+    }
+
+    #[diplomat::opaque_mut]
+    pub struct MutableBytes {
+        inner: Option<Vec<u8>>,
+    }
+
+    impl MutableBytes {
+        pub fn get_as_bytes<'a>(&'a self) -> &'a [u8] {
+            match &self.inner {
+                Some(bytes) => bytes.as_slice(),
+                None => {
+                    panic!("MutableBytes have not been set");
+                }
+            }
+        }
+
+        pub fn set_bytes(&mut self, new_bytes: &[u8]) {
+            self.inner = Some(new_bytes.to_vec());
+        }
+
+        pub fn new() -> Box<Self> {
+            Box::new(Self { inner: None })
         }
     }
 }
