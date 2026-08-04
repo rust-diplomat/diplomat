@@ -23,5 +23,5 @@ keywords = ["ffi", "codegen"]
 [workspace.dependencies]
 diplomat = { version = "0.16.0", path = "macro", default-features = false }
 diplomat_core = { version = "0.16.0", path = "core", default-features = false }
-diplomat-runtime = { version = "0.16.0", path = "runtime", default-features = false }
+diplomat-runtime = { version = "0.15.1", path = "runtime", default-features = false }
 diplomat-tool = { version = "0.16.0", path = "tool", default-features = false }
