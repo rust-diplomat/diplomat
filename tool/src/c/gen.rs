@@ -469,7 +469,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 
                 let trait_name_unnamespaced = self.formatter.fmt_trait_name(t_id);
                 (
-                    self.formatter.diplomat_namespace_for_custom_type(trait_name_unnamespaced, res.attrs.namespace.as_deref()),
+                    self.formatter.diplomat_namespace_for_custom_type(format!("DiplomatTraitStruct_{trait_name_unnamespaced}").into(), res.attrs.namespace.as_deref()),
                     format!("{param_name}_trait_wrap").into(),
                 )
             }
