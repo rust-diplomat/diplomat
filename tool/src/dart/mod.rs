@@ -182,10 +182,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
     fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
         let special = self.gen_special_method_info(&ty.special_method_presence);
-        let is_precondition_violation = ty.attrs.precondition_violation;
 
         let mut implements = Vec::new();
-        if is_precondition_violation {
+        if ty.attrs.precondition_violation {
             implements.push("core.Error".to_string());
         } else if ty.attrs.custom_errors {
             implements.push("core.Exception".to_string());
@@ -210,7 +209,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: &'a [MethodInfo<'a>],
             docs: String,
             is_contiguous: bool,
-            is_precondition_violation: bool,
             implements: Vec<String>,
             special: SpecialMethodGenInfo<'a>,
         }
@@ -222,7 +220,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             methods: methods.as_slice(),
             docs: self.formatter.fmt_docs(&ty.docs),
             is_contiguous: is_contiguous_enum(ty),
-            is_precondition_violation,
             implements,
             special,
         }

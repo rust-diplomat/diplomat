@@ -11,6 +11,7 @@ pub mod ffi {
 
     #[derive(PartialEq, Eq, Debug)]
     #[diplomat::attr(auto, error)]
+    #[diplomat::attr(*, precondition_violation)]
     pub enum ErrorEnum {
         Foo,
         Bar,
