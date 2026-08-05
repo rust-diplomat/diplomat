@@ -89,8 +89,8 @@ export class StructOfOpaque {
         functionCleanupArena,
         appendArrayMap
     ) {
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#i.ffiValue, Uint32Array);
-        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#j.ffiValue, Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 0, this.#i instanceof Opaque ? this.#i.ffiValue : typeError('this.#i', 'Opaque'), Uint32Array);
+        diplomatRuntime.writeToArrayBuffer(arrayBuffer, offset + 4, this.#j instanceof OpaqueMut ? this.#j.ffiValue : typeError('this.#j', 'OpaqueMut'), Uint32Array);
     }
 
     static _fromFFI(internalConstructor, ptr, aEdges) {

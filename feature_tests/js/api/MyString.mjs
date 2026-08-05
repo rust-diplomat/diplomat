@@ -214,7 +214,7 @@ export class MyString {
     static sliceOfOpaques(sl) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op.ffiValue), "u32")));
+        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op instanceof MyString ? op.ffiValue : typeError('op', 'MyString')), "u32")));
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
     wasm.MyString_slice_of_opaques(slSlice.ptr, write.buffer);
@@ -234,7 +234,7 @@ export class MyString {
     static optionalSliceOfOpaques(sl) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op?.ffiValue ?? 0), "u32")));
+        const slSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, sl.map((op) => op === null || op instanceof MyString ? op?.ffiValue ?? 0 : typeError('op', 'MyString')), "u32")));
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
     wasm.MyString_optional_slice_of_opaques(slSlice.ptr, write.buffer);
@@ -254,7 +254,7 @@ export class MyString {
     static otherOpaqueType(other) {
         let functionCleanupArena = new diplomatRuntime.CleanupArena();
 
-        const otherSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, other.map((op) => op.ffiValue), "u32")));
+        const otherSlice = functionCleanupArena.alloc(diplomatRuntime.DiplomatBuf.sliceWrapper(wasm, diplomatRuntime.DiplomatBuf.slice(wasm, other.map((op) => op instanceof Float64Vec ? op.ffiValue : typeError('op', 'Float64Vec')), "u32")));
         const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
 
     wasm.MyString_other_opaque_type(otherSlice.ptr, write.buffer);
