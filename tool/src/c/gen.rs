@@ -63,6 +63,19 @@ pub struct MethodInfo<'a> {
     abi_name: &'a str,
 }
 
+/// Like [MethodInfo], but for callbacks (as such, no ABI names).
+pub struct CallbackInfo<'a> {
+    pub return_ty : Cow<'a, str>,
+    /// A list of the types only.
+    pub params : Vec<Cow<'a, str>>,
+}
+
+/// Information of the method signatures found on a trait.
+/// Used by the C++ backend to use typing to determine how to convert from the C ABI to the given language.
+pub struct TraitInfo<'a> {
+    pub methods : Vec<CallbackInfo<'a>>,
+}
+
 /// Information for constructing a C struct required for callback return informatioon.
 #[derive(Clone)]
 pub struct CallbackAndStructDef {
@@ -144,13 +157,14 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         decl_header
     }
 
-    pub fn gen_trait_def(&self, id: hir::TraitId) -> Header {
+    pub fn gen_trait_def(&self, id: hir::TraitId) -> (TraitInfo<'tcx>, Header) {
         let def = self.tcx.resolve_trait(id);
         let mut decl_header = Header::new(self.decl_header_path.to_owned(), self.is_for_cpp);
         let trt_name = self.formatter.fmt_trait_name(id);
 
         let mut trait_structs = vec![];
         let mut method_sigs = vec![];
+        let mut trait_methods = vec![];
         for m in &def.methods {
             let mut param_types: Vec<Cow<'tcx, str>> = m
                 .params
@@ -188,6 +202,11 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 _ => unreachable!("unknown AST/HIR variant"),
             };
 
+            trait_methods.push(CallbackInfo {
+                return_ty: ret_type.clone(),
+                params: param_types.clone(),
+            });
+
             method_sigs.push(format!(
                 "{} (*run_{}_callback)({});",
                 ret_type,
@@ -205,7 +224,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         .render_into(&mut decl_header)
         .unwrap();
 
-        decl_header
+        (TraitInfo {
+            methods: trait_methods,
+        }, decl_header)
     }
 
     pub fn gen_function_impls(
