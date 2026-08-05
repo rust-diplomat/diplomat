@@ -42,7 +42,7 @@ enum {{type_name}}
   @override
   int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
   {%- endif %}
-  {%- if is_bug %}
+  {%- if is_precondition_violation %}
 
   @override
   StackTrace? get stackTrace => null;
