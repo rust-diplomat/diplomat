@@ -9,7 +9,6 @@ enum ErrorEnum implements core.Error {
   // ignore: public_member_api_docs
   bar;
 
-
   @override
   core.StackTrace? get stackTrace => core.StackTrace.current;
 }

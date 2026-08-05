@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-final class RenamedMyIterator implements ffi.Finalizable, core.Iterator<int> {
+final class RenamedMyIterator implements core.Iterator<int>, ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive

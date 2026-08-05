@@ -5,9 +5,9 @@
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 final class {{type_name}}
-   {%- if let Some(ext) = extends_class %} extends {{ext}}{% endif %}
-   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
-   {%- if !implements.is_empty() %} implements {{ implements.join(", ") }}{% endif %} {
+  {%- if let Some(ext) = extends_class %} extends {{ext}}{% endif %}
+  {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
+  {%- if !implements.is_empty() %} implements {{ implements.join(", ") }}{% endif %} {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive

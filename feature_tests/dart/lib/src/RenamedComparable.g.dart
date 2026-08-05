@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-final class RenamedComparable implements ffi.Finalizable, core.Comparable<RenamedComparable> {
+final class RenamedComparable implements core.Comparable<RenamedComparable>, ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive

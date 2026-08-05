@@ -181,17 +181,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
-        let special = self.gen_special_method_info(&ty.special_method_presence);
-
-        let mut implements = Vec::new();
-        if ty.attrs.precondition_violation {
-            implements.push("core.Error".to_string());
-        } else if ty.attrs.custom_errors {
-            implements.push("core.Exception".to_string());
-        }
-        if special.comparator {
-            implements.push(format!("core.Comparable<{type_name}>"));
-        }
+        let (special, implements) =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name);
+        let implements = implements.into_iter().collect::<Vec<_>>();
 
         let methods = ty
             .methods
@@ -228,21 +220,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> String {
-        let special = self.gen_special_method_info(&ty.special_method_presence);
+        let (special, mut implements) =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name);
 
-        let mut extends_class = None;
-        let mut implements = vec!["ffi.Finalizable".to_string()];
-        if ty.attrs.precondition_violation {
-            extends_class = Some("core.Error".to_string());
-        } else if ty.attrs.custom_errors {
-            implements.push("core.Exception".to_string());
-        }
-        if special.comparator {
-            implements.push(format!("core.Comparable<{type_name}>"));
-        }
+        let extends_class = implements.take("core.Error");
+        implements.insert("ffi.Finalizable".to_string());
         if let Some(ref it) = special.iterator {
-            implements.push(format!("core.Iterator<{it}>"));
+            implements.insert(format!("core.Iterator<{it}>"));
         }
+        let implements = implements.into_iter().collect::<Vec<_>>();
 
         let methods = ty
             .methods
@@ -289,18 +275,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
-        let special = self.gen_special_method_info(&ty.special_method_presence);
+        let (special, mut implements) =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name);
 
-        let mut extends_class = None;
-        let mut implements = Vec::new();
-        if ty.attrs.precondition_violation {
-            extends_class = Some("core.Error".to_string());
-        } else if ty.attrs.custom_errors {
-            implements.push("core.Exception".to_string());
-        }
-        if special.comparator {
-            implements.push(format!("core.Comparable<{type_name}>"));
-        }
+        let extends_class = implements.take("core.Error");
+        let implements = implements.into_iter().collect::<Vec<_>>();
         let fields = ty
             .fields
             .iter()
@@ -737,11 +716,25 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_special_method_info(
         &mut self,
         special_method_presence: &SpecialMethodPresence,
-    ) -> SpecialMethodGenInfo<'cx> {
+        attrs: &hir::Attrs,
+        type_name: &str,
+    ) -> (SpecialMethodGenInfo<'cx>, BTreeSet<String>) {
         let mut info = SpecialMethodGenInfo {
             comparator: special_method_presence.comparator,
             ..Default::default()
         };
+
+        let mut implements = BTreeSet::new();
+
+        if attrs.precondition_violation {
+            implements.insert("core.Error".to_string());
+        } else if attrs.custom_errors {
+            implements.insert("core.Exception".to_string());
+        }
+
+        if special_method_presence.comparator {
+            implements.insert(format!("core.Comparable<{type_name}>"));
+        }
 
         if let Some(ref val) = special_method_presence.iterator {
             info.iterator = Some(self.gen_success_ty(val))
@@ -751,12 +744,12 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             let Some(ref val) = iterator_def.special_method_presence.iterator else {
                 self.errors
                     .push_error("Found iterable not returning an iterator type".into());
-                return info;
+                return (info, implements);
             };
             info.iterable = Some(self.gen_success_ty(val))
         }
 
-        info
+        (info, implements)
     }
 
     fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {

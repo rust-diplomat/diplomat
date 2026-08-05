@@ -5,8 +5,8 @@
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 enum {{type_name}}
-   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
-   {%- if !implements.is_empty() %} implements {{ implements.join(", ") }}{% endif %} {
+  {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
+  {%- if !implements.is_empty() %} implements {{ implements.join(", ") }}{% endif %} {
 {%~ for enum_variant in ty.variants %}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
@@ -43,7 +43,6 @@ enum {{type_name}}
   int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
   {%- endif %}
   {%- if implements.contains(&"core.Error".to_string()) %}
-
   @override
   core.StackTrace? get stackTrace => core.StackTrace.current;
   {%- endif %}
