@@ -16,7 +16,7 @@ pub struct DiplomatResult<T, E> {
     pub is_ok: bool,
 }
 
-/// A type to represent Option<T> over FFI.
+/// A type to represent `Option<T>` over FFI.
 ///
 /// Used internally to handle `Option<T>` arguments and return types, and needs to be
 /// used explicitly for optional struct fields.

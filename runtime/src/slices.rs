@@ -269,23 +269,35 @@ impl Deref for DiplomatOwnedUTF8StrSlice {
     }
 }
 
-/// This like `&str`, but unvalidated and safe to use over FFI
+/// This is like `&str`, but unvalidated and safe to use over FFI
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
+///
+/// Using this type on a function signature is equivalent to using `&DiplomatStr`,
+/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
 pub type DiplomatStrSlice<'a> = DiplomatSlice<'a, u8>;
-/// This like `Box<str>`, but unvalidated and safe to use over FFI
+/// This is like `Box<str>`, but unvalidated and safe to use over FFI
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
+///
+/// Using this type on a function signature is equivalent to using `Box<DiplomatStr>`,
+/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
 pub type DiplomatOwnedStrSlice = DiplomatOwnedSlice<u8>;
 /// An unvalidated UTF-16 string that is safe to use over FFI
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
+///
+/// Using this type on a function signature is equivalent to using `&DiplomatStr16`,
+/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
 pub type DiplomatStr16Slice<'a> = DiplomatSlice<'a, u16>;
 /// An unvalidated, owned UTF-16 string that is safe to use over FFI
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
+///
+/// Using this type on a function signature is equivalent to using `Box<DiplomatStr16>`,
+/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
 pub type DiplomatOwnedStr16Slice<'a> = DiplomatOwnedSlice<u16>;
