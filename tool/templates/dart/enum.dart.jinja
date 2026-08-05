@@ -5,8 +5,8 @@
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 enum {{type_name}}
-   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
-   {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
+  {%- if !special.mixins.is_empty() %} with {{ special.mixins.iter().join(", ") }} {%- endif %}
+  {%- if !special.implements.is_empty() %} implements {{ special.implements.iter().join(", ") }}{% endif %} {
 {%~ for enum_variant in ty.variants %}
   {%- if !enum_variant.docs.is_empty() %}
   {{- fmt.fmt_docs(enum_variant.docs)|prefix_trimmed("  /// ") }}
@@ -41,6 +41,11 @@ enum {{type_name}}
   bool operator ==(Object other) => other is {{type_name}} && compareTo(other) == 0;
   @override
   int get hashCode => 42; // Cannot get hash from Rust, so a constant is the only correct impl
+  {%- endif %}
+  
+  {%- if special.implements.contains("core.Error") %}
+  @override
+  core.StackTrace? get stackTrace => core.StackTrace.current;
   {%- endif %}
 }
 

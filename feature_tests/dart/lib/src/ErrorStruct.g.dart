@@ -10,7 +10,7 @@ final class _ErrorStructFfi extends ffi.Struct {
   external int j;
 }
 
-final class ErrorStruct {
+final class ErrorStruct implements core.Exception {
   // ignore: public_member_api_docs
   int i;
   // ignore: public_member_api_docs

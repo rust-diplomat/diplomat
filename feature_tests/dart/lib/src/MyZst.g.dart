@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-final class MyZst {
+final class MyZst implements core.Exception {
 
   // ignore: public_member_api_docs
   MyZst();

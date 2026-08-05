@@ -18,8 +18,9 @@ final class _{{type_name}}Ffi extends ffi.Struct {
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
 final class {{type_name}}
-   {%- if let Some(it) = special.iterable %} with core.Iterable<{{it}}> {%- endif %}
-   {%- if special.comparator -%} implements core.Comparable<{{type_name}}> {%- endif %} {
+  {%- if let Some(ext) = special.extends %} extends {{ext}}{% endif %}
+  {%- if !special.mixins.is_empty() %} with {{ special.mixins.iter().join(", ") }} {%- endif %}
+  {%- if !special.implements.is_empty() %} implements {{ special.implements.iter().join(", ") }}{% endif %} {
 
   {%- for field in fields %}
   // ignore: public_member_api_docs

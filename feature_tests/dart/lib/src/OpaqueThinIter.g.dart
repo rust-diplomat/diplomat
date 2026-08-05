@@ -3,7 +3,7 @@
 
 part of 'lib.g.dart';
 
-final class OpaqueThinIter implements ffi.Finalizable, core.Iterator<OpaqueThin> {
+final class OpaqueThinIter implements core.Iterator<OpaqueThin>, ffi.Finalizable {
   final ffi.Pointer<ffi.Opaque> _ffi;
 
   // These are "used" in the sense that they keep dependencies alive

@@ -3,12 +3,14 @@
 
 part of 'lib.g.dart';
 
-enum ErrorEnum {
+enum ErrorEnum implements core.Error {
   // ignore: public_member_api_docs
   foo,
   // ignore: public_member_api_docs
   bar;
 
+  @override
+  core.StackTrace? get stackTrace => core.StackTrace.current;
 }
 
 // dart format on

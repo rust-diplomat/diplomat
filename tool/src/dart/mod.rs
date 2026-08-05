@@ -15,6 +15,7 @@ use diplomat_core::hir::{
 };
 
 use askama::Template;
+use itertools::Itertools;
 
 mod formatter;
 use formatter::DartFormatter;
@@ -181,14 +182,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_enum(&mut self, ty: &'cx hir::EnumDef, type_name: &str) -> String {
+        let special =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name, false);
+
         let methods = ty
             .methods
             .iter()
             .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
-
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/enum.dart.jinja", escape = "none")]
@@ -216,6 +218,11 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     }
 
     fn gen_opaque_def(&mut self, ty: &'cx hir::OpaqueDef, type_name: &str) -> String {
+        let mut special =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name, true);
+
+        special.implements.insert("ffi.Finalizable".into());
+
         let methods = ty
             .methods
             .iter()
@@ -224,7 +231,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .collect::<Vec<_>>();
 
         let destructor = &ty.dtor_abi_name;
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         #[derive(Template)]
         #[template(path = "dart/opaque.dart.jinja", escape = "none")]
@@ -258,6 +264,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         type_name: &str,
         mutable: bool,
     ) -> String {
+        let special =
+            self.gen_special_method_info(&ty.special_method_presence, &ty.attrs, type_name, true);
+
         let fields = ty
             .fields
             .iter()
@@ -345,7 +354,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .filter(|m| !m.attrs.disable)
             .flat_map(|method| self.gen_method_info(method, type_name))
             .collect::<Vec<_>>();
-        let special = self.gen_special_method_info(&ty.special_method_presence);
 
         // Non-out structs need to be constructible in Dart
         let default_constructor =
@@ -691,14 +699,33 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_special_method_info(
         &mut self,
         special_method_presence: &SpecialMethodPresence,
+        attrs: &hir::Attrs,
+        type_name: &str,
+        allow_superclass: bool,
     ) -> SpecialMethodGenInfo<'cx> {
-        let mut info = SpecialMethodGenInfo {
-            comparator: special_method_presence.comparator,
-            ..Default::default()
-        };
+        let mut info = SpecialMethodGenInfo::default();
+
+        if attrs.precondition_violation {
+            if allow_superclass {
+                info.extends = Some("core.Error".into());
+            } else {
+                info.implements.insert("core.Error".into());
+            }
+        } else if attrs.custom_errors {
+            info.implements.insert("core.Exception".into());
+        }
+
+        if special_method_presence.comparator {
+            info.implements
+                .insert(format!("core.Comparable<{type_name}>").into());
+            info.comparator = true;
+        }
 
         if let Some(ref val) = special_method_presence.iterator {
-            info.iterator = Some(self.gen_success_ty(val))
+            let val = self.gen_success_ty(val);
+            info.implements
+                .insert(format!("core.Iterator<{}>", val).into());
+            info.iterator = Some(val);
         }
         if let Some(ref iterator) = special_method_presence.iterable {
             let iterator_def = self.tcx.resolve_opaque(*iterator);
@@ -707,7 +734,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                     .push_error("Found iterable not returning an iterator type".into());
                 return info;
             };
-            info.iterable = Some(self.gen_success_ty(val))
+            let val = self.gen_success_ty(val);
+            info.mixins.insert(format!("core.Iterable<{}>", val).into());
+            info.iterable = Some(val);
         }
 
         info
@@ -1573,6 +1602,12 @@ struct StructBorrowContext<'tcx> {
 
 #[derive(Default)]
 struct SpecialMethodGenInfo<'a> {
+    /// The superclass
+    extends: Option<Cow<'a, str>>,
+    /// The set of mixins
+    mixins: BTreeSet<Cow<'a, str>>,
+    /// The set of implementations
+    implements: BTreeSet<Cow<'a, str>>,
     /// Whether it is a comparator
     comparator: bool,
     /// Whether it is an iterator, and the type it iterates over
