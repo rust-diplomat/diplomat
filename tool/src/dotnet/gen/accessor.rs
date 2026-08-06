@@ -367,15 +367,16 @@ pub(super) fn route_members<'ctx>(
 /// another member (CS0102), or with the type that contains it (CS0542).
 ///
 /// The generated type is not only what Diplomat was asked for. The templates
-/// always add `AsFFI` and `FromFFI`, opaques also get `Dispose`, and a struct's
-/// fields are members too — so a property named after any of those, or after the
-/// type itself, compiles to nothing.
+/// always add `AsFFI` and `FromFFI`; opaques always get private `Cleanup` and
+/// may opt into public `Dispose`; and a struct's fields are members too — so a
+/// property named after any of those, or after the type itself, compiles to
+/// nothing.
 pub(super) fn reject_member_collisions(
     ty: &str,
     properties: &[PropertyInfo<'_>],
     methods: &[MethodInfo<'_>],
     field_names: &[&str],
-    is_opaque: bool,
+    has_generated_dispose: bool,
     errors: &ErrorStore<'_, String>,
 ) {
     /// The label for the enclosing type, which C# rejects on its own terms.
@@ -383,11 +384,11 @@ pub(super) fn reject_member_collisions(
 
     let mut seen = BTreeMap::<&str, &str>::new();
     seen.insert(ty, ENCLOSING_TYPE);
-    for member in ["AsFFI", "FromFFI"] {
+    for member in ["AsFFI", "FromFFI", "Cleanup"] {
         seen.entry(member)
             .or_insert("a member Diplomat always generates");
     }
-    if is_opaque {
+    if has_generated_dispose {
         seen.entry("Dispose")
             .or_insert("a member Diplomat always generates");
     }

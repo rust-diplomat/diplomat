@@ -36,9 +36,10 @@ public partial class OpaqueMutexedString: IDisposable
     }
 
     /// <remarks>
-    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
-    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
-    /// use-after-free and remains the caller's responsibility.
+    /// Edges only keep the borrowed-from objects GC-reachable. If this type is
+    /// opted into a public <c>Dispose</c>, disposing a parent while a borrowing
+    /// child is in use is still a use-after-free and remains the caller's
+    /// responsibility.
     /// </remarks>
     internal unsafe OpaqueMutexedString(Raw.OpaqueMutexedString* handle, object[] edges)
     {
@@ -47,10 +48,10 @@ public partial class OpaqueMutexedString: IDisposable
     }
 
     /// <summary>
-    /// Wraps a handle that already knows whether it owns the pointer. A
-    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
-    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
-    /// while this view is in use.
+    /// Wraps a handle that already knows whether it owns the pointer. A borrowed
+    /// return passes a non-owning handle, so cleanup leaves Rust's pointer
+    /// alone; the edges keep the borrowed-from owners alive while this view is
+    /// in use.
     /// </summary>
     internal unsafe OpaqueMutexedString(RustHandle<Raw.OpaqueMutexedString> inner, object[] edges)
     {
@@ -154,10 +155,7 @@ public partial class OpaqueMutexedString: IDisposable
         return _inner.Ptr;
     }
 
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
+    private void Cleanup()
     {
         unsafe
         {
@@ -174,13 +172,24 @@ public partial class OpaqueMutexedString: IDisposable
                 (edge as DiplomatPinnedMemory)?.Dispose();
             }
             _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
-
-            GC.SuppressFinalize(this);
         }
     }
-
+    /// <summary>
+    /// Destroys the underlying object immediately.
+    /// </summary>
+    public void Dispose()
+    {
+        Cleanup();
+        GC.SuppressFinalize(this);
+    }
     ~OpaqueMutexedString()
     {
-        Dispose();
+        try
+        {
+            Cleanup();
+        }
+        catch
+        {
+        }
     }
 }

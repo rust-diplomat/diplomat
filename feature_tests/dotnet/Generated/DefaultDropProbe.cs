@@ -8,9 +8,9 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class DataProvider
+public partial class DefaultDropProbe
 {
-    private unsafe RustHandle<Raw.DataProvider> _inner;
+    private unsafe RustHandle<Raw.DefaultDropProbe> _inner;
 
     /// <summary>
     /// Roots the wrappers this value borrows from so the GC cannot finalize
@@ -18,10 +18,10 @@ public partial class DataProvider
     /// </summary>
     private object[] _edges;
 
-    private static readonly unsafe RustDestructor<Raw.DataProvider> _destroy = Raw.DataProvider.Destroy;
+    private static readonly unsafe RustDestructor<Raw.DefaultDropProbe> _destroy = Raw.DefaultDropProbe.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>DataProvider</c> from a raw handle.
+    /// Creates a managed <c>DefaultDropProbe</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -29,9 +29,9 @@ public partial class DataProvider
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe DataProvider(Raw.DataProvider* handle)
+    internal unsafe DefaultDropProbe(Raw.DefaultDropProbe* handle)
     {
-        _inner = RustHandle<Raw.DataProvider>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.DefaultDropProbe>.Owned(handle, _destroy);
         _edges = System.Array.Empty<object>();
     }
 
@@ -41,9 +41,9 @@ public partial class DataProvider
     /// child is in use is still a use-after-free and remains the caller's
     /// responsibility.
     /// </remarks>
-    internal unsafe DataProvider(Raw.DataProvider* handle, object[] edges)
+    internal unsafe DefaultDropProbe(Raw.DefaultDropProbe* handle, object[] edges)
     {
-        _inner = RustHandle<Raw.DataProvider>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.DefaultDropProbe>.Owned(handle, _destroy);
         _edges = edges;
     }
 
@@ -53,42 +53,44 @@ public partial class DataProvider
     /// alone; the edges keep the borrowed-from owners alive while this view is
     /// in use.
     /// </summary>
-    internal unsafe DataProvider(RustHandle<Raw.DataProvider> inner, object[] edges)
+    internal unsafe DefaultDropProbe(RustHandle<Raw.DefaultDropProbe> inner, object[] edges)
     {
         _inner = inner;
         _edges = edges;
     }
 
     /// <returns>
-    /// A <c>DataProvider</c> allocated on Rust side.
+    /// A <c>DefaultDropProbe</c> allocated on Rust side.
     /// </returns>
-    public static DataProvider NewStatic()
+    public static DefaultDropProbe Create()
     {
         unsafe
         {
-            Raw.DataProvider* result = Raw.DataProvider.NewStatic();
-            return new DataProvider(result);
+            Raw.DefaultDropProbe* result = Raw.DefaultDropProbe.Create();
+            return new DefaultDropProbe(result);
         }
     }
 
-    /// <exception cref="InvalidOperationException"></exception>
-    public static void ReturnsResult()
+    public static void ResetDropCount()
     {
         unsafe
         {
-            var result = Raw.DataProvider.ReturnsResult();
-            if (!result.IsOk)
-            {
-                throw new InvalidOperationException("FFI function failed with unit error");
-            }
-            return;
+            Raw.DefaultDropProbe.ResetDropCount();
+        }
+    }
+
+    public static ulong DropCount()
+    {
+        unsafe
+        {
+            return Raw.DefaultDropProbe.DropCount();
         }
     }
 
     /// <summary>
     /// Returns the underlying raw handle.
     /// </summary>
-    internal unsafe Raw.DataProvider* AsFFI()
+    internal unsafe Raw.DefaultDropProbe* AsFFI()
     {
         return _inner.Ptr;
     }
@@ -104,10 +106,15 @@ public partial class DataProvider
 
             _inner.Release();
             _inner = default;
+            // Unpin only after Release: Rust's Drop may still read the pinned buffer.
+            foreach (object edge in _edges)
+            {
+                (edge as DiplomatPinnedMemory)?.Dispose();
+            }
             _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
         }
     }
-    ~DataProvider()
+    ~DefaultDropProbe()
     {
         try
         {

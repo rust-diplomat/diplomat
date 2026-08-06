@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RenamedNested2: IDisposable
+public partial class RenamedNested2
 {
     private unsafe RustHandle<Raw.RenamedNested2> _inner;
 
@@ -36,9 +36,10 @@ public partial class RenamedNested2: IDisposable
     }
 
     /// <remarks>
-    /// Edges only keep the borrowed-from objects GC-reachable. Explicitly
-    /// <c>Dispose</c>-ing a parent while a borrowing child is in use is still a
-    /// use-after-free and remains the caller's responsibility.
+    /// Edges only keep the borrowed-from objects GC-reachable. If this type is
+    /// opted into a public <c>Dispose</c>, disposing a parent while a borrowing
+    /// child is in use is still a use-after-free and remains the caller's
+    /// responsibility.
     /// </remarks>
     internal unsafe RenamedNested2(Raw.RenamedNested2* handle, object[] edges)
     {
@@ -47,10 +48,10 @@ public partial class RenamedNested2: IDisposable
     }
 
     /// <summary>
-    /// Wraps a handle that already knows whether it owns the pointer. A
-    /// borrowed return passes a non-owning handle, so Dispose and the finalizer
-    /// leave Rust's pointer alone; the edges keep the borrowed-from owners alive
-    /// while this view is in use.
+    /// Wraps a handle that already knows whether it owns the pointer. A borrowed
+    /// return passes a non-owning handle, so cleanup leaves Rust's pointer
+    /// alone; the edges keep the borrowed-from owners alive while this view is
+    /// in use.
     /// </summary>
     internal unsafe RenamedNested2(RustHandle<Raw.RenamedNested2> inner, object[] edges)
     {
@@ -66,10 +67,7 @@ public partial class RenamedNested2: IDisposable
         return _inner.Ptr;
     }
 
-    /// <summary>
-    /// Destroys the underlying object immediately.
-    /// </summary>
-    public void Dispose()
+    private void Cleanup()
     {
         unsafe
         {
@@ -86,13 +84,16 @@ public partial class RenamedNested2: IDisposable
                 (edge as DiplomatPinnedMemory)?.Dispose();
             }
             _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
-
-            GC.SuppressFinalize(this);
         }
     }
-
     ~RenamedNested2()
     {
-        Dispose();
+        try
+        {
+            Cleanup();
+        }
+        catch
+        {
+        }
     }
 }

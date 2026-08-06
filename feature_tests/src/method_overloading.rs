@@ -10,6 +10,7 @@
 pub mod ffi {
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, idisposable)]
     #[diplomat::cfg(supports = method_overloading)]
     pub struct MethodOverloading;
 
