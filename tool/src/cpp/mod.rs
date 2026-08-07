@@ -163,7 +163,7 @@ pub(crate) fn run<'tcx>(
             // Skip type if disabled
             continue;
         }
-        let trait_name = formatter.fmt_symbol_name(id.into());
+        let _trait_name = formatter.fmt_symbol_name(id.into());
         let decl_header_path = formatter.fmt_decl_header_path(id.into());
         let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
 

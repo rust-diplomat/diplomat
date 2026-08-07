@@ -65,15 +65,15 @@ pub struct MethodInfo<'a> {
 
 /// Like [MethodInfo], but for callbacks (as such, no ABI names).
 pub struct CallbackInfo<'a> {
-    pub return_ty : Cow<'a, str>,
+    pub return_ty: Cow<'a, str>,
     /// A list of the types only.
-    pub params : Vec<Cow<'a, str>>,
+    pub params: Vec<Cow<'a, str>>,
 }
 
 /// Information of the method signatures found on a trait.
 /// Used by the C++ backend to use typing to determine how to convert from the C ABI to the given language.
 pub struct TraitInfo<'a> {
-    pub methods : Vec<CallbackInfo<'a>>,
+    pub methods: Vec<CallbackInfo<'a>>,
 }
 
 /// Information for constructing a C struct required for callback return informatioon.
@@ -224,9 +224,12 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         .render_into(&mut decl_header)
         .unwrap();
 
-        (TraitInfo {
-            methods: trait_methods,
-        }, decl_header)
+        (
+            TraitInfo {
+                methods: trait_methods,
+            },
+            decl_header,
+        )
     }
 
     pub fn gen_function_impls(
@@ -484,13 +487,17 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 let trt_name_maybe_namespaced = self.gen_ty_name(ty, header);
                 let res = self.tcx.resolve_trait(t_id);
                 if res.attrs.disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled trait {trt_name_maybe_namespaced}"))
+                    self.errors.push_error(format!(
+                        "Found usage of disabled trait {trt_name_maybe_namespaced}"
+                    ))
                 }
-                
+
                 let trait_name_unnamespaced = self.formatter.fmt_trait_name(t_id);
                 (
-                    self.formatter.diplomat_namespace_for_custom_type(format!("DiplomatTraitStruct_{trait_name_unnamespaced}").into(), res.attrs.namespace.as_deref()),
+                    self.formatter.diplomat_namespace_for_custom_type(
+                        format!("DiplomatTraitStruct_{trait_name_unnamespaced}").into(),
+                        res.attrs.namespace.as_deref(),
+                    ),
                     format!("{param_name}_trait_wrap").into(),
                 )
             }

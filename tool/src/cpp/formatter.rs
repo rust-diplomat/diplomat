@@ -186,12 +186,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     pub fn fmt_c_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
         let trt_name_unnamespaced = self.c.fmt_trait_name(id);
         let res = self.c.tcx().resolve_trait(id);
-        self.c
-            .diplomat_namespace_for_custom_type(
-                format!("DiplomatTraitStruct_{}", trt_name_unnamespaced).into(),
-                res.attrs.namespace.as_deref(),
-            )
-            .into()
+        self.c.diplomat_namespace_for_custom_type(
+            format!("DiplomatTraitStruct_{}", trt_name_unnamespaced).into(),
+            res.attrs.namespace.as_deref(),
+        )
     }
 
     pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

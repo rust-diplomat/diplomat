@@ -498,7 +498,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
     pub fn gen_trait_def(&mut self, id: TraitId) {
         let trait_name = self.formatter.fmt_symbol_name(id.into());
-        let trait_name_unnamespaced = self.formatter.fmt_trait_name_unnamespaced(id.into());
+        let trait_name_unnamespaced = self.formatter.fmt_trait_name_unnamespaced(id);
         let trait_def = self.c.tcx.resolve_trait(id);
 
         struct TraitMethodInfo<'a> {
@@ -521,7 +521,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let ret = self.gen_cpp_return_type_name(&m.output, false);
                 let return_method_call = match m.output.as_ref() {
                     ReturnType::Infallible(i) if i.is_unit() => None,
-                    ReturnType::Infallible(..) => Some(format!("replace_ret")),
+                    ReturnType::Infallible(..) => Some("replace_ret".to_string()),
                     ReturnType::Fallible(ok, err) => {
                         let ok_type_name = match ok {
                             hir::SuccessType::Unit => "std::monostate".into(),
@@ -591,10 +591,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     return_type: &m.output,
                     return_method_call,
                     params,
-                    deprecated: m
-                        .attrs
-                        .as_ref()
-                        .and_then(|a| a.deprecated.as_ref().map(|d| d.as_str())),
+                    deprecated: m.attrs.as_ref().and_then(|a| a.deprecated.as_deref()),
                     // Methods are in the same order, so this should be correrct:
                     c_ty: &trait_info.methods[idx],
                 }
@@ -609,7 +606,6 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: &'a Cpp2Formatter<'a>,
             ctype: Cow<'a, str>,
             c_header: C2Header,
-            trait_name: &'a str,
             trait_name_unnamespaced: &'a str,
             namespace: Option<&'a str>,
             methods: &'a [TraitMethodInfo<'a>],
@@ -621,12 +617,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             fmt: self.formatter,
             c_header,
             ctype: ctype.clone(),
-            trait_name: &trait_name,
             trait_name_unnamespaced: &trait_name_unnamespaced,
             namespace: trait_def.attrs.namespace.as_deref(),
             methods: methods.as_slice(),
             docs: &self.formatter.fmt_docs(&trait_def.docs, &trait_def.attrs),
-            deprecated: trait_def.attrs.deprecated.as_ref().map(|d| d.as_str()),
+            deprecated: trait_def.attrs.deprecated.as_deref(),
         }
         .render_into(self.decl_header)
         .unwrap();
