@@ -282,8 +282,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 let fields = self.lower_fields(struct_def)?;
                 let field_names: Vec<&str> =
                     fields.iter().map(|field| field.name.as_str()).collect();
-                let members =
-                    self.build_members(&display_name, &struct_def.methods, &field_names, false);
+                let members = self.build_members(
+                    &display_name,
+                    &struct_def.methods,
+                    &field_names,
+                    false,
+                    false,
+                );
                 PreparedType::Struct {
                     display_name,
                     fields,
@@ -299,6 +304,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     &display_name,
                     &opaque_def.methods,
                     &[],
+                    true,
                     opaque_def.attrs.idisposable,
                 );
                 PreparedType::Opaque {
@@ -379,6 +385,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: &str,
         methods: &'tcx [hir::Method],
         field_names: &[&str],
+        is_opaque: bool,
         has_generated_dispose: bool,
     ) -> TypeMembers<'tcx> {
         let lowered: Vec<(Option<AccessorInfo>, MethodInfo<'tcx>)> = methods
@@ -392,6 +399,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             &properties,
             &methods,
             field_names,
+            is_opaque,
             has_generated_dispose,
             self.errors,
         );

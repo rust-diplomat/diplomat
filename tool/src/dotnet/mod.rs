@@ -2778,27 +2778,6 @@ mod test {
                 pub fn is_disposed(&self) -> bool {
                     unimplemented!()
                 }
-
-                #[test]
-                fn a_property_colliding_with_cleanup_is_rejected() {
-                    let (_files, errors) = run_dotnet(property_test_module(quote! {
-                        #[diplomat::attr(auto, getter = "cleanup")]
-                        pub fn cleanup_state(&self) -> bool {
-                            unimplemented!()
-                        }
-                    }));
-
-                    assert_eq!(
-                        errors.len(),
-                        1,
-                        "expected exactly one diagnostic: {errors:?}"
-                    );
-                    assert!(
-                        errors[0].contains("two members named `Cleanup`"),
-                        "the collision must be reported; got: {}",
-                        errors[0]
-                    );
-                }
             },
         ));
 
@@ -2811,6 +2790,77 @@ mod test {
             errors[0].contains("two members named `Dispose`"),
             "the collision must be reported; got: {}",
             errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_property_colliding_with_cleanup_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "cleanup")]
+            pub fn cleanup_state(&self) -> bool {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Cleanup`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_method_colliding_with_cleanup_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            pub fn cleanup(&self) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Cleanup`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn a_struct_property_named_cleanup_is_accepted() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Config {
+                    size: u8,
+                }
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "cleanup")]
+                    pub fn cleanup_state(self) -> bool {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Cleanup"),
+            "a struct has no generated Cleanup to collide with, got:\n{config}"
         );
     }
 

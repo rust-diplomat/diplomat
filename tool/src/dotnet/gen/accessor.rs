@@ -376,6 +376,7 @@ pub(super) fn reject_member_collisions(
     properties: &[PropertyInfo<'_>],
     methods: &[MethodInfo<'_>],
     field_names: &[&str],
+    is_opaque: bool,
     has_generated_dispose: bool,
     errors: &ErrorStore<'_, String>,
 ) {
@@ -384,18 +385,30 @@ pub(super) fn reject_member_collisions(
 
     let mut seen = BTreeMap::<&str, &str>::new();
     seen.insert(ty, ENCLOSING_TYPE);
-    for member in ["AsFFI", "FromFFI", "Cleanup"] {
-        seen.entry(member)
-            .or_insert("a member Diplomat always generates");
+    let mut generated_members = BTreeMap::<&str, &str>::new();
+    for member in ["AsFFI", "FromFFI"] {
+        generated_members.insert(member, "a member Diplomat always generates");
+    }
+    if is_opaque {
+        generated_members.insert("Cleanup", "a member Diplomat always generates for opaques");
     }
     if has_generated_dispose {
-        seen.entry("Dispose")
-            .or_insert("a member Diplomat always generates");
+        generated_members.insert("Dispose", "a member Diplomat generates for this opaque");
+    }
+    for (member, description) in &generated_members {
+        seen.entry(member).or_insert(description);
     }
     for field in field_names {
         seen.entry(field).or_insert("a struct field");
     }
     for method in methods {
+        if let Some(generated) = generated_members.get(method.name.as_str()) {
+            errors.push_error(format!(
+                "[.NET backend] `{ty}` would have two members named `{}`: a method and \
+                 {generated}. Rename the method with `#[diplomat::rename]`.",
+                method.name
+            ));
+        }
         seen.entry(&method.name).or_insert("a method");
     }
     for property in properties {
