@@ -5,12 +5,18 @@ mod ffi {
         x: i32,
         y: i32,
     }
+
+    #[diplomat::cfg(supports = "traits")]
     pub trait TesterTrait {
         fn test_trait_fn(&self, x: u32) -> u32;
         fn test_void_trait_fn(&self);
         fn test_struct_trait_fn(&self, s: TraitTestingStruct) -> i32;
         #[diplomat::attr(kotlin, disable)]
         fn test_result_output(&self) -> Result<u32, ()>;
+        #[diplomat::attr(kotlin, disable)]
+        fn test_optional_output(&self, x: u32) -> Option<u32>;
+        #[diplomat::attr(kotlin, disable)]
+        fn test_result_of_optional(&self, is_ok: bool) -> Result<u32, DiplomatOption<u32>>;
     }
 
     #[diplomat::cfg(supports = "traits")]
@@ -32,6 +38,19 @@ mod ffi {
         #[diplomat::attr(kotlin, disable)]
         pub fn test_result_output(t: impl TesterTrait) {
             assert_eq!(t.test_result_output(), Ok(0));
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_optional_output(t: impl TesterTrait, x: u32) {
+            assert_eq!(t.test_optional_output(x), Some(5));
+        }
+
+        #[diplomat::attr(kotlin, disable)]
+        pub fn test_result_of_optional(
+            t: impl TesterTrait,
+            is_ok: bool,
+        ) -> Result<u32, DiplomatOption<u32>> {
+            t.test_result_of_optional(is_ok)
         }
     }
 }

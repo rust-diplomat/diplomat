@@ -1,0 +1,38 @@
+{%- macro method_call() -%}
+reinterpret_cast<{{trait_name}}*>(self)->{{m.name}}(
+    {%- for p in m.params -%}
+    {{fmt.lib_name_ns_prefix}}diplomat::fn_trait_helpers::replace<{{p.type_name}}>({{p.var_name}}) {%- if !loop.last -%}, {% endif %}
+    {%- endfor -%}
+)
+{%- endmacro -%}
+inline {{ctype}} {{trait_name}}::AsFFI() const {
+    struct {{ctype}} trait_inner = {
+        (void*)this,
+        {
+            &{{trait_name}}::Destroy,
+            {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::{{trait_name_unnamespaced}}_DATA_SIZE,
+            {{fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::{{trait_name_unnamespaced}}_DATA_ALIGNMENT,
+            {%- for m in methods %}
+            []({%- for p in m.c_ty.params -%} {%- if loop.index0 == 0 -%} void* self {%- else -%} {{p}} {{m.params[loop.index0 - 1].var_name}} {%- endif -%} {%- if !loop.last -%}, {% endif -%} {%- endfor -%}) -> {# -#}
+            {%- if matches!(m.return_type, ReturnType::Fallible(..) | ReturnType::Nullable(..)) -%}
+            {{- fmt.lib_name_ns_prefix}}{% if let Some(ns) = namespace %}{{ns}}::{%endif%}capi::{{m.c_ty.return_ty-}} 
+            {%- else -%}
+            diplomat::replace_fn_t<{{m.return_type_name}}>
+            {%- endif %} {
+                return {# -#}
+                {%- if let Some(c) = m.return_method_call -%}
+                {{fmt.lib_name_ns_prefix}}diplomat::fn_trait_helpers::{{c}}({{method_call()}});
+                {%- else -%} 
+                {{method_call()}};
+                {%- endif %}
+            },
+            {%- endfor %}
+        }
+    };
+    return trait_inner;
+}
+
+void {{trait_name}}::Destroy(const void* data) {
+    auto self = static_cast<const {{trait_name}}*>(data);
+    delete self;
+}

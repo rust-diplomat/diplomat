@@ -59,10 +59,10 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.arithmetic = true;
     a.option = true;
     a.callbacks = true;
-    a.traits = false;
+    a.traits = true;
     a.custom_errors = false;
-    a.traits_are_send = false;
-    a.traits_are_sync = false;
+    a.traits_are_send = true;
+    a.traits_are_sync = true;
     a.generate_mocking_interface = false;
     a.abi_compatibles = true;
     a.struct_refs = true;
@@ -129,7 +129,7 @@ pub(crate) fn run<'tcx>(
             },
             decl_header: &mut decl_header,
             impl_header: &mut impl_header,
-            generating_struct_fields: false,
+            generate_definition_includes: false,
         };
         context.impl_header.decl_include = Some(decl_header_path.clone());
 
@@ -153,6 +153,44 @@ pub(crate) fn run<'tcx>(
         context.decl_header.includes.remove(&*decl_header_path);
         context.impl_header.includes.remove(&*impl_header_path);
         context.impl_header.includes.remove(&*decl_header_path);
+
+        files.add_file(decl_header_path, decl_header.to_string());
+        files.add_file(impl_header_path, impl_header.to_string());
+    }
+
+    for (id, tr) in tcx.all_traits() {
+        if tr.attrs.disable {
+            // Skip type if disabled
+            continue;
+        }
+        let _trait_name = formatter.fmt_symbol_name(id.into());
+        let decl_header_path = formatter.fmt_decl_header_path(id.into());
+        let mut decl_header = header::Header::new(decl_header_path.clone(), lib_name);
+
+        let impl_header_path = formatter.fmt_impl_header_path(id.into());
+        let mut impl_header = header::Header::new(impl_header_path.clone(), lib_name);
+
+        let mut context = ItemGenContext {
+            formatter: &formatter,
+            errors: &errors,
+            config,
+            c: crate::c::ItemGenContext {
+                tcx,
+                formatter: &formatter.c,
+                errors: &errors,
+                is_for_cpp: true,
+                decl_header_path: &decl_header_path,
+                impl_header_path: &impl_header_path,
+            },
+            decl_header: &mut decl_header,
+            impl_header: &mut impl_header,
+            generate_definition_includes: false,
+        };
+        context.impl_header.decl_include = Some(decl_header_path.clone());
+
+        let guard = errors.set_context_ty(tr.name.as_str().into());
+        context.gen_trait_def(id);
+        drop(guard);
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
@@ -189,7 +227,7 @@ pub(crate) fn run<'tcx>(
                 },
                 impl_header: &mut free_func_impl_header,
                 decl_header: &mut Header::new(Default::default(), None),
-                generating_struct_fields: false,
+                generate_definition_includes: false,
             };
 
             let c_header = ty_context
@@ -271,7 +309,7 @@ mod test {
                 },
                 decl_header: &mut decl_header,
                 impl_header: &mut impl_header,
-                generating_struct_fields: false,
+                generate_definition_includes: false,
             };
 
             ty_gen_cx.gen_opaque_def(id);

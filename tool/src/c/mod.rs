@@ -117,7 +117,7 @@ pub(crate) fn run<'tcx>(
             impl_header_path: &impl_header_path,
         };
 
-        let decl_header = context.gen_trait_def(id);
+        let (_, decl_header) = context.gen_trait_def(id);
         files.add_file(decl_header_path, decl_header.to_string());
     }
     // loop over traits too

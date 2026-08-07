@@ -14,6 +14,10 @@
 
 
 typedef struct test_result_output_result {union {uint32_t ok; }; bool is_ok;} test_result_output_result;
+
+typedef struct test_optional_output_result {union {uint32_t ok; }; bool is_ok;} test_optional_output_result;
+
+typedef struct test_result_of_optional_result {union {uint32_t ok; OptionU32 err;}; bool is_ok;} test_result_of_optional_result;
 typedef struct TesterTrait_VTable {
     void (*destructor)(const void*);
     size_t SIZE; size_t ALIGNMENT;
@@ -21,6 +25,8 @@ typedef struct TesterTrait_VTable {
     void (*run_test_void_trait_fn_callback)(void*);
     int32_t (*run_test_struct_trait_fn_callback)(void*, TraitTestingStruct);
     test_result_output_result (*run_test_result_output_callback)(void*);
+    test_optional_output_result (*run_test_optional_output_callback)(void*, uint32_t);
+    test_result_of_optional_result (*run_test_result_of_optional_callback)(void*, bool);
 } TesterTrait_VTable;
 
 typedef struct DiplomatTraitStruct_TesterTrait {

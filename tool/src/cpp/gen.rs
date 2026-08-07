@@ -13,6 +13,8 @@ use diplomat_core::hir::IncludeSource;
 use diplomat_core::hir::OpaqueId;
 use diplomat_core::hir::OpaquePath;
 use diplomat_core::hir::Slice;
+use diplomat_core::hir::TraitId;
+use diplomat_core::hir::TraitIdGetter;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
     SymbolId, TyPosition, Type, TypeDef,
@@ -116,8 +118,9 @@ pub(crate) struct ItemGenContext<'ccx, 'tcx, 'header> {
     pub c: CItemGenContext<'ccx, 'tcx, 'header>,
     pub impl_header: &'header mut Header<'ccx>,
     pub decl_header: &'header mut Header<'ccx>,
-    /// Are we currently generating struct fields?
-    pub generating_struct_fields: bool,
+    /// For generating type names, do we need to include headers to grab additional ctypes info?
+    /// (Used for struct fields and trait definitions)
+    pub generate_definition_includes: bool,
 }
 
 impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
@@ -384,13 +387,13 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
         let is_in_mut_struct =
             def.attrs.mut_struct_ref || self.config.cpp_config.structs_always_mut_ref;
 
-        self.generating_struct_fields = true;
+        self.generate_definition_includes = true;
         let field_decls = def
             .fields
             .iter()
             .map(|field| self.gen_field_ty_decl(is_in_mut_struct, &field.ty, field.name.as_str()))
             .collect::<Vec<_>>();
-        self.generating_struct_fields = false;
+        self.generate_definition_includes = false;
 
         let cpp_to_c_fields = def
             .fields
@@ -488,6 +491,159 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             c_header: c_impl_header,
             extra_impl_code: self.impl_extra_code_from_attrs(&def.attrs.custom_extra_code),
             tuple: def.attrs.tuple,
+        }
+        .render_into(self.impl_header)
+        .unwrap();
+    }
+
+    pub fn gen_trait_def(&mut self, id: TraitId) {
+        let trait_name = self.formatter.fmt_symbol_name(id.into());
+        let trait_name_unnamespaced = self.formatter.fmt_trait_name_unnamespaced(id);
+        let trait_def = self.c.tcx.resolve_trait(id);
+
+        struct TraitMethodInfo<'a> {
+            name: Cow<'a, str>,
+            return_type_name: Cow<'a, str>,
+            return_type: &'a ReturnType<hir::InputOnly>,
+            return_method_call: Option<String>,
+            params: Vec<NamedType<'a>>,
+            deprecated: Option<&'a str>,
+            c_ty: &'a crate::c::gen::CallbackInfo<'a>,
+        }
+
+        let (trait_info, c_header) = self.c.gen_trait_def(id);
+        self.generate_definition_includes = true;
+        let methods = trait_def
+            .methods
+            .iter()
+            .enumerate()
+            .map(|(idx, m)| {
+                let ret = self.gen_cpp_return_type_name(&m.output, false);
+                let return_method_call = match m.output.as_ref() {
+                    ReturnType::Infallible(i) if i.is_unit() => None,
+                    ReturnType::Infallible(..) => Some("replace_ret".to_string()),
+                    ReturnType::Fallible(ok, err) => {
+                        let ok_type_name = match ok {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+                        let err_type_name = match err {
+                            Some(o) => self.gen_type_name(o),
+                            None => "std::monostate".into(),
+                        };
+                        Some(format!(
+                            "replace_result<{ok_type_name}, {err_type_name}, {}{}capi::{}>",
+                            self.formatter.lib_name_ns_prefix,
+                            if let Some(ns) = &trait_def.attrs.namespace {
+                                format!("{ns}::")
+                            } else {
+                                "".into()
+                            },
+                            trait_info.methods[idx].return_ty
+                        ))
+                    }
+                    ReturnType::Nullable(ref success) => {
+                        let type_name = match success {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+                        Some(format!(
+                            "replace_optional_ret<{}{}capi::{}, {type_name}>",
+                            self.formatter.lib_name_ns_prefix,
+                            if let Some(ns) = &trait_def.attrs.namespace {
+                                format!("{ns}::")
+                            } else {
+                                "".into()
+                            },
+                            trait_info.methods[idx].return_ty
+                        ))
+                    }
+                };
+                let params = m
+                    .params
+                    .iter()
+                    .map(|p| {
+                        NamedType {
+                            var_name: p
+                                .name
+                                .as_ref()
+                                .expect("Found unnamed parameter in trait")
+                                .as_str()
+                                .into(),
+                            type_name: self.gen_type_name(&p.ty),
+                            default_value: None,
+                            // TODO:
+                            lifetimebound: false,
+                        }
+                    })
+                    .collect::<Vec<_>>();
+
+                TraitMethodInfo {
+                    name: m
+                        .name
+                        .as_ref()
+                        .expect("Could not get trait method name")
+                        .as_str()
+                        .into(),
+                    return_type_name: ret,
+                    return_type: &m.output,
+                    return_method_call,
+                    params,
+                    deprecated: m.attrs.as_ref().and_then(|a| a.deprecated.as_deref()),
+                    // Methods are in the same order, so this should be correrct:
+                    c_ty: &trait_info.methods[idx],
+                }
+            })
+            .collect::<Vec<_>>();
+
+        let ctype = self.formatter.fmt_c_trait_name(id);
+
+        #[derive(Template)]
+        #[template(path = "cpp/trait_decl.h.jinja", escape = "none")]
+        struct DeclTemplate<'a> {
+            fmt: &'a Cpp2Formatter<'a>,
+            ctype: Cow<'a, str>,
+            c_header: C2Header,
+            trait_name_unnamespaced: &'a str,
+            namespace: Option<&'a str>,
+            methods: &'a [TraitMethodInfo<'a>],
+            docs: &'a str,
+            deprecated: Option<&'a str>,
+        }
+
+        DeclTemplate {
+            fmt: self.formatter,
+            c_header,
+            ctype: ctype.clone(),
+            trait_name_unnamespaced: &trait_name_unnamespaced,
+            namespace: trait_def.attrs.namespace.as_deref(),
+            methods: methods.as_slice(),
+            docs: &self.formatter.fmt_docs(&trait_def.docs, &trait_def.attrs),
+            deprecated: trait_def.attrs.deprecated.as_deref(),
+        }
+        .render_into(self.decl_header)
+        .unwrap();
+
+        #[derive(Template)]
+        #[template(path = "cpp/trait_impl.h.jinja", escape = "none")]
+        struct ImplTemplate<'a> {
+            fmt: &'a Cpp2Formatter<'a>,
+            trait_name: &'a str,
+            trait_name_unnamespaced: &'a str,
+            namespace: Option<&'a str>,
+            ctype: Cow<'a, str>,
+            methods: &'a [TraitMethodInfo<'a>],
+        }
+
+        ImplTemplate {
+            fmt: self.formatter,
+            trait_name: &trait_name,
+            trait_name_unnamespaced: &trait_name_unnamespaced,
+            namespace: trait_def.attrs.namespace.as_deref(),
+            ctype,
+            methods: methods.as_slice(),
         }
         .render_into(self.impl_header)
         .unwrap();
@@ -825,7 +981,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
                 self.decl_header
                     .append_forward(def, &type_name_unnamespaced);
-                if self.generating_struct_fields {
+                if self.generate_definition_includes {
                     self.decl_header
                         .includes
                         .insert(self.formatter.fmt_decl_header_path(id.into()));
@@ -863,6 +1019,18 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             Type::DiplomatOption(ref inner) => {
                 format!("std::optional<{}>", self.gen_type_name(inner)).into()
             }
+            Type::ImplTrait(ref tr) => {
+                let id = tr.id();
+                self.decl_header
+                    .includes
+                    .insert(self.formatter.fmt_decl_header_path(id.into()));
+                // We require a pointer for polymorphism, and it's unique because we expect to own the value.
+                format!(
+                    "std::unique_ptr<{}>",
+                    self.formatter.fmt_symbol_name(id.into())
+                )
+                .into()
+            }
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
@@ -880,7 +1048,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         self.decl_header
             .append_forward(def, &type_name_unnamespaced);
-        if self.generating_struct_fields {
+        if self.generate_definition_includes {
             self.decl_header
                 .includes
                 .insert(self.formatter.fmt_decl_header_path(id.into()));
@@ -1216,6 +1384,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
+            Type::ImplTrait(..) => format!("{cpp_name}.release()->AsFFI()").into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }
