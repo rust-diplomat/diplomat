@@ -64,7 +64,7 @@ public class RcRaceStressTests
     // ── Hazard 1: many application threads racing Dispose() on the SAME ────
     // ── wrapper (both the source and, separately, the dependent) ───────────
     [Fact]
-    public void ConcurrentDisposeOnSameWrapper_DestroysExactlyOnce_NoMatterHowManyRacingThreads()
+    public async Task ConcurrentDisposeOnSameWrapper_DestroysExactlyOnce_NoMatterHowManyRacingThreads()
     {
         const int iterations = 200;
         const int threadsPerWrapper = 8;
@@ -94,7 +94,7 @@ public class RcRaceStressTests
             }
 
             start.Set();
-            Task.WaitAll(tasks);
+            await Task.WhenAll(tasks);
             start.Dispose();
 
             Assert.Equal(
@@ -121,7 +121,7 @@ public class RcRaceStressTests
     // ── Hazard 2: application-thread source.Dispose() racing the ──────────
     // ── dependent's OWN finalizer on the GC's dedicated finalizer thread ───
     [Fact]
-    public void SourceDispose_RacesDependentFinalizer_DestroysExactlyOnce_NoLeak()
+    public async Task SourceDispose_RacesDependentFinalizer_DestroysExactlyOnce_NoLeak()
     {
         const int iterations = 60;
 
@@ -150,7 +150,7 @@ public class RcRaceStressTests
             // the exact same shared RustHandleState<T> at once.
             ready.Set();
             source.Dispose();
-            gcPressure.Wait();
+            await gcPressure;
             ready.Dispose();
 
             // The finalizer thread's timing is inherently nondeterministic,
