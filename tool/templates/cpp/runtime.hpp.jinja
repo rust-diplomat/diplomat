@@ -478,7 +478,7 @@ namespace fn_trait_helpers {
       if constexpr(has_err) {
         if (!is_ok) {
           auto val = std::move(res).err().value();
-          if constexpr(is_optional_v<T>) {
+          if constexpr(is_optional_v<E>) {
             out.err = replace_optional_ret<decltype(out.err)>(val);
           } else {
             out.err = replace_ret<E>(val);
