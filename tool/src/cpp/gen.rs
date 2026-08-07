@@ -6,8 +6,6 @@ use crate::config;
 use crate::read_custom_binding;
 use crate::ErrorStore;
 use askama::Template;
-use diplomat_core::hir::TraitId;
-use diplomat_core::hir::TraitIdGetter;
 use diplomat_core::hir::borrowing_param::ParamBorrowInfo;
 use diplomat_core::hir::CallbackInstantiationFunctionality;
 use diplomat_core::hir::IncludeLocation;
@@ -15,6 +13,8 @@ use diplomat_core::hir::IncludeSource;
 use diplomat_core::hir::OpaqueId;
 use diplomat_core::hir::OpaquePath;
 use diplomat_core::hir::Slice;
+use diplomat_core::hir::TraitId;
+use diplomat_core::hir::TraitIdGetter;
 use diplomat_core::hir::{
     self, MaybeOwn, Mutability, OpaqueOwner, ReturnType, SelfType, StructPathLike, SuccessType,
     SymbolId, TyPosition, Type, TypeDef,
@@ -503,92 +503,116 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
 
         struct TraitMethodInfo<'a> {
             name: Cow<'a, str>,
-            return_type_name : Cow<'a, str>,
-            return_type : &'a ReturnType<hir::InputOnly>,
-            return_method_call : Option<String>,
-            params : Vec<NamedType<'a>>,
-            deprecated : Option<&'a str>,
-            c_ty : &'a crate::c::gen::CallbackInfo<'a>,
+            return_type_name: Cow<'a, str>,
+            return_type: &'a ReturnType<hir::InputOnly>,
+            return_method_call: Option<String>,
+            params: Vec<NamedType<'a>>,
+            deprecated: Option<&'a str>,
+            c_ty: &'a crate::c::gen::CallbackInfo<'a>,
         }
 
-        
         let (trait_info, c_header) = self.c.gen_trait_def(id);
         self.generate_definition_includes = true;
-        let methods = trait_def.methods.iter().enumerate().map(|(idx, m)| {
-            let ret = self.gen_cpp_return_type_name(&m.output, false);
-            let return_method_call = match  m.output.as_ref() {
-                ReturnType::Infallible(i) if i.is_unit() => {
-                    None
-                }
-                ReturnType::Infallible(..) => {
-                    Some(format!("replace_ret"))
-                }
-                ReturnType::Fallible(ok, err) => {
-                    let ok_type_name = match ok {
-                        hir::SuccessType::Unit => "std::monostate".into(),
-                        hir::SuccessType::OutType(o) => self.gen_type_name(o),
-                        _ => unreachable!("unknown AST/HIR variant"),
-                    };
-                    let err_type_name = match err {
-                        Some(o) => self.gen_type_name(o),
-                        None => "std::monostate".into(),
-                    };
-                    Some(format!("replace_result<{ok_type_name}, {err_type_name}, {}{}capi::{}>", self.formatter.lib_name_ns_prefix,
-                    if let Some(ns) = &trait_def.attrs.namespace {
-                        format!("{ns}::")
-                    } else {
-                        "".into()
-                    },
-                    &trait_info.methods[idx].return_ty))
-                }
-                ReturnType::Nullable(ref success) => {
-                    let type_name = match success {
-                        hir::SuccessType::Unit => "std::monostate".into(),
-                        hir::SuccessType::OutType(o) => self.gen_type_name(o),
-                        _ => unreachable!("unknown AST/HIR variant"),
-                    };
-                    Some(format!("replace_optional_ret<{}{}capi::{}, {type_name}>", self.formatter.lib_name_ns_prefix,
-                    if let Some(ns) = &trait_def.attrs.namespace {
-                        format!("{ns}::")
-                    } else {
-                        "".into()
-                    }, &trait_info.methods[idx].return_ty))
-                }
-            };
-            let params = m.params.iter().map(|p| {
-                NamedType {
-                    var_name: p.name.as_ref().expect("Found unnamed parameter in trait").as_str().into(),
-                    type_name: self.gen_type_name(&p.ty),
-                    default_value: None,
-                    // TODO:
-                    lifetimebound: false
-                }
-            }).collect::<Vec<_>>();
+        let methods = trait_def
+            .methods
+            .iter()
+            .enumerate()
+            .map(|(idx, m)| {
+                let ret = self.gen_cpp_return_type_name(&m.output, false);
+                let return_method_call = match m.output.as_ref() {
+                    ReturnType::Infallible(i) if i.is_unit() => None,
+                    ReturnType::Infallible(..) => Some(format!("replace_ret")),
+                    ReturnType::Fallible(ok, err) => {
+                        let ok_type_name = match ok {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+                        let err_type_name = match err {
+                            Some(o) => self.gen_type_name(o),
+                            None => "std::monostate".into(),
+                        };
+                        Some(format!(
+                            "replace_result<{ok_type_name}, {err_type_name}, {}{}capi::{}>",
+                            self.formatter.lib_name_ns_prefix,
+                            if let Some(ns) = &trait_def.attrs.namespace {
+                                format!("{ns}::")
+                            } else {
+                                "".into()
+                            },
+                            &trait_info.methods[idx].return_ty
+                        ))
+                    }
+                    ReturnType::Nullable(ref success) => {
+                        let type_name = match success {
+                            hir::SuccessType::Unit => "std::monostate".into(),
+                            hir::SuccessType::OutType(o) => self.gen_type_name(o),
+                            _ => unreachable!("unknown AST/HIR variant"),
+                        };
+                        Some(format!(
+                            "replace_optional_ret<{}{}capi::{}, {type_name}>",
+                            self.formatter.lib_name_ns_prefix,
+                            if let Some(ns) = &trait_def.attrs.namespace {
+                                format!("{ns}::")
+                            } else {
+                                "".into()
+                            },
+                            &trait_info.methods[idx].return_ty
+                        ))
+                    }
+                };
+                let params = m
+                    .params
+                    .iter()
+                    .map(|p| {
+                        NamedType {
+                            var_name: p
+                                .name
+                                .as_ref()
+                                .expect("Found unnamed parameter in trait")
+                                .as_str()
+                                .into(),
+                            type_name: self.gen_type_name(&p.ty),
+                            default_value: None,
+                            // TODO:
+                            lifetimebound: false,
+                        }
+                    })
+                    .collect::<Vec<_>>();
 
-            TraitMethodInfo {
-                name: m.name.as_ref().expect("Could not get trait method name").as_str().into(),
-                return_type_name: ret,
-                return_type: &m.output,
-                return_method_call,
-                params,
-                deprecated: m.attrs.as_ref().and_then(|a| { a.deprecated.as_ref().map(|d| d.as_str()) }),
-                // Methods are in the same order, so this should be correrct:
-                c_ty: &trait_info.methods[idx],
-            }
-        }).collect::<Vec<_>>();
+                TraitMethodInfo {
+                    name: m
+                        .name
+                        .as_ref()
+                        .expect("Could not get trait method name")
+                        .as_str()
+                        .into(),
+                    return_type_name: ret,
+                    return_type: &m.output,
+                    return_method_call,
+                    params,
+                    deprecated: m
+                        .attrs
+                        .as_ref()
+                        .and_then(|a| a.deprecated.as_ref().map(|d| d.as_str())),
+                    // Methods are in the same order, so this should be correrct:
+                    c_ty: &trait_info.methods[idx],
+                }
+            })
+            .collect::<Vec<_>>();
 
         let ctype = self.formatter.fmt_c_trait_name(id);
 
         #[derive(Template)]
         #[template(path = "cpp/trait_decl.h.jinja", escape = "none")]
         struct DeclTemplate<'a> {
-            fmt : &'a Cpp2Formatter<'a>,
+            fmt: &'a Cpp2Formatter<'a>,
             ctype: Cow<'a, str>,
-            c_header : C2Header,
-            trait_name : &'a str,
-            trait_name_unnamespaced : &'a str,
-            namespace : Option<&'a str>,
-            methods : &'a [TraitMethodInfo<'a>],
+            c_header: C2Header,
+            trait_name: &'a str,
+            trait_name_unnamespaced: &'a str,
+            namespace: Option<&'a str>,
+            methods: &'a [TraitMethodInfo<'a>],
             docs: &'a str,
             deprecated: Option<&'a str>,
         }
@@ -603,17 +627,19 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             methods: methods.as_slice(),
             docs: &self.formatter.fmt_docs(&trait_def.docs, &trait_def.attrs),
             deprecated: trait_def.attrs.deprecated.as_ref().map(|d| d.as_str()),
-        }.render_into(self.decl_header).unwrap();
+        }
+        .render_into(self.decl_header)
+        .unwrap();
 
         #[derive(Template)]
         #[template(path = "cpp/trait_impl.h.jinja", escape = "none")]
         struct ImplTemplate<'a> {
-            fmt : &'a Cpp2Formatter<'a>,
-            trait_name : &'a str,
-            trait_name_unnamespaced : &'a str,
-            namespace : Option<&'a str>,
+            fmt: &'a Cpp2Formatter<'a>,
+            trait_name: &'a str,
+            trait_name_unnamespaced: &'a str,
+            namespace: Option<&'a str>,
             ctype: Cow<'a, str>,
-            methods : &'a [TraitMethodInfo<'a>],
+            methods: &'a [TraitMethodInfo<'a>],
         }
 
         ImplTemplate {
@@ -623,7 +649,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             namespace: trait_def.attrs.namespace.as_deref(),
             ctype,
             methods: methods.as_slice(),
-        }.render_into(self.impl_header).unwrap();
+        }
+        .render_into(self.impl_header)
+        .unwrap();
     }
 
     pub fn gen_method_info(
@@ -998,9 +1026,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             }
             Type::ImplTrait(ref tr) => {
                 let id = tr.id();
-                self.decl_header.includes.insert(self.formatter.fmt_decl_header_path(id.into()));
+                self.decl_header
+                    .includes
+                    .insert(self.formatter.fmt_decl_header_path(id.into()));
                 // We require a pointer for polymorphism, and it's unique because we expect to own the value.
-                format!("std::unique_ptr<{}>", self.formatter.fmt_symbol_name(id.into())).into()
+                format!(
+                    "std::unique_ptr<{}>",
+                    self.formatter.fmt_symbol_name(id.into())
+                )
+                .into()
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
@@ -1355,9 +1389,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 };
                 format!("{{new decltype({cpp_name})(std::move({cpp_name})), {run_callback}, {lib_name_ns_prefix}diplomat::fn_traits({cpp_name}).c_delete}}",).into()
             }
-            Type::ImplTrait(..) => {
-                format!("{cpp_name}.release()->AsFFI()").into()
-            }
+            Type::ImplTrait(..) => format!("{cpp_name}.release()->AsFFI()").into(),
             _ => unreachable!("unknown AST/HIR variant"),
         }
     }

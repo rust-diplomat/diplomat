@@ -49,13 +49,10 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             .apply(resolved.name().as_str().into())
     }
 
-    pub fn fmt_trait_name_unnamespaced(&self, id : TraitId) -> Cow<'tcx, str> {
+    pub fn fmt_trait_name_unnamespaced(&self, id: TraitId) -> Cow<'tcx, str> {
         let resolved = self.c.tcx().resolve_trait(id);
 
-        resolved
-            .attrs
-            .rename
-            .apply(resolved.name.as_str().into())
+        resolved.attrs.rename.apply(resolved.name.as_str().into())
     }
 
     pub fn fmt_symbol_name(&self, id: SymbolId) -> Cow<'tcx, str> {
@@ -186,10 +183,15 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         self.c.fmt_type_name_maybe_namespaced(id.into())
     }
 
-    pub fn fmt_c_trait_name(&self, id : TraitId) -> Cow<'tcx, str> {
+    pub fn fmt_c_trait_name(&self, id: TraitId) -> Cow<'tcx, str> {
         let trt_name_unnamespaced = self.c.fmt_trait_name(id);
         let res = self.c.tcx().resolve_trait(id);
-        self.c.diplomat_namespace_for_custom_type(format!("DiplomatTraitStruct_{}", trt_name_unnamespaced).into(), res.attrs.namespace.as_deref()).into()
+        self.c
+            .diplomat_namespace_for_custom_type(
+                format!("DiplomatTraitStruct_{}", trt_name_unnamespaced).into(),
+                res.attrs.namespace.as_deref(),
+            )
+            .into()
     }
 
     pub fn fmt_c_ptr<'a>(&self, ident: &'a str, mutability: hir::Mutability) -> Cow<'a, str> {

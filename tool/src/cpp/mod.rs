@@ -194,7 +194,7 @@ pub(crate) fn run<'tcx>(
 
         files.add_file(decl_header_path, decl_header.to_string());
         files.add_file(impl_header_path, impl_header.to_string());
-    } 
+    }
 
     {
         // Group free functions by namespace, removing those which are disabled
