@@ -540,7 +540,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                             } else {
                                 "".into()
                             },
-                            &trait_info.methods[idx].return_ty
+                            trait_info.methods[idx].return_ty
                         ))
                     }
                     ReturnType::Nullable(ref success) => {
@@ -557,7 +557,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                             } else {
                                 "".into()
                             },
-                            &trait_info.methods[idx].return_ty
+                            trait_info.methods[idx].return_ty
                         ))
                     }
                 };
