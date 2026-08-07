@@ -460,13 +460,16 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
             }
             Type::ImplTrait(t) => {
                 let t_id = t.id();
-                let trt_name = self.gen_ty_name(ty, header);
-                if self.tcx.resolve_trait(t_id).attrs.disable {
+                let trt_name_maybe_namespaced = self.gen_ty_name(ty, header);
+                let res = self.tcx.resolve_trait(t_id);
+                if res.attrs.disable {
                     self.errors
-                        .push_error(format!("Found usage of disabled trait {trt_name}"))
+                        .push_error(format!("Found usage of disabled trait {trt_name_maybe_namespaced}"))
                 }
+                
+                let trait_name_unnamespaced = self.formatter.fmt_trait_name(t_id);
                 (
-                    format!("DiplomatTraitStruct_{trt_name}").into(),
+                    self.formatter.diplomat_namespace_for_custom_type(trait_name_unnamespaced, res.attrs.namespace.as_deref()),
                     format!("{param_name}_trait_wrap").into(),
                 )
             }
