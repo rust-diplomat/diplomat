@@ -1,0 +1,32 @@
+{% include "c_include.h.jinja" %}
+
+{% if let Some(ns) = namespace -%}
+namespace {{fmt.lib_name_ns_prefix}}{{ns}} {
+{% else if let Some(lib_name) = &fmt.lib_name -%}
+namespace {{lib_name}} {
+{% endif -%}
+
+
+{% if !docs.is_empty() -%}
+/**
+ {{~ docs|prefix_trimmed(" * ")}}
+ */
+{% endif -%}
+{% if let Some(deprecated) = deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%} class {{trait_name_unnamespaced}} {
+    private:
+    static void Destroy(const void* data);
+
+    protected:
+    {%- for m in methods %}
+    {% if let Some(deprecated) = m.deprecated %}[[deprecated("{{ deprecated }}")]] {% endif -%}
+    virtual {{m.return_type_name}} {{m.name}}({%- for p in m.params -%}  {{p.type_name}} {{p.var_name}} {%- if !loop.last -%}, {% endif -%}{%- endfor %}) = 0;
+    {%- endfor %}
+
+    public:
+    inline {{ctype}} AsFFI() const;
+};
+
+
+{% if namespace.is_some() || fmt.lib_name.is_some() -%}
+} // namespace
+{%-endif%}
