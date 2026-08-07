@@ -524,6 +524,11 @@ pub mod ffi {
             Box::new(Self)
         }
 
+        /// Exists so C# tests can observe that Dispose() invalidates the wrapper.
+        pub fn is_alive(&self) -> bool {
+            true
+        }
+
         pub fn reset_drop_count() {
             super::DISPOSABLE_DROP_PROBE_DROPS.store(0, super::Ordering::SeqCst);
         }

@@ -71,6 +71,20 @@ public partial class DisposableDropProbe: IDisposable
         }
     }
 
+    public bool IsAlive()
+    {
+        unsafe
+        {
+            if (_inner.IsNull)
+            {
+                throw new ObjectDisposedException("DisposableDropProbe");
+            }
+            var result = Raw.DisposableDropProbe.IsAlive(AsFFI());
+            GC.KeepAlive(this);
+            return result;
+        }
+    }
+
     public static void ResetDropCount()
     {
         unsafe

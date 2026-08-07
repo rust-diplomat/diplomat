@@ -2225,18 +2225,34 @@ mod test {
 
     #[test]
     fn opaque_manually_disposable_opt_in_emits_public_dispose() {
+        // Generate both shapes from one bridge so the attribute is what flips
+        // the public Dispose surface, not some ambient backend default.
         let (files, errors) = run_dotnet(quote! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(dotnet, manually_disposable)]
                 #[diplomat::opaque]
-                pub struct Plain;
+                pub struct FinalizerOnly;
 
-                impl Plain {
+                impl FinalizerOnly {
                     #[diplomat::attr(auto, constructor)]
                     pub fn new() -> Box<Self> {
                         unimplemented!()
                     }
+
+                    pub fn ping(&self) {}
+                }
+
+                #[diplomat::attr(dotnet, manually_disposable)]
+                #[diplomat::opaque]
+                pub struct Manual;
+
+                impl Manual {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+
+                    pub fn ping(&self) {}
                 }
             }
         });
@@ -2246,20 +2262,41 @@ mod test {
             "unexpected diagnostics: {}",
             errors.join("\n")
         );
-        let plain = files.get("Plain.cs").expect("expected Plain.cs output");
+
+        let finalizer_only = files
+            .get("FinalizerOnly.cs")
+            .expect("expected FinalizerOnly.cs output");
         assert!(
-            plain.contains("public partial class Plain: IDisposable"),
-            "opted-in opaque should implement IDisposable:\n{plain}"
+            finalizer_only.contains("public partial class FinalizerOnly")
+                && !finalizer_only.contains(": IDisposable")
+                && !finalizer_only.contains("public void Dispose()"),
+            "unmarked opaque must stay finalizer-only:\n{finalizer_only}"
         );
         assert!(
-            plain.contains("public void Dispose()")
-                && plain.contains("Cleanup();")
-                && plain.contains("GC.SuppressFinalize(this);"),
-            "opted-in opaque should expose Dispose() that suppresses finalization:\n{plain}"
+            finalizer_only.contains("private void Cleanup()")
+                && finalizer_only.contains("~FinalizerOnly()"),
+            "unmarked opaque still needs private cleanup + finalizer:\n{finalizer_only}"
+        );
+
+        let manual = files.get("Manual.cs").expect("expected Manual.cs output");
+        assert!(
+            manual.contains("public partial class Manual: IDisposable"),
+            "`manually_disposable` must generate `: IDisposable`:\n{manual}"
         );
         assert!(
-            plain.contains("~Plain()") && plain.contains("try") && plain.contains("catch"),
-            "opted-in opaque should still keep finalizer fallback:\n{plain}"
+            manual.contains("public void Dispose()")
+                && manual.contains("Cleanup();")
+                && manual.contains("GC.SuppressFinalize(this);"),
+            "`manually_disposable` must expose Dispose() that suppresses finalization:\n{manual}"
+        );
+        assert!(
+            manual.contains("~Manual()") && manual.contains("try") && manual.contains("catch"),
+            "opted-in opaque should still keep finalizer fallback:\n{manual}"
+        );
+        assert!(
+            manual.contains("public void Ping()")
+                && manual.contains("ObjectDisposedException(\"Manual\")"),
+            "instance methods on a manually_disposable opaque must reject use-after-dispose:\n{manual}"
         );
     }
 
