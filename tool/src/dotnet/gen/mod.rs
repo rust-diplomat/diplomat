@@ -305,7 +305,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     &opaque_def.methods,
                     &[],
                     true,
-                    opaque_def.attrs.idisposable,
+                    opaque_def.attrs.manually_disposable,
                 );
                 PreparedType::Opaque {
                     display_name,
@@ -351,7 +351,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     methods,
                     properties,
                     uses_pinned_memory,
-                    opaque_def.attrs.idisposable,
+                    opaque_def.attrs.manually_disposable,
                 );
                 (Some(raw), content)
             }

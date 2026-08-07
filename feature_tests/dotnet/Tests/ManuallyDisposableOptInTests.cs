@@ -5,7 +5,7 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-public class IdisposableOptInTests
+public class ManuallyDisposableOptInTests
 {
     [MethodImpl(MethodImplOptions.NoInlining
 #if !NETFRAMEWORK

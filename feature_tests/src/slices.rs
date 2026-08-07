@@ -4,7 +4,7 @@ pub mod ffi {
     use std::fmt::Write as _;
 
     #[diplomat::opaque_mut]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[derive(Debug)]
     pub struct MyString(String);
 
@@ -81,7 +81,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque_mut]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[derive(Debug)]
     pub struct Float64Vec(Vec<f64>);
 
@@ -173,7 +173,7 @@ pub mod ffi {
     // Owned opaque returns borrowing a `&[u8]` param: on .NET the param becomes
     // ReadOnlyMemory<u8> pinned for the returned view's lifetime (PR #1201).
     #[diplomat::opaque]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::attr(not(dotnet), disable)]
     pub struct OpaqueSliceView<'a>(&'a [u8]);
 

@@ -4,7 +4,7 @@
 //! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
 //! Opaque Rust handles map to partial classes backed by `RustHandle<T>`, which
 //! records whether C# or Rust owns the pointer. Opaques are finalizer-only by
-//! default; `#[diplomat::attr(dotnet, idisposable)]` opts a type into a public
+//! default; `#[diplomat::attr(dotnet, manually_disposable)]` opts a type into a public
 //! `IDisposable` surface.
 //! Slices, `&DiplomatStr` (unvalidated UTF-8) and `&DiplomatStr16` pin
 //! zero-copy; a validated `&str` still copies, since only a transcode from a
@@ -269,7 +269,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_send = false;
     a.traits_are_sync = false;
     a.generate_mocking_interface = false;
-    a.idisposable = true;
+    a.manually_disposable = true;
 
     a
 }
@@ -2224,11 +2224,11 @@ mod test {
     }
 
     #[test]
-    fn opaque_idisposable_opt_in_emits_public_dispose() {
+    fn opaque_manually_disposable_opt_in_emits_public_dispose() {
         let (files, errors) = run_dotnet(quote! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(dotnet, idisposable)]
+                #[diplomat::attr(dotnet, manually_disposable)]
                 #[diplomat::opaque]
                 pub struct Plain;
 
@@ -2264,12 +2264,12 @@ mod test {
     }
 
     #[test]
-    fn idisposable_attr_requires_simple_path() {
+    fn manually_disposable_attr_requires_simple_path() {
         let errors = lowering_errors(
             quote! {
                 #[diplomat::bridge]
                 mod ffi {
-                    #[diplomat::attr(dotnet, idisposable = true)]
+                    #[diplomat::attr(dotnet, manually_disposable = true)]
                     #[diplomat::opaque]
                     pub struct Bad;
                 }
@@ -2280,23 +2280,23 @@ mod test {
         assert!(
             errors
                 .iter()
-                .any(|e| e.contains("`idisposable` must be a simple path")),
+                .any(|e| e.contains("`manually_disposable` must be a simple path")),
             "expected simple-path validation error, got: {errors:?}"
         );
     }
 
     #[test]
-    fn idisposable_attr_invalid_contexts_are_rejected() {
+    fn manually_disposable_attr_invalid_contexts_are_rejected() {
         let errors = lowering_errors(
             quote! {
                 #[diplomat::bridge]
                 mod ffi {
-                    #[diplomat::attr(dotnet, idisposable)]
+                    #[diplomat::attr(dotnet, manually_disposable)]
                     pub struct NotOpaque {
                         value: u8,
                     }
 
-                    #[diplomat::attr(dotnet, idisposable)]
+                    #[diplomat::attr(dotnet, manually_disposable)]
                     pub enum NotOpaqueEnum {
                         A,
                     }
@@ -2305,7 +2305,7 @@ mod test {
                     pub struct GoodOpaque;
 
                     impl GoodOpaque {
-                        #[diplomat::attr(dotnet, idisposable)]
+                        #[diplomat::attr(dotnet, manually_disposable)]
                         pub fn bad(&self) {
                         }
                     }
@@ -2316,7 +2316,7 @@ mod test {
 
         let wrong_context_count = errors
             .iter()
-            .filter(|e| e.contains("`idisposable` can only be used on opaque types"))
+            .filter(|e| e.contains("`manually_disposable` can only be used on opaque types"))
             .count();
         assert_eq!(
             wrong_context_count, 3,
@@ -2325,13 +2325,13 @@ mod test {
     }
 
     #[test]
-    fn idisposable_attr_duplicate_is_rejected() {
+    fn manually_disposable_attr_duplicate_is_rejected() {
         let errors = lowering_errors(
             quote! {
                 #[diplomat::bridge]
                 mod ffi {
-                    #[diplomat::attr(dotnet, idisposable)]
-                    #[diplomat::attr(dotnet, idisposable)]
+                    #[diplomat::attr(dotnet, manually_disposable)]
+                    #[diplomat::attr(dotnet, manually_disposable)]
                     #[diplomat::opaque]
                     pub struct Duplicate;
                 }
@@ -2342,17 +2342,17 @@ mod test {
         assert!(
             errors
                 .iter()
-                .any(|e| e.contains("Duplicate `idisposable` attribute")),
-            "expected duplicate-idisposable error, got: {errors:?}"
+                .any(|e| e.contains("Duplicate `manually_disposable` attribute")),
+            "expected duplicate-manually_disposable error, got: {errors:?}"
         );
     }
 
     #[test]
-    fn non_dotnet_gated_idisposable_does_not_affect_dotnet_codegen() {
+    fn non_dotnet_gated_manually_disposable_does_not_affect_dotnet_codegen() {
         let (files, errors) = run_dotnet(quote! {
             #[diplomat::bridge]
             mod ffi {
-                #[diplomat::attr(not(dotnet), idisposable)]
+                #[diplomat::attr(not(dotnet), manually_disposable)]
                 #[diplomat::opaque]
                 pub struct Gated;
 
@@ -2373,7 +2373,7 @@ mod test {
         let gated = files.get("Gated.cs").expect("expected Gated.cs output");
         assert!(
             !gated.contains(": IDisposable") && !gated.contains("public void Dispose()"),
-            "dotnet-disabled idisposable attr must not change dotnet output:\n{gated}"
+            "dotnet-disabled manually_disposable attr must not change dotnet output:\n{gated}"
         );
     }
 
@@ -2747,7 +2747,7 @@ mod test {
     }
 
     #[test]
-    fn a_property_named_dispose_is_accepted_without_idisposable_opt_in() {
+    fn a_property_named_dispose_is_accepted_without_manually_disposable_opt_in() {
         let (files, errors) = run_dotnet(property_test_module(quote! {
             #[diplomat::attr(auto, getter = "dispose")]
             pub fn is_disposed(&self) -> bool {
@@ -2763,15 +2763,15 @@ mod test {
         let config = files.get("Config.cs").expect("expected Config.cs output");
         assert!(
             config.contains("public bool Dispose"),
-            "without dotnet idisposable opt-in, an opaque may expose a Dispose-named property:\n{config}"
+            "without dotnet manually_disposable opt-in, an opaque may expose a Dispose-named property:\n{config}"
         );
     }
 
     #[test]
-    fn a_property_colliding_with_dispose_is_rejected_when_idisposable_opted_in() {
+    fn a_property_colliding_with_dispose_is_rejected_when_manually_disposable_opted_in() {
         let (_files, errors) = run_dotnet(property_test_module_with_type_attrs(
             quote! {
-                #[diplomat::attr(dotnet, idisposable)]
+                #[diplomat::attr(dotnet, manually_disposable)]
             },
             quote! {
                 #[diplomat::attr(auto, getter = "dispose")]

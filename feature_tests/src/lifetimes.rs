@@ -308,7 +308,7 @@ pub mod ffi {
     // via transparent_convert and non-owning references. Iterators, iterables, and getters
     // are all handled via attributes, which may have slightly different codepaths.
     #[diplomat::opaque]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
@@ -340,7 +340,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque_mut]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
 
     impl OpaqueThinVec {
@@ -515,7 +515,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::attr(dotnet, idisposable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::opaque]
     pub struct DisposableDropProbe;
 

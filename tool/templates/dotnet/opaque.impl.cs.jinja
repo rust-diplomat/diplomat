@@ -8,7 +8,7 @@ namespace {{ namespace }};
 
 #nullable enable
 
-public partial class {{ name }}{% if idisposable %}: IDisposable{% endif %}
+public partial class {{ name }}{% if manually_disposable %}: IDisposable{% endif %}
 {
     private unsafe RustHandle<Raw.{{ name }}> _inner;
 
@@ -113,7 +113,7 @@ public partial class {{ name }}{% if idisposable %}: IDisposable{% endif %}
         }
     }
 
-{%- if idisposable %}
+{%- if manually_disposable %}
     /// <summary>
     /// Destroys the underlying object immediately.
     /// </summary>

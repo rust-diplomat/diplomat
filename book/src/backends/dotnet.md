@@ -72,7 +72,7 @@ compile the result.
 A getter that returns an owned `Box<[u8]>` (`RustVec`) hands back a value you own, so
 dispose it — `using var x = thing.Data;`. A getter returning an owned opaque can be used
 the same way only when that opaque is opted into
-`#[diplomat::attr(dotnet, idisposable)]`.
+`#[diplomat::attr(dotnet, manually_disposable)]`.
 
 In accessor position a string-shaped parameter is always `string`, even for
 `&DiplomatStr` (which is `byte[]` everywhere else, zero-copy and unvalidated). A property
@@ -99,7 +99,7 @@ no lifetime-carrying returns.
 
 By default, generated opaques are **finalizer-only**: no public `Dispose()`, cleanup runs
 through a private idempotent path invoked by the finalizer. Add
-`#[diplomat::attr(dotnet, idisposable)]` on an opaque type declaration to generate
+`#[diplomat::attr(dotnet, manually_disposable)]` on an opaque type declaration to generate
 `: IDisposable` plus a public `Dispose()` that runs the same cleanup and
 `GC.SuppressFinalize(this)`. In both modes, native calls are followed by
 `GC.KeepAlive(this)` to prevent finalization while P/Invoke is still using the pointer.

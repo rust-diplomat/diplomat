@@ -51,7 +51,7 @@ struct OpaqueImplTemplate<'ctx> {
     /// which both impl templates include.
     is_opaque: bool,
     /// Per-opaque opt-in for generating a public `IDisposable` surface.
-    idisposable: bool,
+    manually_disposable: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -86,7 +86,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         methods: Vec<MethodInfo<'tcx>>,
         properties: Vec<PropertyInfo<'tcx>>,
         uses_pinned_memory: bool,
-        idisposable: bool,
+        manually_disposable: bool,
     ) -> String {
         OpaqueImplTemplate {
             name: display_name,
@@ -95,7 +95,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             properties,
             uses_pinned_memory,
             is_opaque: true,
-            idisposable,
+            manually_disposable,
         }
         .render()
         .unwrap()
