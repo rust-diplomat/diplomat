@@ -42,10 +42,6 @@ struct OpaqueImplTemplate<'ctx> {
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
     properties: Vec<PropertyInfo<'ctx>>,
-    /// Run-level: true iff any type in this generation run pins a slice. Gates
-    /// the `DiplomatPinnedMemory` Dispose sweep so a run with no pinned returns
-    /// emits nothing referencing the (System.Memory-dependent) helper.
-    uses_pinned_memory: bool,
     /// True for an opaque: its instance members check `_inner` before calling
     /// into Rust, which a struct has no need for. Read by `property.cs.jinja`,
     /// which both impl templates include.
@@ -85,7 +81,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
         properties: Vec<PropertyInfo<'tcx>>,
-        uses_pinned_memory: bool,
         manually_disposable: bool,
     ) -> String {
         OpaqueImplTemplate {
@@ -93,7 +88,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             namespace: self.namespace,
             methods,
             properties,
-            uses_pinned_memory,
             is_opaque: true,
             manually_disposable,
         }

@@ -12,12 +12,6 @@ public partial class AttrOpaque1Renamed: IDisposable
 {
     private unsafe RustHandle<Raw.AttrOpaque1Renamed> _inner;
 
-    /// <summary>
-    /// Roots the wrappers this value borrows from so the GC cannot finalize
-    /// a borrowed-from parent while this value is alive.
-    /// </summary>
-    private object[] _edges;
-
     private static readonly unsafe RustDestructor<Raw.AttrOpaque1Renamed> _destroy = Raw.AttrOpaque1Renamed.Destroy;
 
     public byte Abirenamed
@@ -66,31 +60,61 @@ public partial class AttrOpaque1Renamed: IDisposable
     internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle)
     {
         _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy);
-        _edges = System.Array.Empty<object>();
-    }
-
-    /// <remarks>
-    /// Edges only keep the borrowed-from objects GC-reachable. If this type is
-    /// opted into a public <c>Dispose</c>, disposing a parent while a borrowing
-    /// child is in use is still a use-after-free and remains the caller's
-    /// responsibility.
-    /// </remarks>
-    internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle, object[] edges)
-    {
-        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy);
-        _edges = edges;
     }
 
     /// <summary>
-    /// Wraps a handle that already knows whether it owns the pointer. A borrowed
-    /// return passes a non-owning handle, so cleanup leaves Rust's pointer
-    /// alone; the edges keep the borrowed-from owners alive while this view is
-    /// in use.
+    /// Owned construction that also borrows from one or more other opaque
+    /// wrappers (an "owned-borrowing" dependent, e.g. a value borrowing
+    /// <c>&amp;'a self</c> or a borrowed parameter). Each dependency was
+    /// already retained (<c>DiplomatRetainDependency()</c>) by the caller.
     /// </summary>
-    internal unsafe AttrOpaque1Renamed(RustHandle<Raw.AttrOpaque1Renamed> inner, object[] edges)
+    /// <remarks>
+    /// This wrapper's own <c>Cleanup()</c> runs its Rust destructor and
+    /// releases these dependencies afterwards — never before — so a source
+    /// this borrows from cannot be physically destroyed while this value is
+    /// still alive, regardless of the source wrapper's own managed lifetime.
+    /// </remarks>
+    internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle, IRustHandleDependency[] dependencies)
+    {
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy, dependencies);
+    }
+
+    /// <summary>
+    /// Owned construction that also pins one or more of this value's own
+    /// input buffers (e.g. a <c>ReadOnlyMemory</c> parameter it borrows).
+    /// The pins are threaded straight into <c>_inner</c>'s own
+    /// <c>RustHandleState</c> (see <c>RustHandle.cs.jinja</c>) rather than
+    /// held in a field of this class, so they are only ever unpinned right
+    /// after this value's own Rust destructor actually runs — even when
+    /// that destructor call itself is deferred behind an outstanding RC
+    /// dependent (see the <c>dependencies</c> overload above), never merely
+    /// because THIS wrapper's own <c>Cleanup()</c> happened to run.
+    /// </summary>
+    internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle, object[] pins)
+    {
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy, pins);
+    }
+
+    /// <summary>
+    /// Owned construction that both borrows from other opaque wrappers and
+    /// pins one of its own input buffers.
+    /// </summary>
+    internal unsafe AttrOpaque1Renamed(Raw.AttrOpaque1Renamed* handle, IRustHandleDependency[] dependencies, object[] pins)
+    {
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Owned(handle, _destroy, dependencies, pins);
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so cleanup leaves Rust's
+    /// pointer alone; any dependency this view borrows from already rides
+    /// inside <paramref name="inner"/>'s own state (see
+    /// <c>RustHandle&lt;T&gt;.Borrowed(ptr, dependencies)</c>), so this
+    /// constructor needs nothing extra to keep it alive.
+    /// </summary>
+    internal unsafe AttrOpaque1Renamed(RustHandle<Raw.AttrOpaque1Renamed> inner)
     {
         _inner = inner;
-        _edges = edges;
     }
 
     /// <returns>
@@ -171,6 +195,31 @@ public partial class AttrOpaque1Renamed: IDisposable
         return _inner.Ptr;
     }
 
+    /// <summary>
+    /// Retains this value's native resource for a new direct dependent (a
+    /// value another generated wrapper is about to construct by borrowing
+    /// from this one). The caller must release the returned dependency
+    /// exactly once, from its own cleanup, after running its own Rust
+    /// destructor (if it has one) — see <c>RustHandle.cs.jinja</c> for the
+    /// full reference-counting contract. This call, like <c>Dispose()</c>/
+    /// the finalizer, is a lifecycle edge and is synchronized against those
+    /// (a racing release on the same shared state can't corrupt the count);
+    /// ordinary method calls on this wrapper are still not safe to make
+    /// concurrently with each other.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    /// This <c>AttrOpaque1Renamed</c> was already disposed/finalized, so there is
+    /// nothing left to lend a dependent.
+    /// </exception>
+    internal unsafe IRustHandleDependency DiplomatRetainDependency()
+    {
+        if (_inner.IsNull)
+        {
+            throw new ObjectDisposedException("AttrOpaque1Renamed");
+        }
+        return _inner.Retain();
+    }
+
     private void Cleanup()
     {
         unsafe
@@ -180,19 +229,37 @@ public partial class AttrOpaque1Renamed: IDisposable
                 return;
             }
 
+            // Releases this wrapper's own ("owner") reference. Idempotent at
+            // the shared-state level (`RustHandleState<T>.ReleaseOwner()`),
+            // so it's safe no matter how many times — or from how many
+            // threads (e.g. a racing repeated `Dispose()`) — this `Cleanup()`
+            // ends up running: only the first release actually decrements
+            // the count. Physically destroying the native value (and, right
+            // after, unpinning any of its own pinned input buffers) is
+            // deferred until every reference — this wrapper's own and every
+            // RC dependent's — has been released; see `RustHandle.cs.jinja`
+            // for the full ordering guarantee. This call site needs to know
+            // nothing about it.
             _inner.Release();
             _inner = default;
-            // Unpin only after Release: Rust's Drop may still read the pinned buffer.
-            foreach (object edge in _edges)
-            {
-                (edge as DiplomatPinnedMemory)?.Dispose();
-            }
-            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
         }
     }
     /// <summary>
-    /// Destroys the underlying object immediately.
+    /// Requests/releases this wrapper's own ownership reference. Idempotent:
+    /// safe to call more than once, including racing with the finalizer.
     /// </summary>
+    /// <remarks>
+    /// This only relinquishes THIS wrapper's own reference; the underlying
+    /// native resource is not necessarily destroyed when this method
+    /// returns. If another wrapper still holds a live borrow-dependency on
+    /// it (see <c>RustHandle.cs.jinja</c>), the actual Rust destructor call
+    /// is deferred until that borrower releases its own reference too — so
+    /// existing borrowers obtained before this call remain fully valid.
+    /// After this call, this <c>AttrOpaque1Renamed</c> instance itself is unusable:
+    /// its methods (and any attempt to retain a new dependent from it) throw
+    /// <see cref="ObjectDisposedException"/> immediately, regardless of
+    /// whether the physical native destruction happened yet.
+    /// </remarks>
     public void Dispose()
     {
         Cleanup();

@@ -92,17 +92,46 @@ and runs it on release; a **borrowed** handle carries none, so releasing it is a
 because Rust still owns (and will free) that memory. This means methods returning `&T` or
 `Option<&T>` are safe to wrap without risking a double-free.
 
-Borrowed returns also carry a `_edges` array on the object rooting whatever it borrowed
-from, so the GC can't collect the source object out from under a still-live borrowed
-reference. `object[] _edges` is `Array.Empty<object>()` (no allocation) when a type has
-no lifetime-carrying returns.
+A handle that borrows from another wrapper (a method returning `&T`/`Option<&T>`, or an
+owned-but-borrowing dependent) doesn't just root the source object for the GC — it retains
+the source's shared native resource state (`RustHandleState<T>`) for as long as the
+borrowing wrapper is reachable, and releases that retained reference from its own cleanup.
+This is what lets the source wrapper be disposed (or finalized) *before* every dependent
+has let go of it without either use-after-free or an early native destructor call: the
+source's physical native destruction is deferred until its own wrapper reference **and**
+every dependent's retained reference have all been released, however many dependents there
+are or in whatever order their managed lifetimes end. `RustHandleState<T>` also holds any
+of the wrapper's own pinned input buffers, unpinning them only after that wrapper's own
+Rust destructor has actually run (which may itself be deferred by an outstanding dependent).
+
+This reference count is a plain, lock-guarded `int`, not `SafeHandle` and not an atomic
+`Interlocked` counter, and generated wrappers add zero synchronization to hot per-call code
+(P/Invoke calls, property getters, etc.) — calling ordinary instance methods on the same
+wrapper from two threads at once is still undefined behavior, exactly as for any other
+non-thread-safe .NET type. The one thing that *is* synchronized is the small set of
+lifecycle edges — a dependent retaining its source on construction, a wrapper releasing its
+own reference (`Dispose()` or finalizer), and a dependent releasing its retained reference —
+because those are the only points where two different threads can genuinely be doing
+lifecycle work on the very same shared state at once: finalizers run concurrently with the
+application on a dedicated finalizer thread regardless of how single-threaded the user's own
+code is, so a dependent's finalizer and an explicit `source.Dispose()` call can race even in
+otherwise single-threaded user code. See `RustHandle.cs.jinja`'s `RustHandleState<T>` doc
+comments for the full synchronization contract.
 
 By default, generated opaques are **finalizer-only**: no public `Dispose()`, cleanup runs
 through a private idempotent path invoked by the finalizer. Add
 `#[diplomat::attr(dotnet, manually_disposable)]` on an opaque type declaration to generate
 `: IDisposable` plus a public `Dispose()` that runs the same cleanup and
-`GC.SuppressFinalize(this)`. In both modes, native calls are followed by
-`GC.KeepAlive(this)` to prevent finalization while P/Invoke is still using the pointer.
+`GC.SuppressFinalize(this)`. `Dispose()` requests/releases *this wrapper's own* ownership
+reference exactly once, however many times or from however many threads it (or the
+finalizer) ends up running — it does not necessarily trigger physical native destruction
+immediately, since that's deferred while borrowers remain, and existing borrowers stay
+valid after a source is disposed. What `Dispose()` *does* do immediately is make the
+disposed wrapper itself reject further use: subsequent method calls or attempts to retain
+a new dependent from it throw `ObjectDisposedException`, regardless of whether the
+underlying native resource has actually been freed yet. In both modes, native calls are
+followed by `GC.KeepAlive(this)` to prevent finalization while P/Invoke is still using the
+pointer.
 
 ## String encoding
 

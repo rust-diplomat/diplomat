@@ -176,7 +176,20 @@ pub(crate) struct ErrorInfo {
 }
 
 impl ErrorInfo {
-    pub(crate) fn throw_statement_with_edges<R>(&self, raw_expr: R, edges: &[String]) -> String
+    /// `dependencies` are the direct opaque-param/`this` borrow edges the
+    /// error arm borrows from — pins are structurally impossible here (a
+    /// thrown exception has no unpin path), so this is always a pure
+    /// dependency list. They're retained via the same non-atomic RC
+    /// mechanism as a success-arm owned-borrowing return: the inner error
+    /// opaque's own `RustHandle` state holds the dependency (see
+    /// `DotnetErrorType::exception_inner_expr`), not a separate array on the
+    /// exception class — so the exception class itself needs no edge
+    /// plumbing at all.
+    pub(crate) fn throw_statement_with_edges<R>(
+        &self,
+        raw_expr: R,
+        dependencies: &[String],
+    ) -> String
     where
         R: TryInto<RawExpr>,
         R::Error: Display,
@@ -190,13 +203,8 @@ impl ErrorInfo {
             );
         }
 
-        let inner = self.error.exception_inner_expr(raw_expr, edges);
-        if edges.is_empty() {
-            format!("throw new {}({inner});", self.exception_name)
-        } else {
-            let edges_str = edges.join(", ");
-            format!("throw new {}({inner}, {edges_str});", self.exception_name)
-        }
+        let inner = self.error.exception_inner_expr(raw_expr, dependencies);
+        format!("throw new {}({inner});", self.exception_name)
     }
 }
 
@@ -290,10 +298,12 @@ impl DotnetErrorType {
         matches!(self, DotnetErrorType::Opaque(_))
     }
 
-    /// Only opaque (`Box<E>`) errors get a managed C# wrapper that can hold the
-    /// keep-alive edge array; primitive/enum/struct errors marshal by value, so
-    /// there's nowhere to root the borrowed-from owner. That's why this is
-    /// exactly `is_opaque` — not a coincidence a later edit should collapse.
+    /// Only opaque (`Box<E>`) errors get a managed C# wrapper whose own
+    /// `RustHandle` state can retain a dependency (see
+    /// `Self::exception_inner_expr`); primitive/enum/struct errors marshal by
+    /// value, so there's nowhere to hold the retained reference. That's why
+    /// this is exactly `is_opaque` — not a coincidence a later edit should
+    /// collapse.
     pub(crate) fn can_carry_borrow_edges(&self) -> bool {
         self.is_opaque()
     }
@@ -339,13 +349,15 @@ impl DotnetErrorType {
         format!("{name}Exception")
     }
 
-    fn exception_inner_expr(&self, raw_expr: RawExpr, edges: &[String]) -> String {
+    fn exception_inner_expr(&self, raw_expr: RawExpr, dependencies: &[String]) -> String {
         match self {
-            DotnetErrorType::Opaque(name) if edges.is_empty() => format!("new {name}({raw_expr})"),
+            DotnetErrorType::Opaque(name) if dependencies.is_empty() => {
+                format!("new {name}({raw_expr})")
+            }
             DotnetErrorType::Opaque(name) => {
                 format!(
-                    "new {name}({raw_expr}, new object[] {{ {} }})",
-                    edges.join(", ")
+                    "new {name}({raw_expr}, {})",
+                    DotnetReturnType::dependencies_array_expr(dependencies)
                 )
             }
             DotnetErrorType::Struct { name, is_zst: true } => format!("new {name}()"),

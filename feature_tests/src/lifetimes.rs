@@ -537,6 +537,255 @@ pub mod ffi {
             super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst)
         }
     }
+
+    // ── .NET non-atomic borrow-dependency RC fixtures ──────────────────────
+    //
+    // These exercise the .NET-only reference-counted borrow-dependency
+    // mechanism directly (see `tool/templates/dotnet/RustHandle.cs.jinja`):
+    // an IDisposable opt-in "source", a borrowed (non-owning) "view" of it,
+    // an owned-but-borrowing "dependent" that has its own Rust destructor
+    // while holding a reference into the source (a direct RC edge), a second
+    // layer of transitive dependency (a dependent of a dependent — only the
+    // *direct* edge at each layer is ever recorded by the generator; the
+    // full chain is only reachable by each layer's own recursive Release()),
+    // and a finalizer-only (non-opt-in) parent/child pair for the same
+    // destruction-ordering invariant exercised via the finalizer path
+    // instead of explicit `Dispose()`.
+    //
+    // A shared logical clock plus a per-type "drop sequence" cell let tests
+    // assert *relative* destruction order deterministically (dependent
+    // destroyed strictly before its source) instead of depending on GC
+    // timing. `reset_drop_stats()`/`drop_count()`/`drop_seq()` follow the
+    // existing `DefaultDropProbe`/`DisposableDropProbe` static-method
+    // convention above.
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct RcSource(u64);
+
+    impl RcSource {
+        pub fn create(id: u64) -> Box<Self> {
+            Box::new(Self(id))
+        }
+
+        pub fn id(&self) -> u64 {
+            self.0
+        }
+
+        /// A borrowed (non-owning) view of `self`: the RC dependency case
+        /// with no Rust destructor of its own — releasing it only ever
+        /// decrements `self`'s refcount.
+        pub fn view<'b>(&'b self) -> &'b Self {
+            self
+        }
+
+        /// An owned wrapper with its own Rust destructor that also borrows
+        /// `self`'s lifetime — the RC "destroy self, then release the
+        /// dependency" (owned-borrowing) case.
+        pub fn make_dependent<'b>(&'b self) -> Box<RcDependent<'b>> {
+            Box::new(RcDependent(self, self.0))
+        }
+
+        pub fn reset_drop_stats() {
+            super::RC_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
+            super::RC_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::RC_SOURCE_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::RC_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct RcDependent<'a>(&'a RcSource, u64);
+
+    impl<'a> RcDependent<'a> {
+        pub fn id(&self) -> u64 {
+            self.1
+        }
+
+        pub fn source_id(&self) -> u64 {
+            self.0 .0
+        }
+
+        /// A second, transitive layer: `RcDependent2` borrows `self`
+        /// (`RcDependent`), not `RcSource` directly.
+        pub fn make_dependent2<'b>(&'b self) -> Box<RcDependent2<'b, 'a>> {
+            Box::new(RcDependent2(self, self.1))
+        }
+
+        pub fn reset_drop_stats() {
+            super::RC_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
+            super::RC_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::RC_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::RC_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct RcDependent2<'b, 'a: 'b>(&'b RcDependent<'a>, u64);
+
+    impl<'b, 'a: 'b> RcDependent2<'b, 'a> {
+        pub fn id(&self) -> u64 {
+            self.1
+        }
+
+        pub fn reset_drop_stats() {
+            super::RC_DEPENDENT2_DROPS.store(0, super::Ordering::SeqCst);
+            super::RC_DEPENDENT2_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::RC_DEPENDENT2_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::RC_DEPENDENT2_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
+
+    // Finalizer-only (default, non-opt-in) parent/child pair exercising the
+    // same destruction-ordering invariant without explicit `Dispose()`.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct RcFinalizerSource(u64);
+
+    impl RcFinalizerSource {
+        pub fn create(id: u64) -> Box<Self> {
+            Box::new(Self(id))
+        }
+
+        pub fn id(&self) -> u64 {
+            self.0
+        }
+
+        pub fn make_dependent<'b>(&'b self) -> Box<RcFinalizerDependent<'b>> {
+            Box::new(RcFinalizerDependent(self, self.0))
+        }
+
+        pub fn reset_drop_stats() {
+            super::RC_FINALIZER_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
+            super::RC_FINALIZER_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::RC_FINALIZER_SOURCE_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::RC_FINALIZER_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct RcFinalizerDependent<'a>(&'a RcFinalizerSource, u64);
+
+    impl<'a> RcFinalizerDependent<'a> {
+        pub fn id(&self) -> u64 {
+            self.1
+        }
+
+        pub fn reset_drop_stats() {
+            super::RC_FINALIZER_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
+            super::RC_FINALIZER_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::RC_FINALIZER_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::RC_FINALIZER_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
+
+    // ── Pin-lifetime regression fixture ─────────────────────────────────────
+    //
+    // Combines the two keep-alive mechanisms that must compose correctly: an
+    // owned opaque that borrows its OWN pinned input buffer (like
+    // `OpaqueSliceView` in slices.rs) that is ALSO the source of an RC
+    // borrow-dependent (like `RcSource`/`RcDependent` above). This is exactly
+    // the shape that exposed the pin-lifetime bug: disposing the source while
+    // a dependent still holds an RC reference must defer BOTH the source's
+    // Rust destructor AND the release of the source's own pinned input —
+    // never unpinning while the (deferred) destructor might still read it.
+    // `Drop` reads the borrowed slice and records a checksum, so a
+    // moved/corrupted buffer is directly observable from C#.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct PinnedRcSource<'a>(pub(crate) &'a [u8]);
+
+    impl<'a> PinnedRcSource<'a> {
+        pub fn create(data: &'a [u8]) -> Box<Self> {
+            Box::new(Self(data))
+        }
+
+        /// An owned wrapper with its own Rust destructor that also borrows
+        /// `self`'s lifetime, exactly like `RcSource::make_dependent` — but
+        /// `self` here ALSO owns a pinned input buffer of its own.
+        pub fn make_dependent<'b>(&'b self) -> Box<PinnedRcDependent<'b>> {
+            Box::new(PinnedRcDependent(self))
+        }
+
+        pub fn reset_drop_stats() {
+            super::PINNED_RC_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
+            super::PINNED_RC_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
+            super::PINNED_RC_SOURCE_DROP_CHECKSUM.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::PINNED_RC_SOURCE_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::PINNED_RC_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+
+        /// Checksum of the borrowed slice, computed INSIDE `Drop` (see
+        /// below) — proves the pinned buffer was still valid/unmoved at the
+        /// moment the native destructor actually ran, however long that was
+        /// deferred by an outstanding RC dependent.
+        pub fn drop_checksum() -> u64 {
+            super::PINNED_RC_SOURCE_DROP_CHECKSUM.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct PinnedRcDependent<'a>(&'a PinnedRcSource<'a>);
+
+    impl<'a> PinnedRcDependent<'a> {
+        pub fn reset_drop_stats() {
+            super::PINNED_RC_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
+            super::PINNED_RC_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::PINNED_RC_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
+        }
+
+        pub fn drop_seq() -> u64 {
+            super::PINNED_RC_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
@@ -546,6 +795,46 @@ pub(crate) static DEFAULT_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
 pub(crate) static DISPOSABLE_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) use std::sync::atomic::Ordering;
+
+// Shared logical clock + per-type "when did I drop" cells for the RC
+// borrow-dependency fixtures below: lets tests assert *relative* destruction
+// order deterministically (e.g. dependent-before-source) instead of
+// depending on GC timing. 0 means "not dropped yet"; the clock starts at 1
+// so a real sequence number is always non-zero and distinguishable.
+pub(crate) static RC_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+pub(crate) static RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_DEPENDENT2_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_DEPENDENT2_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+pub(crate) static RC_FINALIZER_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_FINALIZER_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_FINALIZER_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static RC_FINALIZER_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+pub(crate) static PINNED_RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static PINNED_RC_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static PINNED_RC_SOURCE_DROP_CHECKSUM: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static PINNED_RC_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
 
 impl Drop for ffi::GcRaceProbe {
     fn drop(&mut self) {
@@ -562,6 +851,67 @@ impl Drop for ffi::DefaultDropProbe {
 impl Drop for ffi::DisposableDropProbe {
     fn drop(&mut self) {
         DISPOSABLE_DROP_PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::RcSource {
+    fn drop(&mut self) {
+        RC_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
+        RC_SOURCE_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::RcDependent<'_> {
+    fn drop(&mut self) {
+        RC_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
+        RC_DEPENDENT_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::RcDependent2<'_, '_> {
+    fn drop(&mut self) {
+        RC_DEPENDENT2_DROPS.fetch_add(1, Ordering::SeqCst);
+        RC_DEPENDENT2_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::RcFinalizerSource {
+    fn drop(&mut self) {
+        RC_FINALIZER_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
+        RC_FINALIZER_SOURCE_DROP_SEQ
+            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::RcFinalizerDependent<'_> {
+    fn drop(&mut self) {
+        RC_FINALIZER_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
+        RC_FINALIZER_DEPENDENT_DROP_SEQ
+            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::PinnedRcSource<'_> {
+    fn drop(&mut self) {
+        // Reads the borrowed pinned slice DURING the destructor — exactly
+        // what would observe moved/freed memory if the .NET wrapper had
+        // already unpinned the buffer before this destructor actually ran
+        // (the bug: unpinning right after `Release()` regardless of whether
+        // that call's refcount decrement was the one that ran this
+        // destructor, or merely deferred it to a still-outstanding
+        // dependent).
+        let checksum: u64 = self.0.iter().map(|&b| b as u64).sum();
+        PINNED_RC_SOURCE_DROP_CHECKSUM.store(checksum, Ordering::SeqCst);
+        PINNED_RC_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
+        PINNED_RC_SOURCE_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::PinnedRcDependent<'_> {
+    fn drop(&mut self) {
+        PINNED_RC_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
+        PINNED_RC_DEPENDENT_DROP_SEQ
+            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
     }
 }
 

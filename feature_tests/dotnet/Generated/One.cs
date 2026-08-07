@@ -12,12 +12,6 @@ public partial class One
 {
     private unsafe RustHandle<Raw.One> _inner;
 
-    /// <summary>
-    /// Roots the wrappers this value borrows from so the GC cannot finalize
-    /// a borrowed-from parent while this value is alive.
-    /// </summary>
-    private object[] _edges;
-
     private static readonly unsafe RustDestructor<Raw.One> _destroy = Raw.One.Destroy;
 
     /// <summary>
@@ -32,31 +26,61 @@ public partial class One
     internal unsafe One(Raw.One* handle)
     {
         _inner = RustHandle<Raw.One>.Owned(handle, _destroy);
-        _edges = System.Array.Empty<object>();
-    }
-
-    /// <remarks>
-    /// Edges only keep the borrowed-from objects GC-reachable. If this type is
-    /// opted into a public <c>Dispose</c>, disposing a parent while a borrowing
-    /// child is in use is still a use-after-free and remains the caller's
-    /// responsibility.
-    /// </remarks>
-    internal unsafe One(Raw.One* handle, object[] edges)
-    {
-        _inner = RustHandle<Raw.One>.Owned(handle, _destroy);
-        _edges = edges;
     }
 
     /// <summary>
-    /// Wraps a handle that already knows whether it owns the pointer. A borrowed
-    /// return passes a non-owning handle, so cleanup leaves Rust's pointer
-    /// alone; the edges keep the borrowed-from owners alive while this view is
-    /// in use.
+    /// Owned construction that also borrows from one or more other opaque
+    /// wrappers (an "owned-borrowing" dependent, e.g. a value borrowing
+    /// <c>&amp;'a self</c> or a borrowed parameter). Each dependency was
+    /// already retained (<c>DiplomatRetainDependency()</c>) by the caller.
     /// </summary>
-    internal unsafe One(RustHandle<Raw.One> inner, object[] edges)
+    /// <remarks>
+    /// This wrapper's own <c>Cleanup()</c> runs its Rust destructor and
+    /// releases these dependencies afterwards — never before — so a source
+    /// this borrows from cannot be physically destroyed while this value is
+    /// still alive, regardless of the source wrapper's own managed lifetime.
+    /// </remarks>
+    internal unsafe One(Raw.One* handle, IRustHandleDependency[] dependencies)
+    {
+        _inner = RustHandle<Raw.One>.Owned(handle, _destroy, dependencies);
+    }
+
+    /// <summary>
+    /// Owned construction that also pins one or more of this value's own
+    /// input buffers (e.g. a <c>ReadOnlyMemory</c> parameter it borrows).
+    /// The pins are threaded straight into <c>_inner</c>'s own
+    /// <c>RustHandleState</c> (see <c>RustHandle.cs.jinja</c>) rather than
+    /// held in a field of this class, so they are only ever unpinned right
+    /// after this value's own Rust destructor actually runs — even when
+    /// that destructor call itself is deferred behind an outstanding RC
+    /// dependent (see the <c>dependencies</c> overload above), never merely
+    /// because THIS wrapper's own <c>Cleanup()</c> happened to run.
+    /// </summary>
+    internal unsafe One(Raw.One* handle, object[] pins)
+    {
+        _inner = RustHandle<Raw.One>.Owned(handle, _destroy, pins);
+    }
+
+    /// <summary>
+    /// Owned construction that both borrows from other opaque wrappers and
+    /// pins one of its own input buffers.
+    /// </summary>
+    internal unsafe One(Raw.One* handle, IRustHandleDependency[] dependencies, object[] pins)
+    {
+        _inner = RustHandle<Raw.One>.Owned(handle, _destroy, dependencies, pins);
+    }
+
+    /// <summary>
+    /// Wraps a handle that already knows whether it owns the pointer. A
+    /// borrowed return passes a non-owning handle, so cleanup leaves Rust's
+    /// pointer alone; any dependency this view borrows from already rides
+    /// inside <paramref name="inner"/>'s own state (see
+    /// <c>RustHandle&lt;T&gt;.Borrowed(ptr, dependencies)</c>), so this
+    /// constructor needs nothing extra to keep it alive.
+    /// </summary>
+    internal unsafe One(RustHandle<Raw.One> inner)
     {
         _inner = inner;
-        _edges = edges;
     }
 
     /// <returns>
@@ -79,7 +103,7 @@ public partial class One
             Raw.One* result = Raw.One.Transitivity(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { hold });
+            return new One(result, new IRustHandleDependency[] { hold.DiplomatRetainDependency() });
         }
     }
 
@@ -103,7 +127,7 @@ public partial class One
             Raw.One* result = Raw.One.Cycle(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { hold });
+            return new One(result, new IRustHandleDependency[] { hold.DiplomatRetainDependency() });
         }
     }
 
@@ -139,7 +163,7 @@ public partial class One
             GC.KeepAlive(c);
             GC.KeepAlive(d);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { a, b, c, d });
+            return new One(result, new IRustHandleDependency[] { a.DiplomatRetainDependency(), b.DiplomatRetainDependency(), c.DiplomatRetainDependency(), d.DiplomatRetainDependency() });
         }
     }
 
@@ -163,7 +187,7 @@ public partial class One
             Raw.One* result = Raw.One.ReturnOutlivesParam(holdRaw, noholdRaw);
             GC.KeepAlive(hold);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { hold });
+            return new One(result, new IRustHandleDependency[] { hold.DiplomatRetainDependency() });
         }
     }
 
@@ -195,7 +219,7 @@ public partial class One
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result, new object[] { top, left, right, bottom });
+            return new One(result, new IRustHandleDependency[] { top.DiplomatRetainDependency(), left.DiplomatRetainDependency(), right.DiplomatRetainDependency(), bottom.DiplomatRetainDependency() });
         }
     }
 
@@ -227,7 +251,7 @@ public partial class One
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result, new object[] { left, bottom });
+            return new One(result, new IRustHandleDependency[] { left.DiplomatRetainDependency(), bottom.DiplomatRetainDependency() });
         }
     }
 
@@ -259,7 +283,7 @@ public partial class One
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result, new object[] { right, bottom });
+            return new One(result, new IRustHandleDependency[] { right.DiplomatRetainDependency(), bottom.DiplomatRetainDependency() });
         }
     }
 
@@ -291,7 +315,7 @@ public partial class One
             GC.KeepAlive(left);
             GC.KeepAlive(right);
             GC.KeepAlive(bottom);
-            return new One(result, new object[] { bottom });
+            return new One(result, new IRustHandleDependency[] { bottom.DiplomatRetainDependency() });
         }
     }
 
@@ -327,7 +351,7 @@ public partial class One
             GC.KeepAlive(c);
             GC.KeepAlive(d);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { a, b, c, d });
+            return new One(result, new IRustHandleDependency[] { a.DiplomatRetainDependency(), b.DiplomatRetainDependency(), c.DiplomatRetainDependency(), d.DiplomatRetainDependency() });
         }
     }
 
@@ -355,7 +379,7 @@ public partial class One
             GC.KeepAlive(explicitHold);
             GC.KeepAlive(implicitHold);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { explicitHold, implicitHold });
+            return new One(result, new IRustHandleDependency[] { explicitHold.DiplomatRetainDependency(), implicitHold.DiplomatRetainDependency() });
         }
     }
 
@@ -387,7 +411,7 @@ public partial class One
             GC.KeepAlive(implicit1);
             GC.KeepAlive(implicit2);
             GC.KeepAlive(nohold);
-            return new One(result, new object[] { @explicit, implicit1, implicit2 });
+            return new One(result, new IRustHandleDependency[] { @explicit.DiplomatRetainDependency(), implicit1.DiplomatRetainDependency(), implicit2.DiplomatRetainDependency() });
         }
     }
 
@@ -399,6 +423,31 @@ public partial class One
         return _inner.Ptr;
     }
 
+    /// <summary>
+    /// Retains this value's native resource for a new direct dependent (a
+    /// value another generated wrapper is about to construct by borrowing
+    /// from this one). The caller must release the returned dependency
+    /// exactly once, from its own cleanup, after running its own Rust
+    /// destructor (if it has one) — see <c>RustHandle.cs.jinja</c> for the
+    /// full reference-counting contract. This call, like <c>Dispose()</c>/
+    /// the finalizer, is a lifecycle edge and is synchronized against those
+    /// (a racing release on the same shared state can't corrupt the count);
+    /// ordinary method calls on this wrapper are still not safe to make
+    /// concurrently with each other.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">
+    /// This <c>One</c> was already disposed/finalized, so there is
+    /// nothing left to lend a dependent.
+    /// </exception>
+    internal unsafe IRustHandleDependency DiplomatRetainDependency()
+    {
+        if (_inner.IsNull)
+        {
+            throw new ObjectDisposedException("One");
+        }
+        return _inner.Retain();
+    }
+
     private void Cleanup()
     {
         unsafe
@@ -408,14 +457,19 @@ public partial class One
                 return;
             }
 
+            // Releases this wrapper's own ("owner") reference. Idempotent at
+            // the shared-state level (`RustHandleState<T>.ReleaseOwner()`),
+            // so it's safe no matter how many times — or from how many
+            // threads (e.g. a racing repeated `Dispose()`) — this `Cleanup()`
+            // ends up running: only the first release actually decrements
+            // the count. Physically destroying the native value (and, right
+            // after, unpinning any of its own pinned input buffers) is
+            // deferred until every reference — this wrapper's own and every
+            // RC dependent's — has been released; see `RustHandle.cs.jinja`
+            // for the full ordering guarantee. This call site needs to know
+            // nothing about it.
             _inner.Release();
             _inner = default;
-            // Unpin only after Release: Rust's Drop may still read the pinned buffer.
-            foreach (object edge in _edges)
-            {
-                (edge as DiplomatPinnedMemory)?.Dispose();
-            }
-            _edges = System.Array.Empty<object>(); // release refs so borrowed-from owners can be GC'd
         }
     }
     ~One()

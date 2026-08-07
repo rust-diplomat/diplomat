@@ -218,10 +218,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
 
     /// Render every non-disabled type to `(display_name, raw, content)`,
     /// alongside the run-level `uses_pinned_memory`, `uses_owned_byte_slice_return`,
-    /// and `uses_borrowed_span` flags. Types are BUILT first (each method
-    /// lowered exactly once) so the flags are known before the first opaque
-    /// cleanup sweep — a pin edge lands on the RETURNED type's wrapper, which
-    /// may render before the method that pins into it.
+    /// and `uses_borrowed_span` flags — these gate which System.Memory-only
+    /// runtime helper files (`DiplomatPinnedMemory.cs`, `DiplomatBorrowedSpan.cs`,
+    /// the owned-byte-slice-return helpers) actually get emitted, independent
+    /// of per-type rendering. Types are BUILT first (each method lowered
+    /// exactly once, which is also where result/option struct registration
+    /// and diagnostics happen) so every flag reflects the whole run before
+    /// any file is written.
     pub(super) fn render_all_types(&self) -> (bool, bool, bool, Vec<RenderedType>) {
         let mut prepared_types = Vec::new();
         let mut uses_pinned_memory = false;
@@ -249,7 +252,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             .into_iter()
             .map(|prepared| {
                 let display_name = prepared.display_name().to_string();
-                let (raw, content) = self.render_prepared(prepared, uses_pinned_memory);
+                let (raw, content) = self.render_prepared(prepared);
                 RenderedType {
                     display_name,
                     raw,
@@ -326,13 +329,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         })
     }
 
-    /// Render a prepared type to `(raw, content)`. `uses_pinned_memory` is the
-    /// run-level flag threaded into the opaque template's cleanup sweep.
-    fn render_prepared(
-        &self,
-        prepared: PreparedType<'tcx>,
-        uses_pinned_memory: bool,
-    ) -> (Option<String>, String) {
+    /// Render a prepared type to `(raw, content)`.
+    fn render_prepared(&self, prepared: PreparedType<'tcx>) -> (Option<String>, String) {
         match prepared {
             PreparedType::Prerendered { raw, content, .. } => (raw, content),
             PreparedType::Opaque {
@@ -350,7 +348,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     display_name,
                     methods,
                     properties,
-                    uses_pinned_memory,
                     opaque_def.attrs.manually_disposable,
                 );
                 (Some(raw), content)

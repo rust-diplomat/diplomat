@@ -3,9 +3,11 @@
 //! Generates C# bindings that call into the Diplomat-generated C ABI via
 //! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
 //! Opaque Rust handles map to partial classes backed by `RustHandle<T>`, which
-//! records whether C# or Rust owns the pointer. Opaques are finalizer-only by
-//! default; `#[diplomat::attr(dotnet, manually_disposable)]` opts a type into a public
-//! `IDisposable` surface.
+//! records whether C# or Rust owns the pointer and shares a small, plain-`int`
+//! reference count (`RustHandleState<T>`) with every generated wrapper that
+//! borrows from it — see "Borrow-dependency reference counting" below.
+//! Opaques are finalizer-only by default; `#[diplomat::attr(dotnet, manually_disposable)]`
+//! opts a type into a public `IDisposable` surface.
 //! Slices, `&DiplomatStr` (unvalidated UTF-8) and `&DiplomatStr16` pin
 //! zero-copy; a validated `&str` still copies, since only a transcode from a
 //! real `System.String` can guarantee well-formed UTF-8. Callbacks are
@@ -18,8 +20,8 @@
 //! ## Borrowing / lifetime model
 //!
 //! The backend does not encode Rust lifetimes in C# types. It uses HIR
-//! lifetime-edge analysis to root supported borrowed outputs and reject the
-//! unsafe cases:
+//! lifetime-edge analysis (`hir::borrowing_param`) to root supported borrowed
+//! outputs and reject the unsafe cases:
 //!
 //! * `&[u8]` / `&[u32]` / `&DiplomatStr` (`byte[]`) and `&DiplomatStr16`
 //!   (`string`) params are pinned with `fixed (...)` for the call and
@@ -29,7 +31,7 @@
 //!   When an owned opaque success return borrows a `&[u8]` / `&[u32]` /
 //!   `&DiplomatStr` / `&DiplomatStr16` param, that param instead surfaces as
 //!   `ReadOnlyMemory` and is pinned via `DiplomatPinnedMemory`, rooted as a
-//!   keep-alive edge and unpinned after the Rust destructor runs. A
+//!   pin holder (see below) and unpinned after the Rust destructor runs. A
 //!   validated `&str` can't take this path — the transcode-copy only lives
 //!   for the call, so this borrow position (and other borrow positions:
 //!   borrowed errors, Option-wrapped or non-opaque returns) are still
@@ -40,24 +42,115 @@
 //!   `uses_pinned_memory`), so runs that never borrow a slice don't inherit
 //!   the dependency.
 //! * Borrowed opaque returns (`&T`, `&mut T`, `Option<&T>`) use non-owning
-//!   handles plus keep-alive edges.
+//!   handles plus RC dependencies (see below).
 //! * Borrowed string/slice returns (`&'a str` / `&'a [u8]` / `&'a [u32]`) wrap
 //!   the same `(ptr, len)` shape as an input slice in `DiplomatBorrowedSpan<T>`,
-//!   rooted with keep-alive edges the same way a borrowed opaque return is.
+//!   rooted with RC dependencies the same way a borrowed opaque return is.
 //!   It exposes `WithSpan(...)` (scoped, zero-copy, read-only access) and
 //!   `Clone()` (an explicit, independent `T[]`) — never a bare `Span`-returning
-//!   property, since nothing would keep the view's edges rooted once the span
-//!   escaped it. Wrapping one in `Result`/`Option` isn't supported yet.
+//!   property, since nothing would keep the view's dependencies retained once
+//!   the span escaped it. `DiplomatBorrowedSpan<T>` itself has no `Dispose`/
+//!   `Cleanup` hook and is intentionally outside the RC mechanism's scope —
+//!   its rooted dependencies live only as long as the span value itself
+//!   (a struct, not a disposable wrapper), which is why it can only ever
+//!   carry dependencies, never pins (`Ownership::Borrowed` structurally
+//!   never produces pins; see `gen::method::output_keep_alive_edges`).
+//!   Wrapping one in `Result`/`Option` isn't supported yet.
 //! * An owned `Box<[u8]>` return wraps the `DiplomatOwnedSliceU8` `(ptr, len)`
 //!   struct in `RustVec`, which owns the native allocation and is
 //!   `IDisposable`. It offers the same `WithSpan(...)` / `Clone()` shape as
 //!   `DiplomatBorrowedSpan<T>`, for the same reason: `MemoryManager<T>` would
 //!   force a `GetSpan()` whose result doesn't keep the owner alive.
 //! * Borrowed opaque errors (`Result<_, &E>`) are rejected; without a success
-//!   arm to carry keep-alive edges, `Dispose` would call `Destroy` on a pointer
-//!   Rust still owns (double-free).
+//!   arm to carry a keep-alive dependency, `Dispose` would call `Destroy` on
+//!   a pointer Rust still owns (double-free).
 //! * Lifetime-carrying owned returns (`Box<T<'a>>`) from opaque wrappers get
 //!   XML lifetime remarks.
+//!
+//! ## Borrow-dependency reference counting
+//!
+//! When a generated opaque wrapper's native value borrows from another
+//! opaque (an `OpaqueParam` HIR lifetime edge — the receiver or an opaque
+//! parameter), the two wrappers' native lifetimes are linked with a small
+//! reference count instead of copying data or leaning on the GC alone. This
+//! exists to fix a real ordering hazard: without it, a borrowed-from source's
+//! *native* Rust allocation could be destroyed (via explicit `Dispose()` or a
+//! finalizer) while a dependent still holds a live pointer into it — and,
+//! because finalizers run on their own dedicated thread, that release can
+//! race concurrently with the source's own `Dispose()`/finalizer even when
+//! the application's own code never spawns a thread.
+//!
+//! The whole mechanism is concentrated in one small runtime module —
+//! `tool/templates/dotnet/RustHandle.cs.jinja` (`IRustHandleDependency`,
+//! `RustHandleState<T>`, `RustHandle<T>`) — so the generator itself only ever
+//! needs to know one thing: which *direct* edges (from HIR borrow-edge
+//! analysis, not a generator-computed transitive closure) a given return
+//! value carries. See `gen::method::output_keep_alive_edges` and
+//! `dependencies_array_expr`.
+//!
+//! Design invariants:
+//!
+//! * **Direct edges only, recursively correct.** The generator emits a
+//!   `DiplomatRetainDependency()` call (routed into
+//!   `RustHandle<T>.Owned`/`Borrowed(ptr, dependencies)`) only for the
+//!   value(s) a return directly borrows from. Each dependent's own dependency
+//!   token release runs its own Rust destructor first and *then* releases
+//!   what it itself retained — so correct destruction order for arbitrarily
+//!   deep transitive chains falls out of that per-layer recursion, without
+//!   the generator ever computing a transitive closure.
+//! * **Wrapper disposal ≠ native destruction.** A wrapper's own
+//!   `Dispose()`/finalizer always only releases *its own* reference; the
+//!   underlying native allocation is only physically destroyed once every
+//!   reference — the owning wrapper's and every dependent's — has been
+//!   released. This holds for both finalizer-only (default) and opt-in
+//!   `IDisposable` opaques: an opted-in source becomes unusable to its own
+//!   caller after `Dispose()` (its `RustHandle<T>` is nulled out, so further
+//!   calls/new retains immediately throw `ObjectDisposedException`), but
+//!   existing borrowers keep the native allocation alive until their own
+//!   cleanup runs.
+//! * **Synchronized only at lifecycle edges, not at all.** Generated wrappers
+//!   still make no promise of concurrent-*method*-call safety — calling
+//!   ordinary instance methods on the same wrapper from two threads at once
+//!   remains undefined behavior, unchanged from before. But because
+//!   finalization is inherently concurrent with application code,
+//!   `RustHandleState<T>` guards its plain `int` count with a single internal
+//!   `lock` at exactly the handful of lifecycle edges where a real race is
+//!   possible: dependent construction (`Retain`), a wrapper's own
+//!   `Dispose()`/finalizer releasing its single owner reference
+//!   (`ReleaseOwner`, deliberately idempotent so a racing double-release of
+//!   the SAME wrapper's owner slot can never double-decrement), and each
+//!   dependency token's own one-shot-guarded release. This is still not
+//!   `SafeHandle`/`Interlocked`-style atomics and adds zero synchronization
+//!   to hot per-call code — it is not a general-purpose atomic
+//!   reference-counting (ARC) scheme, just enough locking to make the
+//!   lifecycle bookkeeping itself race-free.
+//! * **No per-call retain/release.** Retaining happens only once, at the
+//!   moment a borrowing value is *constructed* (after its native call
+//!   succeeds/fails, before the wrapper/exception object is built) — never
+//!   on every call into an existing wrapper. There is no transactional
+//!   acquire/rollback around the native call itself.
+//! * **A wrapper's own pins live inside its own `RustHandleState`, not a
+//!   separately-released field.** An owned return that borrows its own
+//!   input buffer (e.g. a `ReadOnlyMemory` parameter, pinned via
+//!   `DiplomatPinnedMemory`) threads that pin straight into the same
+//!   `RustHandle<T>.Owned(ptr, destroy, pins)` call that creates its
+//!   `RustHandleState<T>` (see `gen::method::output_keep_alive_edges`, which
+//!   splits a return's keep-alive obligations into `dependencies` (RC) and
+//!   `pins` (this-wrapper-only) for exactly this reason). Because both the
+//!   Rust destructor and the pin release live behind the same refcount
+//!   reaching zero, a wrapper's own `Cleanup()` can never unpin a buffer the
+//!   destructor hasn't actually read yet — including when that destructor
+//!   call is itself deferred behind a still-outstanding RC dependent, not
+//!   invoked by this wrapper's own release call at all. The destructor call,
+//!   the pin-disposal sweep, and the recursive release of this wrapper's own
+//!   dependencies all happen strictly outside the internal lock, in that
+//!   order.
+//!
+//! This directly replaces draft PR #1246's universal atomic `SafeHandle`
+//! approach — no `SafeHandle`, no `Interlocked`, no `DangerousAddRef`/
+//! `DangerousRelease`, no per-call leases. The only synchronization primitive
+//! anywhere in the generated runtime is a single plain `lock` inside
+//! `RustHandleState<T>`, taken only at the lifecycle edges listed above.
 
 use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
@@ -786,6 +879,265 @@ mod test {
         );
     }
 
+    // The RC follow-up (replacing the draft universal-atomic-SafeHandle
+    // approach): a borrowed opaque return retains the receiver as a direct
+    // RC dependency instead of just GC-rooting it in an `_edges` array, so
+    // the *native* source allocation stays alive — not just the managed
+    // wrapper — until the returned view's own cleanup releases it.
+    #[test]
+    fn borrowed_opaque_return_retains_receiver_as_rc_dependency() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo;
+
+                impl Foo {
+                    pub fn borrowed_return<'a>(&'a self) -> &'a Self {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains(
+                "RustHandle<Raw.Foo>.Borrowed(result, new IRustHandleDependency[] { this.DiplomatRetainDependency() })"
+            ),
+            "a borrowed opaque return should retain the receiver as a direct RC \
+             dependency via DiplomatRetainDependency(), not just GC-root it:\n{foo}"
+        );
+        assert!(
+            foo.contains("internal unsafe IRustHandleDependency DiplomatRetainDependency()"),
+            "every opaque wrapper should expose DiplomatRetainDependency() so \
+             dependents elsewhere can retain its native resource state:\n{foo}"
+        );
+    }
+
+    // An owned-but-borrowing return (a value with its own Rust destructor
+    // that also borrows a receiver/parameter's lifetime) must retain that
+    // source as a direct RC dependency at construction time, so the
+    // generated `RustHandle<T>.Owned(ptr, destroy, dependencies)` — not a
+    // bare GC-rooting edges array — is what defers the source's physical
+    // destruction until this dependent's own cleanup runs.
+    #[test]
+    fn owned_borrowing_return_retains_receiver_as_rc_dependency() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct Dependent<'a>(&'a Owner);
+
+                impl Owner {
+                    pub fn make_dependent<'a>(&'a self) -> Box<Dependent<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let owner = files.get("Owner.cs").expect("expected Owner.cs output");
+        assert!(
+            owner.contains(
+                "new Dependent(result, new IRustHandleDependency[] { this.DiplomatRetainDependency() })"
+            ),
+            "an owned-borrowing return should retain the receiver as a direct \
+             RC dependency on construction:\n{owner}"
+        );
+
+        let dependent = files
+            .get("Dependent.cs")
+            .expect("expected Dependent.cs output");
+        assert!(
+            dependent.contains(
+                "internal unsafe Dependent(Raw.Dependent* handle, IRustHandleDependency[] dependencies)"
+            ),
+            "the owned-borrowing wrapper should accept its retained \
+             dependencies as a constructor parameter:\n{dependent}"
+        );
+        assert!(
+            dependent.contains("RustHandle<Raw.Dependent>.Owned(handle, _destroy, dependencies)"),
+            "the retained dependencies should be threaded into the RC state \
+             via the Owned(ptr, destroy, dependencies) factory, so this \
+             wrapper's own Rust destructor always runs strictly before the \
+             source can be physically destroyed:\n{dependent}"
+        );
+    }
+
+    // Constraint: no SafeHandle, Interlocked, per-call guards/leases, or
+    // per-call retain/release machinery anywhere in the generated RC
+    // runtime — lifecycle-edge synchronization uses a single plain `lock`
+    // inside `RustHandleState<T>`, not the old draft PR's universal atomic
+    // SafeHandle approach.
+    #[test]
+    fn generated_rc_runtime_has_no_atomic_or_safehandle_machinery() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct Dependent<'a>(&'a Owner);
+
+                impl Owner {
+                    pub fn make_dependent<'a>(&'a self) -> Box<Dependent<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        for banned in [
+            "SafeHandle",
+            "Interlocked",
+            "DangerousAddRef",
+            "DangerousRelease",
+        ] {
+            for (name, contents) in &files {
+                assert!(
+                    !contents.contains(banned),
+                    "generated file {name} unexpectedly contains banned \
+                     machinery `{banned}` — the RC follow-up must not \
+                     reintroduce the old draft PR's atomic SafeHandle approach:\n{contents}"
+                );
+            }
+        }
+
+        let rust_handle = files
+            .get("RustHandle.cs")
+            .expect("expected RustHandle.cs output");
+        assert!(
+            rust_handle.contains("lock (_gate)"),
+            "lifecycle edges (Retain/ReleaseOwner/dependency token release) \
+             must synchronize the shared plain-int refcount with a lock, so \
+             a finalizer-thread release can't race an application-thread \
+             release of the same shared state:\n{rust_handle}"
+        );
+        assert!(
+            rust_handle.contains("concurrent-method-call safety"),
+            "the RC runtime must honestly document that ordinary method \
+             calls on generated wrappers remain unsynchronized, rather than \
+             implying general concurrent-call safety:\n{rust_handle}"
+        );
+        assert!(
+            !rust_handle.to_lowercase().contains("arc (automatic"),
+            "the RC runtime must not be described as an ARC scheme:\n{rust_handle}"
+        );
+    }
+
+    // Regression test for the pin-lifetime bug: a wrapper's own pinned input
+    // buffers must only be unpinned once the SHARED refcount reaches zero —
+    // i.e. strictly after this value's own Rust destructor actually runs,
+    // even when that destructor call is deferred behind a still-outstanding
+    // RC dependent rather than invoked by this wrapper's own owner-release
+    // call. Before the fix, an opaque's `Cleanup()` unpinned its own
+    // `_edges` unconditionally right after calling `_inner.Release()`,
+    // regardless of whether that specific call was the one that actually
+    // ran the destructor — so a deferred destructor (because some other
+    // dependent still held a reference) could read an already-unpinned,
+    // possibly-moved buffer.
+    #[test]
+    fn generated_rc_runtime_unpins_only_after_its_own_destructor_runs() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Owner;
+
+                #[diplomat::opaque]
+                pub struct Dependent<'a>(&'a Owner);
+
+                impl Owner {
+                    pub fn make_dependent<'a>(&'a self) -> Box<Dependent<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let rust_handle = files
+            .get("RustHandle.cs")
+            .expect("expected RustHandle.cs output");
+
+        // Pins must be a constructor parameter of `RustHandleState<T>`
+        // itself (not a separately-released field on the generated wrapper),
+        // so they live behind the exact same refcount-reaching-zero gate as
+        // the Rust destructor.
+        assert!(
+            rust_handle.contains(
+                "internal RustHandleState(T* ptr, RustDestructor<T>? destructor, IRustHandleDependency[] dependencies, object[] pins)"
+            ),
+            "pins must be threaded into RustHandleState's own constructor:\n{rust_handle}"
+        );
+
+        // Inside `Decrement()`, the destructor call must textually precede
+        // the pin-disposal loop, and both must be reachable only from the
+        // refcount-reaches-zero branch — never unconditionally on every
+        // release call.
+        let refcount_zero_branch = rust_handle
+            .find("if (_refCount != 0)")
+            .expect("Decrement() should early-return unless the refcount just hit zero");
+        let destructor_at = rust_handle
+            .find("destructor(ptr);")
+            .expect("Decrement() should still call the destructor once refcount hits zero");
+        let unpin_at = rust_handle
+            .find("(pin as IDisposable)?.Dispose();")
+            .expect("Decrement() should unpin this wrapper's own pins");
+        assert!(
+            refcount_zero_branch < destructor_at && destructor_at < unpin_at,
+            "the destructor must run, in order, strictly between the \
+             refcount-zero check and the pin-unpinning sweep — both gated \
+             on the SAME zero-refcount branch, not on every Release() call:\n{rust_handle}"
+        );
+
+        // No opaque wrapper should do its own separate pin-disposal anymore
+        // — that responsibility moved entirely into RustHandleState.
+        for (name, contents) in &files {
+            if name == "RustHandle.cs" || name == "DiplomatPinnedMemory.cs" {
+                continue;
+            }
+            assert!(
+                !contents.contains("DiplomatPinnedMemory"),
+                "generated file {name} should not reference \
+                 DiplomatPinnedMemory directly — pin release lives entirely \
+                 in the shared RustHandle.cs runtime:\n{contents}"
+            );
+        }
+    }
+
     // `&DiplomatStr` (`UnvalidatedUtf8`) carries no caller-side validity
     // contract, so it's lowered exactly like `&[u8]` (see
     // `lower_immutable_element_slice`) — including this case, which used to
@@ -826,16 +1178,27 @@ mod test {
             foo.contains("new Foo(result, new object[] { xPin })"),
             "infallible owned return should root the pin holder as an edge:\n{foo}"
         );
-        let release_at = foo
-            .find("_inner.Release();")
-            .expect("Dispose should release the Rust handle");
-        let unpin_at = foo
-            .find("(edge as DiplomatPinnedMemory)?.Dispose();")
-            .expect("Dispose should unpin holder edges");
         assert!(
-            release_at < unpin_at,
-            "unpin must run AFTER Release() so Rust's Drop can still read the buffer:\n{foo}"
+            foo.contains("_inner = RustHandle<Raw.Foo>.Owned(handle, _destroy, pins);"),
+            "the pins-only constructor should thread pins straight into the \
+             RustHandleState so they're released as part of the same \
+             destruction seam as the Rust destructor, not a separate \
+             wrapper-level field:\n{foo}"
         );
+        assert!(
+            !foo.contains("_edges"),
+            "the old separately-released `_edges` field should be gone — \
+             pins now live entirely inside RustHandleState:\n{foo}"
+        );
+        assert!(
+            !foo.contains("as DiplomatPinnedMemory"),
+            "Cleanup() should no longer manually sweep pins itself — that \
+             lives entirely in the shared RustHandle.cs runtime now:\n{foo}"
+        );
+
+        // The actual destructor-then-unpin ordering is enforced once, in the
+        // shared runtime, not per generated type — see
+        // `generated_rc_runtime_unpins_only_after_its_own_destructor_runs`.
     }
 
     // A validated `&'a str` still forces a transcode-copy (`Utf8.Clone`),
@@ -975,8 +1338,10 @@ mod test {
         );
     }
 
-    // Rust's Drop may still read the buffer, so the unpin lives in the
-    // wrapper's Dispose after Release() — never in a holder finalizer.
+    // Rust's Drop may still read the buffer, so the unpin lives behind the
+    // shared RustHandleState's own destruction seam, gated on the refcount
+    // reaching zero — never in a holder finalizer, and never unconditionally
+    // on this wrapper's own Cleanup().
     #[test]
     fn owned_return_borrowing_byte_slice_unpins_on_dispose() {
         let tk_stream = quote! {
@@ -1005,22 +1370,29 @@ mod test {
             foo.contains("new Foo(result, new object[] { dataPin })"),
             "infallible owned return should root the pin holder as an edge:\n{foo}"
         );
-        let release_at = foo
-            .find("_inner.Release();")
-            .expect("Dispose should release the Rust handle");
-        let unpin_at = foo
-            .find("(edge as DiplomatPinnedMemory)?.Dispose();")
-            .expect("Dispose should unpin holder edges");
         assert!(
-            release_at < unpin_at,
-            "unpin must run AFTER Release() so Rust's Drop can still read the buffer:\n{foo}"
+            foo.contains("_inner = RustHandle<Raw.Foo>.Owned(handle, _destroy, pins);"),
+            "the pins-only constructor should thread pins into the \
+             RustHandleState, not a separate wrapper-level field:\n{foo}"
+        );
+        assert!(
+            !foo.contains("_edges"),
+            "the old separately-released `_edges` field should be gone — \
+             pins now live entirely inside RustHandleState:\n{foo}"
+        );
+        assert!(
+            !foo.contains("as DiplomatPinnedMemory"),
+            "Cleanup() should no longer manually sweep pins itself — that \
+             lives entirely in the shared RustHandle.cs runtime now:\n{foo}"
         );
     }
 
-    // The pin edge lands on the RETURNED type's wrapper, so the Dispose sweep
-    // must exist on every opaque, not just those with pinning methods (#1194).
+    // The pin edge lands on the RETURNED type's wrapper, so its constructor
+    // must accept pins even on a type with no pinning methods of its own
+    // (#1194) — but the actual unpin sweep lives once in the shared
+    // RustHandle.cs runtime, not duplicated per opaque.
     #[test]
-    fn cross_type_pinned_return_unpins_on_dispose() {
+    fn cross_type_pinned_return_threads_pins_into_rust_handle_state() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -1047,8 +1419,9 @@ mod test {
 
         let product = files.get("Product.cs").expect("expected Product.cs output");
         assert!(
-            product.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
-            "a type returned pinned from another type's method must sweep pin edges on Dispose:\n{product}"
+            product.contains("_inner = RustHandle<Raw.Product>.Owned(handle, _destroy, pins);"),
+            "a type returned pinned from another type's method must still \
+             thread pins into its own RustHandleState:\n{product}"
         );
     }
 
@@ -1450,10 +1823,10 @@ mod test {
     }
 
     // A run with NO pinned-slice return must not ship the System.Memory-
-    // dependent pin helper, nor the Dispose sweep that references it — the
-    // netstandard2.0 floor would fail to compile it.
+    // dependent pin helper at all — the netstandard2.0 floor would fail to
+    // compile it.
     #[test]
-    fn run_without_pinning_omits_pin_helper_and_sweep() {
+    fn run_without_pinning_omits_pin_helper() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -1478,18 +1851,14 @@ mod test {
             !files.contains_key("DiplomatPinnedMemory.cs"),
             "no pinned return means the pin helper must not be emitted"
         );
-        let plain = files.get("Plain.cs").expect("expected Plain.cs output");
-        assert!(
-            !plain.contains("(edge as DiplomatPinnedMemory)"),
-            "no pinned return means the Dispose sweep must be absent:\n{plain}"
-        );
     }
 
-    // A run WITH a pinned-slice return ships the helper and the sweep on every
-    // opaque (cross-type: the sweep must be present regardless of which type
+    // A run WITH a pinned-slice return ships the helper, and the returned
+    // type's own wrapper threads its pin(s) straight into its
+    // RustHandleState (cross-type: this must hold regardless of which type
     // declares the pinning method).
     #[test]
-    fn run_with_pinning_emits_pin_helper_and_sweep() {
+    fn run_with_pinning_emits_pin_helper_and_threads_pins_into_rust_handle_state() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -1516,8 +1885,12 @@ mod test {
         );
         let viewer = files.get("Viewer.cs").expect("expected Viewer.cs output");
         assert!(
-            viewer.contains("(edge as DiplomatPinnedMemory)?.Dispose();"),
-            "a pinned return should emit the Dispose sweep:\n{viewer}"
+            viewer.contains("_inner = RustHandle<Raw.Viewer>.Owned(handle, _destroy, pins);"),
+            "a pinned return should thread pins into RustHandleState:\n{viewer}"
+        );
+        assert!(
+            !viewer.contains("as DiplomatPinnedMemory"),
+            "the wrapper itself should not manually sweep pins anymore:\n{viewer}"
         );
     }
 
@@ -1587,17 +1960,18 @@ mod test {
         );
         assert!(
             owner.contains(
-                "throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);"
+                "throw new BorrowingErrorException(new BorrowingError(result.Err, new IRustHandleDependency[] { this.DiplomatRetainDependency() }));"
             ),
-            "error path should pass the receiver edge to the inner error and exception:\n{owner}"
+            "error path should retain the receiver as the inner error's RC dependency:\n{owner}"
         );
 
         let exc = files
             .get("BorrowingErrorException.cs")
             .expect("expected BorrowingErrorException.cs output");
         assert!(
-            exc.contains("params object[] edges"),
-            "exception class should accept keep-alive edges in its constructor:\n{exc}"
+            exc.contains("public BorrowingErrorException(BorrowingError inner)"),
+            "exception class no longer needs its own keep-alive edges — the inner \
+             error opaque's own RC state already retains the dependency:\n{exc}"
         );
     }
 
@@ -1631,17 +2005,18 @@ mod test {
         let owner = files.get("Owner.cs").expect("expected Owner.cs output");
         assert!(
             owner.contains(
-                "throw new BorrowingErrorException(new BorrowingError(result.Err, new object[] { this }), this);"
+                "throw new BorrowingErrorException(new BorrowingError(result.Err, new IRustHandleDependency[] { this.DiplomatRetainDependency() }));"
             ),
-            "error path should pass the receiver edge to the inner error and exception:\n{owner}"
+            "error path should retain the receiver as the inner error's RC dependency:\n{owner}"
         );
 
         let exc = files
             .get("BorrowingErrorException.cs")
             .expect("expected BorrowingErrorException.cs output");
         assert!(
-            exc.contains("params object[] edges"),
-            "exception class should accept keep-alive edges in its constructor:\n{exc}"
+            exc.contains("public BorrowingErrorException(BorrowingError inner)"),
+            "exception class no longer needs its own keep-alive edges — the inner \
+             error opaque's own RC state already retains the dependency:\n{exc}"
         );
     }
 
@@ -3179,7 +3554,9 @@ mod test {
         );
         let config = files.get("Config.cs").expect("expected Config.cs output");
         assert_eq!(
-            config.matches("/// <exception cref=").count(),
+            config
+                .matches("/// <exception cref=\"MyErrorException\">")
+                .count(),
             1,
             "both accessors throw the same exception, so document it once, got:
 {config}"
