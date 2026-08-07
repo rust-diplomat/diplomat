@@ -613,6 +613,9 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
                 };
             }
         }
+        Item::Trait(t) => {
+            let _attrs = AttributeInfo::extract(&mut t.attrs);
+        }
         _ => (),
     });
 
