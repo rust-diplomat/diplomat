@@ -5,8 +5,9 @@
 //! 1. **Raw layer** (`Raw<Name>.cs`) — `[DllImport]` declarations, one per
 //!    user method plus the auto-generated `<Name>_destroy`. Fed to
 //!    `opaque.raw.cs.jinja`.
-//! 2. **Idiomatic layer** (`<Name>.cs`) — `IDisposable`-shaped wrapper class
-//!    that calls into the raw layer. Fed to `opaque.impl.cs.jinja`.
+//! 2. **Idiomatic layer** (`<Name>.cs`) — wrapper class that calls into the raw
+//!    layer (finalizer-only by default, optional public `IDisposable`). Fed to
+//!    `opaque.impl.cs.jinja`.
 //!
 //! Both templates consume the same [`super::method::MethodInfo`] — the
 //! kind-agnostic, layer-agnostic method view. The split between raw and
@@ -41,14 +42,12 @@ struct OpaqueImplTemplate<'ctx> {
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
     properties: Vec<PropertyInfo<'ctx>>,
-    /// Run-level: true iff any type in this generation run pins a slice. Gates
-    /// the `DiplomatPinnedMemory` Dispose sweep so a run with no pinned returns
-    /// emits nothing referencing the (System.Memory-dependent) helper.
-    uses_pinned_memory: bool,
     /// True for an opaque: its instance members check `_inner` before calling
     /// into Rust, which a struct has no need for. Read by `property.cs.jinja`,
     /// which both impl templates include.
     is_opaque: bool,
+    /// Per-opaque opt-in for generating a public `IDisposable` surface.
+    manually_disposable: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -82,15 +81,15 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
         properties: Vec<PropertyInfo<'tcx>>,
-        uses_pinned_memory: bool,
+        manually_disposable: bool,
     ) -> String {
         OpaqueImplTemplate {
             name: display_name,
             namespace: self.namespace,
             methods,
             properties,
-            uses_pinned_memory,
             is_opaque: true,
+            manually_disposable,
         }
         .render()
         .unwrap()

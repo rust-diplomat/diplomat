@@ -2,14 +2,17 @@ using System;
 
 namespace {{ namespace }};
 
+/// <summary>
+/// If <c>{{ error }}</c> is an opaque error that borrows from an opaque
+/// parameter or the receiver, that dependency is retained by <c>Inner</c>'s
+/// own native resource state (see <c>RustHandle.cs.jinja</c>) rather than by
+/// this exception class — so no separate keep-alive plumbing is needed here.
+/// </summary>
 public class {{ exception_name }} : Exception
 {
     public {{ error }} Inner { get; }
-    {%- if error.can_carry_borrow_edges() %}
-    private readonly object[] _edges;
-    {%- endif %}
 
-    public {{ exception_name }}({{ error }} inner{%- if error.can_carry_borrow_edges() %}, params object[] edges{%- endif %}) : base(
+    public {{ exception_name }}({{ error }} inner) : base(
         {%- if error.is_opaque() %}
         {%- if let Some(method) = message_method %}
         inner.{{ method }}()
@@ -22,8 +25,5 @@ public class {{ exception_name }} : Exception
     )
     {
         Inner = inner;
-        {%- if error.can_carry_borrow_edges() %}
-        _edges = edges;
-        {%- endif %}
     }
 }

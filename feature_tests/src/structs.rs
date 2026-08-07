@@ -8,13 +8,16 @@ pub mod ffi {
     use std::sync::Mutex;
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     pub struct Opaque(String);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OpaqueMutexedString(Mutex<String>);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct Utf16Wrap(Vec<u16>);
 
     #[derive(Debug, PartialEq, Eq)]
@@ -40,6 +43,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub enum MyOpaqueEnum {
         A(String),
         B(Utf16Wrap),
@@ -692,6 +696,7 @@ pub mod ffi {
     // pairing wrong.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct PropertyMarshals {
         number: u32,
         choice: DefaultEnum,
