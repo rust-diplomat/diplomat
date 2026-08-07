@@ -308,6 +308,7 @@ pub mod ffi {
     // via transparent_convert and non-owning references. Iterators, iterables, and getters
     // are all handled via attributes, which may have slightly different codepaths.
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
@@ -339,6 +340,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
 
     impl OpaqueThinVec {
@@ -491,15 +493,75 @@ pub mod ffi {
             super::PROBE_DROPS.load(super::Ordering::SeqCst) - before
         }
     }
+
+    // Dedicated drop probes for dotnet opt-in IDisposable behavior:
+    // one unmarked opaque (finalizer-only default), and one opt-in opaque.
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct DefaultDropProbe;
+
+    impl DefaultDropProbe {
+        pub fn create() -> Box<Self> {
+            Box::new(Self)
+        }
+
+        pub fn reset_drop_count() {
+            super::DEFAULT_DROP_PROBE_DROPS.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::DEFAULT_DROP_PROBE_DROPS.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque]
+    pub struct DisposableDropProbe;
+
+    impl DisposableDropProbe {
+        pub fn create() -> Box<Self> {
+            Box::new(Self)
+        }
+
+        /// Exists so C# tests can observe that Dispose() invalidates the wrapper.
+        pub fn is_alive(&self) -> bool {
+            true
+        }
+
+        pub fn reset_drop_count() {
+            super::DISPOSABLE_DROP_PROBE_DROPS.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst)
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
 pub(crate) static PROBE_DROPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+pub(crate) static DEFAULT_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+pub(crate) static DISPOSABLE_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
 pub(crate) use std::sync::atomic::Ordering;
 
 impl Drop for ffi::GcRaceProbe {
     fn drop(&mut self) {
         PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::DefaultDropProbe {
+    fn drop(&mut self) {
+        DEFAULT_DROP_PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+impl Drop for ffi::DisposableDropProbe {
+    fn drop(&mut self) {
+        DISPOSABLE_DROP_PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
     }
 }
 

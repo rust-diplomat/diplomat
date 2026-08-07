@@ -367,15 +367,17 @@ pub(super) fn route_members<'ctx>(
 /// another member (CS0102), or with the type that contains it (CS0542).
 ///
 /// The generated type is not only what Diplomat was asked for. The templates
-/// always add `AsFFI` and `FromFFI`, opaques also get `Dispose`, and a struct's
-/// fields are members too — so a property named after any of those, or after the
-/// type itself, compiles to nothing.
+/// always add `AsFFI` and `FromFFI`; opaques always get private `Cleanup` and
+/// may opt into public `Dispose`; and a struct's fields are members too — so a
+/// property named after any of those, or after the type itself, compiles to
+/// nothing.
 pub(super) fn reject_member_collisions(
     ty: &str,
     properties: &[PropertyInfo<'_>],
     methods: &[MethodInfo<'_>],
     field_names: &[&str],
     is_opaque: bool,
+    has_generated_dispose: bool,
     errors: &ErrorStore<'_, String>,
 ) {
     /// The label for the enclosing type, which C# rejects on its own terms.
@@ -383,18 +385,30 @@ pub(super) fn reject_member_collisions(
 
     let mut seen = BTreeMap::<&str, &str>::new();
     seen.insert(ty, ENCLOSING_TYPE);
+    let mut generated_members = BTreeMap::<&str, &str>::new();
     for member in ["AsFFI", "FromFFI"] {
-        seen.entry(member)
-            .or_insert("a member Diplomat always generates");
+        generated_members.insert(member, "a member Diplomat always generates");
     }
     if is_opaque {
-        seen.entry("Dispose")
-            .or_insert("a member Diplomat always generates");
+        generated_members.insert("Cleanup", "a member Diplomat always generates for opaques");
+    }
+    if has_generated_dispose {
+        generated_members.insert("Dispose", "a member Diplomat generates for this opaque");
+    }
+    for (member, description) in &generated_members {
+        seen.entry(member).or_insert(description);
     }
     for field in field_names {
         seen.entry(field).or_insert("a struct field");
     }
     for method in methods {
+        if let Some(generated) = generated_members.get(method.name.as_str()) {
+            errors.push_error(format!(
+                "[.NET backend] `{ty}` would have two members named `{}`: a method and \
+                 {generated}. Rename the method with `#[diplomat::rename]`.",
+                method.name
+            ));
+        }
         seen.entry(&method.name).or_insert("a method");
     }
     for property in properties {

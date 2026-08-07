@@ -7,7 +7,8 @@
 //! Module layout:
 //!
 //! * [`opaque`] — `Raw[T].cs` `[DllImport]` declarations + the idiomatic
-//!   `IDisposable`-shaped wrapper class. Self-contained for a single
+//!   wrapper class (finalizer-only by default, optional public `IDisposable`).
+//!   Self-contained for a single
 //!   `OpaqueDef`.
 //! * [`lower`] — pure type-leaf lowering shared across opaque / struct /
 //!   enum: primitives → C# keywords, opaque paths → `T*`. New backends
@@ -95,7 +96,7 @@ pub(super) struct RenderedType {
 
 /// A type whose render data is built but not yet emitted. The two-phase split
 /// (build all, then render all) lets the run compute whether ANY type pins a
-/// slice before rendering opaque Dispose sweeps that reference the pin helper.
+/// slice before rendering opaque cleanup sweeps that reference the pin helper.
 enum PreparedType<'tcx> {
     /// No dependency on the run-level pin flag — already rendered (enums).
     Prerendered {
@@ -219,7 +220,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     /// alongside the run-level `uses_pinned_memory`, `uses_owned_byte_slice_return`,
     /// and `uses_borrowed_span` flags. Types are BUILT first (each method
     /// lowered exactly once) so the flags are known before the first opaque
-    /// Dispose sweep — a pin edge lands on the RETURNED type's wrapper, which
+    /// cleanup sweep — a pin edge lands on the RETURNED type's wrapper, which
     /// may render before the method that pins into it.
     pub(super) fn render_all_types(&self) -> (bool, bool, bool, Vec<RenderedType>) {
         let mut prepared_types = Vec::new();
@@ -281,8 +282,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 let fields = self.lower_fields(struct_def)?;
                 let field_names: Vec<&str> =
                     fields.iter().map(|field| field.name.as_str()).collect();
-                let members =
-                    self.build_members(&display_name, &struct_def.methods, &field_names, false);
+                let members = self.build_members(
+                    &display_name,
+                    &struct_def.methods,
+                    &field_names,
+                    false,
+                    false,
+                );
                 PreparedType::Struct {
                     display_name,
                     fields,
@@ -294,7 +300,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 return None;
             }
             hir::TypeDef::Opaque(opaque_def) => {
-                let members = self.build_members(&display_name, &opaque_def.methods, &[], true);
+                let members = self.build_members(
+                    &display_name,
+                    &opaque_def.methods,
+                    &[],
+                    true,
+                    opaque_def.attrs.manually_disposable,
+                );
                 PreparedType::Opaque {
                     display_name,
                     opaque_def,
@@ -315,7 +327,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     }
 
     /// Render a prepared type to `(raw, content)`. `uses_pinned_memory` is the
-    /// run-level flag threaded into the opaque template's Dispose sweep.
+    /// run-level flag threaded into the opaque template's cleanup sweep.
     fn render_prepared(
         &self,
         prepared: PreparedType<'tcx>,
@@ -334,8 +346,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     properties,
                 } = members;
                 let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, raw_methods);
-                let content =
-                    self.gen_opaque_impl(display_name, methods, properties, uses_pinned_memory);
+                let content = self.gen_opaque_impl(
+                    display_name,
+                    methods,
+                    properties,
+                    uses_pinned_memory,
+                    opaque_def.attrs.manually_disposable,
+                );
                 (Some(raw), content)
             }
             PreparedType::Struct {
@@ -369,6 +386,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         methods: &'tcx [hir::Method],
         field_names: &[&str],
         is_opaque: bool,
+        has_generated_dispose: bool,
     ) -> TypeMembers<'tcx> {
         let lowered: Vec<(Option<AccessorInfo>, MethodInfo<'tcx>)> = methods
             .iter()
@@ -382,6 +400,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             &methods,
             field_names,
             is_opaque,
+            has_generated_dispose,
             self.errors,
         );
         TypeMembers {

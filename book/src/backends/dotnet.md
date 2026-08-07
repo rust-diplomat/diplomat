@@ -66,12 +66,13 @@ to null on the second read. Setters keep `&mut self`; assigning is the point.
 
 Names must not collide either. A property that would share its name with a method, a
 struct field, the type that contains it, or one of the members Diplomat always generates
-(`AsFFI`, `FromFFI`, and `Dispose` on opaques) is rejected, because C# would not compile
-the result.
+(`AsFFI`, `FromFFI`, and opt-in `Dispose` on opaques) is rejected, because C# would not
+compile the result.
 
-A getter that returns an opaque or an owned `Box<[u8]>` hands back a value you own, so
-dispose it — `using var x = thing.Held;`. It is not a cheap field read: each get crosses
-the FFI boundary and, for those two shapes, allocates.
+A getter that returns an owned `Box<[u8]>` (`RustVec`) hands back a value you own, so
+dispose it — `using var x = thing.Data;`. A getter returning an owned opaque can be used
+the same way only when that opaque is opted into
+`#[diplomat::attr(dotnet, manually_disposable)]`.
 
 In accessor position a string-shaped parameter is always `string`, even for
 `&DiplomatStr` (which is `byte[]` everywhere else, zero-copy and unvalidated). A property
@@ -96,9 +97,12 @@ from, so the GC can't collect the source object out from under a still-live borr
 reference. `object[] _edges` is `Array.Empty<object>()` (no allocation) when a type has
 no lifetime-carrying returns.
 
-Consumers are not required to call `Dispose()`; a finalizer is the documented last-resort
-cleanup path for owned handles. Native calls are followed by `GC.KeepAlive(this)` to
-prevent the finalizer from running mid-call and freeing memory a P/Invoke is still using.
+By default, generated opaques are **finalizer-only**: no public `Dispose()`, cleanup runs
+through a private idempotent path invoked by the finalizer. Add
+`#[diplomat::attr(dotnet, manually_disposable)]` on an opaque type declaration to generate
+`: IDisposable` plus a public `Dispose()` that runs the same cleanup and
+`GC.SuppressFinalize(this)`. In both modes, native calls are followed by
+`GC.KeepAlive(this)` to prevent finalization while P/Invoke is still using the pointer.
 
 ## String encoding
 

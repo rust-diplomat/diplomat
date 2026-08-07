@@ -2,8 +2,10 @@
 //!
 //! Generates C# bindings that call into the Diplomat-generated C ABI via
 //! P/Invoke (`[DllImport]` externs with the `Cdecl` calling convention).
-//! Opaque Rust handles map to `IDisposable` partial classes backed by
-//! `RustHandle<T>`, which records whether C# or Rust owns the pointer.
+//! Opaque Rust handles map to partial classes backed by `RustHandle<T>`, which
+//! records whether C# or Rust owns the pointer. Opaques are finalizer-only by
+//! default; `#[diplomat::attr(dotnet, manually_disposable)]` opts a type into a public
+//! `IDisposable` surface.
 //! Slices, `&DiplomatStr` (unvalidated UTF-8) and `&DiplomatStr16` pin
 //! zero-copy; a validated `&str` still copies, since only a transcode from a
 //! real `System.String` can guarantee well-formed UTF-8. Callbacks are
@@ -267,6 +269,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_send = false;
     a.traits_are_sync = false;
     a.generate_mocking_interface = false;
+    a.manually_disposable = true;
 
     a
 }
@@ -2157,10 +2160,14 @@ mod test {
         );
     }
 
-    fn property_test_module(methods: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+    fn property_test_module_with_type_attrs(
+        type_attrs: proc_macro2::TokenStream,
+        methods: proc_macro2::TokenStream,
+    ) -> proc_macro2::TokenStream {
         quote! {
             #[diplomat::bridge]
             mod ffi {
+                #type_attrs
                 #[diplomat::opaque]
                 pub struct Config;
 
@@ -2169,6 +2176,242 @@ mod test {
                 }
             }
         }
+    }
+
+    fn property_test_module(methods: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+        property_test_module_with_type_attrs(quote! {}, methods)
+    }
+
+    #[test]
+    fn opaque_defaults_to_finalizer_only_cleanup() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Plain;
+
+                impl Plain {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let plain = files.get("Plain.cs").expect("expected Plain.cs output");
+        assert!(
+            plain.contains("public partial class Plain") && !plain.contains(": IDisposable"),
+            "default opaque should not implement IDisposable:\n{plain}"
+        );
+        assert!(
+            !plain.contains("public void Dispose()"),
+            "default opaque should not expose public Dispose:\n{plain}"
+        );
+        assert!(
+            plain.contains("private void Cleanup()")
+                && plain.contains("~Plain()")
+                && plain.contains("try")
+                && plain.contains("Cleanup();")
+                && plain.contains("catch"),
+            "default opaque should use finalizer fallback through Cleanup:\n{plain}"
+        );
+    }
+
+    #[test]
+    fn opaque_manually_disposable_opt_in_emits_public_dispose() {
+        // Generate both shapes from one bridge so the attribute is what flips
+        // the public Dispose surface, not some ambient backend default.
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct FinalizerOnly;
+
+                impl FinalizerOnly {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+
+                    pub fn ping(&self) {}
+                }
+
+                #[diplomat::attr(dotnet, manually_disposable)]
+                #[diplomat::opaque]
+                pub struct Manual;
+
+                impl Manual {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+
+                    pub fn ping(&self) {}
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let finalizer_only = files
+            .get("FinalizerOnly.cs")
+            .expect("expected FinalizerOnly.cs output");
+        assert!(
+            finalizer_only.contains("public partial class FinalizerOnly")
+                && !finalizer_only.contains(": IDisposable")
+                && !finalizer_only.contains("public void Dispose()"),
+            "unmarked opaque must stay finalizer-only:\n{finalizer_only}"
+        );
+        assert!(
+            finalizer_only.contains("private void Cleanup()")
+                && finalizer_only.contains("~FinalizerOnly()"),
+            "unmarked opaque still needs private cleanup + finalizer:\n{finalizer_only}"
+        );
+
+        let manual = files.get("Manual.cs").expect("expected Manual.cs output");
+        assert!(
+            manual.contains("public partial class Manual: IDisposable"),
+            "`manually_disposable` must generate `: IDisposable`:\n{manual}"
+        );
+        assert!(
+            manual.contains("public void Dispose()")
+                && manual.contains("Cleanup();")
+                && manual.contains("GC.SuppressFinalize(this);"),
+            "`manually_disposable` must expose Dispose() that suppresses finalization:\n{manual}"
+        );
+        assert!(
+            manual.contains("~Manual()") && manual.contains("try") && manual.contains("catch"),
+            "opted-in opaque should still keep finalizer fallback:\n{manual}"
+        );
+        assert!(
+            manual.contains("public void Ping()")
+                && manual.contains("ObjectDisposedException(\"Manual\")"),
+            "instance methods on a manually_disposable opaque must reject use-after-dispose:\n{manual}"
+        );
+    }
+
+    #[test]
+    fn manually_disposable_attr_requires_simple_path() {
+        let errors = lowering_errors(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::attr(dotnet, manually_disposable = true)]
+                    #[diplomat::opaque]
+                    pub struct Bad;
+                }
+            },
+            true,
+        );
+
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.contains("`manually_disposable` must be a simple path")),
+            "expected simple-path validation error, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn manually_disposable_attr_invalid_contexts_are_rejected() {
+        let errors = lowering_errors(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::attr(dotnet, manually_disposable)]
+                    pub struct NotOpaque {
+                        value: u8,
+                    }
+
+                    #[diplomat::attr(dotnet, manually_disposable)]
+                    pub enum NotOpaqueEnum {
+                        A,
+                    }
+
+                    #[diplomat::opaque]
+                    pub struct GoodOpaque;
+
+                    impl GoodOpaque {
+                        #[diplomat::attr(dotnet, manually_disposable)]
+                        pub fn bad(&self) {
+                        }
+                    }
+                }
+            },
+            true,
+        );
+
+        let wrong_context_count = errors
+            .iter()
+            .filter(|e| e.contains("`manually_disposable` can only be used on opaque types"))
+            .count();
+        assert_eq!(
+            wrong_context_count, 3,
+            "expected 3 context errors (struct, enum, method), got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn manually_disposable_attr_duplicate_is_rejected() {
+        let errors = lowering_errors(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::attr(dotnet, manually_disposable)]
+                    #[diplomat::attr(dotnet, manually_disposable)]
+                    #[diplomat::opaque]
+                    pub struct Duplicate;
+                }
+            },
+            true,
+        );
+
+        assert!(
+            errors
+                .iter()
+                .any(|e| e.contains("Duplicate `manually_disposable` attribute")),
+            "expected duplicate-manually_disposable error, got: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn non_dotnet_gated_manually_disposable_does_not_affect_dotnet_codegen() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(not(dotnet), manually_disposable)]
+                #[diplomat::opaque]
+                pub struct Gated;
+
+                impl Gated {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn new() -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let gated = files.get("Gated.cs").expect("expected Gated.cs output");
+        assert!(
+            !gated.contains(": IDisposable") && !gated.contains("public void Dispose()"),
+            "dotnet-disabled manually_disposable attr must not change dotnet output:\n{gated}"
+        );
     }
 
     #[test]
@@ -2386,8 +2629,8 @@ mod test {
     }
 
     // A property and a method can collide just as easily as two properties, and
-    // the template's own members (`AsFFI`, `FromFFI`, `Dispose`) are in the same
-    // namespace.
+    // the template's own members (`AsFFI`, `FromFFI`, plus opt-in `Dispose`) are
+    // in the same namespace.
     #[test]
     fn a_property_colliding_with_a_method_is_rejected() {
         let (_files, errors) = run_dotnet(property_test_module(quote! {
@@ -2541,13 +2784,39 @@ mod test {
     }
 
     #[test]
-    fn a_property_colliding_with_dispose_is_rejected() {
-        let (_files, errors) = run_dotnet(property_test_module(quote! {
+    fn a_property_named_dispose_is_accepted_without_manually_disposable_opt_in() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
             #[diplomat::attr(auto, getter = "dispose")]
             pub fn is_disposed(&self) -> bool {
                 unimplemented!()
             }
         }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Dispose"),
+            "without dotnet manually_disposable opt-in, an opaque may expose a Dispose-named property:\n{config}"
+        );
+    }
+
+    #[test]
+    fn a_property_colliding_with_dispose_is_rejected_when_manually_disposable_opted_in() {
+        let (_files, errors) = run_dotnet(property_test_module_with_type_attrs(
+            quote! {
+                #[diplomat::attr(dotnet, manually_disposable)]
+            },
+            quote! {
+                #[diplomat::attr(auto, getter = "dispose")]
+                pub fn is_disposed(&self) -> bool {
+                    unimplemented!()
+                }
+            },
+        ));
 
         assert_eq!(
             errors.len(),
@@ -2558,6 +2827,77 @@ mod test {
             errors[0].contains("two members named `Dispose`"),
             "the collision must be reported; got: {}",
             errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_property_colliding_with_cleanup_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "cleanup")]
+            pub fn cleanup_state(&self) -> bool {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Cleanup`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_method_colliding_with_cleanup_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            pub fn cleanup(&self) {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Cleanup`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn a_struct_property_named_cleanup_is_accepted() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Config {
+                    size: u8,
+                }
+
+                impl Config {
+                    #[diplomat::attr(auto, getter = "cleanup")]
+                    pub fn cleanup_state(self) -> bool {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Cleanup"),
+            "a struct has no generated Cleanup to collide with, got:\n{config}"
         );
     }
 
