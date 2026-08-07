@@ -150,7 +150,7 @@ pub mod ffi {
             other: &'a OpaqueMutexedString,
         ) -> &'a OpaqueMutexedString {
             let guard = self.0.lock().expect("Failed to lock mutex");
-            if guard.len() % 2 == 0 {
+            if guard.len().is_multiple_of(2) {
                 self
             } else {
                 other
