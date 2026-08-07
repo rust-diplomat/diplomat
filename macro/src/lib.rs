@@ -138,12 +138,24 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
         pub alignment: usize,
     ));
     for m in &custom_trait.methods {
-        // TODO check that this is the right conversion, it might be the wrong direction
         let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty)).collect();
         let method_name = Ident::new(&format!("run_{}_callback", m.name), Span::call_site());
         let return_tokens = match &m.output_type {
             Some(ret_ty) => {
-                let conv_ret_ty = ret_ty.to_syn();
+                let conv_ret_ty = match ret_ty {
+                    ast::TypeName::Result(ok, err, StdlibOrDiplomat::Stdlib) => {
+                        let ok = ok.to_syn();
+                        let err = err.to_syn();
+                        // TODO: Results of optionals
+                        quote! { diplomat_runtime::DiplomatResult<#ok, #err> }
+                    }
+                    ast::TypeName::Option(ok, StdlibOrDiplomat::Stdlib) => {
+                        let ok = ok.to_syn();
+                        quote! { diplomat_runtime::DiplomatOption<#ok> }
+                    }
+                    _ => ret_ty.to_syn().to_token_stream(),
+                };
+
                 quote!( -> #conv_ret_ty)
             }
             None => {
@@ -194,7 +206,16 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
         let (return_tokens, end_token) = match &m.output_type {
             Some(ret_ty) => {
                 let conv_ret_ty = ret_ty.to_syn();
-                (quote!( -> #conv_ret_ty), quote! {})
+                (
+                    quote!( -> #conv_ret_ty),
+                    match ret_ty {
+                        ast::TypeName::Result(_, _, StdlibOrDiplomat::Stdlib)
+                        | ast::TypeName::Option(_, StdlibOrDiplomat::Stdlib) => {
+                            quote!(.into())
+                        }
+                        _ => quote!(),
+                    },
+                )
             }
             None => (quote! {}, quote! {;}),
         };
