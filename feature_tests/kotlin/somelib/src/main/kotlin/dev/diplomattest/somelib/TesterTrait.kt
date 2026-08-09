@@ -10,6 +10,7 @@ interface TesterTrait {
     fun testTraitFn(x: UInt): UInt;
     fun testVoidTraitFn(): Unit;
     fun testStructTraitFn(s: TraitTestingStruct): Int;
+    fun testTakingMutableOpaque(mo: MutableBytes): Unit;
 }
 
 
@@ -21,6 +22,9 @@ internal interface Runner_DiplomatTraitMethod_TesterTrait_testVoidTraitFn: Callb
 }
 internal interface Runner_DiplomatTraitMethod_TesterTrait_testStructTraitFn: Callback {
     fun invoke(ignored: Pointer?, s: TraitTestingStructNative ): Int
+}
+internal interface Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque: Callback {
+    fun invoke(ignored: Pointer?, mo: Pointer ): Unit
 }
 
 internal object TesterTrait_VTable_destructor: Callback {
@@ -58,9 +62,16 @@ internal class DiplomatTrait_TesterTrait_VTable_Native: Structure(), Structure.B
                     throw Exception("ERROR NOT IMPLEMENTED")
                 }
             }
+    @JvmField
+    internal var run_testTakingMutableOpaque_callback: Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque
+        = object :  Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque {
+                override fun invoke(ignored: Pointer?, mo: Pointer ): Unit {
+                    throw Exception("ERROR NOT IMPLEMENTED")
+                }
+            }
     // Define the fields of the struct
     override fun getFieldOrder(): List<String> {
-        return listOf("destructor", "size", "alignment", "run_testTraitFn_callback", "run_testVoidTraitFn_callback", "run_testStructTraitFn_callback")
+        return listOf("destructor", "size", "alignment", "run_testTraitFn_callback", "run_testVoidTraitFn_callback", "run_testStructTraitFn_callback", "run_testTakingMutableOpaque_callback")
     }
 }
 
@@ -107,6 +118,12 @@ internal class DiplomatTrait_TesterTrait_Wrapper internal constructor (
                 }
             }
             vtable.run_testStructTraitFn_callback = testStructTraitFn;
+            val testTakingMutableOpaque: Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque = object :  Runner_DiplomatTraitMethod_TesterTrait_testTakingMutableOpaque {
+                override fun invoke(ignored: Pointer?, mo: Pointer ): Unit {
+                    return (trt_obj.testTakingMutableOpaque(MutableBytes(mo, listOf(), false)));
+                }
+            }
+            vtable.run_testTakingMutableOpaque_callback = testTakingMutableOpaque;
             val native_wrapper = DiplomatTrait_TesterTrait_Wrapper_Native();
             native_wrapper.vtable = vtable;
             val ret_val = DiplomatTrait_TesterTrait_Wrapper(native_wrapper);
