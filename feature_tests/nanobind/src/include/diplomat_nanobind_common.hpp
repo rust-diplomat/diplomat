@@ -32,15 +32,26 @@ namespace nanobind::detail
         template <typename T>
         using Cast = char32_t;
 
-        bool from_python(handle src, uint8_t, cleanup_list *) noexcept
+        bool from_python(handle src, uint8_t flags, cleanup_list *) noexcept
         {
-            value = PyUnicode_ReadChar(src.ptr(), 0);
-            if (!value)
+            if (src.is_none())
             {
-                PyErr_Clear();
-                return false;
+                if (!(flags & (uint8_t) cast_flags::accepts_none))
+                    return false;
+
+                value = U'\0';
+                size = 1;
+                return true;
             }
+
+            if (!PyUnicode_Check(src.ptr()))
+                return false;
+
             size = PyUnicode_GetLength(src.ptr());
+            if (size != 1)
+                return false;
+
+            value = PyUnicode_ReadChar(src.ptr(), 0);
             return true;
         }
 
@@ -71,7 +82,7 @@ namespace nanobind::detail
         template <typename T_>
         NB_INLINE bool can_cast() const noexcept
         {
-            return (value && size == 1);
+            return size == 1;
         }
 
         explicit operator char32_t()

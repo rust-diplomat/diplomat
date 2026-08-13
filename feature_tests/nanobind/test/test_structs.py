@@ -26,6 +26,8 @@ def test_structs():
     sl.append(somelib.PrimitiveStruct(1, True, 'c', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(2, False, ' ', 0, 0, 0))
     sl.append(somelib.PrimitiveStruct(-1, False, ' ', 0, 0, 0))
+    none_char = somelib.PrimitiveStruct(0, False, None, 0, 0, 0)
+    assert none_char.b == U'\0'
     sl = sl.asSlice
     assert sl[0].x == 1
     assert sl[1].x == 2
