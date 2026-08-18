@@ -143,11 +143,11 @@ let termini = Object.assign({
             d: selfD,
             e: selfE,
             f: selfF,
-            g: selfG
+            g: new somelib.MyEnum(selfG)
         }).intoA(),
         // For avoiding webpacking minifying issues:
         funcName: "MyStruct.intoA",
-        expr: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => "somelib.MyStruct.fromFields({\n    a: selfA,\n    b: selfB,\n    c: selfC,\n    d: selfD,\n    e: selfE,\n    f: selfF,\n    g: selfG\n}).intoA()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2').replace(/([\( ])selfD([,\) \n])/, '$1' + selfD + '$2').replace(/([\( ])selfE([,\) \n])/, '$1' + selfE + '$2').replace(/([\( ])selfF([,\) \n])/, '$1' + selfF + '$2').replace(/([\( ])selfG([,\) \n])/, '$1' + selfG + '$2'),
+        expr: (selfA, selfB, selfC, selfD, selfE, selfF, selfG) => "somelib.MyStruct.fromFields({\n    a: selfA,\n    b: selfB,\n    c: selfC,\n    d: selfD,\n    e: selfE,\n    f: selfF,\n    g: new somelib.MyEnum(selfG)\n}).intoA()".replace(/([\( ])selfA([,\) \n])/, '$1' + selfA + '$2').replace(/([\( ])selfB([,\) \n])/, '$1' + selfB + '$2').replace(/([\( ])selfC([,\) \n])/, '$1' + selfC + '$2').replace(/([\( ])selfD([,\) \n])/, '$1' + selfD + '$2').replace(/([\( ])selfE([,\) \n])/, '$1' + selfE + '$2').replace(/([\( ])selfF([,\) \n])/, '$1' + selfF + '$2').replace(/([\( ])selfG([,\) \n])/, '$1' + selfG + '$2'),
         parameters: [
             
             {
@@ -429,10 +429,10 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.acceptsOptionEnum": {
-        func: (arg, sentinel) => somelib.OptionOpaque.acceptsOptionEnum(arg, sentinel),
+        func: (arg, sentinel) => somelib.OptionOpaque.acceptsOptionEnum(new somelib.OptionEnum(arg), sentinel),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.acceptsOptionEnum",
-        expr: (arg, sentinel) => "somelib.OptionOpaque.acceptsOptionEnum(arg, sentinel)".replace(/([\( ])arg([,\) \n])/, '$1' + arg + '$2').replace(/([\( ])sentinel([,\) \n])/, '$1' + sentinel + '$2'),
+        expr: (arg, sentinel) => "somelib.OptionOpaque.acceptsOptionEnum(new somelib.OptionEnum(arg), sentinel)".replace(/([\( ])arg([,\) \n])/, '$1' + arg + '$2').replace(/([\( ])sentinel([,\) \n])/, '$1' + sentinel + '$2'),
         display: displayOptionalEnum,
         parameters: [
             
@@ -453,10 +453,10 @@ let termini = Object.assign({
     },
 
     "OptionOpaque.acceptsMultipleOptionEnum": {
-        func: (sentinel1, arg1, arg2, arg3, sentinel2) => somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2),
+        func: (sentinel1, arg1, arg2, arg3, sentinel2) => somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, new somelib.OptionEnum(arg1), new somelib.OptionEnum(arg2), new somelib.OptionEnum(arg3), sentinel2),
         // For avoiding webpacking minifying issues:
         funcName: "OptionOpaque.acceptsMultipleOptionEnum",
-        expr: (sentinel1, arg1, arg2, arg3, sentinel2) => "somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, arg1, arg2, arg3, sentinel2)".replace(/([\( ])sentinel1([,\) \n])/, '$1' + sentinel1 + '$2').replace(/([\( ])arg1([,\) \n])/, '$1' + arg1 + '$2').replace(/([\( ])arg2([,\) \n])/, '$1' + arg2 + '$2').replace(/([\( ])arg3([,\) \n])/, '$1' + arg3 + '$2').replace(/([\( ])sentinel2([,\) \n])/, '$1' + sentinel2 + '$2'),
+        expr: (sentinel1, arg1, arg2, arg3, sentinel2) => "somelib.OptionOpaque.acceptsMultipleOptionEnum(sentinel1, new somelib.OptionEnum(arg1), new somelib.OptionEnum(arg2), new somelib.OptionEnum(arg3), sentinel2)".replace(/([\( ])sentinel1([,\) \n])/, '$1' + sentinel1 + '$2').replace(/([\( ])arg1([,\) \n])/, '$1' + arg1 + '$2').replace(/([\( ])arg2([,\) \n])/, '$1' + arg2 + '$2').replace(/([\( ])arg3([,\) \n])/, '$1' + arg3 + '$2').replace(/([\( ])sentinel2([,\) \n])/, '$1' + sentinel2 + '$2'),
         display: displayOptionalEnum,
         parameters: [
             
