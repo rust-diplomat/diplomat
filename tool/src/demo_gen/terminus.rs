@@ -295,7 +295,7 @@ impl RenderTerminusContext<'_, '_> {
             Type::Primitive(..) => {
                 self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
-            Type::Enum(e) if param_name == "self" => {
+            Type::Enum(e) => {
                 let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
 
                 if e.resolve(self.tcx).attrs.disable {
@@ -305,18 +305,8 @@ impl RenderTerminusContext<'_, '_> {
 
                 let param =
                     self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs));
-                // Enum coercion only works for arguments, we need to construct self manually
+                // Coerce enum to the correct type:
                 format!("new {}.{type_name}({param})", self.lib_name,)
-            }
-            Type::Enum(e) => {
-                let type_name = self.formatter.fmt_type_name(e.tcx_id.into()).to_string();
-
-                if e.resolve(self.tcx).attrs.disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-
-                self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
             }
             Type::Slice(..) => {
                 self.append_out_param(param_name.clone(), param_type, node, Some(param_attrs))
