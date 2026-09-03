@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df2bb1a4.js";
+            window.path_to_searchindex_js = "../searchindex-dc169c6e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-60d31a41.js"></script>
@@ -175,7 +175,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="fallible-trait-returns"><a class="header" href="#fallible-trait-returns">Fallible Trait Returns</a></h1>
-<p>Supported by queried with <code>#[diplomat::cfg(supports=trait_returns_must_be_fallible)]</code></p>
+<p>(Supported by queried with <code>#[diplomat::cfg(supports=trait_returns_must_be_fallible)]</code>)</p>
 <p>For interpreted languages that with weak typing for variables, traits pose a problem:</p>
 <pre><code class="language-rs">pub trait MyTrait {
   fn some_fn(a : i32) -&gt; i32;
@@ -186,8 +186,7 @@
   def some_fn(a):
     return "ABC"
 </code></pre>
-<p>Python does not impose type restrictions upon return. The trait implementation is returned directly into Rust[^cpp], which expects . Rust will throw an exception and halt the program. For languages that do not enforce strict typing on method returns, Diplomat requires all traits return either unit types (which do not need to be converted) or <code>Result&lt;T, E&gt;</code>. <code>E</code> must be marked specially with the <code>#[diplomat::attr(*, ffi_error)]</code> attribute.</p>
-<p>[cpp]: In the Nanobind backend, the type must be converted through C++. C++ still has to throw an exception if the type fails to convert, but the principle roughly remains the same.</p>
+<p>Python does not impose type restrictions upon return. The trait implementation is returned directly into Rust<sup class="footnote-reference" id="fr-cpp-1"><a href="#footnote-cpp">1</a></sup>, which expects a strict <code>i32</code> value. Rust will throw an exception and halt the program. For languages that do not enforce strict typing on method returns, Diplomat requires all traits return either unit types (which do not need to be converted) or <code>Result&lt;T, E&gt;</code>. <code>E</code> must be marked specially with the <code>#[diplomat::attr(*, ffi_error)]</code> attribute.</p>
 <h2 id="ffi-error"><a class="header" href="#ffi-error">FFI Error</a></h2>
 <p>Diplomat needs a way to specially denote to you, the bindings writer, that a conversion from a provided type to a given Rust type has failed.</p>
 <h3 id="currently-supported"><a class="header" href="#currently-supported">Currently Supported</a></h3>
@@ -205,6 +204,12 @@ pub trait SomeTrait {
 <p>Diplomat will set <code>ErrorEnum</code> to <code>FFIError</code> if a cast to the Rust type cannot be made when <code>result_enum_okay</code> is called. Note that since you define your own return types, it is acceptable to re-use existing enum variants and mark them with <code>ffi_error</code>; however, it is recommended that you pick an enum variant which best communicates the <code>ffi_error</code> failure case.</p>
 <h3 id="plans-to-support"><a class="header" href="#plans-to-support">Plans to support</a></h3>
 <p>Struct fields.</p>
+<hr>
+<ol class="footnote-definition">
+<li id="footnote-cpp">
+<p>In the Nanobind backend, the type must be converted through C++. C++ still has to throw an exception if the type fails to convert, but the principle roughly remains the same. <a href="#fr-cpp-1">↩</a></p>
+</li>
+</ol>
 
                     </main>
 

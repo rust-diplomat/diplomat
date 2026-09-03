@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-df2bb1a4.js";
+            window.path_to_searchindex_js = "../searchindex-dc169c6e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-60d31a41.js"></script>
@@ -263,6 +263,8 @@ template&lt;typename T&gt; struct WriteTrait {
 <p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="./c.html#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
 <h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
+<h3 id="traits"><a class="header" href="#traits">Traits</a></h3>
+<p>Traits are implemented as abstract classes with <code>virtual</code> functions that must be overridden. When a method accepts a trait in C++, it will be a <code>std::unique_ptr</code> of the abstract class, and will be converted into the <a href="./c.html#traits">C VTable of the trait</a>.</p>
 <h3 id="struct-references"><a class="header" href="#struct-references">Struct References</a></h3>
 <h4 id="mut-struct"><a class="header" href="#mut-struct">&amp;mut Struct</a></h4>
 <p>Any structure tagged with <code>#[diplomat::attr(auto, mut_struct_ref)]</code> will be codegenned with different fields than you might expect. Currently, this only holds for structures that hold references:</p>
