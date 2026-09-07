@@ -1659,6 +1659,101 @@ mod tests {
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
     }
 
+    /// Callbacks and trait methods may return an optional borrowed opaque.
+    /// Lowering used to abort with "Could not resolve symbol" instead, because
+    /// the opaque check resolved the returned type against its own path rather
+    /// than against the module the method is declared in.
+    #[test]
+    fn test_callback_optional_opaque_return() {
+        let parsed: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo(u8);
+
+                pub trait Getter {
+                    fn get(&self) -> Option<&Foo>;
+                }
+
+                impl Foo {
+                    pub fn apply_callback(&self, cb: impl FnMut(&Foo) -> Option<&Foo>) {}
+
+                    pub fn apply_self_callback(&self, cb: impl FnMut(&Foo) -> Option<&Self>) {}
+
+                    pub fn apply_trait(&self, g: impl Getter) {}
+                }
+            }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.callbacks = true;
+        attr_validator.support.traits = true;
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        {
+            Ok(_context) => (),
+            Err(e) => {
+                for err in e {
+                    write_report(
+                        &err.ast_report(),
+                        &mut output,
+                        crate::ast::logging::PrettyPrint::ForceUgly,
+                    )
+                    .unwrap();
+                }
+            }
+        };
+        assert!(
+            output.is_empty(),
+            "expected lowering to succeed, got:\n{output}"
+        );
+    }
+
+    /// The companion diagnostic to [`test_callback_optional_opaque_return`]:
+    /// spelling the same return type `DiplomatOption<&T>` is still rejected,
+    /// and now reaches its intended error instead of aborting lowering.
+    #[test]
+    fn test_callback_diplomat_option_opaque_return_fails() {
+        let parsed: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo(u8);
+
+                impl Foo {
+                    pub fn apply_callback(&self, cb: impl FnMut(&Foo) -> DiplomatOption<&Foo>) {}
+                }
+            }
+        };
+
+        let mut output = String::new();
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.callbacks = true;
+        let config = super::LoweringConfig {
+            unsafe_references_in_callbacks: true,
+        };
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        {
+            Ok(_context) => (),
+            Err(e) => {
+                for err in e {
+                    write_report(
+                        &err.ast_report(),
+                        &mut output,
+                        crate::ast::logging::PrettyPrint::ForceUgly,
+                    )
+                    .unwrap();
+                }
+            }
+        };
+        insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+
     #[test]
     fn test_unsupported_mut_slice() {
         uitest_lowering! {

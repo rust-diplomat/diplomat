@@ -2243,7 +2243,7 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Box(t) | ast::TypeName::Reference(_, _, t) => {
                     match &**t {
                         ast::TypeName::Named(t) | ast::TypeName::SelfType(t) => {
-                            let ty = t.resolve(&t.path, self.env);
+                            let ty = t.resolve(in_path, self.env);
                             if let ast::CustomType::Opaque(..) = ty {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
                                     self.errors.push(LoweringError::Other("found DiplomatOption<T>, where T is opaque. Please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
