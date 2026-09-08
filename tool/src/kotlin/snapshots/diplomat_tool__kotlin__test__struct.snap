@@ -35,8 +35,9 @@ internal class MyNativeStructNative: Structure(), Structure.ByValue {
     internal var g: FFIUint32 = FFIUint32();
     @JvmField
     internal var h: Long = 0;
-    /** Documentation for the struct field `i`
-    */
+    /**
+     * Documentation for the struct field `i`
+     */
     @JvmField
     internal var i: FFIUint64 = FFIUint64();
     @JvmField
@@ -154,8 +155,9 @@ internal class DiplomatCallback_MyNativeStruct_test_multi_arg_callback_diplomatC
         }
     }
 }
-/** Documentation for the struct
-*/
+/**
+ * Documentation for the struct
+ */
 class MyNativeStruct (var a: Boolean, var b: Byte, var c: UByte, var d: Short, var e: UShort, var f: Int, var g: UInt, var h: Long, var i: ULong, var j: Int, var k: Float, var l: Double, var m: DoubleArray, var n: Opaque) {
     companion object {
 

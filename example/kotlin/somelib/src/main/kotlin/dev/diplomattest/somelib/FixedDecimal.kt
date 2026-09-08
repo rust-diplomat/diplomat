@@ -15,8 +15,9 @@ internal interface FixedDecimalInterface {
     fun multiplyPow10(power: Short): Unit
     fun toString_(): Result<String>
 }
-/** See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
-*/
+/**
+ * See the [Rust documentation for `FixedDecimal`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html) for more information.
+ */
 class FixedDecimal internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
@@ -45,8 +46,9 @@ class FixedDecimal internal constructor (
         internal val lib: FixedDecimalLib = Native.load("diplomat_example", libClass)
         @JvmStatic
         
-        /** Construct an [FixedDecimal] from an integer.
-        */
+        /**
+         * Construct an [FixedDecimal] from an integer.
+         */
         fun new_(v: Int): FixedDecimal {
             
             val returnVal = lib.icu4x_FixedDecimal_new_mv1(v);
@@ -57,20 +59,22 @@ class FixedDecimal internal constructor (
         }
     }
     
-    /** Multiply the [FixedDecimal] by a given power of ten.
-    *
-    *See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
-    */
+    /**
+     * Multiply the [FixedDecimal] by a given power of ten.
+     *
+     * See the [Rust documentation for `multiply_pow10`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.multiply_pow10) for more information.
+     */
     override fun multiplyPow10(power: Short): Unit {
         
         val returnVal = lib.icu4x_FixedDecimal_multiply_pow10_mv1(handle, power);
         
     }
     
-    /** Format the [FixedDecimal] as a string.
-    *
-    *See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
-    */
+    /**
+     * Format the [FixedDecimal] as a string.
+     *
+     * See the [Rust documentation for `write_to`](https://docs.rs/fixed_decimal/latest/fixed_decimal/struct.FixedDecimal.html#method.write_to) for more information.
+     */
     override fun toString_(): Result<String> {
         val write = DW.lib.diplomat_buffer_write_create(0)
         val returnVal = lib.icu4x_FixedDecimal_to_string_mv1(handle, write);

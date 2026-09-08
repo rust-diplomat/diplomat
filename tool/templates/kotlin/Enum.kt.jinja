@@ -20,7 +20,8 @@ internal interface {{type_name}}Lib: Library {
 {% let variants_for_decl = variants -%}
 {%- let variants_for_native = variants -%}
 {% if !docs.is_empty() -%}
-/** {{docs}}
+/**
+{{docs|prefix_trimmed(" * ")}}
 */
 {% endif -%}
 enum class {{type_name}}
