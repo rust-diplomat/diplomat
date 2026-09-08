@@ -52,6 +52,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -117,6 +118,7 @@ Method {
             ),
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -155,6 +157,7 @@ Method {
     ),
     attrs: Attrs {
         disable: false,
+        unstable: false,
         deprecated: None,
         namespace: None,
         rename: RenameAttr {

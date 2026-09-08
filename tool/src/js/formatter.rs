@@ -112,6 +112,14 @@ impl<'tcx> JSFormatter<'tcx> {
             }
             let _ = writeln!(&mut docs, "@deprecated {deprecated}");
         }
+        if attrs.unstable {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            docs.push_str("@experimental");
+            docs.push('\n');
+        }
         docs
     }
 

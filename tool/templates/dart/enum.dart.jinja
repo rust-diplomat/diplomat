@@ -4,6 +4,9 @@
 {% if let Some(deprecated) = ty.attrs.deprecated -%}
 @core.Deprecated('{{ deprecated }}')
 {% endif -%}
+{% if ty.attrs.unstable -%}
+@meta.experimental
+{% endif -%}
 enum {{type_name}}
   {%- if !special.mixins.is_empty() %} with {{ special.mixins.iter().join(", ") }} {%- endif %}
   {%- if !special.implements.is_empty() %} implements {{ special.implements.iter().join(", ") }}{% endif %} {

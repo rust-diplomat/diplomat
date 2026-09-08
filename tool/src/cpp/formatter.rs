@@ -287,6 +287,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
             }
             let _ = writeln!(&mut docs, "\\deprecated {deprecated}");
         }
+        if attrs.unstable {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            docs.push_str("🚧 This API is unstable and may experience breaking changes outside major releases.");
+            docs.push('\n');
+        }
         docs
     }
 

@@ -1,9 +1,9 @@
 use diplomat_core::hir::{
     self,
     borrowing_param::{LifetimeEdge, LifetimeEdgeKind},
-    Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, FloatType, IntSizeType, IntType,
-    LifetimeEnv, MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike, TraitId,
-    TyPosition, Type, TypeContext, TypeId,
+    Attrs, Docs, DocsTypeReferenceSyntax, DocsUrlGenerator, EnumVariant, FloatType, IntSizeType,
+    IntType, LifetimeEnv, MaybeStatic, PrimitiveType, Slice, StringEncoding, StructPathLike,
+    TraitId, TyPosition, Type, TypeContext, TypeId,
 };
 use heck::ToLowerCamelCase;
 use std::collections::HashSet;
@@ -105,10 +105,20 @@ impl<'tcx> KotlinFormatter<'tcx> {
         "String"
     }
 
-    pub fn fmt_docs(&self, docs: &Docs) -> String {
-        docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
+    pub fn fmt_docs(&self, docs: &Docs, attrs: &Attrs) -> String {
+        let mut docs = docs
+            .to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
-            .to_string()
+            .to_string();
+        if attrs.unstable {
+            if !docs.is_empty() {
+                docs.push('\n');
+                docs.push('\n');
+            }
+            docs.push_str("🚧 This API is unstable and may experience breaking changes outside major releases.");
+            docs.push('\n');
+        }
+        docs
     }
 
     pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {

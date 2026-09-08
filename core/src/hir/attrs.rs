@@ -27,6 +27,8 @@ pub struct Attrs {
     ///
     /// This attribute is always inherited except to variants
     pub disable: bool,
+    /// Whether this item is `cfg(feature = "unstable")`
+    pub unstable: bool,
     /// Mark this item deprecated in FFI.
     pub deprecated: Option<String>,
     /// An optional namespace. None is equivalent to the root namespace.
@@ -451,15 +453,21 @@ impl Attrs {
     pub fn from_ast(
         ast: &ast::Attrs,
         validator: &(impl AttributeValidator + ?Sized),
-        parent_attrs: &Attrs,
+        parent_attrs: Attrs,
         errors: &mut ErrorStore,
     ) -> Self {
-        let mut this = parent_attrs.clone();
+        let mut this = parent_attrs;
         // Backends must support this since it applies to the macro/C code.
         // No special inheritance, was already appropriately inherited in AST
         this.abi_rename = ast.abi_rename.clone();
 
         this.deprecated = ast.deprecated.clone();
+
+        this.unstable |= ast.cfg.iter().any(|x| {
+            x.to_token_stream()
+                .to_string()
+                .contains("feature = \"unstable\"")
+        });
 
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
@@ -772,6 +780,7 @@ impl Attrs {
         // use an exhaustive destructure so new attributes are handled
         let Attrs {
             disable,
+            unstable: _unstable,
             deprecated: _deprecated,
             namespace,
             rename,
@@ -1270,6 +1279,7 @@ impl Attrs {
         Attrs {
             disable,
             deprecated: None,
+            unstable: self.unstable,
             rename,
             namespace,
             // Should not inherit from enums to their variants
@@ -1571,7 +1581,7 @@ pub trait AttributeValidator {
     fn attr_from_ast(
         &self,
         ast: &ast::Attrs,
-        parent_attrs: &Attrs,
+        parent_attrs: Attrs,
         errors: &mut ErrorStore,
     ) -> Attrs {
         Attrs::from_ast(ast, self, parent_attrs, errors)
