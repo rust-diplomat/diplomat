@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-dc169c6e.js";
+            window.path_to_searchindex_js = "searchindex-406269cc.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-60d31a41.js"></script>
+        <script src="toc-548185b0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1405,9 +1405,9 @@ impl SomeStruct {
 <p>Tuples do not support non-static methods, since past the boundary a tuple is not the struct it was generated from.</p>
 <p>See https://github.com/rust-diplomat/diplomat/issues/1145 for the tracking issue for Tuples.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="fallible-trait-returns"><a class="header" href="#fallible-trait-returns">Fallible Trait Returns</a></h1>
-<p>(Supported by queried with <code>#[diplomat::cfg(supports=trait_returns_must_be_fallible)]</code>)</p>
-<p>For interpreted languages that with weak typing for variables, traits pose a problem:</p>
+<h1 id="fallible-callback-returns"><a class="header" href="#fallible-callback-returns">Fallible Callback Returns</a></h1>
+<p>Supported by queried with <code>#[diplomat::cfg(supports=callback_returns_must_be_fallible)]</code></p>
+<p>For interpreted languages that with weak typing for variables, callbacks and traits pose a problem:</p>
 <pre><code class="language-rs">pub trait MyTrait {
   fn some_fn(a : i32) -&gt; i32;
 }
@@ -1417,7 +1417,7 @@ impl SomeStruct {
   def some_fn(a):
     return "ABC"
 </code></pre>
-<p>Python does not impose type restrictions upon return. The trait implementation is returned directly into Rust<sup class="footnote-reference" id="fr-cpp-1"><a href="#footnote-cpp">1</a></sup>, which expects a strict <code>i32</code> value. Rust will throw an exception and halt the program. For languages that do not enforce strict typing on method returns, Diplomat requires all traits return either unit types (which do not need to be converted) or <code>Result&lt;T, E&gt;</code>. <code>E</code> must be marked specially with the <code>#[diplomat::attr(*, ffi_error)]</code> attribute.</p>
+<p>Python does not impose type restrictions upon return. The method is returned directly into Rust<sup class="footnote-reference" id="fr-cpp-1"><a href="#footnote-cpp">1</a></sup>, which expects a strict <code>i32</code> value. Rust will throw an exception and halt the program. For languages that do not enforce strict typing on method returns, Diplomat requires all callbacks and traits to return <code>Result&lt;T, E&gt;</code>. <code>E</code> must be marked specially with the <code>#[diplomat::attr(*, ffi_error)]</code> attribute.</p>
 <h2 id="ffi-error"><a class="header" href="#ffi-error">FFI Error</a></h2>
 <p>Diplomat needs a way to specially denote to you, the bindings writer, that a conversion from a provided type to a given Rust type has failed.</p>
 <h3 id="currently-supported"><a class="header" href="#currently-supported">Currently Supported</a></h3>
@@ -3436,9 +3436,9 @@ except Exception as e:
 <h3 id="diplomatwrite-2"><a class="header" href="#diplomatwrite-2">DiplomatWrite</a></h3>
 <p>The Nanobind backend uses the <a href="#diplomatwrite-1">default C++ implementation for DiplomatWrite</a>, and so returns a <code>str</code> type.</p>
 <h3 id="callbacks-4"><a class="header" href="#callbacks-4">Callbacks</a></h3>
-<p>Implemented as any ordinary Python function (lambda or <code>def</code> will work).</p>
+<p>Implemented as any ordinary Python function (lambda or <code>def</code> will work). Callback returns are fallible, so any callback return must be bound with <a href="#fallible-callback-returns">ffi_error</a>.</p>
 <h3 id="traits-3"><a class="header" href="#traits-3">Traits</a></h3>
-<p>Trait methods are fallible here, so any returned trait must be bound with <a href="#fallible-trait-returns">ffi_error</a>.</p>
+<p>Trait methods are fallible here, so any returned trait must be bound with <a href="#fallible-callback-returns">ffi_error</a>.</p>
 <p>Implemented as classes that subclass a given <code>TraitName</code>. Python will raise a <code>TypeError</code> if <em>any</em> method is not implemented in the trait. If you attempt to <code>super()</code> a trait name, since the method is abstract, it will raise a <code>TypeError</code>. Any exceptions raised while executing in Rust code will be returned as an FFI error.</p>
 <p>There is an additional <code>TraitName_PyBase</code> class that Nanobind generates. This is purely for stubgen purposes: Nanobind has to bind the <a href="#traits-2">underlying abstract class</a> for stubgen, and create an implementation class for binding the abstract methods from Python.</p>
 <h2 id="debugging"><a class="header" href="#debugging">Debugging</a></h2>
