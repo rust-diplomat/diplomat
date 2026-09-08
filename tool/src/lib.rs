@@ -112,6 +112,7 @@ pub fn gen(
     let lowering_config = config.shared_config.lowering_config();
 
     attr_validator.features_enabled = config.shared_config.features_enabled.clone();
+    attr_validator.semver_unstable_features = config.shared_config.semver_unstable_features.clone();
 
     let manifest_path = config
         .shared_config

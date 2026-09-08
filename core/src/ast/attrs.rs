@@ -32,8 +32,7 @@ use crate::ast::SpanLocation;
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Default)]
 #[non_exhaustive]
 pub struct Attrs {
-    /// The regular #[cfg()] attributes. Inherited, though the inheritance onto methods is the
-    /// only relevant one here.
+    /// The regular #[cfg()] attributes. Inherited.
     pub cfg: Vec<Attribute>,
 
     /// The #[deprecated(note = 'foo')] attribute.

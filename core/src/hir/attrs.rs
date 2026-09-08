@@ -463,11 +463,7 @@ impl Attrs {
 
         this.deprecated = ast.deprecated.clone();
 
-        this.unstable |= ast.cfg.iter().any(|x| {
-            x.to_token_stream()
-                .to_string()
-                .contains("feature = \"unstable\"")
-        });
+        this.unstable |= ast.cfg.iter().any(|x| validator.is_unstable(x));
 
         let support = validator.attrs_supported();
         let backend = validator.primary_name();
@@ -1591,6 +1587,8 @@ pub trait AttributeValidator {
     fn validate(&self, attrs: &Attrs, context: AttributeContext, errors: &mut ErrorStore) {
         attrs.validate(self, context, errors)
     }
+
+    fn is_unstable(&self, feature: &syn::Attribute) -> bool;
 }
 
 /// A basic attribute validator
@@ -1608,6 +1606,8 @@ pub struct BasicAttributeValidator {
     pub is_name_value: Option<Box<dyn Fn(&str, &str) -> bool>>,
     /// The features enabled.
     pub features_enabled: HashSet<String>,
+    /// The unstable features.
+    pub semver_unstable_features: HashSet<String>,
 }
 
 impl BasicAttributeValidator {
@@ -1731,6 +1731,13 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn attrs_supported(&self) -> BackendAttrSupport {
         self.support
+    }
+    fn is_unstable(&self, cfg: &syn::Attribute) -> bool {
+        self.semver_unstable_features.iter().any(|f| {
+            cfg.to_token_stream()
+                .to_string()
+                .contains(&format!("feature = {f:?}"))
+        })
     }
 }
 
