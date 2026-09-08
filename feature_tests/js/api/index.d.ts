@@ -132,6 +132,8 @@ export { RenamedAttrEnum } from "./RenamedAttrEnum"
 
 export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum"
 
+export { FFIError } from "./FFIError"
+
 export { UnimportedEnum } from "./UnimportedEnum"
 
 export { OptionEnum } from "./OptionEnum"

@@ -130,6 +130,8 @@ export { RenamedAttrEnum } from "./RenamedAttrEnum.mjs"
 
 export { RenamedDeprecatedEnum } from "./RenamedDeprecatedEnum.mjs"
 
+export { FFIError } from "./FFIError.mjs"
+
 export { UnimportedEnum } from "./UnimportedEnum.mjs"
 
 export { OptionEnum } from "./OptionEnum.mjs"

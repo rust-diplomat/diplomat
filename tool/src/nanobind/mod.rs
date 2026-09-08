@@ -53,7 +53,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // (this is an assumption made elsewehere throughout codegen)
     a.traits_are_send = true;
     a.traits_are_sync = true;
-    a.trait_returns_must_be_fallible = true;
+    a.callback_returns_must_be_fallible = true;
 
     a.generate_mocking_interface = false;
     a.abi_compatibles = true;
@@ -118,6 +118,23 @@ pub(crate) fn run<'cx>(
 
     let mut root_module = RootModule::new();
     root_module.module_name = lib_name.clone().into();
+
+    struct FFIErrorsHeaderEntry<'a> {
+        name: std::borrow::Cow<'a, str>,
+        return_expr: String,
+        include_path: String,
+    }
+    // Hack for telling callbacks how to read FFI errors:
+    #[derive(Template)]
+    #[template(path = "nanobind/ffi_errors.h.jinja", escape = "none")]
+    struct FFIErrorsHeader<'a> {
+        entries: Vec<FFIErrorsHeaderEntry<'a>>,
+        lib_name: Option<String>,
+    }
+    let mut ffi_errors_header = FFIErrorsHeader {
+        entries: vec![],
+        lib_name: formatter.cxx.lib_name.clone(),
+    };
 
     #[derive(Template)]
     #[template(path = "nanobind/binding.cpp.jinja", escape = "none")]
@@ -197,6 +214,24 @@ pub(crate) fn run<'cx>(
             unqualified_type: formatter.cxx.fmt_type_name_unnamespaced(id).to_string(),
             body,
             binding_prefix,
+        };
+
+        if let hir::TypeDef::Enum(e) = ty {
+            let v = e.variants.iter().find(|v| v.attrs.ffi_error);
+            if let Some(v) = v {
+                let variant_name = formatter.cxx.fmt_enum_variant(v);
+                let enum_name = v.attrs.rename.apply(e.name.as_str().into());
+                let enum_name = if let Some(ns) = &e.attrs.namespace {
+                    format!("{ns}::{enum_name}").into()
+                } else {
+                    enum_name
+                };
+                ffi_errors_header.entries.push(FFIErrorsHeaderEntry {
+                    name: enum_name.clone(),
+                    return_expr: format!("{enum_name}::Value::{variant_name}"),
+                    include_path: cpp_decl_path.clone(),
+                });
+            }
         };
 
         files.add_file(binding_impl_path, binding_impl.to_string());
@@ -389,6 +424,10 @@ pub(crate) fn run<'cx>(
         .remove(&vec![root_module.module_name.clone().into()]); // remove the root module from the list of submodules
 
     files.add_file(nanobind_filepath.to_owned(), root_module.to_string());
+    files.add_file(
+        "include/diplomat_ffi_errors.hpp".to_string(),
+        ffi_errors_header.render().unwrap(),
+    );
 
     (files, errors)
 }
@@ -484,6 +523,11 @@ mod test {
                 #[diplomat::opaque]
                 struct OpaqueStruct;
 
+                pub enum FFIError {
+                    #[diplomat::attr(auto, ffi_error)]
+                    FFI,
+                }
+
                 impl OpaqueStruct {
                     pub fn new() -> Box<OpaqueStruct> {
                         Box::new(OpaqueStruct{})
@@ -493,12 +537,12 @@ mod test {
                         return true;
                     }
 
-                    pub fn takes_callback(f : impl Fn()) {
+                    pub fn takes_callback(f : impl Fn() -> Result<(), FFIError>) {
                         todo!()
                     }
 
                     #[diplomat::attr(*, rename="takes_callback")]
-                    pub fn takes_other_callback(f : impl Fn(bool)) {}
+                    pub fn takes_other_callback(f : impl Fn(bool) -> Result<(), FFIError>) {}
 
                     #[diplomat::attr(*, rename="new")]
                     pub fn str_slice_override(sl : &[DiplomatStrSlice]) {

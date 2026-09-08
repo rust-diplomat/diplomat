@@ -10,7 +10,7 @@ use crate::ast::attrs::AttrInheritContext;
 use crate::ast::SpanLocation;
 #[allow(unused_imports)] // use in docs links
 use crate::hir;
-use crate::hir::ParamSelf;
+use crate::hir::{CallbackInstantiationFunctionality, ParamSelf};
 use crate::{ast, Env};
 use core::fmt::{self, Display};
 use smallvec::SmallVec;
@@ -423,7 +423,7 @@ impl TypeContext {
         for (_id, ty) in self.all_types() {
             ctx.errors.set_item(ty.name().as_str(), ty.span());
 
-            self.validate_type_def(&mut ctx.errors, ty);
+            self.validate_type_def(ctx, ty);
 
             for method in ty.methods() {
                 ctx.errors.set_subitem(method.name.as_str(), &method.name);
@@ -475,7 +475,7 @@ impl TypeContext {
                     }
 
                     self.validate_ty_in_method(
-                        &mut ctx.errors,
+                        ctx,
                         Param::Input(param.name.as_str()),
                         &param.ty,
                         method,
@@ -493,7 +493,7 @@ impl TypeContext {
                 }
 
                 method.output.with_contained_types(|out_ty| {
-                    self.validate_ty_in_method(&mut ctx.errors, Param::Return, out_ty, method);
+                    self.validate_ty_in_method(ctx, Param::Return, out_ty, method);
                 })
             }
         }
@@ -504,33 +504,9 @@ impl TypeContext {
                 let ident = m.name.as_ref().expect("Trait methods must have names");
                 ctx.errors.set_subitem(ident.as_str(), ident);
                 for p in &m.params {
-                    self.validate_ty(&mut ctx.errors, &p.ty);
+                    self.validate_ty(ctx, &p.ty);
                 }
-
-                if ctx
-                    .attr_validator
-                    .attrs_supported()
-                    .trait_returns_must_be_fallible
-                {
-                    match m.output.as_ref() {
-                        hir::ReturnType::Fallible(_, err) => {
-                            let is_valid = if let Some(hir::Type::Enum(e)) = err {
-                                let e = self.resolve_enum(e.tcx_id);
-                                let is_valid = e.variants.iter().find(|v| v.attrs.ffi_error);
-                                is_valid.is_some()
-                            } else {
-                                false
-                            };
-
-                            if !is_valid {
-                                ctx.errors.push(LoweringError::Other("Found non #[diplomat::attr(*, ffi_error)] marked error type in trait return. See https://rust-diplomat.github.io/diplomat/attrs/fallible_trait_returns.html for more.".to_string()));
-                            }
-                        }
-                        _ => {
-                            ctx.errors.push(LoweringError::Other("Backend trait return types are fallible. Return type must be a `-> Result<T, E>`. See https://rust-diplomat.github.io/diplomat/attrs/fallible_trait_returns.html for more.".to_string()));
-                        }
-                    }
-                }
+                self.validate_callback_ret(&m.output, ctx);
 
                 let success = match &*m.output {
                     hir::ReturnType::Infallible(success) | hir::ReturnType::Nullable(success) => {
@@ -538,31 +514,36 @@ impl TypeContext {
                     }
                     hir::ReturnType::Fallible(success, fallible) => {
                         if let Some(f) = fallible {
-                            self.validate_ty(&mut ctx.errors, f);
+                            self.validate_ty(ctx, f);
                         }
                         success
                     }
                 };
 
                 if let hir::SuccessType::OutType(o) = success {
-                    self.validate_ty(&mut ctx.errors, o);
+                    self.validate_ty(ctx, o);
                 }
+            }
+        }
+
+        for (_id, f) in self.all_free_functions() {
+            ctx.errors.set_item(f.name.as_str(), &f.name);
+            for p in &f.params {
+                self.validate_ty(ctx, &p.ty);
             }
         }
     }
 
     /// Perform validation checks on any given type
     /// (whether it be a struct field, a method argument, etc.)
-    /// Currently used to check if a given type is a slice of structs,
-    /// and ensure the relevant attributes are set there.
-    fn validate_ty<P: super::TyPosition>(&self, errors: &mut ErrorStore, ty: &hir::Type<P>) {
+    fn validate_ty<P: super::TyPosition>(&self, ctx: &mut LoweringContext, ty: &hir::Type<P>) {
         match ty {
             hir::Type::Slice(hir::Slice::Struct(_, st)) => {
                 let st = self.resolve_type(st.id());
                 match st {
                     TypeDef::Struct(st) => {
                         if !st.attrs.abi_compatible {
-                            errors.push(LoweringError::Other(format!(
+                            ctx.errors.push(LoweringError::Other(format!(
                                 "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                                 st.name
                             )));
@@ -580,7 +561,7 @@ impl TypeContext {
                         MaybeOwn::Borrow(b)
                             if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
                         {
-                            errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
+                            ctx.errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
                         }
                         _ => {}
                     },
@@ -596,7 +577,12 @@ impl TypeContext {
                 };
 
                 if can_tuple && !matches!(st.owner(), MaybeOwn::Own) {
-                    errors.push(LoweringError::Other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat. See https://github.com/rust-diplomat/diplomat/issues/1143".to_string()));
+                    ctx.errors.push(LoweringError::Other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat. See https://github.com/rust-diplomat/diplomat/issues/1143".to_string()));
+                }
+            }
+            hir::Type::Callback(cb) => {
+                if let Ok(cb_ret) = cb.get_output_type() {
+                    self.validate_callback_ret(cb_ret, ctx)
                 }
             }
             _ => {}
@@ -638,12 +624,12 @@ impl TypeContext {
     /// Also validates the type of each given parameter.
     fn validate_ty_in_method<P: hir::TyPosition>(
         &self,
-        errors: &mut ErrorStore,
+        ctx: &mut LoweringContext,
         param: Param,
         param_ty: &hir::Type<P>,
         method: &hir::Method,
     ) {
-        self.validate_ty(errors, param_ty);
+        self.validate_ty(ctx, param_ty);
 
         let linked = match &param_ty {
             hir::Type::Opaque(p) => p.link_lifetimes(self),
@@ -655,7 +641,7 @@ impl TypeContext {
                     match l {
                         MaybeStatic::NonStatic(ns) if out.contains(&ns) => {
                             let lt_name = method.lifetime_env.fmt_lifetime(ns);
-                            errors.push(LoweringError::Other(format!("Opaque slices ({param}) cannot be borrowed from. Suggestion: remove &'{lt_name} from method output.")));
+                            ctx.errors.push(LoweringError::Other(format!("Opaque slices ({param}) cannot be borrowed from. Suggestion: remove &'{lt_name} from method output.")));
                         }
                         _ => {}
                     }
@@ -707,34 +693,34 @@ impl TypeContext {
                         // This case is technically already handled in the lifetime lowerer, we're being careful
                         "comes from &-ref's lifetime in parameter".into()
                     };
-                    errors.push(LoweringError::Other(format!("Method should explicitly include this \
+                    ctx.errors.push(LoweringError::Other(format!("Method should explicitly include this \
                                         lifetime bound from {param}: '{use_longer_name}: '{use_name} ({def_cause})")))
                 }
             }
         }
     }
 
-    fn validate_type_def(&self, errors: &mut ErrorStore, def: TypeDef) {
+    fn validate_type_def(&self, ctx: &mut LoweringContext, def: TypeDef) {
         if let TypeDef::Struct(st) = def {
-            self.validate_struct(errors, st);
+            self.validate_struct(ctx, st);
         }
     }
 
-    fn validate_struct<P: hir::TyPosition>(&self, errors: &mut ErrorStore, st: &StructDef<P>) {
+    fn validate_struct<P: hir::TyPosition>(&self, ctx: &mut LoweringContext, st: &StructDef<P>) {
         if st.attrs.abi_compatible && st.lifetimes.num_lifetimes() > 0 {
-            errors.push(LoweringError::Other(format!(
+            ctx.errors.push(LoweringError::Other(format!(
                 "Struct {:?} cannot have any lifetimes if it is marked as ABI compatible.",
                 st.name
             )));
         }
 
         for f in &st.fields {
-            self.validate_ty(errors, &f.ty);
+            self.validate_ty(ctx, &f.ty);
 
             if matches!(f.ty, hir::Type::Struct(..))
                 && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed())
             {
-                errors.push(LoweringError::Other(format!(
+                ctx.errors.push(LoweringError::Other(format!(
                     "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs, try removing the borrow and storing the struct directly.",
                      st.name, f.name
                 )));
@@ -747,14 +733,14 @@ impl TypeContext {
                         match ty {
                             TypeDef::Struct(f_st) => {
                                 if !f_st.attrs.abi_compatible {
-                                    errors.push(LoweringError::Other(format!(
+                                    ctx.errors.push(LoweringError::Other(format!(
                                         "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, abi_compatible)]`.",
                                         st.name, f.name, f_st.name
                                     )));
                                 }
                             }
                             TypeDef::OutStruct(out) => {
-                                errors.push(LoweringError::Other(
+                                ctx.errors.push(LoweringError::Other(
                                     format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, abi_compatible)].")
                                 ));
                             }
@@ -762,11 +748,42 @@ impl TypeContext {
                         }
                     }
                     _ => {
-                        errors.push(LoweringError::Other(format!(
+                        ctx.errors.push(LoweringError::Other(format!(
                             "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
                             st.name, f.name
                         )));
                     }
+                }
+            }
+        }
+    }
+
+    fn validate_callback_ret(
+        &self,
+        return_type: &crate::hir::ReturnType<crate::hir::InputOnly>,
+        ctx: &mut LoweringContext,
+    ) {
+        if ctx
+            .attr_validator
+            .attrs_supported()
+            .callback_returns_must_be_fallible
+        {
+            match return_type {
+                hir::ReturnType::Fallible(_, err) => {
+                    let is_valid = if let Some(hir::Type::Enum(e)) = err {
+                        let e = self.resolve_enum(e.tcx_id);
+                        let is_valid = e.variants.iter().find(|v| v.attrs.ffi_error);
+                        is_valid.is_some()
+                    } else {
+                        false
+                    };
+
+                    if !is_valid {
+                        ctx.errors.push(LoweringError::Other("Found non #[diplomat::attr(*, ffi_error)] marked error type in trait return. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
+                    }
+                }
+                _ => {
+                    ctx.errors.push(LoweringError::Other("Backend callback return types are fallible. Return type must be a `-> Result<T, E>`. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
                 }
             }
         }
@@ -1915,6 +1932,10 @@ mod tests {
                     a : i32
                 }
 
+                impl SomeStruct {
+                    pub fn callback_unit_type_not_okay(cb : impl Fn(u32) -> ()) {}
+                }
+
                 enum SomeEnum {
                     B,
                     #[diplomat::attr(*, ffi_error)]
@@ -1943,7 +1964,8 @@ mod tests {
         let mut output = String::new();
 
         let mut attr_validator = hir::BasicAttributeValidator::new("tests");
-        attr_validator.support.trait_returns_must_be_fallible = true;
+        attr_validator.support.callback_returns_must_be_fallible = true;
+        attr_validator.support.callbacks = true;
         match hir::TypeContext::from_syn(
             &parsed,
             Default::default(),

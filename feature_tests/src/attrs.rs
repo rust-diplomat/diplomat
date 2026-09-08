@@ -11,6 +11,8 @@ use super::*;
 #[diplomat::include("src/attrs/mixins.rs")]
 #[diplomat::include("src/attrs/cache_test.rs")]
 pub mod ffi {
+    use crate::callbacks::ffi::FFIError;
+
     super::mixin_macro! {}
     super::cache_test_macro! {RenamedCachedIncludeZST}
 
@@ -89,7 +91,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(any(not(supports=callbacks), kotlin), disable)]
-        pub fn test_namespaced_callback(_t: impl Fn() -> Result<(), ()>) {
+        pub fn test_namespaced_callback(_t: impl Fn() -> Result<(), FFIError>) {
             todo!()
         }
 

@@ -11,19 +11,22 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "FFIError.hpp"
 #include "diplomat_runtime.hpp"
 
 
 namespace somelib {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_MutableCallbackHolder_new_func {
-        const void* data;
-        int32_t (*run_callback)(const void*, int32_t );
-        void (*destructor)(const void*);
-    } DiplomatCallback_MutableCallbackHolder_new_func;
+    typedef struct DiplomatCallback_MutableCallbackHolder_new_fallible_func_result {union {int32_t ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_MutableCallbackHolder_new_fallible_func_result;
 
-    somelib::capi::MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_func func_cb_wrap);
+    typedef struct DiplomatCallback_MutableCallbackHolder_new_fallible_func {
+        const void* data;
+        DiplomatCallback_MutableCallbackHolder_new_fallible_func_result (*run_callback)(const void*, int32_t );
+        void (*destructor)(const void*);
+    } DiplomatCallback_MutableCallbackHolder_new_fallible_func;
+
+    somelib::capi::MutableCallbackHolder* MutableCallbackHolder_new_fallible(DiplomatCallback_MutableCallbackHolder_new_fallible_func func_cb_wrap);
 
     int32_t MutableCallbackHolder_call(somelib::capi::MutableCallbackHolder* self, int32_t a);
 
@@ -33,8 +36,8 @@ namespace capi {
 } // namespace capi
 } // namespace
 
-inline std::unique_ptr<somelib::MutableCallbackHolder> somelib::MutableCallbackHolder::new_(std::function<int32_t(int32_t)> func) {
-    auto result = somelib::capi::MutableCallbackHolder_new({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).c_run_callback, somelib::diplomat::fn_traits(func).c_delete});
+inline std::unique_ptr<somelib::MutableCallbackHolder> somelib::MutableCallbackHolder::new_fallible(std::function<somelib::diplomat::result<int32_t, somelib::FFIError>(int32_t)> func) {
+    auto result = somelib::capi::MutableCallbackHolder_new_fallible({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).template c_run_callback_result<int32_t, somelib::FFIError, somelib::capi::DiplomatCallback_MutableCallbackHolder_new_fallible_func_result>, somelib::diplomat::fn_traits(func).c_delete});
     return std::unique_ptr<somelib::MutableCallbackHolder>(somelib::MutableCallbackHolder::FromFFI(result));
 }
 

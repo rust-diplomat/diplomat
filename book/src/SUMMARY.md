@@ -34,7 +34,7 @@
     - [Stringifiers](attrs/stringifiers.md)
     - [References](attrs/references.md)
     - [Tuples](attrs/tuples.md)
-    - [Fallible Trait Returns](attrs/fallible_trait_returns.md)
+    - [Fallible Callback Returns](attrs/fallible_callback_returns.md)
     - [Custom Extra Code](attrs/custom_extra_code.md)
   - [Notes on Diplomat and safety](safety.md)
 - [Backend developer guide](developer.md)

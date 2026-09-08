@@ -13,6 +13,7 @@
 namespace somelib {
 namespace capi { struct Unnamespaced; }
 class Unnamespaced;
+class FFIError;
 } // namespace somelib
 namespace somelib {
 namespace ns {
@@ -46,7 +47,7 @@ public:
    */
   inline static std::unique_ptr<somelib::ns::AttrOpaque1Renamed> totally_not_new();
 
-  inline static void test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t);
+  inline static void test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, somelib::FFIError>()> _t);
 
   inline static int32_t mac_test();
 

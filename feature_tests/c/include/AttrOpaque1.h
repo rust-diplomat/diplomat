@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "AttrEnum.d.h"
+#include "FFIError.d.h"
 #include "Unnamespaced.d.h"
 
 #include "AttrOpaque1.d.h"
@@ -16,7 +17,7 @@
 
 
 
-typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result { bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
+typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result {union { FFIError err;}; bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
 
 typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
     const void* data;

@@ -13,6 +13,7 @@
 namespace somelib {
 namespace capi { struct MutableCallbackHolder; }
 class MutableCallbackHolder;
+class FFIError;
 } // namespace somelib
 
 
@@ -27,7 +28,7 @@ namespace somelib {
 class MutableCallbackHolder {
 public:
 
-  inline static std::unique_ptr<somelib::MutableCallbackHolder> new_(std::function<int32_t(int32_t)> func);
+  inline static std::unique_ptr<somelib::MutableCallbackHolder> new_fallible(std::function<somelib::diplomat::result<int32_t, somelib::FFIError>(int32_t)> func);
 
   inline int32_t call(int32_t a);
 

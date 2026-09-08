@@ -1,0 +1,24 @@
+{% for e in entries %}
+#include "{{e.include_path}}"
+{% endfor %}
+
+// Helpers for callbacks and traits, to grab the representation of a struct when a callback or trait has failed.
+{% if let Some(lib_name) = lib_name %}
+namespace {{lib_name}} {
+{% endif %}
+template<typename T>
+struct get_ffi_error;
+
+{% for e in entries %}
+
+template<>
+struct get_ffi_error<{{e.name}}> {
+    static constexpr {{e.name}} get() {
+        return {{e.return_expr}};
+    }
+};
+{% endfor %}
+
+{% if let Some(lib_name) = lib_name %}
+}
+{% endif %}

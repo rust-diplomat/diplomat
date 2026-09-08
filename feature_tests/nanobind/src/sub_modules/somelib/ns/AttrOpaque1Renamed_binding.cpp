@@ -1,6 +1,7 @@
 #include "diplomat_nanobind_common.hpp"
 
 
+#include "FFIError.hpp"
 #include "Unnamespaced.hpp"
 #include "ns/AttrOpaque1Renamed.hpp"
 #include "ns/RenamedAttrEnum.hpp"

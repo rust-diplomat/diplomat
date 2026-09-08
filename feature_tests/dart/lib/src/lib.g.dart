@@ -25,6 +25,7 @@ part 'CyclicStructC.g.dart';
 part 'DefaultEnum.g.dart';
 part 'ErrorEnum.g.dart';
 part 'ErrorStruct.g.dart';
+part 'FFIError.g.dart';
 part 'FallibleOpaqueConstructor.g.dart';
 part 'Float64Vec.g.dart';
 part 'Foo.g.dart';

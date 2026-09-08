@@ -6,7 +6,6 @@
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/optional.h>
-#include <nanobind/stl/function.h>
 #include <nanobind/stl/vector.h>
 #include <nanobind/stl/bind_vector.h>
 #include <nanobind/stl/tuple.h>
@@ -14,6 +13,7 @@
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
 #include "diplomat_runtime.hpp"
+#include "diplomat_ffi_errors.hpp"
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -312,6 +312,66 @@ namespace nanobind::detail
 
         static handle from_cpp(somelib::diplomat::string_view_for_slice value, rv_policy, cleanup_list *) noexcept {
             return PyUnicode_FromStringAndSize(value.data(), value.size());
+        }
+    };
+
+    // Callbacks all take the form of std::function<result<T, E>(Args...)>:
+    template<typename T, typename E, typename... Args>
+    struct type_caster<std::function<somelib::diplomat::result<T, E>(Args...)>> {
+        static constexpr auto Name = const_name("collections.abc.Callable[[") +
+        concat(make_caster<Args>::Name...)
+        + const_name("], ") + make_caster<somelib::diplomat::result<T, E>>::Name + const_name("]");
+
+        using Value = std::function<somelib::diplomat::result<T, E>(Args...)>;
+        Value value;
+
+        struct method_owner {
+            object inner;
+
+            somelib::diplomat::result<T, E> operator()(Args... args) {
+                // Acquire the GIL:
+                gil_scoped_acquire acq;
+                handle out;
+                // nb::handle will `throw` if it encounters an issue:
+                try {
+                    // nb::handle automatically converts args for us:
+                    out = inner(args...);
+                } catch (...) {
+                    PyErr_Clear();
+                    // Diplomat Nanobind makes the assumption that we always are returning a result:
+                    return somelib::diplomat::Err(somelib::get_ffi_error<E>::get());
+                }
+                make_caster<somelib::diplomat::result<T, E>> caster;
+                if (caster.from_python(out, 0, nullptr)) {
+                    if (caster.ok_val.has_value()) {
+                        return somelib::diplomat::Ok<T>(std::move(caster.ok_val.value()));
+                    } else if (caster.err_val.has_value()) {
+                        return somelib::diplomat::Err<E>(std::move(caster.err_val.value()));
+                    } else {
+                        return somelib::diplomat::Err<E>(std::move(somelib::get_ffi_error<E>::get()));
+                    }
+                } else {
+                    return somelib::diplomat::Err<E>(std::move(somelib::get_ffi_error<E>::get()));
+                }
+            }
+        };
+        
+        template <typename T_>
+        using Cast = Value;
+        operator Value() { return value; }
+
+        bool from_python(handle src, uint8_t, cleanup_list*) {
+            if (src.is_none()) {
+                return false;
+            }
+
+            if (!PyCallable_Check(src.ptr())) {
+                return false;
+            }
+            value = method_owner {
+                object(src, borrow_t())
+            };
+            return true;
         }
     };
 }

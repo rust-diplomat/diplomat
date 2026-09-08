@@ -12,6 +12,7 @@
 #include <optional>
 #include <cstdlib>
 #include "CallbackTestingStruct.hpp"
+#include "FFIError.hpp"
 #include "MyString.hpp"
 #include "MyStruct.hpp"
 #include "MyStructContainingAnOption.hpp"
@@ -108,7 +109,7 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_diplomat_result_t;
-    typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t_result {union {const somelib::capi::Opaque* ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_opaque_t_result;
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t_result {union {const somelib::capi::Opaque* ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_opaque_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t {
         const void* data;
@@ -122,28 +123,28 @@ namespace capi {
         DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_inner_conversion_t;
-    typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t_result {union {somelib::diplomat::capi::DiplomatStringView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_str_conversion_t_result;
+    typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t_result {union {somelib::diplomat::capi::DiplomatStringView ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_str_conversion_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t {
         const void* data;
         DiplomatCallback_CallbackWrapper_test_str_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_str_conversion_t;
-    typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result {union {somelib::diplomat::capi::DiplomatF64View ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result;
+    typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result {union {somelib::diplomat::capi::DiplomatF64View ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t {
         const void* data;
         DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_slice_conversion_t;
-    typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {somelib::capi::MyStruct_option ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
+    typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {somelib::capi::MyStruct_option ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t {
         const void* data;
         DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
     } DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t;
-    typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {somelib::capi::DiplomatPrimitiveStructView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
+    typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {somelib::capi::DiplomatPrimitiveStructView ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
 
     typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
         const void* data;
@@ -279,17 +280,17 @@ inline void somelib::CallbackWrapper::test_diplomat_result(std::function<somelib
     somelib::capi::CallbackWrapper_test_diplomat_result({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<size_t, size_t, somelib::capi::DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline std::string somelib::CallbackWrapper::test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t) {
+inline std::string somelib::CallbackWrapper::test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, somelib::FFIError>()> t) {
     std::string output;
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString(output);
-    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
     return output;
 }
 template<typename W>
-inline void somelib::CallbackWrapper::test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t, W& writeable) {
+inline void somelib::CallbackWrapper::test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, somelib::FFIError>()> t, W& writeable) {
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
-    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
+    somelib::capi::CallbackWrapper_test_result_opaque({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<const somelib::Opaque&, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_opaque_t_result>, somelib::diplomat::fn_traits(t).c_delete},
         &write);
 }
 
@@ -297,20 +298,20 @@ inline void somelib::CallbackWrapper::test_inner_conversion(std::function<someli
     somelib::capi::CallbackWrapper_test_inner_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::MyStructContainingAnOption, size_t, somelib::capi::DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_str_conversion(std::function<somelib::diplomat::result<std::string_view, std::monostate>()> t) {
-    somelib::capi::CallbackWrapper_test_str_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::string_view, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_str_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+inline void somelib::CallbackWrapper::test_str_conversion(std::function<somelib::diplomat::result<std::string_view, somelib::FFIError>()> t) {
+    somelib::capi::CallbackWrapper_test_str_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::string_view, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_str_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, std::monostate>()> t) {
-    somelib::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const double>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+inline void somelib::CallbackWrapper::test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, somelib::FFIError>()> t) {
+    somelib::capi::CallbackWrapper_test_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const double>, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t) {
-    somelib::capi::CallbackWrapper_test_result_option_struct_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::optional<somelib::MyStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+inline void somelib::CallbackWrapper::test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, somelib::FFIError>()> t) {
+    somelib::capi::CallbackWrapper_test_result_option_struct_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<std::optional<somelib::MyStruct>, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
-inline void somelib::CallbackWrapper::test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t) {
-    somelib::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate, somelib::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
+inline void somelib::CallbackWrapper::test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, somelib::FFIError>()> t) {
+    somelib::capi::CallbackWrapper_test_struct_slice_conversion({new decltype(t)(std::move(t)), somelib::diplomat::fn_traits(t).template c_run_callback_result<somelib::diplomat::span<const somelib::PrimitiveStruct>, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result>, somelib::diplomat::fn_traits(t).c_delete});
 }
 
 inline std::string somelib::CallbackWrapper::test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t) {

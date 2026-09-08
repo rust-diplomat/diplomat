@@ -61,15 +61,14 @@ void add_OpaqueMut_binding(nb::module_);
 void add_OpaqueMutexedString_binding(nb::module_);
 void add_PrimitiveStructVec_binding(nb::module_);
 void add_Utf16Wrap_binding(nb::module_);
+void add_FFIError_binding(nb::module_);
 void add_UnimportedEnum_binding(nb::module_);
 void add_OptionEnum_binding(nb::module_);
 void add_ErrorEnum_binding(nb::module_);
 void add_ContiguousEnum_binding(nb::module_);
 void add_DefaultEnum_binding(nb::module_);
 void add_MyEnum_binding(nb::module_);
-void add_FFIError_binding(nb::module_);
 void add_FallibleTesterTrait_binding(nb::module_);
-void add_free_function_binding(nb::module_);
 }namespace somelib::mylib{
   
 void add_MethodOverloading_binding(nb::module_);
@@ -228,15 +227,14 @@ NB_MODULE(somelib, mod)
     add_OpaqueMutexedString_binding(mod);
     add_PrimitiveStructVec_binding(mod);
     add_Utf16Wrap_binding(mod);
+    add_FFIError_binding(mod);
     add_UnimportedEnum_binding(mod);
     add_OptionEnum_binding(mod);
     add_ErrorEnum_binding(mod);
     add_ContiguousEnum_binding(mod);
     add_DefaultEnum_binding(mod);
     add_MyEnum_binding(mod);
-    add_FFIError_binding(mod);
     add_FallibleTesterTrait_binding(mod);
-    add_free_function_binding(mod);
     
     mylib::add_MethodOverloading_binding(mylib_mod);
     

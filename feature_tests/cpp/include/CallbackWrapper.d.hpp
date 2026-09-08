@@ -19,6 +19,7 @@ struct CallbackTestingStruct;
 struct MyStruct;
 struct MyStructContainingAnOption;
 struct PrimitiveStruct;
+class FFIError;
 } // namespace somelib
 
 
@@ -68,19 +69,19 @@ struct CallbackWrapper {
 
   inline static void test_diplomat_result(std::function<somelib::diplomat::result<size_t, size_t>()> t);
 
-  inline static std::string test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t);
+  inline static std::string test_result_opaque(std::function<somelib::diplomat::result<const somelib::Opaque&, somelib::FFIError>()> t);
   template<typename W>
-  inline static void test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, std::monostate>()> t, W& writeable_output);
+  inline static void test_result_opaque_write(std::function<somelib::diplomat::result<const somelib::Opaque&, somelib::FFIError>()> t, W& writeable_output);
 
   inline static void test_inner_conversion(std::function<somelib::diplomat::result<somelib::MyStructContainingAnOption, size_t>()> t);
 
-  inline static void test_str_conversion(std::function<somelib::diplomat::result<std::string_view, std::monostate>()> t);
+  inline static void test_str_conversion(std::function<somelib::diplomat::result<std::string_view, somelib::FFIError>()> t);
 
-  inline static void test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, std::monostate>()> t);
+  inline static void test_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const double>, somelib::FFIError>()> t);
 
-  inline static void test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, std::monostate>()> t);
+  inline static void test_result_option_struct_conversion(std::function<somelib::diplomat::result<std::optional<somelib::MyStruct>, somelib::FFIError>()> t);
 
-  inline static void test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, std::monostate>()> t);
+  inline static void test_struct_slice_conversion(std::function<somelib::diplomat::result<somelib::diplomat::span<const somelib::PrimitiveStruct>, somelib::FFIError>()> t);
 
   inline static std::string test_opaque_result_error(std::function<somelib::diplomat::result<std::monostate, const somelib::Opaque&>()> t);
   template<typename W>

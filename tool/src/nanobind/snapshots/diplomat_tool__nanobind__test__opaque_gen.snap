@@ -12,5 +12,5 @@ opaque
     .def_static("do_thing", &mylib::OpaqueStruct::do_thing)
     .def_static("new", std::move(maybe_op_unwrap(nb::overload_cast<>(&mylib::OpaqueStruct::new_))))
     .def_static("new", std::move(maybe_op_unwrap(nb::overload_cast<diplomat::span<const diplomat::string_view_for_slice>>(&mylib::OpaqueStruct::new_))), "sl"_a)
-    .def_static("takes_callback", nb::overload_cast<std::function<void()>>(&mylib::OpaqueStruct::takes_callback), "f"_a)
-    .def_static("takes_callback", nb::overload_cast<std::function<void(bool)>>(&mylib::OpaqueStruct::takes_callback), "f"_a);
+    .def_static("takes_callback", nb::overload_cast<std::function<diplomat::result<std::monostate, mylib::FFIError>()>>(&mylib::OpaqueStruct::takes_callback), "f"_a)
+    .def_static("takes_callback", nb::overload_cast<std::function<diplomat::result<std::monostate, mylib::FFIError>(bool)>>(&mylib::OpaqueStruct::takes_callback), "f"_a);

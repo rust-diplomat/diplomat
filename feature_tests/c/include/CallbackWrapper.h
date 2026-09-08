@@ -8,6 +8,7 @@
 #include "diplomat_runtime.h"
 
 #include "CallbackTestingStruct.d.h"
+#include "FFIError.d.h"
 #include "MyString.d.h"
 #include "MyStruct.d.h"
 #include "MyStructContainingAnOption.d.h"
@@ -105,7 +106,7 @@ typedef struct DiplomatCallback_CallbackWrapper_test_diplomat_result_t {
     DiplomatCallback_CallbackWrapper_test_diplomat_result_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_diplomat_result_t;
-typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t_result {union {const Opaque* ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_opaque_t_result;
+typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t_result {union {const Opaque* ok; FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_opaque_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_result_opaque_t {
     const void* data;
@@ -119,28 +120,28 @@ typedef struct DiplomatCallback_CallbackWrapper_test_inner_conversion_t {
     DiplomatCallback_CallbackWrapper_test_inner_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_inner_conversion_t;
-typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t_result {union {DiplomatStringView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_str_conversion_t_result;
+typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t_result {union {DiplomatStringView ok; FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_str_conversion_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_str_conversion_t {
     const void* data;
     DiplomatCallback_CallbackWrapper_test_str_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_str_conversion_t;
-typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result {union {DiplomatF64View ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result;
+typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result {union {DiplomatF64View ok; FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_slice_conversion_t {
     const void* data;
     DiplomatCallback_CallbackWrapper_test_slice_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_slice_conversion_t;
-typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {MyStruct_option ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
+typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result {union {MyStruct_option ok; FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t {
     const void* data;
     DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t_result (*run_callback)(const void*);
     void (*destructor)(const void*);
 } DiplomatCallback_CallbackWrapper_test_result_option_struct_conversion_t;
-typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {DiplomatPrimitiveStructView ok; }; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
+typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result {union {DiplomatPrimitiveStructView ok; FFIError err;}; bool is_ok;} DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t_result;
 
 typedef struct DiplomatCallback_CallbackWrapper_test_struct_slice_conversion_t {
     const void* data;

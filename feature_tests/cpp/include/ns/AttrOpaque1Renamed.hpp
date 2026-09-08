@@ -11,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "../FFIError.hpp"
 #include "../Unnamespaced.hpp"
 #include "../diplomat_runtime.hpp"
 #include "RenamedAttrEnum.hpp"
@@ -19,7 +20,7 @@
 namespace somelib::ns {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result { bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
+    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result {union { somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
 
     typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
         const void* data;
@@ -61,8 +62,8 @@ inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1
     return std::unique_ptr<somelib::ns::AttrOpaque1Renamed>(somelib::ns::AttrOpaque1Renamed::FromFFI(result));
 }
 
-inline void somelib::ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, std::monostate>()> _t) {
-    somelib::ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), somelib::diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, std::monostate, somelib::ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, somelib::diplomat::fn_traits(_t).c_delete});
+inline void somelib::ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, somelib::FFIError>()> _t) {
+    somelib::ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), somelib::diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, somelib::FFIError, somelib::ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, somelib::diplomat::fn_traits(_t).c_delete});
 }
 
 inline int32_t somelib::ns::AttrOpaque1Renamed::mac_test() {
