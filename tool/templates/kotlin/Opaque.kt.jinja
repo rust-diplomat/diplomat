@@ -33,8 +33,9 @@ typealias {{type_name}}IteratorItem = {{iter_ty}}
 {%- when None %}
 {%- endmatch %}
 {% if !docs.is_empty() -%}
-/** {{docs}}
-*/
+/**
+{{docs|prefix_trimmed(" * ")}}
+ */
 {%- endif %}
 class {{type_name}} internal constructor (
     internal val handle: Pointer,

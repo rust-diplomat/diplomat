@@ -195,9 +195,10 @@ class ResultOpaque internal constructor (
         }
     }
     
-    /** When we take &str, the return type becomes a Result
-    *Test that this interacts gracefully with returning a reference type
-    */
+    /**
+     * When we take &str, the return type becomes a Result
+     * Test that this interacts gracefully with returning a reference type
+     */
     fun takesStr(v: String): ResultOpaque {
         // This lifetime edge depends on lifetimes: 'a
         val aEdges: MutableList<Any> = mutableListOf(this);

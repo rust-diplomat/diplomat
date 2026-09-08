@@ -1,7 +1,8 @@
 
 {%- if !docs.is_empty() %}
-/** {{docs}}
-*/
+/**
+{{docs|prefix_trimmed(" * ")}}
+ */
 {%- endif %}
 {% if add_override_specifier_for_opaque_self_methods %}override {% endif -%}
 {{ declaration }} {

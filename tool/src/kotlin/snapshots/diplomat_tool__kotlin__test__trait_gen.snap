@@ -9,11 +9,13 @@ import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
-/** Documentation for this trait!
-*/
+/**
+ * Documentation for this trait!
+ */
 interface TesterTrait {
-    /** Trait function docs
-    */
+    /**
+     * Trait function docs
+     */
     fun testTraitFn(x: Int, y: Int, z: UByte): Int;
     fun testVoidTraitFn(): Unit;
     fun testStructTraitFn(s: TraitTestingStruct): Int;

@@ -10,10 +10,11 @@ internal interface DataProviderLib: Library {
     fun icu4x_DataProvider_new_static_mv1(): Pointer
     fun icu4x_DataProvider_returns_result_mv1(): ResultUnitUnit
 }
-/** An  data provider, capable of loading  data keys from some source.
-*
-*See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
-*/
+/**
+ * An  data provider, capable of loading  data keys from some source.
+ *
+ * See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
+ */
 class DataProvider internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
@@ -42,8 +43,9 @@ class DataProvider internal constructor (
         internal val lib: DataProviderLib = Native.load("diplomat_example", libClass)
         @JvmStatic
         
-        /** See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
-        */
+        /**
+         * See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
+         */
         fun newStatic(): DataProvider {
             
             val returnVal = lib.icu4x_DataProvider_new_static_mv1();
@@ -54,8 +56,9 @@ class DataProvider internal constructor (
         }
         @JvmStatic
         
-        /** This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
-        */
+        /**
+         * This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+         */
         fun returnsResult(): Result<Unit> {
             
             val returnVal = lib.icu4x_DataProvider_returns_result_mv1();

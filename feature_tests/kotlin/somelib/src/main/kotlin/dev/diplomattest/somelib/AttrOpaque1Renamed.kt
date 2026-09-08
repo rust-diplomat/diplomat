@@ -22,9 +22,10 @@ internal interface AttrOpaque1RenamedInterface {
     fun useUnnamespaced(un: Unnamespaced): Unit
     fun useNamespaced(n: RenamedAttrEnum): Unit
 }
-/** Some example docs
-*Back to all docs
-*/
+/**
+ * Some example docs
+ * Back to all docs
+ */
 class AttrOpaque1Renamed internal constructor (
     internal val handle: Pointer,
     // These ensure that anything that is borrowed is kept alive and not cleaned
@@ -63,8 +64,9 @@ class AttrOpaque1Renamed internal constructor (
         }
         @JvmStatic
         
-        /** More example docs
-        */
+        /**
+         * More example docs
+         */
         fun new_(): AttrOpaque1Renamed {
             
             val returnVal = lib.namespace_AttrOpaque1_new();

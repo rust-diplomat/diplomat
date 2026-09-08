@@ -19,6 +19,7 @@ use std::iter::once;
 mod formatter;
 use formatter::KotlinFormatter;
 
+use crate::filters;
 use crate::{Config, ErrorStore, FileMap};
 use serde::{Deserialize, Serialize};
 

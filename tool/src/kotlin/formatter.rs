@@ -108,8 +108,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
     pub fn fmt_docs(&self, docs: &Docs) -> String {
         docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
-            .replace('\n', "\n*")
-            .replace(" \n", "\n")
+            .to_string()
     }
 
     pub fn fmt_primitive_slice(&self, ty: PrimitiveType) -> String {

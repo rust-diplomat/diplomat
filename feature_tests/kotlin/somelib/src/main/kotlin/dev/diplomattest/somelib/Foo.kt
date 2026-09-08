@@ -82,8 +82,9 @@ class Foo internal constructor (
         }
         @JvmStatic
         
-        /** Test that the extraction logic correctly pins the right fields
-        */
+        /**
+         * Test that the extraction logic correctly pins the right fields
+         */
         fun extractFromBounds(bounds: BorrowedFieldsWithBounds, anotherString: String): Foo {
             val temporaryEdgeArena: MutableList<Any> = mutableListOf()
             // This lifetime edge depends on lifetimes: 'a, 'y, 'z
