@@ -75,3 +75,15 @@ def test_tuples():
 
     assert somelib.TupleStruct.takes_st_as_tuple((10, 0, somelib.MyStruct(), somelib.Opaque())) == 10
     assert somelib.TupleStruct.takes_st_as_tuple((10, 0, somelib.MyStruct(), somelib.Opaque()), 20) == 30
+
+def test_struct_char_constructor_none_defaults():
+    # A struct without `#[diplomat::attr(auto, constructor)]` gets an auto-generated
+    # positional constructor that marks every member `.none()` (see
+    # PrimitiveStruct_binding.cpp). `PrimitiveStruct.b` is a `char32_t`, so this
+    # exercises the char32_t caster through that constructor: a valid char must work,
+    # and None must default-initialize to '\0' (mirroring C struct zero-init) instead
+    # of crashing.
+    ps = somelib.PrimitiveStruct(1.0, True, U'餐', 0, 0, 0)
+    assert ps.b == U'餐'
+    ps = somelib.PrimitiveStruct(1.0, True, None, 0, 0, 0)
+    assert ps.b == U'\0'
