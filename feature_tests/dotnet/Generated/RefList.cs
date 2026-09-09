@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RefList : IDiplomatScoped, IDisposable
+public partial class RefList : IDisposable
 {
     private unsafe RustHandle<Raw.RefList>? _inner;
 
@@ -39,10 +39,10 @@ public partial class RefList : IDiplomatScoped, IDisposable
 
     internal unsafe RefList(
         Raw.RefList* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.RefList>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.RefList>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -51,13 +51,14 @@ public partial class RefList : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public static RefList Node(RefListParameter data)
     {
         unsafe
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
-            using (BorrowLease<Raw.RefListParameter> dataLease = data.BorrowShared())
+            using (BorrowLease<Raw.RefListParameter> dataLease = data.Lease(BorrowKind.Shared))
             {
                 Raw.RefList* result = Raw.RefList.Node(dataLease.Ptr);
                 GC.KeepAlive(data);
@@ -66,37 +67,14 @@ public partial class RefList : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.RefList* AsFFI()
+    internal unsafe BorrowLease<Raw.RefList> Lease(BorrowKind kind)
     {
         RustHandle<Raw.RefList>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("RefList");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.RefList> BorrowShared()
-    {
-        RustHandle<Raw.RefList>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RefList");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.RefList> BorrowExclusive()
-    {
-        RustHandle<Raw.RefList>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RefList");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -105,24 +83,17 @@ public partial class RefList : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.RefList>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>RefList</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

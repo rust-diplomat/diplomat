@@ -3,12 +3,15 @@ pub mod ffi {
     use diplomat_runtime::{DiplomatChar, DiplomatOption, DiplomatWrite};
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OptionOpaque(i32);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OptionOpaqueChar(char);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::attr(dart, disable)]
     pub struct OptionString(String);
 

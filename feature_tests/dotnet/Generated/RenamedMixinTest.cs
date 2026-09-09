@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RenamedMixinTest : IDiplomatScoped, IDisposable
+public partial class RenamedMixinTest
 {
     private unsafe RustHandle<Raw.RenamedMixinTest>? _inner;
 
@@ -39,10 +39,10 @@ public partial class RenamedMixinTest : IDiplomatScoped, IDisposable
 
     internal unsafe RenamedMixinTest(
         Raw.RenamedMixinTest* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.RenamedMixinTest>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.RenamedMixinTest>.Borrowed(handle, ownership, edges);
     }
 
     public static string Hello()
@@ -62,37 +62,14 @@ public partial class RenamedMixinTest : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.RenamedMixinTest* AsFFI()
+    internal unsafe BorrowLease<Raw.RenamedMixinTest> Lease(BorrowKind kind)
     {
         RustHandle<Raw.RenamedMixinTest>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("RenamedMixinTest");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.RenamedMixinTest> BorrowShared()
-    {
-        RustHandle<Raw.RenamedMixinTest>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RenamedMixinTest");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.RenamedMixinTest> BorrowExclusive()
-    {
-        RustHandle<Raw.RenamedMixinTest>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RenamedMixinTest");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -101,33 +78,8 @@ public partial class RenamedMixinTest : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.RenamedMixinTest>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>RenamedMixinTest</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~RenamedMixinTest()

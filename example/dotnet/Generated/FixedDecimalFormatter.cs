@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
+public partial class FixedDecimalFormatter
 {
     private unsafe RustHandle<Raw.FixedDecimalFormatter>? _inner;
 
@@ -39,10 +39,10 @@ public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
 
     internal unsafe FixedDecimalFormatter(
         Raw.FixedDecimalFormatter* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.FixedDecimalFormatter>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.FixedDecimalFormatter>.Borrowed(handle, ownership, edges);
     }
 
     /// <exception cref="InvalidOperationException"></exception>
@@ -55,8 +55,8 @@ public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
         {
             if (locale == null) throw new ArgumentNullException(nameof(locale));
             if (provider == null) throw new ArgumentNullException(nameof(provider));
-            using (BorrowLease<Raw.Locale> localeLease = locale.BorrowShared())
-            using (BorrowLease<Raw.DataProvider> providerLease = provider.BorrowShared())
+            using (BorrowLease<Raw.Locale> localeLease = locale.Lease(BorrowKind.Shared))
+            using (BorrowLease<Raw.DataProvider> providerLease = provider.Lease(BorrowKind.Shared))
             {
                 var result = Raw.FixedDecimalFormatter.TryNew(localeLease.Ptr, providerLease.Ptr, options.AsFFI());
                 GC.KeepAlive(locale);
@@ -75,8 +75,8 @@ public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
         unsafe
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
-            using (BorrowLease<Raw.FixedDecimalFormatter> selfLease = BorrowShared())
-            using (BorrowLease<Raw.FixedDecimal> valueLease = value.BorrowShared())
+            using (BorrowLease<Raw.FixedDecimalFormatter> selfLease = Lease(BorrowKind.Shared))
+            using (BorrowLease<Raw.FixedDecimal> valueLease = value.Lease(BorrowKind.Shared))
             {
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
@@ -94,37 +94,14 @@ public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.FixedDecimalFormatter* AsFFI()
+    internal unsafe BorrowLease<Raw.FixedDecimalFormatter> Lease(BorrowKind kind)
     {
         RustHandle<Raw.FixedDecimalFormatter>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("FixedDecimalFormatter");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.FixedDecimalFormatter> BorrowShared()
-    {
-        RustHandle<Raw.FixedDecimalFormatter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("FixedDecimalFormatter");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.FixedDecimalFormatter> BorrowExclusive()
-    {
-        RustHandle<Raw.FixedDecimalFormatter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("FixedDecimalFormatter");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -133,33 +110,8 @@ public partial class FixedDecimalFormatter : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.FixedDecimalFormatter>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>FixedDecimalFormatter</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~FixedDecimalFormatter()

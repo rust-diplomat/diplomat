@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Two : IDiplomatScoped, IDisposable
+public partial class Two
 {
     private unsafe RustHandle<Raw.Two>? _inner;
 
@@ -39,43 +39,20 @@ public partial class Two : IDiplomatScoped, IDisposable
 
     internal unsafe Two(
         Raw.Two* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.Two>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.Two>.Borrowed(handle, ownership, edges);
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.Two* AsFFI()
+    internal unsafe BorrowLease<Raw.Two> Lease(BorrowKind kind)
     {
         RustHandle<Raw.Two>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("Two");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.Two> BorrowShared()
-    {
-        RustHandle<Raw.Two>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Two");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.Two> BorrowExclusive()
-    {
-        RustHandle<Raw.Two>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Two");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -84,33 +61,8 @@ public partial class Two : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.Two>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>Two</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~Two()

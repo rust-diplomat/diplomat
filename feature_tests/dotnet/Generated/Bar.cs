@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Bar : IDiplomatScoped, IDisposable
+public partial class Bar : IDisposable
 {
     private unsafe RustHandle<Raw.Bar>? _inner;
 
@@ -20,6 +20,7 @@ public partial class Bar : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public Foo Foo
     {
@@ -27,11 +28,11 @@ public partial class Bar : IDiplomatScoped, IDisposable
         {
             unsafe
             {
-                using (BorrowLease<Raw.Bar> selfLease = BorrowShared())
+                using (BorrowLease<Raw.Bar> selfLease = Lease(BorrowKind.Shared))
                 {
                     Raw.Foo* result = Raw.Bar.Foo(selfLease.Ptr);
                     GC.KeepAlive(this);
-                    return new Foo(result, BorrowKind.Shared, selfLease);
+                    return new Foo(result, Ownership.SharedView, selfLease);
                 }
             }
         }
@@ -62,43 +63,20 @@ public partial class Bar : IDiplomatScoped, IDisposable
 
     internal unsafe Bar(
         Raw.Bar* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.Bar>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.Bar>.Borrowed(handle, ownership, edges);
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.Bar* AsFFI()
+    internal unsafe BorrowLease<Raw.Bar> Lease(BorrowKind kind)
     {
         RustHandle<Raw.Bar>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("Bar");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.Bar> BorrowShared()
-    {
-        RustHandle<Raw.Bar>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Bar");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.Bar> BorrowExclusive()
-    {
-        RustHandle<Raw.Bar>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Bar");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -107,24 +85,17 @@ public partial class Bar : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.Bar>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>Bar</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

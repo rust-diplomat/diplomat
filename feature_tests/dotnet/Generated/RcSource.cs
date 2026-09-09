@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RcSource : IDiplomatScoped, IDisposable
+public partial class RcSource : IDisposable
 {
     private unsafe RustHandle<Raw.RcSource>? _inner;
 
@@ -39,10 +39,10 @@ public partial class RcSource : IDiplomatScoped, IDisposable
 
     internal unsafe RcSource(
         Raw.RcSource* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.RcSource>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.RcSource>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -61,7 +61,7 @@ public partial class RcSource : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.RcSource> selfLease = BorrowShared())
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.RcSource.Id(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -76,36 +76,59 @@ public partial class RcSource : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public RcSource View()
     {
         unsafe
         {
-            using (BorrowLease<Raw.RcSource> selfLease = BorrowShared())
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.RcSource* result = Raw.RcSource.View(selfLease.Ptr);
                 GC.KeepAlive(this);
-                return new RcSource(result, BorrowKind.Shared, selfLease);
+                return new RcSource(result, Ownership.SharedView, selfLease);
             }
         }
     }
 
     /// <returns>
-    /// A scoped use of the Rust-backed <c>RcSource</c>.
+    /// An exclusive view into the Rust-backed <c>RcSource</c>.
     /// </returns>
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-    /// Dispose the returned scope when you finish using the value so the borrow ends promptly.
+    /// The returned value holds an exclusive borrow on its source.
+    /// Dispose the returned value to end the exclusive borrow and release its reference to the source.
     /// </remarks>
-    public ScopedUse<RcSource> ViewMut()
+    public RcSource ViewMut()
     {
         unsafe
         {
-            using (BorrowLease<Raw.RcSource> selfLease = BorrowExclusive())
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Exclusive))
             {
                 Raw.RcSource* result = Raw.RcSource.ViewMut(selfLease.Ptr);
                 GC.KeepAlive(this);
-                return new ScopedUse<RcSource>(new RcSource(result, BorrowKind.Exclusive, selfLease));
+                return new RcSource(result, Ownership.ExclusiveView, selfLease);
+            }
+        }
+    }
+
+    /// <returns>
+    /// An exclusive view into the Rust-backed <c>RcSource</c>.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// The returned value holds an exclusive borrow on its source.
+    /// Dispose the returned value to end the exclusive borrow and release its reference to the source.
+    /// </remarks>
+    public RcSource? MaybeViewMut(bool present)
+    {
+        unsafe
+        {
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Exclusive))
+            {
+                Raw.RcSource* result = Raw.RcSource.MaybeViewMut(selfLease.Ptr, present);
+                GC.KeepAlive(this);
+                return result == null ? null : new RcSource(result, Ownership.ExclusiveView, selfLease);
             }
         }
     }
@@ -114,7 +137,7 @@ public partial class RcSource : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.RcSource> selfLease = BorrowExclusive())
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Exclusive))
             {
                 var result = Raw.RcSource.PingMutable(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -129,12 +152,13 @@ public partial class RcSource : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public RcDependent MakeDependent()
     {
         unsafe
         {
-            using (BorrowLease<Raw.RcSource> selfLease = BorrowShared())
+            using (BorrowLease<Raw.RcSource> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.RcDependent* result = Raw.RcSource.MakeDependent(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -167,37 +191,14 @@ public partial class RcSource : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.RcSource* AsFFI()
+    internal unsafe BorrowLease<Raw.RcSource> Lease(BorrowKind kind)
     {
         RustHandle<Raw.RcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("RcSource");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.RcSource> BorrowShared()
-    {
-        RustHandle<Raw.RcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RcSource");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.RcSource> BorrowExclusive()
-    {
-        RustHandle<Raw.RcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RcSource");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -206,24 +207,17 @@ public partial class RcSource : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.RcSource>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>RcSource</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

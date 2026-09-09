@@ -4,10 +4,14 @@ pub mod ffi {
 
     use diplomat_runtime::DiplomatStr16;
 
+    // .NET requires the attribute here: `Bar::foo` hands out a view of this and
+    // `Bar` is disposable, so a finalizer-only `Foo` would defer `Bar`'s release.
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct Foo<'a>(&'a DiplomatStr);
 
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
@@ -142,6 +146,7 @@ pub mod ffi {
 
     #[derive(Copy, Clone)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct One<'a>(super::One<'a>);
 
     #[derive(Copy, Clone)]
@@ -307,7 +312,10 @@ pub mod ffi {
     // The Vec type stores the underlying type, and when it returns accessors, it does so
     // via transparent_convert and non-owning references. Iterators, iterables, and getters
     // are all handled via attributes, which may have slightly different codepaths.
+    // .NET requires the attribute here: `OpaqueThinVec::first` returns a view of
+    // this and the vec is disposable.
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
@@ -329,6 +337,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OpaqueThinIter<'a>(pub std::slice::Iter<'a, crate::lifetimes::Internal>);
 
     impl<'a> OpaqueThinIter<'a> {
@@ -339,6 +348,7 @@ pub mod ffi {
     }
 
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct OpaqueThinVec(std::vec::Vec<crate::lifetimes::Internal>);
 
     impl OpaqueThinVec {
@@ -461,6 +471,7 @@ pub mod ffi {
     // the borrow would dangle.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct BorrowingError<'a>(&'a OpaqueThinVec);
 
     impl<'a> BorrowingError<'a> {
@@ -513,6 +524,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct DisposableDropProbe;
 
     impl DisposableDropProbe {
@@ -557,6 +569,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct RcSource(u64);
 
     impl RcSource {
@@ -577,6 +590,10 @@ pub mod ffi {
 
         pub fn view_mut<'b>(&'b mut self) -> &'b mut Self {
             self
+        }
+
+        pub fn maybe_view_mut<'b>(&'b mut self, present: bool) -> Option<&'b mut Self> {
+            present.then_some(self)
         }
 
         pub fn ping_mutable(&mut self) -> bool {
@@ -606,6 +623,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct RcDependent<'a>(&'a RcSource, u64);
 
     impl<'a> RcDependent<'a> {
@@ -639,6 +657,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct RcDependent2<'b, 'a: 'b>(&'b RcDependent<'a>, u64);
 
     impl<'b, 'a: 'b> RcDependent2<'b, 'a> {
@@ -662,6 +681,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct BorrowSafetyProbe;
 
     impl BorrowSafetyProbe {
@@ -725,6 +745,14 @@ pub mod ffi {
             true
         }
 
+        pub fn view<'b>(&'b self) -> &'b Self {
+            self
+        }
+
+        pub fn view_mut<'b>(&'b mut self) -> &'b mut Self {
+            self
+        }
+
         pub fn borrow_static_from_optional<'a>(
             first: Option<&'a BorrowSafetyProbe>,
             second: Option<&'a BorrowSafetyProbe>,
@@ -768,6 +796,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct RcFinalizerDependent<'a>(&'a RcFinalizerSource, u64);
 
     impl<'a> RcFinalizerDependent<'a> {
@@ -803,6 +832,7 @@ pub mod ffi {
     // moved/corrupted buffer is directly observable from C#.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct PinnedRcSource<'a>(pub(crate) &'a [u8]);
 
     impl<'a> PinnedRcSource<'a> {
@@ -842,6 +872,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     pub struct PinnedRcDependent<'a>(&'a PinnedRcSource<'a>);
 
     impl<'a> PinnedRcDependent<'a> {

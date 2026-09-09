@@ -141,4 +141,68 @@ public sealed class RuntimeBorrowSafetyTests
         span.Dispose();
         Assert.Equal(1ul, BorrowSafetyProbe.DropCount());
     }
+
+    [Fact]
+    public async Task ExclusiveView_DisposedDuringInFlightCall_ReleasesSourceOnlyAfterCallReturns()
+    {
+        BorrowSafetyProbe.ResetMutableCall();
+        using BorrowSafetyProbe probe = BorrowSafetyProbe.Create();
+        BorrowSafetyProbe view = probe.ViewMut();
+        Task heldCall = Task.Factory.StartNew(
+            view.HoldMutable,
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default
+        );
+
+        try
+        {
+            Assert.True(
+                SpinWait.SpinUntil(BorrowSafetyProbe.MutableCallEntered, TimeSpan.FromSeconds(5))
+            );
+            view.Dispose();
+            Assert.Throws<InvalidOperationException>(() => probe.PingMutable());
+            Assert.Throws<ObjectDisposedException>(() => view.PingMutable());
+        }
+        finally
+        {
+            BorrowSafetyProbe.ReleaseMutableCall();
+            await AwaitWithTimeout(heldCall);
+        }
+
+        Assert.True(probe.PingMutable());
+    }
+
+    [Fact]
+    public async Task SharedView_CallDuringSourceExclusiveCall_Throws_ThenStaysInvalidated()
+    {
+        BorrowSafetyProbe.ResetMutableCall();
+        using BorrowSafetyProbe probe = BorrowSafetyProbe.Create();
+        using BorrowSafetyProbe view = probe.View();
+        Assert.True(view.PingShared());
+
+        Task heldCall = Task.Factory.StartNew(
+            probe.HoldMutable,
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning,
+            TaskScheduler.Default
+        );
+
+        try
+        {
+            Assert.True(
+                SpinWait.SpinUntil(BorrowSafetyProbe.MutableCallEntered, TimeSpan.FromSeconds(5))
+            );
+            Assert.Throws<InvalidOperationException>(() => view.PingShared());
+        }
+        finally
+        {
+            BorrowSafetyProbe.ReleaseMutableCall();
+            await AwaitWithTimeout(heldCall);
+        }
+
+        Assert.Throws<InvalidOperationException>(() => view.PingShared());
+        using BorrowSafetyProbe refreshed = probe.View();
+        Assert.True(refreshed.PingShared());
+    }
 }

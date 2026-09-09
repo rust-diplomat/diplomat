@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class GcRaceProbe : IDiplomatScoped, IDisposable
+public partial class GcRaceProbe
 {
     private unsafe RustHandle<Raw.GcRaceProbe>? _inner;
 
@@ -39,10 +39,10 @@ public partial class GcRaceProbe : IDiplomatScoped, IDisposable
 
     internal unsafe GcRaceProbe(
         Raw.GcRaceProbe* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.GcRaceProbe>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.GcRaceProbe>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -61,7 +61,7 @@ public partial class GcRaceProbe : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.GcRaceProbe> selfLease = BorrowShared())
+            using (BorrowLease<Raw.GcRaceProbe> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.GcRaceProbe.DropsDuringSpin(selfLease.Ptr, millis);
                 GC.KeepAlive(this);
@@ -70,37 +70,14 @@ public partial class GcRaceProbe : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.GcRaceProbe* AsFFI()
+    internal unsafe BorrowLease<Raw.GcRaceProbe> Lease(BorrowKind kind)
     {
         RustHandle<Raw.GcRaceProbe>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("GcRaceProbe");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.GcRaceProbe> BorrowShared()
-    {
-        RustHandle<Raw.GcRaceProbe>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("GcRaceProbe");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.GcRaceProbe> BorrowExclusive()
-    {
-        RustHandle<Raw.GcRaceProbe>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("GcRaceProbe");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -109,33 +86,8 @@ public partial class GcRaceProbe : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.GcRaceProbe>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>GcRaceProbe</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~GcRaceProbe()

@@ -21,6 +21,9 @@ internal partial struct RcSource
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcSource_view_mut", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern RcSource* ViewMut(RcSource* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcSource_maybe_view_mut", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern RcSource* MaybeViewMut(RcSource* handle, [MarshalAs(UnmanagedType.U1)] bool present);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcSource_ping_mutable", CallingConvention = CallingConvention.Cdecl)]
     [return: MarshalAs(UnmanagedType.U1)]
     internal static unsafe extern bool PingMutable(RcSource* handle);

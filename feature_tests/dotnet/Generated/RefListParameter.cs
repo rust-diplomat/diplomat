@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RefListParameter : IDiplomatScoped, IDisposable
+public partial class RefListParameter
 {
     private unsafe RustHandle<Raw.RefListParameter>? _inner;
 
@@ -39,43 +39,20 @@ public partial class RefListParameter : IDiplomatScoped, IDisposable
 
     internal unsafe RefListParameter(
         Raw.RefListParameter* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.RefListParameter>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.RefListParameter>.Borrowed(handle, ownership, edges);
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.RefListParameter* AsFFI()
+    internal unsafe BorrowLease<Raw.RefListParameter> Lease(BorrowKind kind)
     {
         RustHandle<Raw.RefListParameter>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("RefListParameter");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.RefListParameter> BorrowShared()
-    {
-        RustHandle<Raw.RefListParameter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RefListParameter");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.RefListParameter> BorrowExclusive()
-    {
-        RustHandle<Raw.RefListParameter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RefListParameter");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -84,33 +61,8 @@ public partial class RefListParameter : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.RefListParameter>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>RefListParameter</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~RefListParameter()

@@ -34,10 +34,10 @@ public class OpaqueDisposeTests
     }
 
     [Fact]
-    public void DefaultProbe_ImplementsIDisposable_AndFinalizerDropsExactlyOnce()
+    public void DefaultProbe_IsFinalizerOnly_AndDropsExactlyOnce()
     {
         DefaultDropProbe.ResetDropCount();
-        Assert.Contains(typeof(IDisposable), typeof(DefaultDropProbe).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(DefaultDropProbe).GetInterfaces());
 
         WeakReference weak = CreateDefaultProbeAndDropReference();
         ForceGcUntil(() => !weak.IsAlive && DefaultDropProbe.DropCount() == 1ul);

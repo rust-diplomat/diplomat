@@ -9,7 +9,7 @@ public class AttrTests
     [Fact]
     public void AttrOpaque_RenamedConstructorMethodsAndAbiName_Work()
     {
-        using AttrOpaque1Renamed value = AttrOpaque1Renamed.totally_not_New();
+        AttrOpaque1Renamed value = AttrOpaque1Renamed.totally_not_New();
 
         Assert.Equal((byte)77, value.method_renamed);
         Assert.Equal((byte)123, value.Abirenamed);
@@ -20,8 +20,8 @@ public class AttrTests
     [Fact]
     public void AttrOpaque_NamespacedAndUnnamespacedArguments_Work()
     {
-        using AttrOpaque1Renamed value = AttrOpaque1Renamed.NewOverload(5);
-        using Unnamespaced unnamespaced = Unnamespaced.Make(RenamedAttrEnum.Renamed);
+        AttrOpaque1Renamed value = AttrOpaque1Renamed.NewOverload(5);
+        Unnamespaced unnamespaced = Unnamespaced.Make(RenamedAttrEnum.Renamed);
 
         value.UseNamespaced(RenamedAttrEnum.A);
         value.UseUnnamespaced(unnamespaced);

@@ -42,6 +42,7 @@ struct OpaqueImplTemplate<'ctx> {
     namespace: &'ctx str,
     methods: Vec<MethodInfo<'ctx>>,
     properties: Vec<PropertyInfo<'ctx>>,
+    manually_disposable: bool,
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -75,12 +76,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         display_name: String,
         methods: Vec<MethodInfo<'tcx>>,
         properties: Vec<PropertyInfo<'tcx>>,
+        manually_disposable: bool,
     ) -> String {
         OpaqueImplTemplate {
             name: display_name,
             namespace: self.namespace,
             methods,
             properties,
+            manually_disposable,
         }
         .render()
         .unwrap()

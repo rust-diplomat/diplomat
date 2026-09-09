@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OpaqueThinIter : IDiplomatScoped, IDisposable
+public partial class OpaqueThinIter : IDisposable
 {
     private unsafe RustHandle<Raw.OpaqueThinIter>? _inner;
 
@@ -39,10 +39,10 @@ public partial class OpaqueThinIter : IDiplomatScoped, IDisposable
 
     internal unsafe OpaqueThinIter(
         Raw.OpaqueThinIter* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.OpaqueThinIter>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.OpaqueThinIter>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -51,51 +51,29 @@ public partial class OpaqueThinIter : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public OpaqueThin? Next()
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinIter> selfLease = BorrowExclusive())
+            using (BorrowLease<Raw.OpaqueThinIter> selfLease = Lease(BorrowKind.Exclusive))
             {
                 Raw.OpaqueThin* result = Raw.OpaqueThinIter.Next(selfLease.Ptr);
                 GC.KeepAlive(this);
-                return result == null ? null : new OpaqueThin(result, BorrowKind.Shared, selfLease);
+                return result == null ? null : new OpaqueThin(result, Ownership.SharedView, selfLease);
             }
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.OpaqueThinIter* AsFFI()
+    internal unsafe BorrowLease<Raw.OpaqueThinIter> Lease(BorrowKind kind)
     {
         RustHandle<Raw.OpaqueThinIter>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("OpaqueThinIter");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.OpaqueThinIter> BorrowShared()
-    {
-        RustHandle<Raw.OpaqueThinIter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OpaqueThinIter");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.OpaqueThinIter> BorrowExclusive()
-    {
-        RustHandle<Raw.OpaqueThinIter>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OpaqueThinIter");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -104,24 +82,17 @@ public partial class OpaqueThinIter : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.OpaqueThinIter>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>OpaqueThinIter</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

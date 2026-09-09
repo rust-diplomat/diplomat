@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class RenamedTestOpaque : IDiplomatScoped, IDisposable
+public partial class RenamedTestOpaque
 {
     private unsafe RustHandle<Raw.RenamedTestOpaque>? _inner;
 
@@ -39,43 +39,20 @@ public partial class RenamedTestOpaque : IDiplomatScoped, IDisposable
 
     internal unsafe RenamedTestOpaque(
         Raw.RenamedTestOpaque* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.RenamedTestOpaque>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.RenamedTestOpaque>.Borrowed(handle, ownership, edges);
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.RenamedTestOpaque* AsFFI()
+    internal unsafe BorrowLease<Raw.RenamedTestOpaque> Lease(BorrowKind kind)
     {
         RustHandle<Raw.RenamedTestOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("RenamedTestOpaque");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.RenamedTestOpaque> BorrowShared()
-    {
-        RustHandle<Raw.RenamedTestOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RenamedTestOpaque");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.RenamedTestOpaque> BorrowExclusive()
-    {
-        RustHandle<Raw.RenamedTestOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("RenamedTestOpaque");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -84,33 +61,8 @@ public partial class RenamedTestOpaque : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.RenamedTestOpaque>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>RenamedTestOpaque</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~RenamedTestOpaque()

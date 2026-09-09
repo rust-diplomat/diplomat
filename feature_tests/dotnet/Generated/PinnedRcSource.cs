@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class PinnedRcSource : IDiplomatScoped, IDisposable
+public partial class PinnedRcSource : IDisposable
 {
     private unsafe RustHandle<Raw.PinnedRcSource>? _inner;
 
@@ -39,10 +39,10 @@ public partial class PinnedRcSource : IDiplomatScoped, IDisposable
 
     internal unsafe PinnedRcSource(
         Raw.PinnedRcSource* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.PinnedRcSource>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.PinnedRcSource>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -52,7 +52,8 @@ public partial class PinnedRcSource : IDiplomatScoped, IDisposable
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
     /// <br/>
-    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned while the returned value is in use.
+    /// Dispose the returned value to unpin it. Do not mutate the buffer while the returned value is in use.
     /// </remarks>
     public static PinnedRcSource Create(ReadOnlyMemory<byte> data)
     {
@@ -79,12 +80,13 @@ public partial class PinnedRcSource : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public PinnedRcDependent MakeDependent()
     {
         unsafe
         {
-            using (BorrowLease<Raw.PinnedRcSource> selfLease = BorrowShared())
+            using (BorrowLease<Raw.PinnedRcSource> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.PinnedRcDependent* result = Raw.PinnedRcSource.MakeDependent(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -125,37 +127,14 @@ public partial class PinnedRcSource : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.PinnedRcSource* AsFFI()
+    internal unsafe BorrowLease<Raw.PinnedRcSource> Lease(BorrowKind kind)
     {
         RustHandle<Raw.PinnedRcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("PinnedRcSource");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.PinnedRcSource> BorrowShared()
-    {
-        RustHandle<Raw.PinnedRcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("PinnedRcSource");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.PinnedRcSource> BorrowExclusive()
-    {
-        RustHandle<Raw.PinnedRcSource>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("PinnedRcSource");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -164,24 +143,17 @@ public partial class PinnedRcSource : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.PinnedRcSource>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>PinnedRcSource</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

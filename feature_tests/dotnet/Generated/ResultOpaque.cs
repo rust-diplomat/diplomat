@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class ResultOpaque : IDiplomatScoped, IDisposable
+public partial class ResultOpaque : IDisposable
 {
     private unsafe RustHandle<Raw.ResultOpaque>? _inner;
 
@@ -39,10 +39,10 @@ public partial class ResultOpaque : IDiplomatScoped, IDisposable
 
     internal unsafe ResultOpaque(
         Raw.ResultOpaque* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.ResultOpaque>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.ResultOpaque>.Borrowed(handle, ownership, edges);
     }
 
     /// <exception cref="ErrorEnumException"></exception>
@@ -176,7 +176,7 @@ public partial class ResultOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.ResultOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.ResultOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.ResultOpaque.AssertInteger(selfLease.Ptr, i);
                 GC.KeepAlive(this);
@@ -184,37 +184,14 @@ public partial class ResultOpaque : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.ResultOpaque* AsFFI()
+    internal unsafe BorrowLease<Raw.ResultOpaque> Lease(BorrowKind kind)
     {
         RustHandle<Raw.ResultOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("ResultOpaque");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.ResultOpaque> BorrowShared()
-    {
-        RustHandle<Raw.ResultOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("ResultOpaque");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.ResultOpaque> BorrowExclusive()
-    {
-        RustHandle<Raw.ResultOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("ResultOpaque");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -223,24 +200,17 @@ public partial class ResultOpaque : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.ResultOpaque>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>ResultOpaque</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

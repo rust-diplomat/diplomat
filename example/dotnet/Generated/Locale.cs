@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class Locale : IDiplomatScoped, IDisposable
+public partial class Locale
 {
     private unsafe RustHandle<Raw.Locale>? _inner;
 
@@ -39,10 +39,10 @@ public partial class Locale : IDiplomatScoped, IDisposable
 
     internal unsafe Locale(
         Raw.Locale* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.Locale>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.Locale>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -61,37 +61,14 @@ public partial class Locale : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.Locale* AsFFI()
+    internal unsafe BorrowLease<Raw.Locale> Lease(BorrowKind kind)
     {
         RustHandle<Raw.Locale>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("Locale");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.Locale> BorrowShared()
-    {
-        RustHandle<Raw.Locale>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Locale");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.Locale> BorrowExclusive()
-    {
-        RustHandle<Raw.Locale>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("Locale");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -100,33 +77,8 @@ public partial class Locale : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.Locale>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>Locale</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~Locale()

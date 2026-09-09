@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class MethodOverloading : IDiplomatScoped, IDisposable
+public partial class MethodOverloading : IDisposable
 {
     private unsafe RustHandle<Raw.MethodOverloading>? _inner;
 
@@ -39,10 +39,10 @@ public partial class MethodOverloading : IDiplomatScoped, IDisposable
 
     internal unsafe MethodOverloading(
         Raw.MethodOverloading* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.MethodOverloading>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.MethodOverloading>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -81,37 +81,14 @@ public partial class MethodOverloading : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.MethodOverloading* AsFFI()
+    internal unsafe BorrowLease<Raw.MethodOverloading> Lease(BorrowKind kind)
     {
         RustHandle<Raw.MethodOverloading>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("MethodOverloading");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.MethodOverloading> BorrowShared()
-    {
-        RustHandle<Raw.MethodOverloading>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("MethodOverloading");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.MethodOverloading> BorrowExclusive()
-    {
-        RustHandle<Raw.MethodOverloading>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("MethodOverloading");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -120,24 +97,17 @@ public partial class MethodOverloading : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.MethodOverloading>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>MethodOverloading</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

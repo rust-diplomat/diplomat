@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OptionString : IDiplomatScoped, IDisposable
+public partial class OptionString : IDisposable
 {
     private unsafe RustHandle<Raw.OptionString>? _inner;
 
@@ -39,10 +39,10 @@ public partial class OptionString : IDiplomatScoped, IDisposable
 
     internal unsafe OptionString(
         Raw.OptionString* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.OptionString>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.OptionString>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -66,7 +66,7 @@ public partial class OptionString : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionString> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionString> selfLease = Lease(BorrowKind.Shared))
             {
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
@@ -87,37 +87,14 @@ public partial class OptionString : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.OptionString* AsFFI()
+    internal unsafe BorrowLease<Raw.OptionString> Lease(BorrowKind kind)
     {
         RustHandle<Raw.OptionString>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("OptionString");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.OptionString> BorrowShared()
-    {
-        RustHandle<Raw.OptionString>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionString");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.OptionString> BorrowExclusive()
-    {
-        RustHandle<Raw.OptionString>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionString");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -126,24 +103,17 @@ public partial class OptionString : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.OptionString>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>OptionString</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

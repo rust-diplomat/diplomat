@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OptionOpaqueChar : IDiplomatScoped, IDisposable
+public partial class OptionOpaqueChar : IDisposable
 {
     private unsafe RustHandle<Raw.OptionOpaqueChar>? _inner;
 
@@ -39,17 +39,17 @@ public partial class OptionOpaqueChar : IDiplomatScoped, IDisposable
 
     internal unsafe OptionOpaqueChar(
         Raw.OptionOpaqueChar* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.OptionOpaqueChar>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.OptionOpaqueChar>.Borrowed(handle, ownership, edges);
     }
 
     public void AssertChar(uint ch)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaqueChar> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaqueChar> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.OptionOpaqueChar.AssertChar(selfLease.Ptr, ch);
                 GC.KeepAlive(this);
@@ -57,37 +57,14 @@ public partial class OptionOpaqueChar : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.OptionOpaqueChar* AsFFI()
+    internal unsafe BorrowLease<Raw.OptionOpaqueChar> Lease(BorrowKind kind)
     {
         RustHandle<Raw.OptionOpaqueChar>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("OptionOpaqueChar");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.OptionOpaqueChar> BorrowShared()
-    {
-        RustHandle<Raw.OptionOpaqueChar>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionOpaqueChar");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.OptionOpaqueChar> BorrowExclusive()
-    {
-        RustHandle<Raw.OptionOpaqueChar>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionOpaqueChar");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -96,24 +73,17 @@ public partial class OptionOpaqueChar : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.OptionOpaqueChar>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>OptionOpaqueChar</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

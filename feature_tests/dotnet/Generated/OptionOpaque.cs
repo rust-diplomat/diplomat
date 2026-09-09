@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OptionOpaque : IDiplomatScoped, IDisposable
+public partial class OptionOpaque : IDisposable
 {
     private unsafe RustHandle<Raw.OptionOpaque>? _inner;
 
@@ -39,10 +39,10 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
 
     internal unsafe OptionOpaque(
         Raw.OptionOpaque* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.OptionOpaque>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.OptionOpaque>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -73,7 +73,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OptionOpaque.OptionIsize(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -86,7 +86,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OptionOpaque.OptionUsize(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -99,7 +99,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OptionOpaque.OptionI32(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -112,7 +112,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OptionOpaque.OptionU32(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -125,7 +125,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.OptionOpaque.AssertInteger(selfLease.Ptr, i);
                 GC.KeepAlive(this);
@@ -137,7 +137,7 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OptionOpaque>? argLease = arg == null ? null : arg.BorrowShared())
+            using (BorrowLease<Raw.OptionOpaque>? argLease = arg == null ? null : arg.Lease(BorrowKind.Shared))
             {
                 var result = Raw.OptionOpaque.OptionOpaqueArgument(argLease == null ? null : argLease.Ptr);
                 GC.KeepAlive(arg);
@@ -146,37 +146,14 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.OptionOpaque* AsFFI()
+    internal unsafe BorrowLease<Raw.OptionOpaque> Lease(BorrowKind kind)
     {
         RustHandle<Raw.OptionOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("OptionOpaque");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.OptionOpaque> BorrowShared()
-    {
-        RustHandle<Raw.OptionOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionOpaque");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.OptionOpaque> BorrowExclusive()
-    {
-        RustHandle<Raw.OptionOpaque>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OptionOpaque");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -185,24 +162,17 @@ public partial class OptionOpaque : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.OptionOpaque>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>OptionOpaque</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

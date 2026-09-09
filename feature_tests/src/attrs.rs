@@ -34,6 +34,7 @@ pub mod ffi {
     macro_rules! create_vec {
         ($vec_name:ident contains "hello"; [$ty:ident]) => {
             #[diplomat::opaque_mut]
+            #[diplomat::attr(dotnet, manually_disposable)]
             pub struct $vec_name(Vec<$ty>);
 
             impl $vec_name {

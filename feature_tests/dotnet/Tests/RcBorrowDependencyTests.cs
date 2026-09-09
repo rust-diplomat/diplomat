@@ -115,10 +115,8 @@ public class RcBorrowDependencyTests
     public void MutableView_HoldsExclusiveBorrowUntilDisposed()
     {
         using RcSource source = RcSource.Create(7);
-        using (var viewScope = source.ViewMut())
+        using (RcSource view = source.ViewMut())
         {
-            RcSource view = viewScope.Value;
-
             Assert.Equal(7ul, view.Id());
             Assert.True(view.PingMutable());
             Assert.True(view.PingMutable());
@@ -133,14 +131,88 @@ public class RcBorrowDependencyTests
     public void MutableScopeEnd_ReleasesSource_WhenSharedSubviewEscapes()
     {
         using RcSource source = RcSource.Create(7);
-        var mutableScope = source.ViewMut();
-        using RcSource sharedSubview = mutableScope.Value.View();
+        RcSource mutableView = source.ViewMut();
+        using RcSource sharedSubview = mutableView.View();
 
-        mutableScope.Dispose();
-        Assert.False(mutableScope.HasValue);
+        mutableView.Dispose();
 
         Assert.True(source.PingMutable());
         Assert.Throws<InvalidOperationException>(() => sharedSubview.Id());
+    }
+
+    [Fact]
+    public void SharedViewOfSharedView_RootMutationInvalidatesOuter_AndDisposeReleasesRoot()
+    {
+        ResetAllDropStats();
+
+        RcSource source = RcSource.Create(7);
+        RcSource view = source.View();
+        RcSource outer = view.View();
+
+        Assert.Equal(7ul, outer.Id());
+        Assert.True(source.PingMutable());
+        Assert.Throws<InvalidOperationException>(() => outer.Id());
+
+        source.Dispose();
+        view.Dispose();
+        Assert.Equal(0ul, RcSource.DropCount());
+
+        outer.Dispose();
+        Assert.Equal(1ul, RcSource.DropCount());
+    }
+
+    [Fact]
+    public void OptionalExclusiveView_NullReleasesLease_SomeHoldsUntilDisposed()
+    {
+        using RcSource source = RcSource.Create(7);
+
+        Assert.Null(source.MaybeViewMut(false));
+        Assert.True(source.PingMutable());
+
+        RcSource view = source.MaybeViewMut(true)!;
+        Assert.Equal(7ul, view.Id());
+        Assert.Throws<InvalidOperationException>(() => source.PingMutable());
+
+        view.Dispose();
+        Assert.True(source.PingMutable());
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining
+#if !NETFRAMEWORK
+        | MethodImplOptions.AggressiveOptimization
+#endif
+    )]
+    private static void CreateAndAbandonExclusiveView(RcSource source)
+    {
+        _ = source.ViewMut();
+    }
+
+    private static bool TryPingMutable(RcSource source)
+    {
+        try
+        {
+            return source.PingMutable();
+        }
+        catch (InvalidOperationException)
+        {
+            return false;
+        }
+    }
+
+    // `&mut` views are plain classes now, so one can be dropped without Dispose.
+    // Only the finalizer can then hand the exclusive borrow back to the source.
+    [Fact]
+    public void ExclusiveView_LeakedToGc_FinalizerReleasesExclusiveBorrow()
+    {
+        ResetAllDropStats();
+
+        using RcSource source = RcSource.Create(7);
+        CreateAndAbandonExclusiveView(source);
+
+        ForceGcUntil(() => TryPingMutable(source));
+
+        Assert.True(source.PingMutable());
+        Assert.Equal(0ul, RcSource.DropCount());
     }
 
     // ── Owned-borrowing: dependent's own destructor runs before source ─────
@@ -188,6 +260,32 @@ public class RcBorrowDependencyTests
         dependent.Dispose();
 
         Assert.True(source.PingMutable());
+    }
+
+    [Fact]
+    public void OwnedDependentOfSharedView_BlocksRootMutation_AndDefersRootDrop()
+    {
+        ResetAllDropStats();
+
+        RcSource source = RcSource.Create(5);
+        RcSource view = source.View();
+        RcDependent dependent = view.MakeDependent();
+
+        Assert.Equal(5ul, dependent.SourceId());
+        Assert.Throws<InvalidOperationException>(() => source.PingMutable());
+
+        source.Dispose();
+        view.Dispose();
+        Assert.Equal(0ul, RcSource.DropCount());
+        Assert.Equal(5ul, dependent.SourceId());
+
+        dependent.Dispose();
+        Assert.Equal(1ul, RcDependent.DropCount());
+        Assert.Equal(1ul, RcSource.DropCount());
+        Assert.True(
+            RcDependent.DropSeq() < RcSource.DropSeq(),
+            "dependent must be destroyed before the root it borrows through the view"
+        );
     }
 
     // ── Transitive/direct dependency chain (only direct edges recorded) ────
@@ -248,9 +346,9 @@ public class RcBorrowDependencyTests
     // ── Finalizer fallback parent/child ordering ──────────────────────────
 
     [Fact]
-    public void FinalizerFallbackProbes_AreIDisposable()
+    public void FinalizerFallback_UsesUnmarkedSourceAndMarkedDependent()
     {
-        Assert.Contains(typeof(IDisposable), typeof(RcFinalizerSource).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(RcFinalizerSource).GetInterfaces());
         Assert.Contains(typeof(IDisposable), typeof(RcFinalizerDependent).GetInterfaces());
     }
 

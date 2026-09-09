@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
+public partial class OpaqueThinVec : IDisposable
 {
     private unsafe RustHandle<Raw.OpaqueThinVec>? _inner;
 
@@ -20,6 +20,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public OpaqueThin? First
     {
@@ -27,11 +28,11 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
         {
             unsafe
             {
-                using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+                using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
                 {
                     Raw.OpaqueThin* result = Raw.OpaqueThinVec.First(selfLease.Ptr);
                     GC.KeepAlive(this);
-                    return result == null ? null : new OpaqueThin(result, BorrowKind.Shared, selfLease);
+                    return result == null ? null : new OpaqueThin(result, Ownership.SharedView, selfLease);
                 }
             }
         }
@@ -45,7 +46,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
             {
                 if (value == null) throw new ArgumentNullException(nameof(value));
                 byte[] valueBytes = Diplomat.Utf8.Clone(value);
-                using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowExclusive())
+                using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Exclusive))
                 {
                     fixed (byte* valuePtr = valueBytes)
                     {
@@ -82,10 +83,10 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
 
     internal unsafe OpaqueThinVec(
         Raw.OpaqueThinVec* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.OpaqueThinVec>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.OpaqueThinVec>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -110,12 +111,13 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public OpaqueThinIter Iter()
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -128,7 +130,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OpaqueThinVec.Len(selfLease.Ptr);
                 GC.KeepAlive(this);
@@ -143,16 +145,17 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public OpaqueThin? Get(nuint idx)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.OpaqueThin* result = Raw.OpaqueThinVec.Get(selfLease.Ptr, idx);
                 GC.KeepAlive(this);
-                return result == null ? null : new OpaqueThin(result, BorrowKind.Shared, selfLease);
+                return result == null ? null : new OpaqueThin(result, Ownership.SharedView, selfLease);
             }
         }
     }
@@ -164,12 +167,13 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public OpaqueThin TryFirst(bool fail)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OpaqueThinVec.TryFirst(selfLease.Ptr, fail);
                 GC.KeepAlive(this);
@@ -177,7 +181,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");
                 }
-                return new OpaqueThin(result.Ok, BorrowKind.Shared, selfLease);
+                return new OpaqueThin(result.Ok, Ownership.SharedView, selfLease);
             }
         }
     }
@@ -189,12 +193,13 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
+    /// Dispose the returned value to release its reference to the source.
     /// </remarks>
     public OpaqueThin? TryGet(nuint idx, bool fail)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OpaqueThinVec.TryGet(selfLease.Ptr, idx, fail);
                 GC.KeepAlive(this);
@@ -202,7 +207,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");
                 }
-                return result.Ok == null ? null : new OpaqueThin(result.Ok, BorrowKind.Shared, selfLease);
+                return result.Ok == null ? null : new OpaqueThin(result.Ok, Ownership.SharedView, selfLease);
             }
         }
     }
@@ -214,12 +219,13 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public OpaqueThinIter TryIter(bool fail)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OpaqueThinVec.TryIter(selfLease.Ptr, fail);
                 GC.KeepAlive(this);
@@ -238,12 +244,13 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// The returned value keeps its borrowed backing storage alive until cleanup.
+    /// Dispose the returned value to release its borrow and reference to the source.
     /// </remarks>
     public OpaqueThinIter? OptionalIter(bool some)
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.OptionalIter(selfLease.Ptr, some);
                 GC.KeepAlive(this);
@@ -257,7 +264,7 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.OpaqueThinVec> selfLease = BorrowShared())
+            using (BorrowLease<Raw.OpaqueThinVec> selfLease = Lease(BorrowKind.Shared))
             {
                 var result = Raw.OpaqueThinVec.TryBorrow(selfLease.Ptr, fail);
                 GC.KeepAlive(this);
@@ -270,37 +277,14 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.OpaqueThinVec* AsFFI()
+    internal unsafe BorrowLease<Raw.OpaqueThinVec> Lease(BorrowKind kind)
     {
         RustHandle<Raw.OpaqueThinVec>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("OpaqueThinVec");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.OpaqueThinVec> BorrowShared()
-    {
-        RustHandle<Raw.OpaqueThinVec>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OpaqueThinVec");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.OpaqueThinVec> BorrowExclusive()
-    {
-        RustHandle<Raw.OpaqueThinVec>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("OpaqueThinVec");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -309,24 +293,17 @@ public partial class OpaqueThinVec : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.OpaqueThinVec>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>OpaqueThinVec</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

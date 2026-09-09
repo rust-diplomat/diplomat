@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
+public partial class AttrOpaque1Renamed
 {
     private unsafe RustHandle<Raw.AttrOpaque1Renamed>? _inner;
 
@@ -20,7 +20,7 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
         {
             unsafe
             {
-                using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = BorrowShared())
+                using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = Lease(BorrowKind.Shared))
                 {
                     var result = Raw.AttrOpaque1Renamed.Abirenamed(selfLease.Ptr);
                     GC.KeepAlive(this);
@@ -36,7 +36,7 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
         {
             unsafe
             {
-                using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = BorrowShared())
+                using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = Lease(BorrowKind.Shared))
                 {
                     var result = Raw.AttrOpaque1Renamed.method_renamed(selfLease.Ptr);
                     GC.KeepAlive(this);
@@ -71,10 +71,10 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
 
     internal unsafe AttrOpaque1Renamed(
         Raw.AttrOpaque1Renamed* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.AttrOpaque1Renamed>.Borrowed(handle, ownership, edges);
     }
 
     /// <returns>
@@ -122,8 +122,8 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
         unsafe
         {
             if (un == null) throw new ArgumentNullException(nameof(un));
-            using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = BorrowShared())
-            using (BorrowLease<Raw.Unnamespaced> unLease = un.BorrowShared())
+            using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = Lease(BorrowKind.Shared))
+            using (BorrowLease<Raw.Unnamespaced> unLease = un.Lease(BorrowKind.Shared))
             {
                 Raw.AttrOpaque1Renamed.UseUnnamespaced(selfLease.Ptr, unLease.Ptr);
                 GC.KeepAlive(this);
@@ -136,7 +136,7 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
     {
         unsafe
         {
-            using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = BorrowShared())
+            using (BorrowLease<Raw.AttrOpaque1Renamed> selfLease = Lease(BorrowKind.Shared))
             {
                 Raw.AttrOpaque1Renamed.UseNamespaced(selfLease.Ptr, n);
                 GC.KeepAlive(this);
@@ -144,37 +144,14 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.AttrOpaque1Renamed* AsFFI()
+    internal unsafe BorrowLease<Raw.AttrOpaque1Renamed> Lease(BorrowKind kind)
     {
         RustHandle<Raw.AttrOpaque1Renamed>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("AttrOpaque1Renamed");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.AttrOpaque1Renamed> BorrowShared()
-    {
-        RustHandle<Raw.AttrOpaque1Renamed>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("AttrOpaque1Renamed");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.AttrOpaque1Renamed> BorrowExclusive()
-    {
-        RustHandle<Raw.AttrOpaque1Renamed>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("AttrOpaque1Renamed");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -183,33 +160,8 @@ public partial class AttrOpaque1Renamed : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.AttrOpaque1Renamed>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
-    }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Requests/releases this wrapper's own ownership reference.
-    /// </summary>
-    /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
-    /// After this call, this <c>AttrOpaque1Renamed</c> instance itself is unusable:
-    /// its methods (and any attempt to start a new borrow from it) throw
-    /// <see cref="ObjectDisposedException"/> immediately, regardless of
-    /// whether the physical native destruction happened yet.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 
     ~AttrOpaque1Renamed()

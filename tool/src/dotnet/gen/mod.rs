@@ -33,6 +33,7 @@ use super::formatter::DotnetFormatter;
 
 mod accessor;
 mod callback;
+pub(super) mod disposal;
 pub(super) mod fillable;
 mod impl_struct;
 mod lower;
@@ -72,6 +73,7 @@ pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub result_struct_registry: RefCell<HashMap<String, DotnetResult>>,
     pub option_struct_registry: RefCell<HashMap<String, fillable::DotnetOption>>,
     pub callback_struct_registry: RefCell<HashMap<String, DotnetCallback>>,
+    pub disposal: RefCell<disposal::DisposalRequirements>,
 }
 
 #[derive(Template)]
@@ -248,6 +250,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             prepared_types.push(prepared);
         }
 
+        self.disposal
+            .borrow()
+            .finish(self.tcx, self.errors, self.formatter);
+
         let rendered = prepared_types
             .into_iter()
             .map(|prepared| {
@@ -285,8 +291,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 let fields = self.lower_fields(struct_def)?;
                 let field_names: Vec<&str> =
                     fields.iter().map(|field| field.name.as_str()).collect();
-                let members =
-                    self.build_members(&display_name, &struct_def.methods, &field_names, false);
+                let members = self.build_members(
+                    &display_name,
+                    struct_def.name.as_str(),
+                    &struct_def.methods,
+                    &field_names,
+                    false,
+                    false,
+                );
                 PreparedType::Struct {
                     display_name,
                     fields,
@@ -298,7 +310,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 return None;
             }
             hir::TypeDef::Opaque(opaque_def) => {
-                let members = self.build_members(&display_name, &opaque_def.methods, &[], true);
+                let members = self.build_members(
+                    &display_name,
+                    opaque_def.name.as_str(),
+                    &opaque_def.methods,
+                    &[],
+                    true,
+                    opaque_def.attrs.manually_disposable,
+                );
                 PreparedType::Opaque {
                     display_name,
                     opaque_def,
@@ -333,7 +352,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     properties,
                 } = members;
                 let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, raw_methods);
-                let content = self.gen_opaque_impl(display_name, methods, properties);
+                let content = self.gen_opaque_impl(
+                    display_name,
+                    methods,
+                    properties,
+                    opaque_def.attrs.manually_disposable,
+                );
                 (Some(raw), content)
             }
             PreparedType::Struct {
@@ -364,13 +388,15 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     fn build_members(
         &self,
         display_name: &str,
+        rust_name: &str,
         methods: &'tcx [hir::Method],
         field_names: &[&str],
         is_opaque: bool,
+        has_generated_dispose: bool,
     ) -> TypeMembers<'tcx> {
         let lowered: Vec<(Option<AccessorInfo>, MethodInfo<'tcx>)> = methods
             .iter()
-            .filter_map(|m| self.build_method_info(StructMethodContext::new(m)))
+            .filter_map(|m| self.build_method_info(StructMethodContext::new(m), rust_name))
             .collect();
         let raw_methods = lowered.iter().map(|(_, m)| m.clone()).collect();
         let (methods, properties) = accessor::route_members(lowered, self.errors);
@@ -380,6 +406,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             &methods,
             field_names,
             is_opaque,
+            has_generated_dispose,
             self.errors,
         );
         TypeMembers {

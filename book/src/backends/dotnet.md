@@ -66,7 +66,8 @@ to null on the second read. Setters keep `&mut self`; assigning is the point.
 
 Names must not collide either. A property that would share its name with a method, a
 struct field, the type that contains it, or one of the members Diplomat always generates
-(`AsFFI`, `FromFFI`, and `Dispose` on opaques) is rejected, because C# would not
+(`AsFFI` and `FromFFI` on structs; `Lease`, `Cleanup`, and `Dispose` on opaques) is rejected,
+because C# would not
 compile the result.
 
 A getter that returns an owned `Box<[u8]>` (`RustVec`) hands back a value you own, so
@@ -92,12 +93,12 @@ because Rust still owns (and will free) that memory. This means methods returnin
 `Option<&T>` are safe to wrap without risking a double-free.
 
 Every `RustHandle<T>` is a small reference-counted class: pointer, destructor, edges,
-lifetime claims, and borrow state live in exactly one place. Construction starts the claim
-count at 1 (the owning wrapper). Each `BorrowLease` adds one claim and a shared or exclusive
+lifetime references, and borrow state live in exactly one place. Construction starts the reference
+count at 1 (the owning wrapper). Each `BorrowLease` adds one reference and a shared or exclusive
 mode. A returned borrowed value takes over that lease: shared views convert it to a versioned
-token (`TransferVersioned()`), exclusive views keep the exclusive lease until
-`ScopedUse<T>` ends, and owned-borrowing returns keep the transferred lease until cleanup.
-Physical native destruction waits until the last claim is gone, in whatever order managed
+token (`TransferVersioned()`), exclusive views keep the exclusive lease until their bare
+wrapper is disposed, and owned-borrowing returns keep the transferred lease until cleanup.
+Physical native destruction waits until the last reference is gone, in whatever order managed
 lifetimes end. Cleanup always runs the native destructor first, then disposes every edge
 (pins and borrow tokens).
 
@@ -105,23 +106,90 @@ The reference count is updated with `Interlocked` so a user-thread retain can
 race a finalizer-thread token release on the same handle without lost updates.
 Teardown still runs only on the thread that drives the count to zero.
 
-Every generated opaque implements `IDisposable` and keeps a finalizer as a fallback.
-`Dispose()` runs the same private idempotent cleanup path and calls
+Every opaque keeps a finalizer as a fallback. Add
+`#[diplomat::attr(dotnet, manually_disposable)]` to opt into `IDisposable`. The .NET
+generator requires the attribute on a returned opaque in these cases:
+
+1. A method returns a mutable borrow. Only `Dispose()` ends the exclusive borrow.
+
+   ```rust
+   #[diplomat::opaque_mut]
+   #[diplomat::attr(dotnet, manually_disposable)]
+   pub struct View;
+
+   #[diplomat::opaque_mut]
+   pub struct Source(View);
+
+   impl Source {
+       pub fn view_mut(&mut self) -> &mut View { &mut self.0 }
+   }
+   ```
+
+2. A method returns an owned opaque that borrows from the receiver or another opaque parameter. `Dispose()` releases the returned wrapper's borrow and lifetime reference.
+
+   ```rust
+   #[diplomat::opaque]
+   pub struct Parent;
+
+   #[diplomat::opaque]
+   #[diplomat::attr(dotnet, manually_disposable)]
+   pub struct Child<'a>(&'a Parent);
+
+   impl Parent {
+       pub fn child<'a>(&'a self) -> Box<Child<'a>> { Box::new(Child(self)) }
+   }
+   ```
+
+3. A returned view retains an opaque that is manually disposable or is required to be
+   manually disposable. The rule is transitive, so every returned view in the retention
+   chain must carry the attribute.
+
+   ```rust
+   #[diplomat::opaque]
+   #[diplomat::attr(dotnet, manually_disposable)]
+   pub struct Source(View);
+
+   #[diplomat::opaque]
+   #[diplomat::attr(dotnet, manually_disposable)]
+   pub struct View;
+
+   impl Source {
+       pub fn view(&self) -> &View { &self.0 }
+   }
+   ```
+
+4. An owned opaque return borrows a managed slice or string input. The wrapper keeps that
+   managed memory pinned until `Dispose()` unpins it.
+
+   ```rust
+   #[diplomat::opaque]
+   #[diplomat::attr(dotnet, manually_disposable)]
+   pub struct Parser<'a>(&'a [u8]);
+
+   impl Parser<'_> {
+       pub fn parse<'a>(data: &'a [u8]) -> Box<Parser<'a>> {
+           Box::new(Parser(data))
+       }
+   }
+   ```
+
+A plain owned opaque with no borrowed data does not require the attribute. A shared view of
+a source that is not manually disposable does not require it either. You may still opt in
+when no rule requires deterministic cleanup.
+
+`Dispose()` runs the same private idempotent cleanup path as the finalizer and calls
 `GC.SuppressFinalize(this)`. It releases this wrapper's ownership reference but does not
 necessarily destroy the native value immediately: existing borrowers keep it alive and
 remain valid. The disposed wrapper itself rejects further use with
 `ObjectDisposedException`. Native calls are followed by `GC.KeepAlive(this)` to prevent
-finalization while P/Invoke is still using the pointer. The legacy
-`#[diplomat::attr(dotnet, manually_disposable)]` attribute is accepted for source
-compatibility but is otherwise ignored because every opaque is already disposable. It is
-scheduled for removal in the next breaking release ([#1260](https://github.com/rust-diplomat/diplomat/issues/1260)).
+finalization while P/Invoke is still using the pointer.
 
 Shared versioned views do not keep their source borrowed between calls: a mutable source
-call can proceed and invalidates the old view. Exclusive `ScopedUse<T>` values and owned
-values that borrow from a source are different: they keep a real source borrow until
-disposed. A conflicting source mutation throws `InvalidOperationException` until that
-scope or dependent is disposed. Dispose these values deterministically rather than waiting
-for the GC if the source needs to be mutated again.
+call can proceed and invalidates the old view. Exclusive views are bare wrappers, and owned
+values that borrow from a source keep a real source borrow until disposed. A conflicting
+source mutation throws `InvalidOperationException` until that view or dependent is disposed.
+Dispose these values deterministically rather than waiting for the GC if the source needs to
+be mutated again. In particular, dispose owned-borrowing returns before mutating their source.
 
 ## String encoding
 
@@ -142,8 +210,8 @@ representations line up:
 
 A borrowed string or slice return (`&'a str` / `&'a DiplomatStr` / `&'a DiplomatStr16` /
 `&'a [u8]` / `&'a [u32]`) surfaces as `DiplomatBorrowedSpan<T>` — a zero-copy view over
-memory Rust still owns. Like a shared opaque view, it holds a versioned lifetime claim
-and implements `IDisposable`; `Dispose()` drops that claim without waiting for GC. A later
+memory Rust still owns. Like a shared opaque view, it holds a versioned lifetime reference
+and implements `IDisposable`; `Dispose()` releases that reference without waiting for GC. A later
 mutable call on the source invalidates the view: the next `WithSpan(...)` or `Clone()`
 throws `InvalidOperationException`. It intentionally does not expose a `Span`-returning
 property (nothing would keep the view rooted once the span escaped it); call

@@ -8,7 +8,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class PinnedRcDependent : IDiplomatScoped, IDisposable
+public partial class PinnedRcDependent : IDisposable
 {
     private unsafe RustHandle<Raw.PinnedRcDependent>? _inner;
 
@@ -39,10 +39,10 @@ public partial class PinnedRcDependent : IDiplomatScoped, IDisposable
 
     internal unsafe PinnedRcDependent(
         Raw.PinnedRcDependent* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.PinnedRcDependent>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.PinnedRcDependent>.Borrowed(handle, ownership, edges);
     }
 
     public static void ResetDropStats()
@@ -69,37 +69,14 @@ public partial class PinnedRcDependent : IDiplomatScoped, IDisposable
         }
     }
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.PinnedRcDependent* AsFFI()
+    internal unsafe BorrowLease<Raw.PinnedRcDependent> Lease(BorrowKind kind)
     {
         RustHandle<Raw.PinnedRcDependent>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("PinnedRcDependent");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.PinnedRcDependent> BorrowShared()
-    {
-        RustHandle<Raw.PinnedRcDependent>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("PinnedRcDependent");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.PinnedRcDependent> BorrowExclusive()
-    {
-        RustHandle<Raw.PinnedRcDependent>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("PinnedRcDependent");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -108,24 +85,17 @@ public partial class PinnedRcDependent : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.PinnedRcDependent>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
-
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>PinnedRcDependent</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of

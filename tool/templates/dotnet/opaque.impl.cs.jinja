@@ -8,7 +8,7 @@ namespace {{ namespace }};
 
 #nullable enable
 
-public partial class {{ name }} : IDiplomatScoped, IDisposable
+public partial class {{ name }}{% if manually_disposable %} : IDisposable{% endif %}
 {
     private unsafe RustHandle<Raw.{{ name }}>? _inner;
 
@@ -41,10 +41,10 @@ public partial class {{ name }} : IDiplomatScoped, IDisposable
 
     internal unsafe {{ name }}(
         Raw.{{ name }}* handle,
-        BorrowKind capability,
+        Ownership ownership,
         params object[] edges)
     {
-        _inner = RustHandle<Raw.{{ name }}>.Borrowed(handle, capability, edges);
+        _inner = RustHandle<Raw.{{ name }}>.Borrowed(handle, ownership, edges);
     }
 
     {#- One idiomatic method per HIR method. `DiplomatWrite`-returning
@@ -64,37 +64,14 @@ public partial class {{ name }} : IDiplomatScoped, IDisposable
     }
     {%- endfor %}
 
-    /// <summary>
-    /// Returns the underlying raw handle.
-    /// </summary>
-    internal unsafe Raw.{{ name }}* AsFFI()
+    internal unsafe BorrowLease<Raw.{{ name }}> Lease(BorrowKind kind)
     {
         RustHandle<Raw.{{ name }}>? inner = _inner;
-        if (inner is null || inner.IsNull)
+        if (inner is null)
         {
             throw new ObjectDisposedException("{{ name }}");
         }
-        return inner.Ptr;
-    }
-
-    internal unsafe BorrowLease<Raw.{{ name }}> BorrowShared()
-    {
-        RustHandle<Raw.{{ name }}>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("{{ name }}");
-        }
-        return inner.BorrowShared();
-    }
-
-    internal unsafe BorrowLease<Raw.{{ name }}> BorrowExclusive()
-    {
-        RustHandle<Raw.{{ name }}>? inner = _inner;
-        if (inner is null || inner.IsNull)
-        {
-            throw new ObjectDisposedException("{{ name }}");
-        }
-        return inner.BorrowExclusive();
+        return inner.Lease(kind);
     }
 
     private void Cleanup()
@@ -103,24 +80,19 @@ public partial class {{ name }} : IDiplomatScoped, IDisposable
         {
             RustHandle<Raw.{{ name }}>? inner =
                 System.Threading.Interlocked.Exchange(ref _inner, null);
-            inner?.Release();
+            inner?.ReleaseOwnerReference();
         }
     }
 
-    void IDiplomatScoped.EndScope()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
-    }
-
+{%- if manually_disposable %}
     /// <summary>
     /// Requests/releases this wrapper's own ownership reference.
     /// </summary>
     /// <remarks>
-    /// This releases this wrapper's claim. The native resource may stay alive
-    /// while other wrappers still hold claims. Disposing an exclusive borrowed
-    /// wrapper also ends its scope. Versioned shared views borrowed from that
-    /// scope become invalid and throw before their next native call.
+    /// This releases this wrapper's reference. The native resource may stay alive
+    /// while other wrappers still hold references. Disposing an exclusive borrowed
+    /// wrapper also ends its exclusive borrow. Shared views taken through that
+    /// wrapper become invalid and throw before their next native call.
     /// After this call, this <c>{{ name }}</c> instance itself is unusable:
     /// its methods (and any attempt to start a new borrow from it) throw
     /// <see cref="ObjectDisposedException"/> immediately, regardless of
@@ -131,6 +103,7 @@ public partial class {{ name }} : IDiplomatScoped, IDisposable
         Cleanup();
         GC.SuppressFinalize(this);
     }
+{%- endif %}
 
     ~{{ name }}()
     {
