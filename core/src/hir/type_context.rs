@@ -247,6 +247,12 @@ impl TypeContext {
 
         let mut errors = ErrorStore::default();
 
+        // Sort modules such that children come after their parents in the list
+        let mut modules = env.iter_modules().collect::<Vec<_>>();
+        modules.sort_by_key(|(p, ..)| p.elements.len());
+
+        let mut module_attrs: HashMap<&[ast::Ident], Attrs> = HashMap::new();
+
         for (path, mod_env) in env.iter_modules() {
             let opt = path.elements.last().and_then(|m| m.span());
             errors.set_item(
@@ -259,12 +265,23 @@ impl TypeContext {
             let mod_attrs = Attrs::from_ast(
                 &mod_env.attrs,
                 &attr_validator,
-                &Default::default(),
+                module_attrs
+                    .get(
+                        &path
+                            .elements
+                            .split_last()
+                            .map(|(_, r)| r)
+                            .unwrap_or_default(),
+                    )
+                    .cloned()
+                    .unwrap_or_default(),
                 &mut errors,
             );
             let ty_attrs = mod_attrs.for_inheritance(AttrInheritContext::Type);
             let method_attrs =
                 mod_attrs.for_inheritance(AttrInheritContext::MethodOrImplFromModule);
+
+            module_attrs.insert(&path.elements, mod_attrs);
 
             for sym in mod_env.items() {
                 match sym {

@@ -288,7 +288,7 @@ impl<'ast> LoweringContext<'ast> {
         let name = self.lower_ident(&ast_enum.name, "enum name");
         let attrs = self.attr_validator.attr_from_ast(
             &ast_enum.attrs,
-            &item.ty_parent_attrs,
+            item.ty_parent_attrs.clone(),
             &mut self.errors,
         );
 
@@ -296,9 +296,11 @@ impl<'ast> LoweringContext<'ast> {
         let variant_parent_attrs = attrs.for_inheritance(AttrInheritContext::Variant);
         for (ident, discriminant, docs, attrs) in ast_enum.variants.iter() {
             let name = self.lower_ident(ident, "enum variant");
-            let attrs =
-                self.attr_validator
-                    .attr_from_ast(attrs, &variant_parent_attrs, &mut self.errors);
+            let attrs = self.attr_validator.attr_from_ast(
+                attrs,
+                variant_parent_attrs.clone(),
+                &mut self.errors,
+            );
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
@@ -361,7 +363,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_opaque.attrs,
-            &item.ty_parent_attrs,
+            item.ty_parent_attrs.clone(),
             &mut self.errors,
         );
         let mut special_method_presence = SpecialMethodPresence::default();
@@ -408,7 +410,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_struct.attrs,
-            &item.ty_parent_attrs,
+            item.ty_parent_attrs.clone(),
             &mut self.errors,
         );
         // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
@@ -430,7 +432,7 @@ impl<'ast> LoweringContext<'ast> {
 
                 let field_attrs =
                     self.attr_validator
-                        .attr_from_ast(attrs, &Attrs::default(), &mut self.errors);
+                        .attr_from_ast(attrs, Attrs::default(), &mut self.errors);
 
                 self.attr_validator.validate(
                     &field_attrs,
@@ -502,7 +504,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_trait.attrs,
-            &item.ty_parent_attrs,
+            item.ty_parent_attrs.clone(),
             &mut self.errors,
         );
 
@@ -524,7 +526,7 @@ impl<'ast> LoweringContext<'ast> {
             for ast_trait_method in ast_trait.methods.iter() {
                 let trait_method_attrs = self.attr_validator.attr_from_ast(
                     &ast_trait_method.attrs,
-                    &attrs,
+                    attrs.clone(),
                     &mut self.errors,
                 );
 
@@ -584,7 +586,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_trait_method.attrs,
-            parent_trait_attrs,
+            parent_trait_attrs.clone(),
             &mut self.errors,
         );
 
@@ -624,7 +626,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_function.item.attrs,
-            &ast_function.ty_parent_attrs,
+            ast_function.ty_parent_attrs.clone(),
             &mut self.errors,
         );
 
@@ -689,7 +691,7 @@ impl<'ast> LoweringContext<'ast> {
 
         let attrs = self.attr_validator.attr_from_ast(
             &ast_out_struct.attrs,
-            &item.ty_parent_attrs,
+            item.ty_parent_attrs.clone(),
             &mut self.errors,
         );
         let fields = {
@@ -717,7 +719,7 @@ impl<'ast> LoweringContext<'ast> {
                             ty,
                             attrs: self.attr_validator.attr_from_ast(
                                 attrs,
-                                &Attrs::default(),
+                                Attrs::default(),
                                 &mut self.errors,
                             ),
                         }),
@@ -901,7 +903,7 @@ impl<'ast> LoweringContext<'ast> {
             self.errors.set_subitem(method.name.as_str(), &method.name);
             let attrs = self.attr_validator.attr_from_ast(
                 &method.attrs,
-                method_parent_attrs,
+                method_parent_attrs.clone(),
                 &mut self.errors,
             );
             if attrs.disable {
@@ -1785,7 +1787,7 @@ impl<'ast> LoweringContext<'ast> {
 
                     let attrs = self.attr_validator.attr_from_ast(
                         &self_param.attrs,
-                        &Attrs::default(),
+                        Attrs::default(),
                         &mut self.errors,
                     );
 
@@ -1848,7 +1850,7 @@ impl<'ast> LoweringContext<'ast> {
 
                     let attrs = self.attr_validator.attr_from_ast(
                         &self_param.attrs,
-                        &Attrs::default(),
+                        Attrs::default(),
                         &mut self.errors,
                     );
 
@@ -1880,7 +1882,7 @@ impl<'ast> LoweringContext<'ast> {
 
                 let attrs = self.attr_validator.attr_from_ast(
                     &self_param.attrs,
-                    &Attrs::default(),
+                    Attrs::default(),
                     &mut self.errors,
                 );
 
@@ -1956,7 +1958,7 @@ impl<'ast> LoweringContext<'ast> {
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
             self.attr_validator
-                .attr_from_ast(&param.attrs, &Attrs::default(), &mut self.errors);
+                .attr_from_ast(&param.attrs, Attrs::default(), &mut self.errors);
 
         self.attr_validator
             .validate(&attrs, AttributeContext::Param, &mut self.errors);

@@ -1359,7 +1359,7 @@ returnVal.option() ?: return null
             write_return,
             slice_conversions,
             cleanups: &cleanups,
-            docs: self.formatter.fmt_docs(&method.docs),
+            docs: self.formatter.fmt_docs(&method.docs, &method.attrs),
             add_override_specifier_for_opaque_self_methods,
             lifetimes: &method.lifetime_env,
             method_lifetimes_map,
@@ -1526,7 +1526,7 @@ returnVal.option() ?: return null
                 special_methods: SpecialMethodsImpl::new(special_methods),
                 callback_params: self.callback_params.as_ref(),
                 use_finalizers_not_cleaners: self.use_finalizers_not_cleaners,
-                docs: self.formatter.fmt_docs(&ty.docs),
+                docs: self.formatter.fmt_docs(&ty.docs, &ty.attrs),
                 is_custom_error: ty.attrs.custom_errors,
                 generate_mocking_interface: (ty.attrs.generate_mocking_interface
                     && !self_methods.is_empty()),
@@ -1673,7 +1673,7 @@ returnVal.option() ?: return null
                         &field.ty,
                     ),
                     kt_to_native,
-                    docs: self.formatter.fmt_docs(&field.docs),
+                    docs: self.formatter.fmt_docs(&field.docs, &field.attrs),
                 }
             })
             .collect();
@@ -1695,7 +1695,7 @@ returnVal.option() ?: return null
                 native_methods: native_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
                 lifetimes,
-                docs: self.formatter.fmt_docs(&ty.docs),
+                docs: self.formatter.fmt_docs(&ty.docs, &ty.attrs),
                 is_custom_error: ty.attrs.custom_errors,
                 is_out_struct: non_out_struct.is_none(),
             }
@@ -1813,7 +1813,9 @@ returnVal.option() ?: return null
             non_native_params_and_types,
             input_params: native_input_names.join(", "),
             docs: match &method.docs {
-                Some(method_docs) => self.formatter.fmt_docs(method_docs),
+                Some(method_docs) => self
+                    .formatter
+                    .fmt_docs(method_docs, &method.attrs.clone().unwrap_or_default()),
                 None => "".to_string(),
             },
         }
@@ -1862,7 +1864,7 @@ returnVal.option() ?: return null
                 trait_methods: trait_methods.as_ref(),
                 callback_params: self.callback_params.as_ref(),
                 trait_method_names: &trait_method_names.join(", "),
-                docs: self.formatter.fmt_docs(&trt.docs),
+                docs: self.formatter.fmt_docs(&trt.docs, &trt.attrs),
             }
             .render()
             .expect("Failed to render trait template"),
@@ -1997,7 +1999,7 @@ returnVal.option() ?: return null
             companion_methods: companion_methods.as_ref(),
             native_methods: native_methods.as_ref(),
             callback_params: self.callback_params.as_ref(),
-            docs: self.formatter.fmt_docs(&ty.docs),
+            docs: self.formatter.fmt_docs(&ty.docs, &ty.attrs),
             is_custom_error: ty.attrs.custom_errors,
         }
         .render()

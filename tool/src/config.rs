@@ -27,6 +27,8 @@ pub struct SharedConfig {
     pub custom_extra_code_location: PathBuf,
     /// List of features to enable/disable generation for.
     pub features_enabled: HashSet<String>,
+    /// List of unstable features.
+    pub semver_unstable_features: HashSet<String>,
     /// Where the manifest for this library is located.
     /// Used to detect relative include locations for `#[diplomat::include()]`.
     /// By default, is set to the parent of the parent of the given entry file.
@@ -44,6 +46,7 @@ impl SharedConfig {
                 | "unsafe_references_in_callbacks"
                 | "custom_extra_code_location"
                 | "features_enabled"
+                | "semver_unstable_features"
         )
     }
 
@@ -96,6 +99,35 @@ impl SharedConfig {
                     _ => panic!("Config key `features_enabled` must be an array or string."),
                 };
                 self.features_enabled = hash_set;
+            }
+            "semver_unstable_features" => {
+                let hash_set = match &value {
+                    Value::Array(arr) => {
+                        let str_arr : HashSet<String> = arr.iter().map(|v| {
+                            let st = v.as_str().unwrap_or_else(|| panic!("Expected semver_unstable_features=[] to be an array of strings. Got {v:?}"));
+                            st.to_string()
+                        }).collect();
+                        str_arr
+                    }
+                    Value::Table(t) if t.len() == 1 => t.keys().cloned().collect(),
+                    Value::String(st) => {
+                        // Serde Toml has screwed up reading an array:
+                        if st.starts_with("[") && st.ends_with("]") {
+                            let slice = &st[1..st.len() - 1];
+                            let hash = slice
+                                .split(",")
+                                .map(|s| s.replace("\"", "").trim().to_string())
+                                .collect();
+                            hash
+                        } else {
+                            HashSet::from([st.clone()])
+                        }
+                    }
+                    _ => {
+                        panic!("Config key `semver_unstable_features` must be an array or string.")
+                    }
+                };
+                self.semver_unstable_features = hash_set;
             }
             _ => (),
         }

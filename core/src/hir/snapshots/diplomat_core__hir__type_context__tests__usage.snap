@@ -41,6 +41,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -77,6 +78,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -160,6 +162,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -196,6 +199,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -424,6 +428,7 @@ TypeContext {
                             ),
                             attrs: Attrs {
                                 disable: false,
+                                unstable: false,
                                 deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
@@ -477,6 +482,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -581,6 +587,7 @@ TypeContext {
                             ),
                             attrs: Attrs {
                                 disable: false,
+                                unstable: false,
                                 deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
@@ -645,6 +652,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -725,6 +733,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -812,6 +821,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -908,6 +918,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -1020,6 +1031,7 @@ TypeContext {
                             ),
                             attrs: Attrs {
                                 disable: false,
+                                unstable: false,
                                 deprecated: None,
                                 namespace: None,
                                 rename: RenameAttr {
@@ -1058,6 +1070,7 @@ TypeContext {
                     ),
                     attrs: Attrs {
                         disable: false,
+                        unstable: false,
                         deprecated: None,
                         namespace: None,
                         rename: RenameAttr {
@@ -1093,6 +1106,7 @@ TypeContext {
             ],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -1166,6 +1180,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -1239,6 +1254,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {
@@ -1388,6 +1404,7 @@ TypeContext {
             methods: [],
             attrs: Attrs {
                 disable: false,
+                unstable: false,
                 deprecated: None,
                 namespace: None,
                 rename: RenameAttr {

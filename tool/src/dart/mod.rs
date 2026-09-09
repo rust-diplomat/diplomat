@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fmt::Write;
 
 use crate::{filters, ErrorStore, FileMap};
-use diplomat_core::hir::OutputOnly;
 use diplomat_core::hir::{
     self,
     borrowing_param::{
@@ -13,6 +12,7 @@ use diplomat_core::hir::{
     ReturnType, SelfType, SpecialMethod, SpecialMethodPresence, StructPathLike, SuccessType,
     TyPosition, Type, TypeContext, TypeDef, TypeId,
 };
+use diplomat_core::hir::{Attrs, OutputOnly};
 
 use askama::Template;
 use itertools::Itertools;
@@ -238,7 +238,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             type_name: &'a str,
             methods: &'a [MethodInfo<'a>],
             docs: String,
-            deprecated: Option<&'a str>,
+            attrs: &'a Attrs,
             destructor: &'a str,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -248,7 +248,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             type_name,
             methods: methods.as_slice(),
             destructor: destructor.as_str(),
-            deprecated: ty.attrs.deprecated.as_deref(),
+            attrs: &ty.attrs,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -367,7 +367,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             mutable: bool,
             fields: Vec<FieldInfo<'a, P>>,
             methods: Vec<MethodInfo<'a>>,
-            deprecated: Option<&'a str>,
+            attrs: &'a Attrs,
             docs: String,
             lifetimes: &'a LifetimeEnv,
             special: SpecialMethodGenInfo<'a>,
@@ -379,7 +379,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             mutable,
             fields,
             methods,
-            deprecated: ty.attrs.deprecated.as_deref(),
+            attrs: &ty.attrs,
             docs: self.formatter.fmt_docs(&ty.docs),
             lifetimes: &ty.lifetimes,
             special,
@@ -679,7 +679,6 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
         Some(MethodInfo {
             method,
-            deprecated: method.attrs.deprecated.as_deref(),
             docs,
             declaration,
             abi_name,
@@ -1470,7 +1469,6 @@ fn is_contiguous_enum(ty: &hir::EnumDef) -> bool {
 struct MethodInfo<'a> {
     /// HIR of the method being rendered
     method: &'a hir::Method,
-    deprecated: Option<&'a str>,
     /// Docs
     docs: String,
     /// The declaration (everything before the parameter list)

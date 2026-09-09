@@ -1,8 +1,11 @@
   {%- if !m.docs.is_empty() %}
   {{~ m.docs|prefix_trimmed("  /// ")}}
   {%- endif %}
-  {% if let Some(deprecated) = m.deprecated -%}
+  {% if let Some(deprecated) = m.method.attrs.deprecated -%}
   @core.Deprecated('{{ deprecated }}')
+  {% endif -%}
+  {% if m.method.attrs.unstable -%}
+  @meta.experimental
   {% endif -%}
   {{ m.declaration }} {
     {%- for arena in m.arenas %}
