@@ -1734,6 +1734,7 @@ impl AttributeValidator for BasicAttributeValidator {
     }
     fn is_unstable(&self, cfg: &syn::Attribute) -> bool {
         self.semver_unstable_features.iter().any(|f| {
+            // TODO(#1274): Improve this heuristic
             cfg.to_token_stream()
                 .to_string()
                 .contains(&format!("feature = {f:?}"))
