@@ -735,6 +735,16 @@ impl TypeName {
             _ => self.clone(),
         }
     }
+
+    /// Is this an owned byte slice (`Box<[u8]>`)? It's the one owned-slice shape
+    /// some backends can return over FFI, so a few sites special-case it.
+    pub fn is_owned_byte_slice(&self) -> bool {
+        matches!(
+            self,
+            TypeName::PrimitiveSlice(None, PrimitiveType::u8 | PrimitiveType::byte, _)
+        )
+    }
+
     /// Converts the [`TypeName`] back into an AST node that can be spliced into a program.
     pub fn to_syn(&self) -> syn::Type {
         match self {

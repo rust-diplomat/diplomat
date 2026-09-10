@@ -2132,17 +2132,15 @@ mod test {
         let errors = lowering_errors(tk_stream, true);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
+            errors[0].contains("except for top-level method-return `Box<[u8]>`"),
             "unexpected diagnostic: {}",
             errors[0]
         );
     }
 
-    // `Option<Box<[u8]>>` is rejected at HIR-lowering time: the new arm in
-    // `core::hir::lowering` requires `!in_result_option`, so an optioned
-    // owned slice falls through to the pre-existing rejection.
+    // `Option<Box<[u8]>>` lowers to tagged DiplomatOption + idiomatic `RustVec?`.
     #[test]
-    fn optional_owned_byte_slice_return_is_rejected() {
+    fn optional_owned_byte_slice_return_lowers_to_nullable_rustvec() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -2157,21 +2155,40 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream, true);
-        assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
+        let (files, errors) = run_dotnet(tk_stream);
         assert!(
-            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
-            "unexpected diagnostic: {}",
-            errors[0]
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let buf = files.get("Buf.cs").expect("expected Buf.cs output");
+        assert!(
+            buf.contains("public static RustVec? Make(uint len)"),
+            "idiomatic signature should return RustVec?:\n{buf}"
+        );
+        assert!(
+            buf.contains(
+                "return result.IsSome ? new RustVec(result.Value.Ptr, result.Value.Len) : null;"
+            ),
+            "None should be null and Some should wrap as RustVec:\n{buf}"
+        );
+
+        assert!(
+            files.contains_key("DiplomatOptionDiplomatOwnedSliceU8.cs"),
+            "optional owned-byte-slice return should emit the DiplomatOption helper"
+        );
+        assert!(
+            files.contains_key("RustVec.cs"),
+            "optional owned-byte-slice return should still emit RustVec"
         );
     }
 
-    // `Result<Box<[u8]>, E>` must stay rejected: the macro leaves the ok arm
-    // as a raw `Box<[u8]>` fat pointer inside `DiplomatResult` (it only
-    // converts to the repr(C) `DiplomatOwnedSlice<u8>` for a plain top-level
-    // return), so the result union's layout would not be FFI-stable.
+    // `Result<Box<[u8]>, E>` is supported when `owned_byte_slice_returns` is on:
+    // the macro lowers the `Ok` payload to `DiplomatOwnedSlice<u8>`, and the
+    // idiomatic .NET surface wraps it as `RustVec`.
     #[test]
-    fn fallible_owned_byte_slice_return_is_rejected() {
+    fn fallible_owned_byte_slice_return_lowers_to_rustvec() {
         let tk_stream = quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -2190,12 +2207,97 @@ mod test {
             }
         };
 
-        let errors = lowering_errors(tk_stream, true);
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let buf = files.get("Buf.cs").expect("expected Buf.cs output");
+        assert!(
+            buf.contains("public static RustVec Make(uint len)"),
+            "idiomatic signature should return RustVec:\n{buf}"
+        );
+        assert!(
+            buf.contains("if (!result.IsOk)")
+                && buf.contains("throw new MyErrorException(result.Err);")
+                && buf.contains("return new RustVec(result.Ok.Ptr, result.Ok.Len);"),
+            "fallible owned-byte-slice path should throw on Err and wrap Ok as RustVec:\n{buf}"
+        );
+
+        let raw_result = files
+            .get("DiplomatResultDiplomatOwnedSliceU8MyError.cs")
+            .expect("expected Result helper struct for fallible owned-byte-slice return");
+        assert!(
+            raw_result.contains("internal DiplomatOwnedSliceU8 ok;")
+                && raw_result.contains("public DiplomatOwnedSliceU8 Ok => IsOk ? _inner.ok")
+                && raw_result.contains("internal MyError err;"),
+            "result helper should carry owned-byte-slice Ok payload and MyError Err payload:\n{raw_result}"
+        );
+    }
+
+    #[test]
+    fn fallible_owned_byte_slice_return_reports_unsupported_backend() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                pub enum MyError {
+                    A,
+                }
+
+                impl Buf {
+                    pub fn make(len: u32) -> Result<Box<[u8]>, MyError> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let errors = lowering_errors(tk_stream, false);
         assert_eq!(errors.len(), 1, "unexpected diagnostics: {errors:?}");
         assert!(
-            errors[0].contains("except for top-level `Box<[u8]>` method returns"),
+            errors[0].contains("#[diplomat::cfg(supports = owned_byte_slice_returns)]"),
             "unexpected diagnostic: {}",
             errors[0]
+        );
+    }
+
+    #[test]
+    fn fallible_owned_byte_slice_return_with_opaque_error_is_supported() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Buf;
+
+                #[diplomat::opaque]
+                pub struct MyError;
+
+                impl Buf {
+                    pub fn make(len: u32) -> Result<Box<[u8]>, Box<MyError>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet(tk_stream);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let buf = files.get("Buf.cs").expect("expected Buf.cs output");
+        assert!(
+            buf.contains("public static RustVec Make(uint len)")
+                && buf.contains("if (!result.IsOk)")
+                && buf.contains("return new RustVec(result.Ok.Ptr, result.Ok.Len);"),
+            "fallible owned-byte-slice return with opaque error should lower cleanly:\n{buf}"
         );
     }
 
@@ -2228,7 +2330,7 @@ mod test {
             !errors.is_empty()
                 && errors
                     .iter()
-                    .any(|e| e.contains("except for top-level `Box<[u8]>` method returns")),
+                    .any(|e| e.contains("except for top-level method-return `Box<[u8]>`")),
             "unexpected diagnostics: {errors:?}"
         );
     }
