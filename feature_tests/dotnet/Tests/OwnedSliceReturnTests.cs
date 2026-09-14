@@ -28,6 +28,39 @@ public class OwnedSliceReturnTests
     }
 
     [Fact]
+    public void TryMakeBytes_Ok_ReturnsExpectedContent()
+    {
+        using RustVec vec = OwnedSliceReturn.TryMakeBytes(5);
+
+        Assert.Equal(5, vec.Length);
+        Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, vec.Clone());
+    }
+
+    [Fact]
+    public void TryMakeBytes_ZeroLen_ThrowsErrorEnumException()
+    {
+        ErrorEnumException ex =
+            Assert.Throws<ErrorEnumException>(() => OwnedSliceReturn.TryMakeBytes(0));
+        Assert.Equal(ErrorEnum.Foo, ex.Inner);
+    }
+
+    [Fact]
+    public void MaybeMakeBytes_Some_ReturnsExpectedContent()
+    {
+        using RustVec? vec = OwnedSliceReturn.MaybeMakeBytes(5);
+
+        Assert.NotNull(vec);
+        Assert.Equal(5, vec!.Length);
+        Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, vec.Clone());
+    }
+
+    [Fact]
+    public void MaybeMakeBytes_ZeroLen_ReturnsNull()
+    {
+        Assert.Null(OwnedSliceReturn.MaybeMakeBytes(0));
+    }
+
+    [Fact]
     public void MakeBytes_LargeBuffer_RoundTripsEveryByte()
     {
         const int len = 4 * 1024 * 1024;

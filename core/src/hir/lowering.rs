@@ -1,12 +1,12 @@
 use super::{
     AttributeContext, AttributeValidator, Attrs, Borrow, BoundedLifetime, Callback, CallbackParam,
-    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, IntType, Lifetime,
-    LifetimeEnv, LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef,
-    OpaquePath, Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param,
-    ParamLifetimeLowerer, ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType,
-    ReturnableStructPath, SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod,
-    SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType, TraitDef,
-    TraitParamSelf, TraitPath, TyPosition, Type, TypeDef, TypeId,
+    EnumDef, EnumPath, EnumVariant, Everywhere, IdentBuf, InputOnly, Lifetime, LifetimeEnv,
+    LifetimeLowerer, LookupId, MaybeOwn, Method, Mutability, NonOptional, OpaqueDef, OpaquePath,
+    Optional, OutStructDef, OutStructField, OutStructPath, OutType, Param, ParamLifetimeLowerer,
+    ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
+    SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
+    StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
+    TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::ast::logging::write_report;
@@ -1635,19 +1635,14 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            // Plain top-level method returns only: out-struct fields and
-            // callbacks keep the old rejection, and `Result`/`Option` inners
-            // are excluded because the macro leaves the ok arm as a raw
-            // `Box<[u8]>` inside `DiplomatResult` — a fat pointer with no
-            // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
-            // shape an infallible return is converted to.
+            // Method returns only: out-struct fields and callbacks keep the old
+            // rejection. `Result`/`Option` method returns may take this path
+            // when the call site passes `in_result_option = false` — the macro
+            // converts those payloads to repr(C) `DiplomatOwnedSlice<u8>`.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
                 if context == TypeLoweringContext::Method
                     && !in_result_option
-                    && matches!(
-                        PrimitiveType::from_ast(*prim),
-                        PrimitiveType::Byte | PrimitiveType::Int(IntType::U8)
-                    ) =>
+                    && ty.is_owned_byte_slice() =>
             {
                 if !self
                     .attr_validator
@@ -1668,7 +1663,7 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::PrimitiveSlice(None, _, _stdlib)
             | ast::TypeName::StrReference(None, _, _stdlib) => {
                 self.errors.push(LoweringError::Other(
-                    "Owned slices cannot be returned, except for top-level `Box<[u8]>` method returns on backends supporting `owned_byte_slice_returns`.".into(),
+                    "Owned slices cannot be returned, except for top-level method-return `Box<[u8]>` (including as a `Result`/`Option` payload) on backends supporting `owned_byte_slice_returns`.".into(),
                 ));
                 Err(())
             }
@@ -2107,7 +2102,9 @@ impl<'ast> LoweringContext<'ast> {
                             &mut return_ltl,
                             in_path,
                             TypeLoweringContext::Method,
-                            true,
+                            // `Box<[u8]>` Ok payloads take the plain method-return
+                            // path — the macro converts them to `DiplomatOwnedSlice<u8>`.
+                            !ty.is_owned_byte_slice(),
                         )
                         .map(SuccessType::OutType),
                 };
@@ -2163,12 +2160,15 @@ impl<'ast> LoweringContext<'ast> {
                     .map(ReturnType::Infallible),
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(write_or_unit)),
                 _ => {
+                    // `Option<Box<[u8]>>` uses the same FFI-safe owned-slice
+                    // payload path as a bare/`Result` return (macro converts).
+                    let in_result_option = !value_ty.is_owned_byte_slice();
                     let t = self.lower_out_type(
                         value_ty,
                         &mut return_ltl,
                         in_path,
                         TypeLoweringContext::Method,
-                        true,
+                        in_result_option,
                     );
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {

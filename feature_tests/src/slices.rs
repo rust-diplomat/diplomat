@@ -1,5 +1,6 @@
 #[diplomat::bridge]
 pub mod ffi {
+    use crate::result::ffi::ErrorEnum;
     use diplomat_runtime::{DiplomatStr, DiplomatStr16Slice, DiplomatStrSlice, DiplomatWrite};
     use std::fmt::Write as _;
 
@@ -231,6 +232,25 @@ pub mod ffi {
         /// GC memory-pressure path.
         pub fn make_bytes(len: u32) -> Box<[u8]> {
             (0..len).map(|i| (i % 256) as u8).collect()
+        }
+
+        /// Fallible variant of [`Self::make_bytes`]: errors on `len == 0`.
+        /// Exercises the `Result<Box<[u8]>, E>` bridge shape.
+        pub fn try_make_bytes(len: u32) -> Result<Box<[u8]>, ErrorEnum> {
+            if len == 0 {
+                return Err(ErrorEnum::Foo);
+            }
+            Ok((0..len).map(|i| (i % 256) as u8).collect())
+        }
+
+        /// Optional variant of [`Self::make_bytes`]: `None` on `len == 0`.
+        /// Exercises the `Option<Box<[u8]>>` bridge shape.
+        pub fn maybe_make_bytes(len: u32) -> Option<Box<[u8]>> {
+            if len == 0 {
+                None
+            } else {
+                Some((0..len).map(|i| (i % 256) as u8).collect())
+            }
         }
     }
 
