@@ -9,7 +9,7 @@ use super::{
     TraitParamSelf, TraitPath, TyPosition, Type, TypeDef, TypeId,
 };
 use crate::ast::attrs::AttrInheritContext;
-use crate::ast::logging::write_report;
+use crate::ast::logging::{ContextLocation, write_report};
 use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
@@ -123,7 +123,17 @@ impl LoweringReport {
             format!("Lowering error in {location}"),
             self.context.location.clone(),
             format!("{}", self.error),
-            vec![],
+            match &self.error {
+                LoweringError::InvalidLocation { context, .. } => {
+                    match context {
+                        TypeLoweringContext::Struct(field) if let Some(sp) = field.span() => {
+                            vec![ContextLocation::new(sp, "".into())]
+                        }
+                        _ => vec![],
+                    }
+                }
+                _ => vec![]
+            },
         )
     }
 }
@@ -987,7 +997,6 @@ impl<'ast> LoweringContext<'ast> {
         let mut disallow_in_callbacks = |msg: &str| {
             if matches!(context, TypeLoweringContext::Callback(..)) {
                 self.errors.push(LoweringError::InvalidLocation {
-                    // TODO: This is `lower_type`, so for callbacks this is a return type
                     context: context.clone(),
                     reason: msg.into()
                 });
@@ -1022,7 +1031,10 @@ impl<'ast> LoweringContext<'ast> {
                             MaybeOwn::Own,
                         )))
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
-                        self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
+                        self.errors.push(LoweringError::InvalidLocation {
+                            context: context.clone(),
+                            reason: format!("{ty} in {path} is marked with #[diplomat::out], but found in input.")
+                        });
                         Err(())
                     } else {
                         unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
