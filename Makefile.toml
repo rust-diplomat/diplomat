@@ -92,6 +92,7 @@ dependencies = [
     "test-kotlin-feature",
     "test-nanobind-feature",
     "test-dotnet-feature",
+    "test-rust-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -413,6 +414,7 @@ dependencies = [
     "gen-kotlin-feature",
     "gen-nanobind-feature",
     "gen-dotnet-feature",
+    "gen-rust-feature",
 ]
 
 [tasks.gen-example]
@@ -450,7 +452,15 @@ dependencies = ["gen-js-feature", "gen-js-example"]
 category = "Code generation"
 dependencies = ["gen-dotnet-feature", "gen-dotnet-example"]
 
+# The Rust backend emits unformatted source, so the committed fixture is rustfmt
+# output. CI diffs `cargo make gen` against the working tree ("Test code is
+# fresh"), so the format pass is part of generation rather than an optional extra
+# in check.sh.
 [tasks.gen-rust-feature]
+category = "Code generation"
+run_task = { name = ["gen-rust-feature-bindings", "gen-rust-feature-format"] }
+
+[tasks.gen-rust-feature-bindings]
 category = "Code generation"
 command = "cargo"
 args = [
@@ -459,6 +469,11 @@ args = [
     "--entry", "feature_tests/rust/provider/src/lib.rs",
     "--config-file", "feature_tests/rust/provider/config.toml",
 ]
+
+[tasks.gen-rust-feature-format]
+category = "Code generation"
+command = "cargo"
+args = ["fmt", "--manifest-path", "feature_tests/rust/generated/Cargo.toml"]
 
 [tasks.gen-rust]
 category = "Code generation"

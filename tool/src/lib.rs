@@ -31,6 +31,16 @@ use std::path::Path;
 
 pub use hir::DocsUrlGenerator;
 
+/// Every target language this tool generates bindings for.
+///
+/// Single source of truth for "which backends exist". The book's preprocessor
+/// renders its per-attribute support lists from this, so a backend missing here
+/// silently disappears from the documentation. Keep in sync with the dispatch in
+/// [`get_supported`]; `target_languages_are_dispatchable` guards one direction.
+pub const TARGET_LANGUAGES: &[&str] = &[
+    "c", "cpp", "dart", "demo_gen", "dotnet", "js", "kotlin", "nanobind", "rust",
+];
+
 pub fn get_supported(target_language: &str) -> hir::BackendAttrSupport {
     match target_language {
         "c" => c::attr_support(),
@@ -364,5 +374,19 @@ pub(crate) fn read_custom_binding<'a, 'b>(
         }
         hir::IncludeSource::Source(s) => Ok(s.clone()),
         _ => panic!("Unrecognized IncludeSource: {:?}", source),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// `get_supported` panics on an unknown target, so this fails if a language is
+    /// advertised in [`TARGET_LANGUAGES`] without a dispatch arm behind it.
+    #[test]
+    fn target_languages_are_dispatchable() {
+        for language in TARGET_LANGUAGES {
+            get_supported(language);
+        }
     }
 }
