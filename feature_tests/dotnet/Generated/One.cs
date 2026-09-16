@@ -49,7 +49,7 @@ public partial class One
         get
         {
             RustHandle<Raw.One>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("One");
             }

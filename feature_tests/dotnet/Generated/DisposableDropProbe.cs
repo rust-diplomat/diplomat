@@ -49,7 +49,7 @@ public partial class DisposableDropProbe: IDisposable
         get
         {
             RustHandle<Raw.DisposableDropProbe>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("DisposableDropProbe");
             }
@@ -83,6 +83,31 @@ public partial class DisposableDropProbe: IDisposable
             {
                 selfLease?.Release();
             }
+        }
+    }
+
+    public ulong DropsDuringSpin(ulong millis)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.DisposableDropProbe>? selfLease = null;
+            try
+            {
+                selfLease = Handle.Lease(BorrowKind.Shared);
+                return Raw.DisposableDropProbe.DropsDuringSpin(selfLease!.Ptr, millis);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public static bool IsSpinning()
+    {
+        unsafe
+        {
+            return Raw.DisposableDropProbe.IsSpinning();
         }
     }
 
@@ -122,8 +147,8 @@ public partial class DisposableDropProbe: IDisposable
     /// <remarks>
     /// Retained-borrow returns sourced from a manually_disposable opaque are
     /// rejected during generation, so Dispose is not a parent-invalidation API.
-    /// Throws <see cref="InvalidOperationException"/> when a native operation on
-    /// this value is still in progress on the current thread.
+    /// A call still in flight on this value finishes first: the native value is
+    /// released when that call returns. Later calls throw <see cref="ObjectDisposedException"/>.
     /// </remarks>
     public void Dispose()
     {

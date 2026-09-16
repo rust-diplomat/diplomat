@@ -49,7 +49,7 @@ public partial class FixedDecimal
         get
         {
             RustHandle<Raw.FixedDecimal>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("FixedDecimal");
             }

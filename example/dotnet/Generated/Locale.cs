@@ -49,7 +49,7 @@ public partial class Locale
         get
         {
             RustHandle<Raw.Locale>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("Locale");
             }

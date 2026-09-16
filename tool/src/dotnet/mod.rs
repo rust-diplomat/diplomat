@@ -1537,17 +1537,18 @@ mod test {
             .expect("expected RustHandle.cs output");
 
         assert!(
-            rust_handle.contains("private IntPtr _ptr")
+            rust_handle.contains("class RustHandle<T> : SafeHandle")
                 && rust_handle.contains("private LifetimeEdges _edges"),
-            "the runtime should have one pointer owner and explicit source edges:\n{rust_handle}"
+            "the runtime should own the pointer through one SafeHandle with explicit source edges:\n{rust_handle}"
         );
         assert!(
-            rust_handle.contains("private int _activeOperations")
-                && rust_handle
+            rust_handle.contains("DangerousAddRef(ref acquired)")
+                && rust_handle.contains("internal void ExitOperation() => DangerousRelease();")
+                && !rust_handle
                     .contains("Cannot dispose a native value while an operation is active"),
-            "active operation guards must reject same-thread reentrant disposal:\n{rust_handle}"
+            "the SafeHandle count must cover only in-flight calls so Dispose defers instead of throwing:\n{rust_handle}"
         );
-        assert!(!rust_handle.contains("SafeHandle") && !rust_handle.contains("_refCount"));
+        assert!(!rust_handle.contains("_refCount") && !rust_handle.contains("_activeOperations"));
 
         // No opaque wrapper should do its own separate pin-disposal — that
         // responsibility lives entirely in RustHandle.

@@ -49,7 +49,7 @@ public partial class RenamedAttrOpaque2
         get
         {
             RustHandle<Raw.RenamedAttrOpaque2>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedAttrOpaque2");
             }

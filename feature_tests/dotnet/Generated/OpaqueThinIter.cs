@@ -49,7 +49,7 @@ public partial class OpaqueThinIter
         get
         {
             RustHandle<Raw.OpaqueThinIter>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueThinIter");
             }

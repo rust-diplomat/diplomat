@@ -77,7 +77,7 @@ public partial class Bar
         get
         {
             RustHandle<Raw.Bar>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("Bar");
             }

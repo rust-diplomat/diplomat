@@ -49,7 +49,7 @@ public partial class RenamedDeprecatedOpaque
         get
         {
             RustHandle<Raw.RenamedDeprecatedOpaque>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedDeprecatedOpaque");
             }

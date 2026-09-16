@@ -49,7 +49,7 @@ public partial class RefList
         get
         {
             RustHandle<Raw.RefList>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RefList");
             }

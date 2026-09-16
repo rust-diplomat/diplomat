@@ -49,7 +49,7 @@ public partial class RcSource
         get
         {
             RustHandle<Raw.RcSource>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RcSource");
             }

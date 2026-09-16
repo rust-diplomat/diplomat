@@ -49,7 +49,7 @@ public partial class Utf16Wrap
         get
         {
             RustHandle<Raw.Utf16Wrap>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("Utf16Wrap");
             }

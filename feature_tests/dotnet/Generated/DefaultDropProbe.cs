@@ -49,7 +49,7 @@ public partial class DefaultDropProbe
         get
         {
             RustHandle<Raw.DefaultDropProbe>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("DefaultDropProbe");
             }

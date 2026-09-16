@@ -49,7 +49,7 @@ public partial class SliceParseError
         get
         {
             RustHandle<Raw.SliceParseError>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("SliceParseError");
             }

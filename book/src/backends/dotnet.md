@@ -129,9 +129,11 @@ impl Source {
 }
 ```
 
-A same-thread `Dispose()` or mutation attempt while an operation or `WithSpan` callback exposes
-a native pointer throws instead of freeing that pointer. Callers must synchronize calls and
-disposal across threads; this backend does not promise that race is safe.
+A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
+instead of invalidating that pointer. Every handle is a `SafeHandle` whose count covers only
+the calls in flight on that value, so `Dispose()` during such a call, from any thread, defers
+the Rust destructor until the last in-flight call returns. The runtime does not serialize
+overlapping calls on one value; conflicting borrows throw.
 
 An owned return that borrows a managed slice or string parameter keeps that buffer pinned until
 its handle is disposed or finalized. A type that also hands out borrows cannot be
@@ -145,11 +147,12 @@ By default, generated opaques are **finalizer-only**: no public `Dispose()`, cle
 through a private idempotent path invoked by the handle finalizer. Add
 `#[diplomat::attr(dotnet, manually_disposable)]` on an opaque type declaration to generate
 `: IDisposable` plus a public `Dispose()` that runs the same cleanup and
-`GC.SuppressFinalize(this)`. `Dispose()` releases this wrapper's own native resource
-immediately, and throws `InvalidOperationException` if a native operation on the value is still
-in progress on the current thread. Methods that would expose a retained borrow from this source
-are rejected during generation, so `Dispose()` is not a parent-invalidation API. Native
-operations use scoped leases so the handle and its source edges stay alive through P/Invoke.
+`GC.SuppressFinalize(this)`. `Dispose()` releases this wrapper's own native resource as soon
+as no call is in flight on it: at once when idle, otherwise when the last in-flight call
+returns. After that release, calls on the wrapper throw `ObjectDisposedException`. Methods that
+would expose a retained borrow from this source are rejected during generation, so `Dispose()`
+is not a parent-invalidation API. Native operations use scoped leases so the handle and its
+source edges stay alive through P/Invoke.
 
 ## String encoding
 

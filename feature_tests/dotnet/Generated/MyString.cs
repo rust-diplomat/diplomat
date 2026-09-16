@@ -99,7 +99,7 @@ public partial class MyString
         get
         {
             RustHandle<Raw.MyString>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("MyString");
             }

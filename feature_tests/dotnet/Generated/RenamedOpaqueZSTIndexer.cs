@@ -49,7 +49,7 @@ public partial class RenamedOpaqueZSTIndexer
         get
         {
             RustHandle<Raw.RenamedOpaqueZSTIndexer>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedOpaqueZSTIndexer");
             }

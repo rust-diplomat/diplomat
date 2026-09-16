@@ -49,7 +49,7 @@ public partial class RcDependent
         get
         {
             RustHandle<Raw.RcDependent>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RcDependent");
             }

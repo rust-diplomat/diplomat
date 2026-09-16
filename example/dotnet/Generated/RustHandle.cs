@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Somelib.Diplomat;
@@ -233,26 +234,26 @@ internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanag
     }
 }
 
-internal sealed unsafe class RustHandle<T> where T : unmanaged
+// The SafeHandle count covers only the calls in flight on this value, so Dispose() during a
+// call waits for that call to return before running the Rust destructor. Edges never count.
+internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 {
-    private IntPtr _ptr;
     private readonly RustDestructor<T>? _destructor;
     private readonly WrapperKind _wrapperKind;
     private LifetimeEdges _edges;
     private BorrowLedger _borrows;
-    private int _activeOperations;
-    private int _closed;
 
     private RustHandle(
         T* ptr,
         RustDestructor<T>? destructor,
         WrapperKind kind,
         ILifetimeEdge?[] edges)
+        : base(IntPtr.Zero, ownsHandle: true)
     {
-        _ptr = (IntPtr)ptr;
         _destructor = destructor;
         _wrapperKind = kind;
         _edges = new LifetimeEdges(kind, edges);
+        SetHandle((IntPtr)ptr);
     }
 
     internal static RustHandle<T> Owned(T* ptr, RustDestructor<T> destructor) =>
@@ -298,27 +299,16 @@ internal sealed unsafe class RustHandle<T> where T : unmanaged
         }
     }
 
-    ~RustHandle()
-    {
-        try
-        {
-            ReleaseWrapper();
-        }
-        catch
-        {
-        }
-    }
+    public override bool IsInvalid => handle == IntPtr.Zero;
 
-    internal T* Ptr => (T*)Volatile.Read(ref _ptr);
-
-    internal bool IsNull => Volatile.Read(ref _closed) != 0 || Volatile.Read(ref _ptr) == IntPtr.Zero;
+    internal T* Ptr => (T*)handle;
 
     internal bool IsCurrent(MutationVersion mutationVersion) =>
-        !IsNull && _borrows.IsCurrent(mutationVersion);
+        !IsClosed && _borrows.IsCurrent(mutationVersion);
 
     internal BorrowLease<T> Lease(BorrowKind kind)
     {
-        if (IsNull)
+        if (IsClosed)
         {
             throw new ObjectDisposedException(typeof(T).Name);
         }
@@ -350,7 +340,7 @@ internal sealed unsafe class RustHandle<T> where T : unmanaged
         }
 
         BorrowLease<T> lease = Lease(BorrowKind.Shared);
-        if (_borrows.IsCurrent(mutationVersion) && !IsNull)
+        if (_borrows.IsCurrent(mutationVersion) && !IsClosed)
         {
             return lease;
         }
@@ -362,25 +352,15 @@ internal sealed unsafe class RustHandle<T> where T : unmanaged
 
     internal OperationLease<T> AcquireOperation()
     {
-        if (IsNull)
-        {
-            throw new ObjectDisposedException(typeof(T).Name);
-        }
-
-        Interlocked.Increment(ref _activeOperations);
-        if (IsNull)
-        {
-            ExitOperation();
-            throw new ObjectDisposedException(typeof(T).Name);
-        }
-
+        bool acquired = false;
+        DangerousAddRef(ref acquired);
         try
         {
             return new OperationLease<T>(this, _edges.AcquireOperationLeases());
         }
         catch
         {
-            ExitOperation();
+            DangerousRelease();
             throw;
         }
     }
@@ -389,38 +369,32 @@ internal sealed unsafe class RustHandle<T> where T : unmanaged
 
     internal MutationVersion ExitBorrowKeepingReference(BorrowKind kind) => _borrows.Exit(kind);
 
-    internal void ExitOperation() => Interlocked.Decrement(ref _activeOperations);
+    internal void ExitOperation() => DangerousRelease();
 
     internal void ReleaseWrapper()
     {
-        if (Volatile.Read(ref _activeOperations) != 0)
-        {
-            throw new InvalidOperationException(
-                "Cannot dispose a native value while an operation is active.");
-        }
-
-        if (Interlocked.Exchange(ref _closed, 1) != 0)
-        {
-            return;
-        }
-
         if (_wrapperKind == WrapperKind.ExclusiveView)
         {
             _borrows.EndScope();
         }
 
-        IntPtr ptr = Interlocked.Exchange(ref _ptr, IntPtr.Zero);
+        Dispose();
+    }
+
+    protected override bool ReleaseHandle()
+    {
         try
         {
-            if (ptr != IntPtr.Zero && _destructor is not null)
+            if (_destructor is not null)
             {
-                _destructor((T*)ptr);
+                _destructor((T*)handle);
             }
         }
         finally
         {
             _edges.Release();
-            GC.SuppressFinalize(this);
         }
+
+        return true;
     }
 }

@@ -49,7 +49,7 @@ public partial class RcFinalizerSource
         get
         {
             RustHandle<Raw.RcFinalizerSource>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RcFinalizerSource");
             }

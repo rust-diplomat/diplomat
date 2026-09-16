@@ -16,6 +16,13 @@ internal partial struct DisposableDropProbe
     [return: MarshalAs(UnmanagedType.U1)]
     internal static unsafe extern bool IsAlive(DisposableDropProbe* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "DisposableDropProbe_drops_during_spin", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern ulong DropsDuringSpin(DisposableDropProbe* handle, ulong millis);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "DisposableDropProbe_is_spinning", CallingConvention = CallingConvention.Cdecl)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    internal static unsafe extern bool IsSpinning();
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "DisposableDropProbe_reset_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void ResetDropCount();
 

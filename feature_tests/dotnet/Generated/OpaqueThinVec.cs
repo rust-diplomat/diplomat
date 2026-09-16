@@ -102,7 +102,7 @@ public partial class OpaqueThinVec
         get
         {
             RustHandle<Raw.OpaqueThinVec>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("OpaqueThinVec");
             }

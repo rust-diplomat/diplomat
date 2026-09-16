@@ -587,6 +587,20 @@ pub mod ffi {
             true
         }
 
+        /// Sleeps without touching `self`, then reports how many probes dropped meanwhile:
+        /// zero proves that a Dispose() racing this call waited for it to return.
+        pub fn drops_during_spin(&self, millis: u64) -> u64 {
+            let before = super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst);
+            super::DISPOSABLE_DROP_PROBE_SPINNING.store(true, super::Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_millis(millis));
+            super::DISPOSABLE_DROP_PROBE_SPINNING.store(false, super::Ordering::SeqCst);
+            super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst) - before
+        }
+
+        pub fn is_spinning() -> bool {
+            super::DISPOSABLE_DROP_PROBE_SPINNING.load(super::Ordering::SeqCst)
+        }
+
         pub fn reset_drop_count() {
             super::DISPOSABLE_DROP_PROBE_DROPS.store(0, super::Ordering::SeqCst);
         }
@@ -926,6 +940,8 @@ pub(crate) static DEFAULT_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static DISPOSABLE_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
+pub(crate) static DISPOSABLE_DROP_PROBE_SPINNING: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
 pub(crate) use std::sync::atomic::Ordering;
 
 // Shared counters for the lifetime fixtures. The owned fields use these

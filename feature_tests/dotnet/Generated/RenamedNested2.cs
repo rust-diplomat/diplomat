@@ -49,7 +49,7 @@ public partial class RenamedNested2
         get
         {
             RustHandle<Raw.RenamedNested2>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("RenamedNested2");
             }

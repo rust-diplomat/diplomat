@@ -49,7 +49,7 @@ public partial class Opaque: IDisposable
         get
         {
             RustHandle<Raw.Opaque>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("Opaque");
             }
@@ -190,8 +190,8 @@ public partial class Opaque: IDisposable
     /// <remarks>
     /// Retained-borrow returns sourced from a manually_disposable opaque are
     /// rejected during generation, so Dispose is not a parent-invalidation API.
-    /// Throws <see cref="InvalidOperationException"/> when a native operation on
-    /// this value is still in progress on the current thread.
+    /// A call still in flight on this value finishes first: the native value is
+    /// released when that call returns. Later calls throw <see cref="ObjectDisposedException"/>.
     /// </remarks>
     public void Dispose()
     {

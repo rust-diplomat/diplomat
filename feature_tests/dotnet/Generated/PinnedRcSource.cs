@@ -49,7 +49,7 @@ public partial class PinnedRcSource
         get
         {
             RustHandle<Raw.PinnedRcSource>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("PinnedRcSource");
             }

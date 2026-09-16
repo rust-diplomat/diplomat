@@ -49,7 +49,7 @@ public partial class DataProvider
         get
         {
             RustHandle<Raw.DataProvider>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("DataProvider");
             }

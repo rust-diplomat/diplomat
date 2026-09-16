@@ -49,7 +49,7 @@ public partial class OptionOpaqueChar
         get
         {
             RustHandle<Raw.OptionOpaqueChar>? inner = _inner;
-            if (inner is null || inner.IsNull)
+            if (inner is null || inner.IsClosed)
             {
                 throw new ObjectDisposedException("OptionOpaqueChar");
             }
