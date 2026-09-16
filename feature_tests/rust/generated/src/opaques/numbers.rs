@@ -141,6 +141,25 @@ impl Numbers {
             }
         }
     }
+    /// A `'static` slice parameter, gated on `static_slices`: the borrow carries no
+    /// caller lifetime, so the generated signature must not introduce one.
+    pub fn from_static(values: &'static [u32]) -> super::Numbers {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe {
+            ffi::Numbers_from_static(ffi::DiplomatSlice::<u32> {
+                ptr: values.as_ptr(),
+                len: values.len(),
+            })
+        };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Numbers");
+            super::Numbers {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
 }
 
 impl<'view> NumbersRef<'view> {

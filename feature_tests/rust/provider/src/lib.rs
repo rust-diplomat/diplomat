@@ -322,6 +322,15 @@ pub mod ffi {
                 values: values.to_vec(),
             })
         }
+
+        /// A `'static` slice parameter, gated on `static_slices`: the borrow carries no
+        /// caller lifetime, so the generated signature must not introduce one.
+        #[diplomat::cfg(supports = static_slices)]
+        pub fn from_static(values: &'static [u32]) -> Box<Self> {
+            Box::new(Self {
+                values: values.to_vec(),
+            })
+        }
     }
 
     /// Float scalars and a float slice. The constructor is the exact shape the shared

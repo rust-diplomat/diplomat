@@ -177,6 +177,10 @@ fn capability_gated_apis_are_generated() {
     let numbers = Numbers::from_slice(&[3, 4, 5]);
     assert_eq!(numbers.sum(), 12);
 
+    // A `'static` slice takes no caller lifetime, so it can outlive this frame.
+    static STATIC_VALUES: [u32; 3] = [7, 8, 9];
+    assert_eq!(Numbers::from_static(&STATIC_VALUES).sum(), 24);
+
     let message = Message::new(b"hello");
     assert_eq!(message.utf8_len(), 5);
 

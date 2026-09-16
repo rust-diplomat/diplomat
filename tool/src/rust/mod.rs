@@ -2396,4 +2396,93 @@ mod tests {
             assert!(files.is_empty(), "{:#?}", files.keys());
         }
     }
+
+    /// A plain `#[diplomat::attr(auto, constructor)]` is accepted and emitted. For Rust
+    /// that is an ordinary associated function, so its generated name is just the
+    /// method's own name — the flag is a promise that such methods are lowered at all.
+    #[test]
+    fn plain_constructors_are_accepted() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Thing(u32);
+                impl Thing {
+                    #[diplomat::attr(auto, constructor)]
+                    pub fn create(value: u32) -> Box<Self> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("pub fn create(value: u32)"), "{safe}");
+    }
+
+    /// How each capability flag claimed by `attr_support` is covered.
+    ///
+    /// `attr_support` is a promise to HIR lowering, not documentation: a provider
+    /// guarded by `#[diplomat::cfg(supports = <flag>)]` is accepted and lowered, so an
+    /// untested promise can yield bindings that compile and misbehave. A `gated:` row
+    /// means the flag guards a fixture API, so dropping the flag removes the API and the
+    /// consumer tests stop compiling; the other rows name the generator test plus the
+    /// fixture method that exercises the shape at runtime.
+    const FLAG_COVERAGE: &[(&str, &str)] = &[
+        (
+            "constructors",
+            "plain_constructors_are_accepted; Counter::new at runtime",
+        ),
+        (
+            "memory_sharing",
+            "gated: Numbers::from_slice, Float64Vec::new",
+        ),
+        (
+            "mutable_slices",
+            "borrowed_slices_and_strings_are_lowered; Numbers::values_mut",
+        ),
+        (
+            "named_constructors",
+            "named_constructor_names_are_honoured; gated: Counter::with_value",
+        ),
+        (
+            "option",
+            "value_types_and_options_are_lowered; Counter::maybe_new",
+        ),
+        (
+            "owned_byte_slice_returns",
+            "owned_slice_returns_are_boxed; Bytes::make",
+        ),
+        ("static_slices", "gated: Numbers::from_static"),
+        (
+            "utf16_strings",
+            "gated: WideMessage; capability_flags_gate_generated_apis",
+        ),
+        ("utf8_strings", "gated: Message::utf8_len"),
+    ];
+
+    /// Every `support.<flag> = true` in `attr_support` needs a [`FLAG_COVERAGE`] row, so
+    /// a capability cannot be claimed without covering it — the mechanical half of the
+    /// rule whose human half is the table itself.
+    #[test]
+    fn every_claimed_flag_is_covered() {
+        let source = include_str!("mod.rs");
+        let body = source
+            .split_once("pub(crate) fn attr_support")
+            .expect("attr_support is defined")
+            .1
+            .split_once("\n}\n")
+            .expect("attr_support has a body")
+            .0;
+        let mut claimed: Vec<&str> = body
+            .lines()
+            .filter_map(|line| line.trim().strip_prefix("support."))
+            .filter_map(|rest| rest.strip_suffix(" = true;"))
+            .collect();
+        claimed.sort_unstable();
+        let mut covered: Vec<&str> = FLAG_COVERAGE.iter().map(|(flag, _)| *flag).collect();
+        covered.sort_unstable();
+        assert_eq!(
+            claimed, covered,
+            "every claimed flag needs a FLAG_COVERAGE row, and every row needs a claim"
+        );
+    }
 }

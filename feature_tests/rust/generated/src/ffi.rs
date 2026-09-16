@@ -163,6 +163,7 @@ extern "C" {
     pub(super) fn Numbers_total(fields: FieldView) -> u32;
     pub(super) fn Numbers_fill(this: *const Numbers, out: DiplomatSliceMut<u32>);
     pub(super) fn Numbers_from_slice(values: DiplomatSlice<u32>) -> *mut Numbers;
+    pub(super) fn Numbers_from_static(values: DiplomatSlice<u32>) -> *mut Numbers;
     pub(super) fn SliceView_destroy(this: *mut SliceView);
     pub(super) fn SliceView_wrap(data: DiplomatSlice<u8>) -> *mut SliceView;
     pub(super) fn SliceView_len(this: *const SliceView) -> u32;
