@@ -16,11 +16,28 @@ use core::fmt;
 use std::collections::HashMap;
 use strck::IntoCk;
 
+#[derive(Debug)]
+#[non_exhaustive]
+/// For errors. Which part of the signature is invalid?
+pub enum SignatureLocation {
+    SelfParam,
+    Return,
+    Param(usize),
+}
+
 /// An error from lowering the AST to the HIR.
 /// This provides location information.
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum LoweringError {
+    /// The given method signature is invalid.
+    InvalidSignature {
+        /// Which part of the signature is invalid.
+        /// Errors already insert the method name into context, so this just adds more specific info:
+        location : SignatureLocation,
+        /// Why the signature is invalid.
+        reason : String,
+    },
     /// The purpose of having this is that translating to the HIR has enormous
     /// potential for really detailed error handling and giving suggestions.
     ///
@@ -35,6 +52,15 @@ pub enum LoweringError {
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Self::InvalidSignature { ref location, ref reason } => {
+                write!(f, "Invalid function signature at {}: {reason}", 
+                    match location {
+                        SignatureLocation::Param(idx) => format!("param {idx}"),
+                        SignatureLocation::Return => "return type".to_string(),
+                        SignatureLocation::SelfParam => "self".to_string(),
+                    }
+                )
+            }
             Self::Other(ref s) => s.fmt(f),
         }
     }
@@ -841,9 +867,10 @@ impl<'ast> LoweringContext<'ast> {
             };
 
             if !(method.return_type == Some(ast::TypeName::Ordering) || is_optional_ord) {
-                self.errors.push(LoweringError::Other(
-                    "Found comparison method that does not return cmp::Ordering or Optional<cmp::Ordering>".into(),
-                ));
+                self.errors.push(LoweringError::InvalidSignature{
+                    location: SignatureLocation::Return,
+                    reason: "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>".into(),
+                });
                 return Err(());
             }
         }
