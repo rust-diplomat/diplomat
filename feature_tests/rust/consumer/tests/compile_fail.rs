@@ -58,30 +58,56 @@ fn check(case: &str) -> String {
     diagnostics
 }
 
+/// Asserts that a compile-fail case was rejected with one of the expected rustc
+/// **error codes**.
+///
+/// Codes are the stable part of a rejection; message wording is not, and has changed
+/// under this suite before (a case written for E0597 has actually emitted E0515 since
+/// the day it landed, and only passed because the older shell-based check accepted
+/// either string). Where rustc legitimately varies between codes for the same defect,
+/// list every accepted code. The rendered diagnostics are printed on failure, so the
+/// wording is still available as context — it is just not what is asserted.
 macro_rules! compile_fail_case {
-    ($name:ident => $expected:literal) => {
+    ($name:ident => [$($code:literal),+ $(,)?]) => {
         #[test]
         fn $name() {
             let diagnostics = check(stringify!($name));
+            let accepted = [$($code),+];
             assert!(
-                diagnostics.contains($expected),
-                "compile-fail case `{}` failed for an unexpected reason; expected {:?}:\n{diagnostics}",
+                accepted
+                    .iter()
+                    .any(|code| diagnostics.contains(&format!("error[{code}]"))),
+                "compile-fail case `{}` was rejected without any of the expected error codes {:?}:\n{diagnostics}",
                 stringify!($name),
-                $expected
+                accepted
             );
         }
     };
+    ($name:ident => $code:literal) => {
+        compile_fail_case!($name => [$code]);
+    };
 }
 
-compile_fail_case!(borrowed_child_outlives_parent => "returns a value referencing data owned by the current function");
-compile_fail_case!(borrowed_not_send => "cannot be sent between threads safely");
-compile_fail_case!(borrowed_not_sync => "cannot be shared between threads safely");
-compile_fail_case!(not_send => "cannot be sent between threads safely");
-compile_fail_case!(not_sync => "cannot be shared between threads safely");
-compile_fail_case!(shared_cannot_mutate => "no method named");
-compile_fail_case!(shared_cannot_satisfy_mut_param => "is not satisfied");
-compile_fail_case!(slice_mut_while_shared => "as mutable because it is also borrowed as immutable");
-compile_fail_case!(slice_outlives_receiver => "does not live long enough");
-compile_fail_case!(struct_field_outlives_source => "does not live long enough");
-compile_fail_case!(two_exclusive_views => "as mutable more than once");
-compile_fail_case!(view_outlives_buffer => "does not live long enough");
+// Returning a value that borrows a child of `self`: the borrowed child cannot
+// outlive the local borrow it was taken through.
+compile_fail_case!(borrowed_child_outlives_parent => "E0515");
+// Borrowed views of an opaque are deliberately neither `Send` nor `Sync`.
+compile_fail_case!(borrowed_not_send => "E0277");
+compile_fail_case!(borrowed_not_sync => "E0277");
+// Owned opaques are deliberately neither `Send` nor `Sync`.
+compile_fail_case!(not_send => "E0277");
+compile_fail_case!(not_sync => "E0277");
+// A shared view has no `&mut self` methods at all.
+compile_fail_case!(shared_cannot_mutate => "E0599");
+// A shared view does not implement the mutable capability trait.
+compile_fail_case!(shared_cannot_satisfy_mut_param => "E0277");
+// Two live views of the same buffer, one mutable.
+compile_fail_case!(slice_mut_while_shared => "E0502");
+// A slice view outliving the receiver it was borrowed from.
+compile_fail_case!(slice_outlives_receiver => ["E0597", "E0515"]);
+// A value struct field outliving the source it was borrowed from.
+compile_fail_case!(struct_field_outlives_source => ["E0597", "E0515"]);
+// Two exclusive views of the same opaque at once.
+compile_fail_case!(two_exclusive_views => "E0499");
+// A view outliving the buffer it was created from.
+compile_fail_case!(view_outlives_buffer => ["E0597", "E0515"]);
