@@ -140,11 +140,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
     /// C enum type. This enables us to add methods to the enum and generally make the enum
     /// behave more like an upgraded C++ type. We don't use `enum class` because methods
     /// cannot be added to it.
-    pub fn gen_enum_def<W: std::fmt::Write + ?Sized>(
+    pub fn gen_enum_def(
         &mut self,
         ty: &'tcx hir::EnumDef,
         id: TypeId,
-        out: &mut W,
+        out: &mut dyn std::fmt::Write,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -218,11 +218,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         entry.push(namespaced_binding_fn);
     }
 
-    pub fn gen_opaque_def<W: std::fmt::Write + ?Sized>(
+    pub fn gen_opaque_def(
         &mut self,
         ty: &'tcx hir::OpaqueDef,
         id: TypeId,
-        out: &mut W,
+        out: &mut dyn std::fmt::Write,
     ) {
         let _guard = self.errors.set_context_ty((&ty.name).into());
 
@@ -254,12 +254,12 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         self.add_to_root_module(id.into());
     }
 
-    pub fn gen_struct_def<P: TyPosition, W: std::fmt::Write + ?Sized>(
+    pub fn gen_struct_def<P: TyPosition>(
         &mut self,
         def: &'tcx hir::StructDef<P>,
         id: TypeId,
-        out: &mut W,
-        binding_prefix: &mut W,
+        out: &mut dyn std::fmt::Write,
+        binding_prefix: &mut dyn std::fmt::Write,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -325,11 +325,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         self.add_to_root_module(id.into());
     }
 
-    pub fn gen_trait_def<W: std::fmt::Write + ?Sized>(
+    pub fn gen_trait_def(
         &mut self,
         def: &'tcx TraitDef,
         id: TraitId,
-        out: &mut W,
+        out: &mut dyn std::fmt::Write,
     ) {
         struct TraitMethodInfo<'a> {
             name: Cow<'a, str>,
