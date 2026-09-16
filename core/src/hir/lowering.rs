@@ -975,7 +975,11 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Type<P>, ()> {
         let mut disallow_in_callbacks = |msg: &str| {
             if context == TypeLoweringContext::Callback {
-                self.errors.push(LoweringError::Other(msg.into()));
+                self.errors.push(LoweringError::InvalidSignature {
+                    // This is `lower_type`, so for callbacks this is a return type: 
+                    location: SignatureLocation::Return,
+                    reason: msg.into()
+                });
                 Err(())
             } else {
                 Ok(())
