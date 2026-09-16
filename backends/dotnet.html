@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-406269cc.js";
+            window.path_to_searchindex_js = "../searchindex-a8275b12.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -235,11 +235,12 @@ or just twice in a row — and a one-shot <code>self.field.take()</code> behind 
 to null on the second read. Setters keep <code>&amp;mut self</code>; assigning is the point.</p>
 <p>Names must not collide either. A property that would share its name with a method, a
 struct field, the type that contains it, or one of the members Diplomat always generates
-(<code>AsFFI</code>, <code>FromFFI</code>, and <code>Dispose</code> on opaques) is rejected, because C# would not
+(<code>AsFFI</code>, <code>FromFFI</code>, and opt-in <code>Dispose</code> on opaques) is rejected, because C# would not
 compile the result.</p>
 <p>A getter that returns an owned <code>Box&lt;[u8]&gt;</code> (<code>RustVec</code>) hands back a value you own, so
-dispose it — <code>using var x = thing.Data;</code>. A getter returning an owned opaque supports the
-same pattern because every generated opaque implements <code>IDisposable</code>.</p>
+dispose it — <code>using var x = thing.Data;</code>. A getter returning an owned opaque can be used
+the same way only when that opaque is opted into
+<code>#[diplomat::attr(dotnet, manually_disposable)]</code>.</p>
 <p>In accessor position a string-shaped parameter is always <code>string</code>, even for
 <code>&amp;DiplomatStr</code> (which is <code>byte[]</code> everywhere else, zero-copy and unvalidated). A property
 cannot have one type for reading and another for writing, and every other backend already
@@ -250,38 +251,65 @@ Dart, <code>string</code> in JS. Parameters outside accessors keep the zero-copy
 methods and types. Static accessors are not supported.</p>
 <h2 id="ownership-and-memory-safety"><a class="header" href="#ownership-and-memory-safety">Ownership and memory safety</a></h2>
 <p>Every opaque type is backed by a <code>RustHandle&lt;T&gt;</code> rather than a bare pointer. A handle
-remembers who owns the underlying memory: an <strong>owned</strong> handle carries the Rust destructor
-and runs it on release; a <strong>borrowed</strong> handle carries none, so releasing it is a no-op
-because Rust still owns (and will free) that memory. This means methods returning <code>&amp;T</code> or
-<code>Option&lt;&amp;T&gt;</code> are safe to wrap without risking a double-free.</p>
-<p>Every <code>RustHandle&lt;T&gt;</code> is a small reference-counted class: pointer, destructor, edges,
-lifetime claims, and borrow state live in exactly one place. Construction starts the claim
-count at 1 (the owning wrapper). Each <code>BorrowLease</code> adds one claim and a shared or exclusive
-mode. A returned borrowed value takes over that lease: shared views convert it to a versioned
-token (<code>TransferVersioned()</code>), exclusive views keep the exclusive lease until
-<code>ScopedUse&lt;T&gt;</code> ends, and owned-borrowing returns keep the transferred lease until cleanup.
-Physical native destruction waits until the last claim is gone, in whatever order managed
-lifetimes end. Cleanup always runs the native destructor first, then disposes every edge
-(pins and borrow tokens).</p>
-<p>The reference count is updated with <code>Interlocked</code> so a user-thread retain can
-race a finalizer-thread token release on the same handle without lost updates.
-Teardown still runs only on the thread that drives the count to zero.</p>
-<p>Every generated opaque implements <code>IDisposable</code> and keeps a finalizer as a fallback.
-<code>Dispose()</code> runs the same private idempotent cleanup path and calls
-<code>GC.SuppressFinalize(this)</code>. It releases this wrapper’s ownership reference but does not
-necessarily destroy the native value immediately: existing borrowers keep it alive and
-remain valid. The disposed wrapper itself rejects further use with
-<code>ObjectDisposedException</code>. Native calls are followed by <code>GC.KeepAlive(this)</code> to prevent
-finalization while P/Invoke is still using the pointer. The legacy
-<code>#[diplomat::attr(dotnet, manually_disposable)]</code> attribute is accepted for source
-compatibility but is otherwise ignored because every opaque is already disposable. It is
-scheduled for removal in the next breaking release (<a href="https://github.com/rust-diplomat/diplomat/issues/1260">#1260</a>).</p>
-<p>Shared versioned views do not keep their source borrowed between calls: a mutable source
-call can proceed and invalidates the old view. Exclusive <code>ScopedUse&lt;T&gt;</code> values and owned
-values that borrow from a source are different: they keep a real source borrow until
-disposed. A conflicting source mutation throws <code>InvalidOperationException</code> until that
-scope or dependent is disposed. Dispose these values deterministically rather than waiting
-for the GC if the source needs to be mutated again.</p>
+owns one native pointer and, for an owned value, its destructor. A borrowed handle carries no
+destructor, so cleaning it cannot free Rust-owned memory. This makes <code>&amp;T</code>, <code>&amp;mut T</code>, and
+<code>Option&lt;&amp;T&gt;</code> wrappers non-owning.</p>
+<p>A dependent stores an ordinary managed reference to each source handle. That reference keeps
+the handle reachable for garbage collection without adding native ownership. The generator
+rejects a method whose returned value retains a borrow from an opaque marked
+<code>#[diplomat::attr(dotnet, manually_disposable)]</code>. This covers borrowed views, borrowed slices,
+owned lifetime-carrying children, and <code>Result</code>/<code>Option</code> success and error paths. The diagnostic
+names the method and source and suggests an independent result or removing the attribute.</p>
+<p>Temporary <code>&amp;self</code>, <code>&amp;mut self</code>, and opaque parameter borrows remain valid when the return does
+not retain them. A manually disposable result may borrow from a non-disposable source. Cleaning
+up a legal dependent releases its borrow bookkeeping and source-handle references; it never
+disposes a source.</p>
+<p>Borrow rules are separate from native ownership. Every value that borrows from a shared
+source is a read view, whether Rust returned <code>&amp;'a T</code>, <code>&amp;'a [u8]</code>, or an owned <code>Box&lt;T&lt;'a&gt;&gt;</code>. It
+lets go of the source’s borrow when the creating call returns and remembers the source’s
+mutation version instead. A later <code>&amp;mut self</code> call on the source succeeds and invalidates the
+view; the view’s next native call throws <code>InvalidOperationException</code>. This stands in for Rust’s
+rule that a borrow ends at its last use, which a garbage-collected runtime cannot observe.</p>
+<p>A value born from an exclusive borrow (<code>&amp;'a mut T</code>, or an owned <code>Box&lt;T&lt;'a&gt;&gt;</code> returned from
+<code>&amp;'a mut self</code> or an <code>&amp;'a mut</code> parameter) is its source’s only writer, so it keeps that borrow
+until it is released. Every call on the source throws until then. The generator requires such a
+returned type to be <code>manually_disposable</code>, because <code>Dispose()</code> is the only deterministic way to
+end the borrow:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::opaque_mut]
+pub struct Source(View);
+
+#[diplomat::opaque_mut]
+#[diplomat::attr(dotnet, manually_disposable)]
+pub struct View;
+
+impl Source {
+    pub fn view_mut(&amp;mut self) -&gt; &amp;mut View { &amp;mut self.0 } // `View` must be disposable
+}
+<span class="boring">}</span></code></pre>
+<p>A mutation attempt while an operation or <code>WithSpan</code> callback exposes a native pointer throws
+instead of invalidating that pointer. Every handle is a <code>SafeHandle</code>; a scoped operation guard
+protects the directly invoked value during its native call. Source edges validate borrow state
+without recursively taking <code>SafeHandle</code> claims.</p>
+<p>The generated API does not synchronize calls, mutation, or disposal across threads. Callers
+must serialize access to every value in a dependency chain; racing these operations is outside
+the supported contract and may cause undefined native behavior.</p>
+<p>An owned return that borrows a managed slice or string parameter keeps that buffer pinned until
+its handle is disposed or finalized. A type that also hands out borrows cannot be
+<code>manually_disposable</code>, so its pin lasts until finalization.</p>
+<p>A Rust destructor, including any custom <code>Drop</code>, must not read memory borrowed from another
+opaque: the runtime may finalize the parent first, and this backend no longer keeps a parent
+alive for a dependent’s destructor. The generator cannot check this; keep it in review.</p>
+<p>By default, generated opaques are <strong>finalizer-only</strong>: no public <code>Dispose()</code>, cleanup runs
+through a private idempotent path invoked by the handle finalizer. Add
+<code>#[diplomat::attr(dotnet, manually_disposable)]</code> on an opaque type declaration to generate
+<code>: IDisposable</code> plus a public <code>Dispose()</code> that runs the same cleanup and
+<code>GC.SuppressFinalize(this)</code>. Callers must not race <code>Dispose()</code> with calls from another thread.
+After release, calls on the wrapper throw <code>ObjectDisposedException</code>. Methods that would expose
+a retained borrow from this source are rejected during generation, so <code>Dispose()</code> is not a
+parent-invalidation API. Native operations use scoped leases so the directly invoked handle
+stays alive and its source edges remain reachable and validated through P/Invoke.</p>
 <h2 id="string-encoding"><a class="header" href="#string-encoding">String encoding</a></h2>
 <p>The backend supports both UTF-8 and UTF-16 strings, zero-copy wherever the C# and Rust
 representations line up:</p>
@@ -300,14 +328,11 @@ generated source instead of hiding inside generic marshalling.</li>
 </ul>
 <p>A borrowed string or slice return (<code>&amp;'a str</code> / <code>&amp;'a DiplomatStr</code> / <code>&amp;'a DiplomatStr16</code> /
 <code>&amp;'a [u8]</code> / <code>&amp;'a [u32]</code>) surfaces as <code>DiplomatBorrowedSpan&lt;T&gt;</code> — a zero-copy view over
-memory Rust still owns. Like a shared opaque view, it holds a versioned lifetime claim
-and implements <code>IDisposable</code>; <code>Dispose()</code> drops that claim without waiting for GC. A later
-mutable call on the source invalidates the view: the next <code>WithSpan(...)</code> or <code>Clone()</code>
-throws <code>InvalidOperationException</code>. It intentionally does not expose a <code>Span</code>-returning
-property (nothing would keep the view rooted once the span escaped it); call
-<code>WithSpan(...)</code> for scoped, zero-copy, read-only access instead — the same pattern
-<code>RustVec</code> uses for owned returns (see below). Producing an independent <code>T[]</code> is a
-separate, explicit step: call <code>Clone()</code>.</p>
+memory Rust still owns, rooted with managed source-handle edges. It validates those sources
+before every raw access and implements <code>IDisposable</code> to release its edges. It intentionally
+does not expose a <code>Span</code>-returning property; call <code>WithSpan(...)</code> for scoped, zero-copy,
+read-only access instead. Producing an independent <code>T[]</code> is a separate, explicit step: call
+<code>Clone()</code>.</p>
 <p>An owned <code>Box&lt;[u8]&gt;</code> return surfaces as <code>RustVec</code> — it owns the native allocation, is
 <code>IDisposable</code>, and offers the same <code>WithSpan(...)</code> / <code>Clone()</code> shape as
 <code>DiplomatBorrowedSpan&lt;T&gt;</code> (it deliberately avoids <code>MemoryManager&lt;T&gt;</code> for the same reason:
