@@ -5,6 +5,8 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
+// End-to-end coverage for `#[diplomat::attr(dotnet, manually_disposable)]`.
+// DefaultDropProbe has no attribute (finalizer-only). DisposableDropProbe opts in.
 public class OpaqueDisposeTests
 {
     [MethodImpl(MethodImplOptions.NoInlining
@@ -34,10 +36,10 @@ public class OpaqueDisposeTests
     }
 
     [Fact]
-    public void DefaultProbe_ImplementsIDisposable_AndFinalizerDropsExactlyOnce()
+    public void DefaultProbe_UsesFinalizerOnly_AndDropsExactlyOnce()
     {
         DefaultDropProbe.ResetDropCount();
-        Assert.Contains(typeof(IDisposable), typeof(DefaultDropProbe).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(DefaultDropProbe).GetInterfaces());
 
         WeakReference weak = CreateDefaultProbeAndDropReference();
         ForceGcUntil(() => !weak.IsAlive && DefaultDropProbe.DropCount() == 1ul);
@@ -47,7 +49,7 @@ public class OpaqueDisposeTests
     }
 
     [Fact]
-    public void Dispose_DropsNativeOnce()
+    public void ManuallyDisposable_ImplementsIDisposable_AndDisposeDropsNativeOnce()
     {
         DisposableDropProbe.ResetDropCount();
         Assert.Contains(typeof(IDisposable), typeof(DisposableDropProbe).GetInterfaces());
@@ -60,12 +62,13 @@ public class OpaqueDisposeTests
         Assert.Equal(1ul, DisposableDropProbe.DropCount());
         Assert.Throws<ObjectDisposedException>(() => probe.IsAlive());
 
+        // Idempotent: second Dispose must not double-drop.
         probe.Dispose();
         Assert.Equal(1ul, DisposableDropProbe.DropCount());
     }
 
     [Fact]
-    public void UsingBlock_DisposesAtScopeExit()
+    public void ManuallyDisposable_UsingBlock_DisposesAtScopeExit()
     {
         DisposableDropProbe.ResetDropCount();
 
@@ -82,7 +85,7 @@ public class OpaqueDisposeTests
     }
 
     [Fact]
-    public void DisposeThenFinalizerPass_DoesNotDoubleDrop()
+    public void ManuallyDisposable_NoDoubleDropAfterDisposeThenFinalizerPass()
     {
         DisposableDropProbe.ResetDropCount();
 
@@ -98,4 +101,5 @@ public class OpaqueDisposeTests
         Assert.False(weak.IsAlive);
         Assert.Equal(1ul, DisposableDropProbe.DropCount());
     }
+
 }

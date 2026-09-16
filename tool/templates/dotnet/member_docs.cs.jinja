@@ -3,32 +3,18 @@
 {%- endfor %}
 {%- if let Some(opaque_name) = docs.returns_opaque %}
     /// <returns>
-{%- if let Some(lifetime) = docs.lifetime %}
-{%- if lifetime.scoped_return %}
-    /// A scoped use of the Rust-backed <c>{{ opaque_name }}</c>.
-{%- else if lifetime.versioned_return %}
-    /// A view into the Rust-backed <c>{{ opaque_name }}</c>.
-{%- else %}
     /// A <c>{{ opaque_name }}</c> allocated on Rust side.
-{%- endif %}
-{%- else %}
-    /// A <c>{{ opaque_name }}</c> allocated on Rust side.
-{%- endif %}
     /// </returns>
 {%- endif %}
 {%- if let Some(lifetime) = docs.lifetime %}
     /// <remarks>
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
-{%- if lifetime.scoped_return %}
-    /// Dispose the returned scope when you finish using the value so the borrow ends promptly.
-{%- else if lifetime.versioned_return %}
-    /// A mutable call on a source invalidates this view. Its next call throws <see cref="InvalidOperationException"/>.
-{%- else %}
-    /// The returned value keeps its borrowed backing storage alive until cleanup.
-{%- endif %}
+    /// Source handles stay reachable while the returned value exists.
 {%- if lifetime.pinned_inputs %}
     /// <br/>
-    /// The buffer passed via <c>ReadOnlyMemory</c> stays pinned until the returned value is disposed; do not mutate it while the returned value is in use.
+    /// Warning: this call pins the buffer passed via <c>ReadOnlyMemory</c> for as long as the returned value, and anything borrowing from it, is alive.
+    /// The pin is released by <c>Dispose()</c> when the type has one, otherwise only when the garbage collector finalizes the value.
+    /// Do not mutate the buffer while the returned value is in use, and keep the returned value short-lived if the buffer is large.
 {%- endif %}
     /// </remarks>
 {%- endif %}

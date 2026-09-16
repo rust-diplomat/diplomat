@@ -11,7 +11,7 @@ use askama::Template;
 use diplomat_core::hir::{OutputOnly, ReturnableStructDef, Type};
 
 use crate::dotnet::r#gen::{
-    method::{DotnetReturnType, RawExpr},
+    method::{dependencies_array_expr, DotnetReturnType, RawExpr},
     DotnetPrimitives, ItemGenContext,
 };
 
@@ -177,7 +177,7 @@ pub(crate) struct ErrorInfo {
 
 impl ErrorInfo {
     /// `dependencies` are the direct opaque borrow sources this error arm
-    /// retains — threaded through to the inner error opaque's own
+    /// moves into the inner error opaque's own
     /// construction (see `DotnetErrorType::exception_inner_expr`), not a
     /// separate array on the exception class — so the exception class
     /// itself needs no edge plumbing at all. Pins are structurally
@@ -300,7 +300,7 @@ impl DotnetErrorType {
     }
 
     /// Only opaque (`Box<E>`) errors get a managed C# wrapper whose own
-    /// `RustHandle` state can retain a dependency (see
+    /// `RustHandle` state can hold a source edge (see
     /// `Self::exception_inner_expr`); primitive/enum/struct errors marshal by
     /// value, so there's nowhere to hold the retained reference. That's why
     /// this is exactly `is_opaque` — not a coincidence a later edit should
@@ -356,7 +356,10 @@ impl DotnetErrorType {
                 if dependencies.is_empty() {
                     format!("new {name}({raw_expr})")
                 } else {
-                    format!("new {name}({raw_expr}, {})", dependencies.join(", "))
+                    format!(
+                        "new {name}({raw_expr}, {})",
+                        dependencies_array_expr(dependencies)
+                    )
                 }
             }
             DotnetErrorType::Struct { name, is_zst: true } => format!("new {name}()"),

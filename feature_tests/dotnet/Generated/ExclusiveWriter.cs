@@ -7,14 +7,14 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class MyOpaqueEnum: IDisposable
+public partial class ExclusiveWriter: IDisposable
 {
-    private unsafe RustHandle<Raw.MyOpaqueEnum>? _inner;
+    private unsafe RustHandle<Raw.ExclusiveWriter>? _inner;
 
-    private static readonly unsafe RustDestructor<Raw.MyOpaqueEnum> _destroy = Raw.MyOpaqueEnum.Destroy;
+    private static readonly unsafe RustDestructor<Raw.ExclusiveWriter> _destroy = Raw.ExclusiveWriter.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>MyOpaqueEnum</c> from a raw handle.
+    /// Creates a managed <c>ExclusiveWriter</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -22,71 +22,50 @@ public partial class MyOpaqueEnum: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle)
+    internal unsafe ExclusiveWriter(Raw.ExclusiveWriter* handle)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Owned(handle, _destroy);
     }
 
     /// <summary>
     /// Owned construction with lifetime edges released after the Rust
     /// destructor.
     /// </summary>
-    internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle, params ILifetimeEdge?[] edges)
+    internal unsafe ExclusiveWriter(Raw.ExclusiveWriter* handle, params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy, edges);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Owned(handle, _destroy, edges);
     }
 
-    internal unsafe MyOpaqueEnum(
-        Raw.MyOpaqueEnum* handle,
+    internal unsafe ExclusiveWriter(
+        Raw.ExclusiveWriter* handle,
         WrapperKind kind,
         params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Borrowed(handle, kind, edges);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.MyOpaqueEnum> Handle
+    internal unsafe RustHandle<Raw.ExclusiveWriter> Handle
     {
         get
         {
-            RustHandle<Raw.MyOpaqueEnum>? inner = _inner;
+            RustHandle<Raw.ExclusiveWriter>? inner = _inner;
             if (inner is null || inner.IsClosed)
             {
-                throw new ObjectDisposedException("MyOpaqueEnum");
+                throw new ObjectDisposedException("ExclusiveWriter");
             }
             return inner;
         }
     }
 
-    /// <returns>
-    /// A <c>MyOpaqueEnum</c> allocated on Rust side.
-    /// </returns>
-    public static MyOpaqueEnum New()
+    public void Add(ulong delta)
     {
         unsafe
         {
-            Raw.MyOpaqueEnum* result = Raw.MyOpaqueEnum.New();
-            return new MyOpaqueEnum(result);
-        }
-    }
-
-    public override string ToString()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.MyOpaqueEnum>? selfLease = null;
+            BorrowLease<Raw.ExclusiveWriter>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
-                try
-                {
-                    Raw.MyOpaqueEnum.ToString(selfLease!.Ptr, &writeable);
-                    return writeable.ToUnicode();
-                }
-                finally
-                {
-                    writeable.Dispose();
-                }
+                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                Raw.ExclusiveWriter.Add(selfLease!.Ptr, delta);
             }
             finally
             {
@@ -99,7 +78,7 @@ public partial class MyOpaqueEnum: IDisposable
     {
         unsafe
         {
-            RustHandle<Raw.MyOpaqueEnum>? inner = _inner;
+            RustHandle<Raw.ExclusiveWriter>? inner = _inner;
             if (inner is null)
             {
                 return;

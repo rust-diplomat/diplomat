@@ -7,14 +7,14 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class MyOpaqueEnum: IDisposable
+public partial class ExclusiveView: IDisposable
 {
-    private unsafe RustHandle<Raw.MyOpaqueEnum>? _inner;
+    private unsafe RustHandle<Raw.ExclusiveView>? _inner;
 
-    private static readonly unsafe RustDestructor<Raw.MyOpaqueEnum> _destroy = Raw.MyOpaqueEnum.Destroy;
+    private static readonly unsafe RustDestructor<Raw.ExclusiveView> _destroy = Raw.ExclusiveView.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>MyOpaqueEnum</c> from a raw handle.
+    /// Creates a managed <c>ExclusiveView</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -22,71 +22,67 @@ public partial class MyOpaqueEnum: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle)
+    internal unsafe ExclusiveView(Raw.ExclusiveView* handle)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.ExclusiveView>.Owned(handle, _destroy);
     }
 
     /// <summary>
     /// Owned construction with lifetime edges released after the Rust
     /// destructor.
     /// </summary>
-    internal unsafe MyOpaqueEnum(Raw.MyOpaqueEnum* handle, params ILifetimeEdge?[] edges)
+    internal unsafe ExclusiveView(Raw.ExclusiveView* handle, params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Owned(handle, _destroy, edges);
+        _inner = RustHandle<Raw.ExclusiveView>.Owned(handle, _destroy, edges);
     }
 
-    internal unsafe MyOpaqueEnum(
-        Raw.MyOpaqueEnum* handle,
+    internal unsafe ExclusiveView(
+        Raw.ExclusiveView* handle,
         WrapperKind kind,
         params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.MyOpaqueEnum>.Borrowed(handle, kind, edges);
+        _inner = RustHandle<Raw.ExclusiveView>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.MyOpaqueEnum> Handle
+    internal unsafe RustHandle<Raw.ExclusiveView> Handle
     {
         get
         {
-            RustHandle<Raw.MyOpaqueEnum>? inner = _inner;
+            RustHandle<Raw.ExclusiveView>? inner = _inner;
             if (inner is null || inner.IsClosed)
             {
-                throw new ObjectDisposedException("MyOpaqueEnum");
+                throw new ObjectDisposedException("ExclusiveView");
             }
             return inner;
         }
     }
 
-    /// <returns>
-    /// A <c>MyOpaqueEnum</c> allocated on Rust side.
-    /// </returns>
-    public static MyOpaqueEnum New()
+    public ulong Value()
     {
         unsafe
         {
-            Raw.MyOpaqueEnum* result = Raw.MyOpaqueEnum.New();
-            return new MyOpaqueEnum(result);
-        }
-    }
-
-    public override string ToString()
-    {
-        unsafe
-        {
-            BorrowLease<Raw.MyOpaqueEnum>? selfLease = null;
+            BorrowLease<Raw.ExclusiveView>? selfLease = null;
             try
             {
                 selfLease = Handle.Lease(BorrowKind.Shared);
-                DiplomatWrite writeable = new DiplomatWrite();
-                try
-                {
-                    Raw.MyOpaqueEnum.ToString(selfLease!.Ptr, &writeable);
-                    return writeable.ToUnicode();
-                }
-                finally
-                {
-                    writeable.Dispose();
-                }
+                return Raw.ExclusiveView.Value(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public void Add(ulong delta)
+    {
+        unsafe
+        {
+            BorrowLease<Raw.ExclusiveView>? selfLease = null;
+            try
+            {
+                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                Raw.ExclusiveView.Add(selfLease!.Ptr, delta);
             }
             finally
             {
@@ -99,7 +95,7 @@ public partial class MyOpaqueEnum: IDisposable
     {
         unsafe
         {
-            RustHandle<Raw.MyOpaqueEnum>? inner = _inner;
+            RustHandle<Raw.ExclusiveView>? inner = _inner;
             if (inner is null)
             {
                 return;
