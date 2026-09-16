@@ -1535,6 +1535,9 @@ mod test {
         let rust_handle = files
             .get("RustHandle.cs")
             .expect("expected RustHandle.cs output");
+        let borrow_lease = files
+            .get("BorrowLease.cs")
+            .expect("expected BorrowLease.cs output");
 
         assert!(
             rust_handle.contains("class RustHandle<T> : SafeHandle")
@@ -1544,9 +1547,11 @@ mod test {
         assert!(
             rust_handle.contains("DangerousAddRef(ref acquired)")
                 && rust_handle.contains("internal void ExitOperation() => DangerousRelease();")
-                && !rust_handle
-                    .contains("Cannot dispose a native value while an operation is active"),
-            "the SafeHandle count must cover only in-flight calls so Dispose defers instead of throwing:\n{rust_handle}"
+                && rust_handle.contains("AcquireDependencyOperation()")
+                && borrow_lease.contains("return owner.AcquireDependencyOperation();")
+                && !borrow_lease.contains("return owner.AcquireOperation();"),
+            "only the directly invoked handle should take a SafeHandle operation claim:\n\
+             RustHandle.cs:\n{rust_handle}\nBorrowLease.cs:\n{borrow_lease}"
         );
         assert!(!rust_handle.contains("_refCount") && !rust_handle.contains("_activeOperations"));
 
@@ -2867,7 +2872,7 @@ mod test {
             my_string.contains(
                 "new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) })"
             ),
-            "the returned view should retain `this` as an RC dependency:\n{my_string}"
+            "the returned view should retain `this` as a managed lifetime edge:\n{my_string}"
         );
 
         let span = files
@@ -2889,6 +2894,10 @@ mod test {
         assert!(
             span.contains("public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable"),
             "the view should release its managed source edges explicitly:\n{span}"
+        );
+        assert!(
+            span.contains("Cannot dispose DiplomatBorrowedSpan during a WithSpan callback"),
+            "disposing a borrowed span from its active callback must fail before releasing edges:\n{span}"
         );
         assert!(
             span.contains("LifetimeEdges.ReleaseNoThrow(edges)"),
@@ -2935,7 +2944,7 @@ mod test {
             buffer.contains(
                 "new DiplomatBorrowedSpan<uint>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) })"
             ),
-            "the returned view should retain `this` as an RC dependency:\n{buffer}"
+            "the returned view should retain `this` as a managed lifetime edge:\n{buffer}"
         );
     }
 

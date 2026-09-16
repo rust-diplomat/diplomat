@@ -71,7 +71,7 @@ internal struct LifetimeEdges
         kind == WrapperKind.SharedView
         || (kind == WrapperKind.Owned && lease.Kind == BorrowKind.Shared);
 
-    internal ILifetimeEdge[] AcquireOperationLeases()
+    internal ILifetimeEdge[] AcquireDependencyLeases()
     {
         List<ILifetimeEdge>? acquired = null;
         try
@@ -80,8 +80,8 @@ internal struct LifetimeEdges
             {
                 ILifetimeEdge? operation = edge switch
                 {
-                    IVersionedReference versioned => versioned.Lease(),
-                    IBorrowLease borrow => borrow.AcquireOperation(),
+                    IVersionedReference versioned => versioned.LeaseForOperation(),
+                    IBorrowLease borrow => borrow.AcquireDependencyOperation(),
                     _ => null,
                 };
                 if (operation is not null)
@@ -201,6 +201,39 @@ internal struct BorrowLedger
     }
 }
 
+internal sealed unsafe class DependencyOperationLease<T> : ILifetimeEdge where T : unmanaged
+{
+    private RustHandle<T>? _owner;
+    private ILifetimeEdge[] _dependencies;
+
+    internal DependencyOperationLease(RustHandle<T> owner, ILifetimeEdge[] dependencies)
+    {
+        _owner = owner;
+        _dependencies = dependencies;
+    }
+
+    public void Release()
+    {
+        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        if (owner is null)
+        {
+            return;
+        }
+
+        ILifetimeEdge[] dependencies = Interlocked.Exchange(
+            ref _dependencies,
+            Array.Empty<ILifetimeEdge>());
+        try
+        {
+            LifetimeEdges.ReleaseLeases(dependencies);
+        }
+        finally
+        {
+            GC.KeepAlive(owner);
+        }
+    }
+}
+
 internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanaged
 {
     private RustHandle<T>? _owner;
@@ -234,8 +267,8 @@ internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanag
     }
 }
 
-// The SafeHandle count covers only the calls in flight on this value, so Dispose() during a
-// call waits for that call to return before running the Rust destructor. Edges never count.
+// The SafeHandle count protects only a native call made directly on this value. Source edges
+// keep managed handles reachable and validate borrow state without taking SafeHandle claims.
 internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 {
     private readonly RustDestructor<T>? _destructor;
@@ -339,15 +372,29 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
                 "This borrowed view was invalidated by disposal or mutation of its source.");
         }
 
-        BorrowLease<T> lease = Lease(BorrowKind.Shared);
-        if (_borrows.IsCurrent(mutationVersion) && !IsClosed)
+        _borrows.Enter(BorrowKind.Shared);
+        ILifetimeEdge? operation = null;
+        try
         {
-            return lease;
-        }
+            operation = AcquireDependencyOperation();
+            if (_borrows.IsCurrent(mutationVersion) && !IsClosed)
+            {
+                return new BorrowLease<T>(
+                    this,
+                    BorrowKind.Shared,
+                    Ptr,
+                    operation);
+            }
 
-        lease.Release();
-        throw new InvalidOperationException(
-            "This borrowed view was invalidated by disposal or mutation of its source.");
+            throw new InvalidOperationException(
+                "This borrowed view was invalidated by disposal or mutation of its source.");
+        }
+        catch
+        {
+            operation?.Release();
+            _borrows.Exit(BorrowKind.Shared);
+            throw;
+        }
     }
 
     internal OperationLease<T> AcquireOperation()
@@ -356,13 +403,32 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
         DangerousAddRef(ref acquired);
         try
         {
-            return new OperationLease<T>(this, _edges.AcquireOperationLeases());
+            return new OperationLease<T>(this, _edges.AcquireDependencyLeases());
         }
         catch
         {
             DangerousRelease();
             throw;
         }
+    }
+
+    internal DependencyOperationLease<T> AcquireDependencyOperation()
+    {
+        if (IsClosed)
+        {
+            throw new InvalidOperationException(
+                "The source of this borrowed value was disposed.");
+        }
+
+        ILifetimeEdge[] dependencies = _edges.AcquireDependencyLeases();
+        if (!IsClosed)
+        {
+            return new DependencyOperationLease<T>(this, dependencies);
+        }
+
+        LifetimeEdges.ReleaseNoThrow(dependencies);
+        throw new InvalidOperationException(
+            "The source of this borrowed value was disposed.");
     }
 
     internal void ExitBorrow(BorrowKind kind) => _borrows.Exit(kind);

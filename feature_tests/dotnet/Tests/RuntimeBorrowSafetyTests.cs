@@ -108,4 +108,21 @@ public class RuntimeBorrowSafetyTests
         view.Dispose();
         view.Dispose();
     }
+
+    [Fact]
+    public void SpanDispose_DuringWithSpanThrowsWithoutChangingState()
+    {
+        MyString value = MyString.New(Utf8("value"));
+        DiplomatBorrowedSpan<byte> view = value.Borrow();
+
+        view.WithSpan(span =>
+        {
+            Assert.Throws<InvalidOperationException>(() => view.Dispose());
+            Assert.Equal((byte)'v', span[0]);
+        });
+
+        Assert.Equal(Utf8("value"), view.Clone());
+        view.Dispose();
+        Assert.Throws<ObjectDisposedException>(() => view.Clone());
+    }
 }

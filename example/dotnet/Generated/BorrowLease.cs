@@ -9,27 +9,27 @@ internal interface IBorrowLease : ILifetimeEdge
 {
     BorrowKind Kind { get; }
 
-    ILifetimeEdge AcquireOperation();
+    ILifetimeEdge AcquireDependencyOperation();
 
     ILifetimeEdge IntoVersionedEdge();
 }
 
 internal interface IVersionedReference : ILifetimeEdge
 {
-    IBorrowLease Lease();
+    IBorrowLease LeaseForOperation();
 }
 
 internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 {
     private RustHandle<T>? _owner;
     private readonly BorrowKind _kind;
-    private OperationLease<T>? _operation;
+    private ILifetimeEdge? _operation;
 
     internal BorrowLease(
         RustHandle<T> owner,
         BorrowKind kind,
         T* ptr,
-        OperationLease<T> operation)
+        ILifetimeEdge operation)
     {
         _owner = owner;
         _kind = kind;
@@ -41,15 +41,16 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     public BorrowKind Kind => _kind;
 
-    public ILifetimeEdge AcquireOperation()
+    public ILifetimeEdge AcquireDependencyOperation()
     {
         RustHandle<T>? owner = Volatile.Read(ref _owner);
         if (owner is null)
         {
-            throw new ObjectDisposedException(nameof(BorrowLease<T>));
+            throw new InvalidOperationException(
+                "The source of this borrowed value is no longer available.");
         }
 
-        return owner.AcquireOperation();
+        return owner.AcquireDependencyOperation();
     }
 
     public ILifetimeEdge IntoVersionedEdge()
@@ -94,7 +95,7 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
         return owner;
     }
 
-    private OperationLease<T>? TakeOperation() => Interlocked.Exchange(ref _operation, null);
+    private ILifetimeEdge? TakeOperation() => Interlocked.Exchange(ref _operation, null);
 
     private sealed class VersionedReference : IVersionedReference
     {
@@ -107,12 +108,13 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
             _version = version;
         }
 
-        public IBorrowLease Lease()
+        public IBorrowLease LeaseForOperation()
         {
             RustHandle<T>? owner = Volatile.Read(ref _owner);
             if (owner is null)
             {
-                throw new ObjectDisposedException(nameof(VersionedReference));
+                throw new InvalidOperationException(
+                    "The source of this borrowed value is no longer available.");
             }
 
             return owner.LeaseCurrentVersion(_version);

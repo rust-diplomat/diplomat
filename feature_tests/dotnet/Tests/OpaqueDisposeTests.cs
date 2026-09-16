@@ -1,7 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Somelib;
 using Xunit;
 
@@ -104,20 +102,4 @@ public class OpaqueDisposeTests
         Assert.Equal(1ul, DisposableDropProbe.DropCount());
     }
 
-    [Fact]
-    public void ManuallyDisposable_DisposeDuringInFlightCall_DropsWhenTheCallReturns()
-    {
-        DisposableDropProbe.ResetDropCount();
-        DisposableDropProbe probe = DisposableDropProbe.Create();
-
-        Task<ulong> call = Task.Run(() => probe.DropsDuringSpin(200));
-        Assert.True(SpinWait.SpinUntil(DisposableDropProbe.IsSpinning, TimeSpan.FromSeconds(10)));
-
-        probe.Dispose();
-        Assert.Equal(0ul, DisposableDropProbe.DropCount());
-
-        Assert.Equal(0ul, call.Result);
-        Assert.Equal(1ul, DisposableDropProbe.DropCount());
-        Assert.Throws<ObjectDisposedException>(() => probe.IsAlive());
-    }
 }

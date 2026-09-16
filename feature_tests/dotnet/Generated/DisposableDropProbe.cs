@@ -147,8 +147,8 @@ public partial class DisposableDropProbe: IDisposable
     /// <remarks>
     /// Retained-borrow returns sourced from a manually_disposable opaque are
     /// rejected during generation, so Dispose is not a parent-invalidation API.
-    /// A call still in flight on this value finishes first: the native value is
-    /// released when that call returns. Later calls throw <see cref="ObjectDisposedException"/>.
+    /// Callers must not race Dispose with calls from another thread. Later calls
+    /// throw <see cref="ObjectDisposedException"/>.
     /// </remarks>
     public void Dispose()
     {
