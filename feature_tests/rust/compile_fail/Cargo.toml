@@ -1,0 +1,10 @@
+[package]
+name = "diplomat-rust-backend-compile-fail"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+diplomat-rust-backend-generated = { path = "../generated" }
+
+[workspace]

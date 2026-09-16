@@ -20,7 +20,7 @@ CXX_FLAGS_FOR_CHECK = "-Wc++98-compat-extra-semi -Wextra-semi"
 [tasks.test-native]
 description = "Test only the native"
 category = "Tests"
-dependencies = ["test-cpp", "test-c"]
+dependencies = ["test-cpp", "test-c", "test-rust"]
 
 [tasks.gen]
 category = "Code generation"
@@ -62,6 +62,10 @@ dependencies = ["test-kotlin-feature-mvn"]
 [tasks.test-dotnet]
 category = "Tests"
 dependencies = ["test-dotnet-feature"]
+
+[tasks.test-rust]
+category = "Tests"
+dependencies = ["test-rust-feature"]
 
 [tasks.test-nanobind]
 category = "Tests"
@@ -445,6 +449,25 @@ dependencies = ["gen-js-feature", "gen-js-example"]
 [tasks.gen-dotnet]
 category = "Code generation"
 dependencies = ["gen-dotnet-feature", "gen-dotnet-example"]
+
+[tasks.gen-rust-feature]
+category = "Code generation"
+command = "cargo"
+args = [
+    "run", "-p", "diplomat-tool", "--", "rust",
+    "feature_tests/rust/generated",
+    "--entry", "feature_tests/rust/provider/src/lib.rs",
+    "--config-file", "feature_tests/rust/provider/config.toml",
+]
+
+[tasks.gen-rust]
+category = "Code generation"
+dependencies = ["gen-rust-feature"]
+
+[tasks.test-rust-feature]
+category = "Tests"
+command = "sh"
+args = ["feature_tests/rust/scripts/check.sh"]
 
 [tasks.gen-c-feature]
 category = "Code generation"

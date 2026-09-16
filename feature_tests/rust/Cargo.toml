@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = ["provider", "generated", "consumer"]
+exclude = ["compile_fail"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
