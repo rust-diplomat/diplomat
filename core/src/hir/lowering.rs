@@ -16,11 +16,10 @@ use core::fmt;
 use std::collections::HashMap;
 use strck::IntoCk;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 #[non_exhaustive]
 /// For errors. Which part of the signature is invalid?
 pub enum SignatureLocation {
-    SelfParam,
     Return,
     Param(usize),
 }
@@ -30,11 +29,11 @@ pub enum SignatureLocation {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum LoweringError {
-    /// The given method signature is invalid.
-    InvalidSignature {
-        /// Which part of the signature is invalid.
-        /// Errors already insert the method name into context, so this just adds more specific info:
-        location : SignatureLocation,
+    /// Trying to evaluate something at the given location resulted in an error.
+    InvalidLocation {
+        /// Where specifically the error occured.
+        /// Errors already insert the type/method name into context, so this just adds more specific info:
+        context : TypeLoweringContext,
         /// Why the signature is invalid.
         reason : String,
     },
@@ -52,14 +51,25 @@ pub enum LoweringError {
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Self::InvalidSignature { ref location, ref reason } => {
-                write!(f, "Invalid function signature at {}: {reason}", 
-                    match location {
-                        SignatureLocation::Param(idx) => format!("param {idx}"),
-                        SignatureLocation::Return => "return type".to_string(),
-                        SignatureLocation::SelfParam => "self".to_string(),
+            Self::InvalidLocation { ref context, ref reason } => {
+                match context {
+                    ctx @ (TypeLoweringContext::Method(location) | TypeLoweringContext::Callback(location)) => {
+                        write!(f, "Invalid {} signature at {}: {reason}", 
+                            match ctx {
+                                TypeLoweringContext::Method(..) => "function",
+                                TypeLoweringContext::Callback(..) => "callback",
+                                _ => unreachable!(),
+                            },
+                            match location {
+                                SignatureLocation::Param(idx) => format!("param {idx}"),
+                                SignatureLocation::Return => "return type".to_string(),
+                            }
+                        )
                     }
-                )
+                    TypeLoweringContext::Struct(field) => {
+                        write!(f, "Invalid struct field {field}: {reason}")
+                    }
+                }
             }
             Self::Other(ref s) => s.fmt(f),
         }
@@ -134,11 +144,12 @@ impl fmt::Display for LoweringReport {
 pub type ErrorAndContext = LoweringReport;
 
 /// Where a type was found
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-enum TypeLoweringContext {
-    Struct,
-    Callback,
-    Method,
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub enum TypeLoweringContext {
+    /// Stores the name of the field currently being evaluated.
+    Struct(ast::Ident),
+    Callback(SignatureLocation),
+    Method(SignatureLocation),
 }
 
 pub(crate) trait ReportContext {
@@ -450,7 +461,7 @@ impl<'ast> LoweringContext<'ast> {
                 let ty = self.lower_type::<Everywhere>(
                     ty,
                     &mut &ast_struct.lifetimes,
-                    TypeLoweringContext::Struct,
+                    TypeLoweringContext::Struct(field_name.clone()),
                     item.in_path,
                 );
 
@@ -722,13 +733,13 @@ impl<'ast> LoweringContext<'ast> {
             let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
             // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
             if !attrs.disable {
-                for (name, ty, docs, attrs) in ast_out_struct.fields.iter() {
-                    let name = self.lower_ident(name, "out-struct field name");
+                for (field_name, ty, docs, attrs) in ast_out_struct.fields.iter() {
+                    let name = self.lower_ident(field_name, "out-struct field name");
                     let ty = self.lower_out_type(
                         ty,
                         &mut &ast_out_struct.lifetimes,
                         item.in_path,
-                        TypeLoweringContext::Struct,
+                        TypeLoweringContext::Struct(field_name.clone()),
                         false,
                     );
 
@@ -867,8 +878,8 @@ impl<'ast> LoweringContext<'ast> {
             };
 
             if !(method.return_type == Some(ast::TypeName::Ordering) || is_optional_ord) {
-                self.errors.push(LoweringError::InvalidSignature{
-                    location: SignatureLocation::Return,
+                self.errors.push(LoweringError::InvalidLocation{
+                    context: TypeLoweringContext::Method(SignatureLocation::Return),
                     reason: "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>".into(),
                 });
                 return Err(());
@@ -974,10 +985,10 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Type<P>, ()> {
         let mut disallow_in_callbacks = |msg: &str| {
-            if context == TypeLoweringContext::Callback {
-                self.errors.push(LoweringError::InvalidSignature {
-                    // This is `lower_type`, so for callbacks this is a return type: 
-                    location: SignatureLocation::Return,
+            if matches!(context, TypeLoweringContext::Callback(..)) {
+                self.errors.push(LoweringError::InvalidLocation {
+                    // TODO: This is `lower_type`, so for callbacks this is a return type
+                    context: context.clone(),
                     reason: msg.into()
                 });
                 Err(())
@@ -1179,7 +1190,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Err(())
                             }
                             _ => {
-                                if context == TypeLoweringContext::Struct
+                                if matches!(context, TypeLoweringContext::Struct(..))
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
                                     self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
@@ -1197,7 +1208,7 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                     ast::TypeName::Primitive(prim) => {
-                        if context == TypeLoweringContext::Struct
+                        if matches!(context, TypeLoweringContext::Struct(..))
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
                             self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
@@ -1370,16 +1381,16 @@ impl<'ast> LoweringContext<'ast> {
                         "Callback arguments are not supported by this backend".into(),
                     ));
                 }
-                if context == TypeLoweringContext::Struct {
+                if matches!(context, TypeLoweringContext::Struct(..)) {
                     self.errors.push(LoweringError::Other(
                         "Callbacks currently unsupported in structs".into(),
                     ));
                     return Err(());
                 }
                 let mut params: Vec<CallbackParam> = Vec::new();
-                for in_ty in input_types.iter() {
+                for (idx, in_ty) in input_types.iter().enumerate() {
                     let param =
-                        self.lower_callback_param(/* anonymous */ None, in_ty, ltl, in_path)?;
+                        self.lower_callback_param(/* anonymous */ None, in_ty, SignatureLocation::Param(idx), ltl, in_path)?;
 
                     params.push(param)
                 }
@@ -1420,7 +1431,7 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(OutType::Primitive(PrimitiveType::from_ast(*prim)))
             }
             ast::TypeName::Ordering => {
-                if context == TypeLoweringContext::Struct {
+                if matches!(context, TypeLoweringContext::Struct(..)) {
                     self.errors.push(LoweringError::Other(
                         "Found cmp::Ordering in struct field, it is only allowed in return types"
                             .to_string(),
@@ -1613,7 +1624,7 @@ impl<'ast> LoweringContext<'ast> {
                             Err(())
                         }
                         _ => {
-                            if context == TypeLoweringContext::Struct
+                            if matches!(context, TypeLoweringContext::Struct(..))
                                 && *stdlib == ast::StdlibOrDiplomat::Stdlib
                             {
                                 self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
@@ -1631,7 +1642,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
                 ast::TypeName::Primitive(prim) => {
-                    if context == TypeLoweringContext::Struct
+                    if matches!(context, TypeLoweringContext::Struct(..))
                         && *stdlib == ast::StdlibOrDiplomat::Stdlib
                     {
                         self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
@@ -1671,7 +1682,7 @@ impl<'ast> LoweringContext<'ast> {
             // guaranteed layout, unlike the `DiplomatOwnedSlice<u8>` repr(C)
             // shape an infallible return is converted to.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
-                if context == TypeLoweringContext::Method
+                if matches!(context, TypeLoweringContext::Method(..))
                     && !in_result_option
                     && matches!(
                         PrimitiveType::from_ast(*prim),
@@ -1978,11 +1989,12 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_param(
         &mut self,
         param: &ast::Param,
+        context : SignatureLocation,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method, in_path);
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method(context), in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -2010,8 +2022,8 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<(Vec<Param>, ReturnLifetimeLowerer<'ast>), ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for param in ast_params {
-            let param = self.lower_param(param, &mut param_ltl, in_path);
+        for (idx, param) in ast_params.iter().enumerate() {
+            let param = self.lower_param(param, SignatureLocation::Param(idx), &mut param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2028,6 +2040,7 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         name: Option<IdentBuf>,
         ty: &ast::TypeName,
+        context : SignatureLocation,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<CallbackParam, ()> {
@@ -2035,7 +2048,7 @@ impl<'ast> LoweringContext<'ast> {
             ty,
             ltl,
             in_path,
-            TypeLoweringContext::Callback,
+            TypeLoweringContext::Callback(context),
             false, /* in_result_option */
         )?;
 
@@ -2061,9 +2074,9 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Vec<CallbackParam>, ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for param in ast_params {
+        for (idx, param) in ast_params.iter().enumerate() {
             let name = self.lower_ident(&param.name, "param name")?;
-            let param = self.lower_callback_param(Some(name), &param.ty, param_ltl, in_path);
+            let param = self.lower_callback_param(Some(name), &param.ty, SignatureLocation::Param(idx), param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2135,7 +2148,7 @@ impl<'ast> LoweringContext<'ast> {
                             ty,
                             &mut return_ltl,
                             in_path,
-                            TypeLoweringContext::Method,
+                            TypeLoweringContext::Method(SignatureLocation::Return),
                             true,
                         )
                         .map(SuccessType::OutType),
@@ -2147,7 +2160,7 @@ impl<'ast> LoweringContext<'ast> {
                             ty,
                             &mut return_ltl,
                             in_path,
-                            TypeLoweringContext::Method,
+                            TypeLoweringContext::Method(SignatureLocation::Return),
                             true,
                         )
                         .map(Some),
@@ -2185,7 +2198,7 @@ impl<'ast> LoweringContext<'ast> {
                         ty,
                         &mut return_ltl,
                         in_path,
-                        TypeLoweringContext::Method,
+                        TypeLoweringContext::Method(SignatureLocation::Return),
                         true,
                     )
                     .map(SuccessType::OutType)
@@ -2196,7 +2209,7 @@ impl<'ast> LoweringContext<'ast> {
                         value_ty,
                         &mut return_ltl,
                         in_path,
-                        TypeLoweringContext::Method,
+                        TypeLoweringContext::Method(SignatureLocation::Return),
                         true,
                     );
                     if let Ok(t) = &t {
@@ -2214,7 +2227,7 @@ impl<'ast> LoweringContext<'ast> {
                     ty,
                     &mut return_ltl,
                     in_path,
-                    TypeLoweringContext::Method,
+                    TypeLoweringContext::Method(SignatureLocation::Return),
                     false,
                 )
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
@@ -2234,13 +2247,13 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(Some),
                 };
 
@@ -2284,13 +2297,13 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                    self.lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(SuccessType::OutType)
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path);
+                    let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path);
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2301,7 +2314,7 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }
