@@ -104,18 +104,25 @@ pub(crate) fn run<'tcx>(
     let package = include_str!("../../templates/rust/Cargo.toml.template")
         .replace("{{crate_name}}", &crate_name);
     let build = include_str!("../../templates/rust/build.rs.template");
-    let ffi = generate_ffi(tcx, &dylib_name);
-    let safe = generate_safe(tcx, docs_url_gen);
-
     files.add_file("Cargo.toml".into(), package);
     files.add_file("build.rs".into(), build.into());
-    files.add_file("src/ffi.rs".into(), ffi);
-    files.add_file("src/lib.rs".into(), safe);
+    files.add_file("src/lib.rs".into(), generate_lib());
+    files.add_file("src/ffi.rs".into(), generate_ffi(tcx, &dylib_name));
+    files.add_file("src/private.rs".into(), generate_private(tcx));
+    files.add_file("src/types.rs".into(), generate_types(tcx, docs_url_gen));
+    files.add_file("src/opaques.rs".into(), generate_opaques_index(tcx));
+    for opaque in tcx.opaques().iter().filter(|ty| !ty.attrs.disable) {
+        files.add_file(
+            format!("src/opaques/{}.rs", opaque_module_name(opaque)),
+            generate_opaque_file(tcx, opaque, docs_url_gen),
+        );
+    }
     (files, errors)
 }
 
 fn validate<'tcx>(tcx: &'tcx TypeContext, errors: &ErrorStore<'tcx, String>, invalid: &Cell<bool>) {
     let mut generated_names = HashSet::new();
+    let mut module_names = HashSet::new();
 
     for (_, def) in tcx.all_types() {
         if def.attrs().disable {
@@ -124,6 +131,24 @@ fn validate<'tcx>(tcx: &'tcx TypeContext, errors: &ErrorStore<'tcx, String>, inv
         let _type_guard = errors.set_context_ty(def.name_with_span().into());
         let name = type_def_name(def);
         let mut names = vec![name.clone()];
+        if let TypeDef::Opaque(opaque) = def {
+            let module = opaque_module_name(opaque);
+            if !valid_rust_ident(&module) {
+                reject(
+                    errors,
+                    invalid,
+                    format!("[Rust backend] `{module}` is not a valid generated Rust module name"),
+                );
+            } else if !module_names.insert(module.clone()) {
+                reject(
+                    errors,
+                    invalid,
+                    format!(
+                        "[Rust backend] generated module name collision for `{module}` (from `{name}`)"
+                    ),
+                );
+            }
+        }
         if matches!(def, TypeDef::Opaque(_)) {
             names.extend([
                 format!("{name}Ref"),
@@ -637,34 +662,51 @@ fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
     out
 }
 
-fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
-    let mut out = String::from(
-        "//! Safe Rust bindings generated over a Diplomat native ABI.\n\n\
+fn generate_lib() -> String {
+    String::from(
+        "//! Safe Rust bindings generated over a Diplomat native ABI.\n\
+         //!\n\
+         //! The unsafe ABI layer lives in the private `ffi` module; the public API is\n\
+         //! re-exported from this crate root.\n\n\
          #![allow(clippy::needless_lifetimes)]\n\
          #![allow(clippy::new_without_default)]\n\n\
-         mod ffi;\n\n\
-         use core::marker::PhantomData;\n\
-         use core::ptr::NonNull;\n\
-         use std::rc::Rc;\n\n\
-         mod private {\n",
+         mod ffi;\n\
+         mod opaques;\n\
+         mod private;\n\
+         mod types;\n\n\
+         pub use opaques::*;\n\
+         pub use types::*;\n",
+    )
+}
+
+/// Sealed capability traits plus the unsafe ABI reconstruction helpers.
+fn generate_private(tcx: &TypeContext) -> String {
+    let mut out = String::from(
+        "//! Sealed capability traits and unsafe ABI reconstruction helpers.\n\
+         //!\n\
+         //! This module is private, so downstream crates cannot name the sealed traits and\n\
+         //! therefore cannot implement the public capability traits themselves. The helpers\n\
+         //! may be unused for a given provider, hence the `dead_code` allow.\n\
+         #![allow(dead_code)]\n\n",
     );
     for opaque in tcx.opaques().iter().filter(|ty| !ty.attrs.disable) {
         let name = type_def_name(TypeDef::Opaque(opaque));
-        writeln!(out, "    pub trait {name}SharedSealed {{").unwrap();
+        writeln!(out, "pub trait {name}SharedSealed {{").unwrap();
         writeln!(
             out,
-            "        fn __as_const_ptr(&self) -> *const crate::ffi::{name};"
+            "    fn __as_const_ptr(&self) -> *const crate::ffi::{name};"
         )
         .unwrap();
-        out.push_str("    }\n");
-        writeln!(out, "    pub trait {name}MutSealed: {name}SharedSealed {{").unwrap();
+        out.push_str("}\n");
+        writeln!(out, "pub trait {name}MutSealed: {name}SharedSealed {{").unwrap();
         writeln!(
             out,
-            "        fn __as_mut_ptr(&mut self) -> *mut crate::ffi::{name};"
+            "    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::{name};"
         )
         .unwrap();
-        out.push_str("    }\n");
+        out.push_str("}\n");
     }
+    out.push('\n');
     out.push_str(
         r#"    /// Reconstruct a shared slice from a provider-returned pointer/length pair.
     ///
@@ -672,7 +714,7 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
     ///
     /// The caller must uphold the provider's validity, alignment, aliasing, and
     /// lifetime contract for `ptr`/`len` for the returned lifetime.
-    pub(super) unsafe fn slice_from_raw_parts<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
+    pub(crate) unsafe fn slice_from_raw_parts<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
         if ptr.is_null() {
             debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
             return &[];
@@ -686,7 +728,7 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
     ///
     /// The caller must uphold the provider's validity, alignment, uniqueness, and
     /// lifetime contract for `ptr`/`len` for the returned lifetime.
-    pub(super) unsafe fn slice_from_raw_parts_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
+    pub(crate) unsafe fn slice_from_raw_parts_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
         if ptr.is_null() {
             debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
             return &mut [];
@@ -700,7 +742,7 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
     ///
     /// The caller must uphold the provider's validity, alignment, aliasing, UTF-8,
     /// and lifetime contract for `ptr`/`len` for the returned lifetime.
-    pub(super) unsafe fn str_from_raw_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
+    pub(crate) unsafe fn str_from_raw_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
         core::str::from_utf8_unchecked(slice_from_raw_parts(ptr, len))
     }
 
@@ -711,7 +753,7 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
     /// `ptr`/`len` must describe a `Box<[T]>` allocated by the provider, and the
     /// provider and consumer must share an allocator (Diplomat's owned-slice
     /// contract). Ownership transfers to the returned `Box`.
-    pub(super) unsafe fn owned_slice_into_box<T>(ptr: *mut T, len: usize) -> Box<[T]> {
+    pub(crate) unsafe fn owned_slice_into_box<T>(ptr: *mut T, len: usize) -> Box<[T]> {
         if ptr.is_null() {
             debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
             return Box::new([]);
@@ -721,8 +763,19 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
 
 "#,
     );
-    out.push_str("}\n\n");
+    out
+}
 
+/// Generated enums and value structs.
+fn generate_types(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
+    let mut out = String::from("//! Generated enums and value structs.\n\n");
+    if tcx
+        .structs()
+        .iter()
+        .any(|strct| !strct.attrs.disable && is_lifetime_struct(strct))
+    {
+        out.push_str("use core::marker::PhantomData;\n\n");
+    }
     for enm in tcx.enums().iter().filter(|ty| !ty.attrs.disable) {
         emit_docs(&mut out, &enm.docs, docs_url_gen, "");
         let name = type_def_name(TypeDef::Enum(enm));
@@ -743,7 +796,6 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
         }
         out.push_str("}\n\n");
     }
-
     for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
         emit_docs(&mut out, &strct.docs, docs_url_gen, "");
         let name = type_def_name(TypeDef::Struct(strct));
@@ -785,11 +837,97 @@ fn generate_safe(tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
             out.push_str("}\n\n");
         }
     }
+    out
+}
 
-    for opaque in tcx.opaques().iter().filter(|ty| !ty.attrs.disable) {
-        emit_opaque(&mut out, opaque, tcx, docs_url_gen);
+/// One module per opaque type, re-exported flat from the `opaques` module.
+fn generate_opaques_index(tcx: &TypeContext) -> String {
+    let mut out = String::from("//! Generated opaque wrappers, one module per type.\n\n");
+    let opaques: Vec<_> = tcx
+        .opaques()
+        .iter()
+        .filter(|ty| !ty.attrs.disable)
+        .collect();
+    for opaque in &opaques {
+        writeln!(out, "mod {};", opaque_module_name(opaque)).unwrap();
+    }
+    if !opaques.is_empty() {
+        out.push('\n');
+    }
+    for opaque in &opaques {
+        writeln!(out, "pub use {}::*;", opaque_module_name(opaque)).unwrap();
     }
     out
+}
+
+/// The contents of a single `src/opaques/<module>.rs` file.
+fn generate_opaque_file(
+    tcx: &TypeContext,
+    opaque: &hir::OpaqueDef,
+    docs_url_gen: &DocsUrlGenerator,
+) -> String {
+    let mut out = String::from(
+        "use core::marker::PhantomData;\n\
+         use core::ptr::NonNull;\n\
+         use std::rc::Rc;\n\n\
+         use crate::ffi;\n",
+    );
+    if opaque_uses_value_types(opaque) {
+        out.push_str("use crate::types::*;\n");
+    }
+    out.push('\n');
+    emit_opaque(&mut out, opaque, tcx, docs_url_gen);
+    out
+}
+
+/// The module name used for an opaque type's generated file.
+fn opaque_module_name(opaque: &hir::OpaqueDef) -> String {
+    snake_case(&type_def_name(TypeDef::Opaque(opaque)))
+}
+
+fn snake_case(name: &str) -> String {
+    let mut out = String::new();
+    for (index, ch) in name.char_indices() {
+        if ch.is_ascii_uppercase() {
+            if index != 0 && !out.ends_with('_') {
+                out.push('_');
+            }
+            out.push(ch.to_ascii_lowercase());
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// Whether a type mentions a generated enum or struct (both live in `types`).
+fn references_value_type<P: hir::TyPosition>(ty: &Type<P>) -> bool {
+    match ty {
+        Type::Enum(_) | Type::Struct(_) => true,
+        Type::DiplomatOption(inner) => references_value_type(inner.as_ref()),
+        _ => false,
+    }
+}
+
+fn opaque_uses_value_types(opaque: &hir::OpaqueDef) -> bool {
+    opaque
+        .methods
+        .iter()
+        .filter(|method| !method.attrs.disable)
+        .any(|method| {
+            let mut found = method
+                .params
+                .iter()
+                .any(|param| references_value_type(&param.ty));
+            if !found {
+                method.output.with_contained_types(|ty| {
+                    if references_value_type(ty) {
+                        found = true;
+                    }
+                });
+            }
+            found
+        })
 }
 
 /// The declared names of an opaque's type-level lifetimes, e.g. `["'a", "'b"]`.
@@ -924,11 +1062,13 @@ fn ffi_field_to_safe(ty: &Type<hir::Everywhere>, expr: &str) -> String {
     match ty {
         Type::Slice(slice) => {
             if slice_is_mutable(slice) {
-                format!("unsafe {{ private::slice_from_raw_parts_mut({expr}.ptr, {expr}.len) }}")
+                format!(
+                    "unsafe {{ crate::private::slice_from_raw_parts_mut({expr}.ptr, {expr}.len) }}"
+                )
             } else if matches!(slice, Slice::Str(_, StringEncoding::Utf8)) {
-                format!("unsafe {{ private::str_from_raw_parts({expr}.ptr, {expr}.len) }}")
+                format!("unsafe {{ crate::private::str_from_raw_parts({expr}.ptr, {expr}.len) }}")
             } else {
-                format!("unsafe {{ private::slice_from_raw_parts({expr}.ptr, {expr}.len) }}")
+                format!("unsafe {{ crate::private::slice_from_raw_parts({expr}.ptr, {expr}.len) }}")
             }
         }
         _ => expr.to_string(),
@@ -979,7 +1119,7 @@ fn struct_lifetime_phantom(strct: &hir::StructDef) -> String {
     } else {
         format!("({joined})")
     };
-    format!("    _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
+    format!("    pub(crate) _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
 }
 
 fn opaque_generics(opaque: &hir::OpaqueDef, view: bool) -> (String, String) {
@@ -1027,7 +1167,7 @@ fn opaque_lifetime_phantom(opaque: &hir::OpaqueDef) -> String {
     } else {
         format!("({joined})")
     };
-    format!("    _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
+    format!("    pub(crate) _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
 }
 
 /// The safe public Rust type of an opaque output, including type-level lifetimes,
@@ -1039,13 +1179,13 @@ fn opaque_safe_type(
 ) -> String {
     let name = opaque_name(path.tcx_id, tcx);
     let mut args = Vec::new();
-    let mut head = name.clone();
+    let mut head = format!("super::{name}");
     if let MaybeOwn::Borrow(borrow) = path.owner {
         args.push(lifetime_name(borrow.lifetime, method));
         head = if borrow.mutability == Mutability::Mutable {
-            format!("{name}RefMut")
+            format!("super::{name}RefMut")
         } else {
-            format!("{name}Ref")
+            format!("super::{name}Ref")
         };
     }
     for lifetime in path.lifetimes.lifetimes() {
@@ -1071,45 +1211,45 @@ fn emit_opaque(
     emit_docs(out, &opaque.docs, docs_url_gen, "");
     writeln!(
         out,
-        "pub struct {name}{owned_params} {{\n    inner: NonNull<ffi::{name}>,\n{phantom}    _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
+        "pub struct {name}{owned_params} {{\n    pub(crate) inner: NonNull<ffi::{name}>,\n{phantom}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
     )
     .unwrap();
     writeln!(
         out,
-        "pub struct {name}Ref{ref_params} {{\n    inner: NonNull<ffi::{name}>,\n    _borrow: PhantomData<&'view ()>,\n{phantom}    _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
+        "pub struct {name}Ref{ref_params} {{\n    pub(crate) inner: NonNull<ffi::{name}>,\n    pub(crate) _borrow: PhantomData<&'view ()>,\n{phantom}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
     )
     .unwrap();
     writeln!(
         out,
-        "pub struct {name}RefMut{ref_params} {{\n    inner: NonNull<ffi::{name}>,\n    _borrow: PhantomData<&'view mut ()>,\n{phantom}    _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
+        "pub struct {name}RefMut{ref_params} {{\n    pub(crate) inner: NonNull<ffi::{name}>,\n    pub(crate) _borrow: PhantomData<&'view mut ()>,\n{phantom}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,\n}}\n"
     )
     .unwrap();
 
     writeln!(
         out,
-        "#[doc(hidden)]\npub trait {name}SharedArg: private::{name}SharedSealed {{}}\n"
+        "#[doc(hidden)]\npub trait {name}SharedArg: crate::private::{name}SharedSealed {{}}\n"
     )
     .unwrap();
     writeln!(
         out,
-        "#[doc(hidden)]\npub trait {name}MutArg: private::{name}MutSealed {{}}\n"
+        "#[doc(hidden)]\npub trait {name}MutArg: crate::private::{name}MutSealed {{}}\n"
     )
     .unwrap();
-    writeln!(out, "impl{owned_params} private::{name}SharedSealed for {name}{owned_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
-    writeln!(out, "impl{owned_params} private::{name}MutSealed for {name}{owned_args} {{ fn __as_mut_ptr(&mut self) -> *mut ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
+    writeln!(out, "impl{owned_params} crate::private::{name}SharedSealed for {name}{owned_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
+    writeln!(out, "impl{owned_params} crate::private::{name}MutSealed for {name}{owned_args} {{ fn __as_mut_ptr(&mut self) -> *mut ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
     writeln!(
         out,
         "impl{owned_params} {name}SharedArg for {name}{owned_args} {{}}\nimpl{owned_params} {name}MutArg for {name}{owned_args} {{}}"
     )
     .unwrap();
-    writeln!(out, "impl{ref_params} private::{name}SharedSealed for {name}Ref{ref_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
+    writeln!(out, "impl{ref_params} crate::private::{name}SharedSealed for {name}Ref{ref_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
     writeln!(
         out,
         "impl{ref_params} {name}SharedArg for {name}Ref{ref_args} {{}}"
     )
     .unwrap();
-    writeln!(out, "impl{ref_params} private::{name}SharedSealed for {name}RefMut{ref_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
-    writeln!(out, "impl{ref_params} private::{name}MutSealed for {name}RefMut{ref_args} {{ fn __as_mut_ptr(&mut self) -> *mut ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
+    writeln!(out, "impl{ref_params} crate::private::{name}SharedSealed for {name}RefMut{ref_args} {{ fn __as_const_ptr(&self) -> *const ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
+    writeln!(out, "impl{ref_params} crate::private::{name}MutSealed for {name}RefMut{ref_args} {{ fn __as_mut_ptr(&mut self) -> *mut ffi::{name} {{ self.inner.as_ptr() }} }}").unwrap();
     writeln!(out, "impl{ref_params} {name}SharedArg for {name}RefMut{ref_args} {{}}\nimpl{ref_params} {name}MutArg for {name}RefMut{ref_args} {{}}\n").unwrap();
 
     writeln!(out, "impl{owned_params} Drop for {name}{owned_args} {{\n    fn drop(&mut self) {{\n        // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.\n        unsafe {{ ffi::{}(self.inner.as_ptr()) }};\n    }}\n}}\n", opaque.dtor_abi_name).unwrap();
@@ -1248,11 +1388,14 @@ fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
             let name = opaque_name(path.tcx_id, tcx);
             match path.owner.mutability {
                 Mutability::Immutable => format!(
-                    "private::{name}SharedSealed::__as_const_ptr({})",
+                    "crate::private::{name}SharedSealed::__as_const_ptr({})",
                     param.name
                 ),
                 Mutability::Mutable => {
-                    format!("private::{name}MutSealed::__as_mut_ptr({})", param.name)
+                    format!(
+                        "crate::private::{name}MutSealed::__as_mut_ptr({})",
+                        param.name
+                    )
                 }
             }
         }
@@ -1294,13 +1437,13 @@ fn return_expr(ret: &ReturnType, method: &hir::Method, tcx: &TypeContext) -> Str
         }
         ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice))) => {
             if is_owned_slice(slice) {
-                "unsafe { private::owned_slice_into_box(result.ptr, result.len) }".into()
+                "unsafe { crate::private::owned_slice_into_box(result.ptr, result.len) }".into()
             } else if slice_is_mutable(slice) {
-                "unsafe { private::slice_from_raw_parts_mut(result.ptr, result.len) }".into()
+                "unsafe { crate::private::slice_from_raw_parts_mut(result.ptr, result.len) }".into()
             } else if matches!(slice, Slice::Str(_, StringEncoding::Utf8)) {
-                "unsafe { private::str_from_raw_parts(result.ptr, result.len) }".into()
+                "unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }".into()
             } else {
-                "unsafe { private::slice_from_raw_parts(result.ptr, result.len) }".into()
+                "unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }".into()
             }
         }
         ReturnType::Infallible(SuccessType::OutType(Type::Struct(
@@ -1332,13 +1475,13 @@ fn opaque_return_expr(
         ", _lifetimes: PhantomData"
     };
     let construct = if path.owner.is_owned() {
-        format!("{name} {{ inner{phantom}, _not_send_sync: PhantomData }}")
+        format!("super::{name} {{ inner{phantom}, _not_send_sync: PhantomData }}")
     } else if path.owner.mutability() == Mutability::Mutable {
         format!(
-            "{name}RefMut {{ inner, _borrow: PhantomData{phantom}, _not_send_sync: PhantomData }}"
+            "super::{name}RefMut {{ inner, _borrow: PhantomData{phantom}, _not_send_sync: PhantomData }}"
         )
     } else {
-        format!("{name}Ref {{ inner, _borrow: PhantomData{phantom}, _not_send_sync: PhantomData }}")
+        format!("super::{name}Ref {{ inner, _borrow: PhantomData{phantom}, _not_send_sync: PhantomData }}")
     };
     if path.is_optional() {
         format!("NonNull::new(result as *mut _).map(|inner| {construct})")
@@ -1408,8 +1551,8 @@ fn safe_input_type(ty: &Type<hir::InputOnly>, method: &hir::Method, tcx: &TypeCo
             let name = opaque_name(path.tcx_id, tcx);
             let lifetime = lifetime_prefix(path.owner.lifetime, method);
             match path.owner.mutability {
-                Mutability::Immutable => format!("&{lifetime}impl {name}SharedArg"),
-                Mutability::Mutable => format!("&{lifetime}mut impl {name}MutArg"),
+                Mutability::Immutable => format!("&{lifetime}impl super::{name}SharedArg"),
+                Mutability::Mutable => format!("&{lifetime}mut impl super::{name}MutArg"),
             }
         }
         Type::DiplomatOption(inner) => {
@@ -1689,6 +1832,18 @@ mod tests {
 
     use crate::Config;
 
+    /// Concatenates every generated Rust source, for assertions about *what* is
+    /// generated rather than *which file* it lands in.
+    fn all_rust_sources(files: &HashMap<String, String>) -> String {
+        let mut paths: Vec<&String> = files.keys().filter(|path| path.ends_with(".rs")).collect();
+        paths.sort();
+        paths
+            .into_iter()
+            .map(|path| files[path].as_str())
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
     fn generate(tokens: proc_macro2::TokenStream) -> (HashMap<String, String>, Vec<String>) {
         let file = syn::parse2::<syn::File>(tokens).unwrap();
         let mut validator = BasicAttributeValidator::new("rust");
@@ -1731,13 +1886,13 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         let raw = &files["src/ffi.rs"];
         assert!(safe.contains("mod ffi;"));
         assert!(safe.contains("pub struct Counter"));
         assert!(safe.contains("impl Drop for Counter"));
         assert!(safe.contains("pub fn increment(&mut self)"));
-        assert!(safe.contains("other: &impl CounterSharedArg"));
+        assert!(safe.contains("other: &impl super::CounterSharedArg"));
         assert!(!safe.contains("pub mod ffi"));
         assert!(raw.contains("extern \"C\""));
         assert!(raw.contains("Counter_destroy"));
@@ -1758,7 +1913,9 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        assert!(files["src/lib.rs"].contains("pub fn child<'a>(&'a self) -> ChildRef<'a>"));
+        assert!(
+            all_rust_sources(&files).contains("pub fn child<'a>(&'a self) -> super::ChildRef<'a>")
+        );
     }
 
     #[test]
@@ -1778,9 +1935,12 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         assert!(safe.contains("'long: 'short"), "{safe}");
-        assert!(safe.contains("&'long self) -> ChildRef<'short>"), "{safe}");
+        assert!(
+            safe.contains("&'long self) -> super::ChildRef<'short>"),
+            "{safe}"
+        );
         assert!(!safe.contains("'long, 'long:"), "{safe}");
     }
 
@@ -1800,7 +1960,7 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         assert!(safe.contains("pub enum Mode"));
         assert!(safe.contains("pub struct Snapshot"));
         assert!(safe.contains("value: Option<u32>"));
@@ -1882,9 +2042,9 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
-        assert!(safe.contains("-> Option<Parent>"));
-        assert!(safe.contains("-> Option<ChildRef<'a>>"));
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("-> Option<super::Parent>"));
+        assert!(safe.contains("-> Option<super::ChildRef<'a>>"));
         assert!(safe.contains("NonNull::new(result as *mut _).map"));
     }
 
@@ -1931,7 +2091,7 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         assert!(
             safe.contains("pub fn borrow<'a>(&'a self) -> &'a [u32]"),
             "{safe}"
@@ -1968,7 +2128,7 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         assert!(
             safe.contains("pub fn bytes<'a>(&'a self) -> &'a [u8]"),
             "{safe}"
@@ -1991,7 +2151,7 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         let ffi = &files["src/ffi.rs"];
         assert!(
             safe.contains("pub fn make(len: u32) -> Box<[u8]>"),
@@ -2023,7 +2183,7 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         let ffi = &files["src/ffi.rs"];
         assert!(safe.contains("pub struct BorrowedFields<'a>"), "{safe}");
         assert!(safe.contains("pub a: &'a [u8]"), "{safe}");
@@ -2054,17 +2214,17 @@ mod tests {
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
-        let safe = &files["src/lib.rs"];
+        let safe = &all_rust_sources(&files);
         assert!(safe.contains("pub struct Foo<'a>"), "{safe}");
         assert!(safe.contains("impl<'a> Drop for Foo<'a>"), "{safe}");
         assert!(safe.contains("pub struct Bar<'b, 'a: 'b>"), "{safe}");
         assert!(safe.contains("impl<'a> Foo<'a> {"), "{safe}");
         assert!(
-            safe.contains("pub fn new(x: &'a [u8]) -> Foo<'a>"),
+            safe.contains("pub fn new(x: &'a [u8]) -> super::Foo<'a>"),
             "{safe}"
         );
         assert!(
-            safe.contains("pub fn get_bar<'b>(&'b self) -> Bar<'b, 'a>"),
+            safe.contains("pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a>"),
             "{safe}"
         );
     }

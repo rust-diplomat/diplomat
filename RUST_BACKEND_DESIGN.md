@@ -45,8 +45,12 @@ The new target follows that architecture in `tool/src/rust/` and
 ```text
 Cargo.toml
 build.rs
-src/lib.rs   # safe public API; `mod ffi` is private
-src/ffi.rs   # raw repr(C) mirrors and extern declarations
+src/lib.rs                  # crate facade: module declarations and flat re-exports
+src/ffi.rs                  # private raw layer: repr(C) mirrors and extern declarations
+src/private.rs              # private: sealed capability traits + unsafe rebuild helpers
+src/types.rs                # enums and value structs
+src/opaques.rs              # `mod <type>;` + `pub use <type>::*;` for each opaque
+src/opaques/<type>.rs       # one module per opaque: wrappers, sealed impls, Drop, methods
 ```
 
 `[rust] crate-name` selects the generated package name. `[rust] dylib-name`
