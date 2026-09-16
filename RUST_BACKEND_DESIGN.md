@@ -81,7 +81,7 @@ API safe.
 
 | Diplomat HIR semantic | Native ABI representation | .NET/C++ safe representation | Experimental Safe Rust representation | HIR/reuse | Internal unsafe operation and public invariant |
 |---|---|---|---|---|---|
-| `bool`, `DiplomatByte`, 8–64-bit integers, `isize`, `usize` | Corresponding C-compatible scalar | Native scalar conversions | Same Rust scalar (`DiplomatByte` becomes `u8`) | `Type::Primitive`, `PrimitiveType`; primitive formatters informed the mapping | Unsafe extern call only. Both sides use the exact scalar ABI type. Unsupported primitive kinds are rejected. |
+| `bool`, `DiplomatByte`, 8–64-bit integers, `isize`, `usize`, `f32`, `f64` | Corresponding C-compatible scalar | Native scalar conversions | Same Rust scalar (`DiplomatByte` becomes `u8`) | `Type::Primitive`, `PrimitiveType`; primitive formatters informed the mapping | Unsafe extern call only. Both sides use the exact scalar ABI type. Unsupported primitive kinds are rejected. |
 | Owned opaque / `Box<T>` return | Non-null `T*` allocated by provider | .NET owning `RustHandle<T>`; C++ owning RAII wrapper | Non-cloneable `T { NonNull<ffi::T>, ... }` | Output `Type::Opaque`, `MaybeOwn::Own`, `OpaqueDef::dtor_abi_name` | Check null, construct private fields, later call provider destructor. Only one constructible owner exists and consumer never reconstructs `Box<T>`. |
 | Nullable owned opaque | Nullable `T*` | Nullable managed/RAII wrapper | `Option<T>` | `OpaquePath::is_optional` plus owned `OpaqueOwner` | `NonNull::new(ptr).map(...)`. Null is `None`; non-null creates exactly one owner. |
 | `&T` input | `const T*` | Handle/pointer extraction or C++ const reference | `&impl TSharedArg` | Input opaque `Borrow { mutability: Immutable, lifetime }`; reuse HIR lifetime | Private sealed trait extracts the pointer. Public capability trait has no methods and downstream crates cannot implement it. `T`, `TRef`, and `TRefMut` provide only shared capability. |
@@ -135,7 +135,7 @@ slice/struct edges or larger output lifetime graphs. It never substitutes
 
 Supported:
 
-- `bool`, `DiplomatByte`, `i8`–`i64`, `u8`–`u64`, `isize`, and `usize`;
+- `bool`, `DiplomatByte`, `i8`–`i64`, `u8`–`u64`, `isize`, `usize`, and `f32`/`f64`;
 - opaque definitions with or without type-level lifetime parameters;
 - static methods/constructors, `&self`, and `&mut self`;
 - shared and mutable opaque parameters through sealed capabilities;
@@ -156,7 +156,9 @@ Supported:
 
 Explicitly rejected with contextual backend errors:
 
-- unsupported primitives (`char`, ordering, 128-bit integers, floats);
+- unsupported primitives: `char` (it reaches the ABI as a `DiplomatChar`/`u32`, so
+  accepting it would need a code-point validity decision), `Ordering` (no agreed ABI
+  shape), and 128-bit integers (not FFI-safe on every target);
 - nested/owning struct fields and output-only structs;
 - owned slice *inputs* and owned slices of non-byte elements;
 - slices of structs/strings/opaques and `Option`/`Result` composition of owned
@@ -184,9 +186,9 @@ the fork's issue #8 tracks closing that gap.
 
 `memory_sharing` is claimed because generated code borrows directly out of
 provider-owned memory. Note the interaction with the rejected primitive set: the
-shared `feature_tests/src` corpus gates `&[f64]` constructors on that same flag, and
-floats are rejected, so pointing this backend at the shared corpus fails outright on
-those methods until floats are supported.
+shared `feature_tests/src` corpus gates `&[f64]` constructors on that same flag, so the
+fixture's `Float64Vec` holds that exact shape — it failed outright until floats were
+added to the primitive subset.
 
 ## Safety audit
 

@@ -1652,10 +1652,14 @@ fn primitive_name(primitive: PrimitiveType) -> Option<&'static str> {
         PrimitiveType::Byte => Some("u8"),
         PrimitiveType::Int(value) => Some(value.as_str()),
         PrimitiveType::IntSize(value) => Some(value.as_str()),
-        PrimitiveType::Char
-        | PrimitiveType::Ordering
-        | PrimitiveType::Int128(_)
-        | PrimitiveType::Float(_) => None,
+        // Floats are FFI-safe scalars and this backend is Rust-to-Rust, so `f32`/`f64`
+        // are the ABI type and the safe type at once; no conversion in either
+        // direction.
+        PrimitiveType::Float(value) => Some(value.as_str()),
+        // `char` arrives as a `DiplomatChar` (a `u32` scalar), so accepting it needs a
+        // decision about validating the code point on the way in. 128-bit integers are
+        // not FFI-safe on every target, and `Ordering` has no agreed ABI shape.
+        PrimitiveType::Char | PrimitiveType::Ordering | PrimitiveType::Int128(_) => None,
     }
 }
 
@@ -1938,7 +1942,10 @@ mod tests {
                 #[diplomat::opaque]
                 pub struct Counter(u32);
                 impl Counter {
-                    pub fn consume(&self, samples: &[f64]) { unimplemented!() }
+                    // `i128` stays outside the supported primitive subset, so a slice of
+                    // it is still rejected. (This case used `f64` until floats were
+                    // added to the subset.)
+                    pub fn consume(&self, samples: &[i128]) { unimplemented!() }
                 }
             }
         });
@@ -1965,16 +1972,19 @@ mod tests {
             PrimitiveType::Int(IntType::U64),
             PrimitiveType::IntSize(IntSizeType::Isize),
             PrimitiveType::IntSize(IntSizeType::Usize),
+            PrimitiveType::Float(FloatType::F32),
+            PrimitiveType::Float(FloatType::F64),
         ] {
             assert!(super::primitive_name(primitive).is_some());
         }
+        // Deliberately still out of the subset: `char` awaits a code-point validity
+        // decision, `Ordering` has no agreed ABI shape, and 128-bit integers are not
+        // FFI-safe on every target. A `Some` here would be a promise we cannot keep.
         for primitive in [
             PrimitiveType::Char,
             PrimitiveType::Ordering,
             PrimitiveType::Int128(Int128Type::I128),
             PrimitiveType::Int128(Int128Type::U128),
-            PrimitiveType::Float(FloatType::F32),
-            PrimitiveType::Float(FloatType::F64),
         ] {
             assert!(super::primitive_name(primitive).is_none());
         }
@@ -2320,5 +2330,70 @@ mod tests {
             "{:#?}",
             files.keys()
         );
+    }
+
+    /// Floats are FFI-safe scalars and the backend is Rust-to-Rust, so they need no
+    /// conversion: the same `f32`/`f64` is the ABI type and the safe type.
+    #[test]
+    fn float_scalars_and_slices_are_lowered() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque_mut]
+                pub struct Floats(Vec<f64>);
+                impl Floats {
+                    pub fn new(values: &[f64]) -> Box<Self> { unimplemented!() }
+                    pub fn scale(&mut self, factor: f64) -> f64 { unimplemented!() }
+                    pub fn narrow(&self) -> f32 { unimplemented!() }
+                    pub fn values<'a>(&'a self) -> &'a [f64] { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("pub fn new(values: &[f64])"), "{safe}");
+        assert!(
+            safe.contains("pub fn scale(&mut self, factor: f64) -> f64"),
+            "{safe}"
+        );
+        assert!(safe.contains("pub fn narrow(&self) -> f32"), "{safe}");
+        assert!(
+            safe.contains("pub fn values<'a>(&'a self) -> &'a [f64]"),
+            "{safe}"
+        );
+    }
+
+    /// The primitives left out of the subset must still stop generation outright,
+    /// rather than emitting bindings that quietly drop the method.
+    #[test]
+    fn unsupported_primitives_still_reject_without_output() {
+        for tokens in [
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    pub struct Wide(u128);
+                    impl Wide {
+                        pub fn get(&self) -> u128 { unimplemented!() }
+                    }
+                }
+            },
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    use diplomat_runtime::DiplomatChar;
+
+                    #[diplomat::opaque]
+                    pub struct Letter(u32);
+                    impl Letter {
+                        pub fn get(&self) -> DiplomatChar { unimplemented!() }
+                    }
+                }
+            },
+        ] {
+            let (files, errors) = generate(tokens);
+            assert!(!errors.is_empty(), "expected a diagnostic");
+            assert!(files.is_empty(), "{:#?}", files.keys());
+        }
     }
 }

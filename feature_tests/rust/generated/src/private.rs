@@ -23,6 +23,12 @@ pub trait CounterSharedSealed {
 pub trait CounterMutSealed: CounterSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Counter;
 }
+pub trait Float64VecSharedSealed {
+    fn __as_const_ptr(&self) -> *const crate::ffi::Float64Vec;
+}
+pub trait Float64VecMutSealed: Float64VecSharedSealed {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Float64Vec;
+}
 pub trait MessageSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::Message;
 }

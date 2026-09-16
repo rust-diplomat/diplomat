@@ -79,6 +79,11 @@ pub struct Counter {
 }
 
 #[repr(C)]
+pub struct Float64Vec {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
 pub struct Message {
     _private: [u8; 0],
 }
@@ -140,6 +145,11 @@ extern "C" {
     pub(super) fn Counter_reset_drop_count();
     pub(super) fn Counter_drop_count() -> usize;
     pub(super) fn Counter_new_named(value: u32) -> *mut Counter;
+    pub(super) fn Float64Vec_destroy(this: *mut Float64Vec);
+    pub(super) fn Float64Vec_new(values: DiplomatSlice<f64>) -> *mut Float64Vec;
+    pub(super) fn Float64Vec_sum(this: *const Float64Vec) -> f64;
+    pub(super) fn Float64Vec_get(this: *const Float64Vec, index: u32) -> f64;
+    pub(super) fn Float64Vec_scale_in_place(this: *mut Float64Vec, factor: f64);
     pub(super) fn Message_destroy(this: *mut Message);
     pub(super) fn Message_new(v: DiplomatSlice<u8>) -> *mut Message;
     pub(super) fn Message_bytes(this: *const Message) -> DiplomatSlice<u8>;

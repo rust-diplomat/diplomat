@@ -4,7 +4,7 @@
 use std::sync::Mutex;
 
 use diplomat_rust_backend_generated::{
-    Bytes, Counter, Message, Mode, Numbers, SliceView, WideMessage,
+    Bytes, Counter, Float64Vec, Message, Mode, Numbers, SliceView, WideMessage,
 };
 
 /// `Counter` reports destruction through a process-wide probe, so the tests that
@@ -182,4 +182,22 @@ fn capability_gated_apis_are_generated() {
 
     let wide = WideMessage::new(&[104, 105]);
     assert_eq!(wide.units(), &[104, 105]);
+}
+
+/// Floats are the same type on both sides of this ABI, so they need no conversion.
+/// The `&[f64]` constructor is doubly load-bearing: it is the shape the shared corpus
+/// gates on `memory_sharing`, and it exercises a float slice rather than a scalar.
+#[test]
+fn float_scalars_and_float_slices_round_trip() {
+    let values = Float64Vec::new(&[1.5, 2.5, 3.0]);
+    assert_eq!(values.sum(), 7.0);
+    assert_eq!(values.get(1), 2.5);
+    assert!(values.get(9).is_nan());
+
+    let mut scaled = Float64Vec::new(&[1.0, -2.0]);
+    scaled.scale_in_place(2.5);
+    assert_eq!(scaled.sum(), -2.5);
+
+    let empty = Float64Vec::new(&[]);
+    assert_eq!(empty.sum(), 0.0);
 }

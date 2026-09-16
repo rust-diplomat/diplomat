@@ -324,6 +324,33 @@ pub mod ffi {
         }
     }
 
+    /// Float scalars and a float slice. The constructor is the exact shape the shared
+    /// corpus gates on `memory_sharing` (`feature_tests/src/slices.rs`:
+    /// `pub fn new(v: &[f64])`), so it holds that shape against this backend's ABI.
+    #[diplomat::opaque_mut]
+    pub struct Float64Vec(Vec<f64>);
+
+    impl Float64Vec {
+        #[diplomat::cfg(supports = memory_sharing)]
+        pub fn new(values: &[f64]) -> Box<Self> {
+            Box::new(Self(values.to_vec()))
+        }
+
+        pub fn sum(&self) -> f64 {
+            self.0.iter().sum()
+        }
+
+        pub fn get(&self, index: u32) -> f64 {
+            self.0.get(index as usize).copied().unwrap_or(f64::NAN)
+        }
+
+        pub fn scale_in_place(&mut self, factor: f64) {
+            for value in &mut self.0 {
+                *value *= factor;
+            }
+        }
+    }
+
     impl Drop for Counter {
         fn drop(&mut self) {
             COUNTER_DROPS.fetch_add(1, Ordering::SeqCst);
