@@ -1,6 +1,5 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Text;
 using Somelib;
 using Somelib.Diplomat;
 using Xunit;
@@ -8,137 +7,105 @@ using Xunit;
 namespace Somelib.FeatureTests;
 
 [Collection(RcSharedNativeStateCollection.Name)]
-public sealed class RuntimeBorrowSafetyTests
+public class RuntimeBorrowSafetyTests
 {
-    private static async Task AwaitWithTimeout(Task task)
+    private static byte[] Utf8(string value) => Encoding.UTF8.GetBytes(value);
+
+    [Fact]
+    public void OwnedChildOfSharedBorrow_DoesNotBlockSource_AndIsInvalidatedByMutation()
     {
-        Task completed = await Task.WhenAny(task, Task.Delay(TimeSpan.FromSeconds(5)));
-        Assert.Same(task, completed);
-        await task;
+        OpaqueThinVec source = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinIter iter = source.Iter();
+
+        // The iterator is a read view: mutating the source succeeds and stales it.
+        source.FirstC = "changed";
+
+        Assert.Equal((nuint)1, source.Len());
+        Assert.Throws<InvalidOperationException>(() => iter.Next());
+        GC.KeepAlive(iter);
     }
 
     [Fact]
-    public async Task ConcurrentSharedCalls_AreAllowedButMutableCallsFailFast()
+    public void OwnedChildOfSharedBorrow_ReadsUntilSourceIsMutated()
     {
-        BorrowSafetyProbe.ResetSharedCall();
-        using BorrowSafetyProbe probe = BorrowSafetyProbe.Create();
-        Task heldCall = Task.Factory.StartNew(
-            probe.HoldShared,
-            CancellationToken.None,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default
-        );
+        OpaqueThinVec source = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinIter iter = source.Iter();
 
-        try
-        {
-            Assert.True(
-                SpinWait.SpinUntil(BorrowSafetyProbe.SharedCallEntered, TimeSpan.FromSeconds(5))
-            );
-            Assert.True(probe.PingShared());
-            Assert.Throws<InvalidOperationException>(() => probe.PingMutable());
-        }
-        finally
-        {
-            BorrowSafetyProbe.ReleaseSharedCall();
-            await AwaitWithTimeout(heldCall);
-        }
+        using OpaqueThin first = iter.Next()!;
+        Assert.Equal(7, first.A);
+        Assert.Null(iter.Next());
+        GC.KeepAlive(source);
     }
 
     [Fact]
-    public async Task ConcurrentMutableCall_RejectsSharedAndMutableCalls()
+    public void ExclusiveView_BlocksSourceUntilDisposed()
     {
-        BorrowSafetyProbe.ResetMutableCall();
-        using BorrowSafetyProbe probe = BorrowSafetyProbe.Create();
-        Task heldCall = Task.Factory.StartNew(
-            probe.HoldMutable,
-            CancellationToken.None,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default
-        );
+        ExclusiveSource source = ExclusiveSource.Create(1);
 
-        try
+        using (ExclusiveView view = source.ViewMut())
         {
-            Assert.True(
-                SpinWait.SpinUntil(BorrowSafetyProbe.MutableCallEntered, TimeSpan.FromSeconds(5))
-            );
-            Assert.Throws<InvalidOperationException>(() => probe.PingShared());
-            Assert.Throws<InvalidOperationException>(() => probe.PingMutable());
-        }
-        finally
-        {
-            BorrowSafetyProbe.ReleaseMutableCall();
-            await AwaitWithTimeout(heldCall);
+            Assert.Throws<InvalidOperationException>(() => source.Value());
+            Assert.Throws<InvalidOperationException>(() => source.SetValue(9));
+            view.Add(2);
+            Assert.Equal(3ul, view.Value());
         }
 
-        Assert.True(probe.PingMutable());
+        Assert.Equal(3ul, source.Value());
     }
 
     [Fact]
-    public async Task Dispose_DuringActiveMutableCall_DefersNativeDestruction()
+    public void ExclusiveOwnedChild_BlocksSourceUntilDisposed()
     {
-        BorrowSafetyProbe.ResetMutableCall();
-        BorrowSafetyProbe.ResetDropCount();
-        BorrowSafetyProbe probe = BorrowSafetyProbe.Create();
-        Task heldCall = Task.Factory.StartNew(
-            probe.HoldMutable,
-            CancellationToken.None,
-            TaskCreationOptions.LongRunning,
-            TaskScheduler.Default
-        );
+        ExclusiveSource source = ExclusiveSource.Create(1);
 
-        try
+        using (ExclusiveWriter writer = source.TakeWriter())
         {
-            Assert.True(
-                SpinWait.SpinUntil(BorrowSafetyProbe.MutableCallEntered, TimeSpan.FromSeconds(5))
-            );
-            probe.Dispose();
-            Assert.Equal(0ul, BorrowSafetyProbe.DropCount());
-        }
-        finally
-        {
-            BorrowSafetyProbe.ReleaseMutableCall();
-            await AwaitWithTimeout(heldCall);
+            Assert.Throws<InvalidOperationException>(() => source.SetValue(9));
+            writer.Add(4);
         }
 
-        Assert.Equal(1ul, BorrowSafetyProbe.DropCount());
+        Assert.Equal(5ul, source.Value());
+        source.SetValue(9);
+        Assert.Equal(9ul, source.Value());
     }
 
     [Fact]
-    public void BorrowedSpan_TransfersOnlyPresentOptionalSourceLeases()
+    public void ExclusiveReturns_AreDisposable_AndBorrowingSourcesAreFinalizerOnly()
     {
-        BorrowSafetyProbe.ResetDropCount();
-        BorrowSafetyProbe source = BorrowSafetyProbe.Create();
-        DiplomatBorrowedSpan<byte> span = BorrowSafetyProbe.BorrowStaticFromOptional(source, null);
-
-        Assert.Equal(new byte[] { 1, 2, 3 }, span.Clone());
-
-        source.Dispose();
-        Assert.Equal(0ul, BorrowSafetyProbe.DropCount());
-
-        span.Dispose();
-        Assert.Equal(1ul, BorrowSafetyProbe.DropCount());
-
-        using DiplomatBorrowedSpan<byte> staticSpan =
-            BorrowSafetyProbe.BorrowStaticFromOptional(null, null);
-        Assert.Equal(new byte[] { 1, 2, 3 }, staticSpan.Clone());
+        Assert.Contains(typeof(IDisposable), typeof(ExclusiveView).GetInterfaces());
+        Assert.Contains(typeof(IDisposable), typeof(ExclusiveWriter).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(ExclusiveSource).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(OpaqueThinVec).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(OpaqueThinIter).GetInterfaces());
+        Assert.DoesNotContain(typeof(IDisposable), typeof(MyString).GetInterfaces());
     }
 
     [Fact]
-    public void BorrowedSpan_SameOptionalSourceTwice_ReleasesBothClaimsAndInvalidates()
+    public void SpanAccess_ReentrantMutationAndCallbackFailureAreRejected()
     {
-        BorrowSafetyProbe.ResetDropCount();
-        BorrowSafetyProbe source = BorrowSafetyProbe.Create();
-        DiplomatBorrowedSpan<byte> span =
-            BorrowSafetyProbe.BorrowStaticFromOptional(source, source);
+        MyString value = MyString.New(Utf8("before"));
+        using DiplomatBorrowedSpan<byte> view = value.Borrow();
 
-        Assert.Equal(new byte[] { 1, 2, 3 }, span.Clone());
-        Assert.True(source.PingMutable());
-        Assert.Throws<InvalidOperationException>(() => span.Clone());
+        Assert.Throws<InvalidOperationException>(() =>
+            view.WithSpan(_ => value.Str = "nested"));
 
-        source.Dispose();
-        Assert.Equal(0ul, BorrowSafetyProbe.DropCount());
+        Assert.Throws<InvalidOperationException>(() =>
+            view.WithSpan(_ => throw new InvalidOperationException("callback failure")));
 
-        span.Dispose();
-        Assert.Equal(1ul, BorrowSafetyProbe.DropCount());
+        value.Str = "after";
+        Assert.Throws<InvalidOperationException>(() => view.Clone());
+    }
+
+    [Fact]
+    public void SpanDispose_IsIdempotentAndSourceMutationInvalidatesAccess()
+    {
+        MyString value = MyString.New(Utf8("value"));
+        DiplomatBorrowedSpan<byte> view = value.Borrow();
+
+        value.Str = "changed";
+        Assert.Throws<InvalidOperationException>(() => view.WithSpan(_ => { }));
+
+        view.Dispose();
+        view.Dispose();
     }
 }

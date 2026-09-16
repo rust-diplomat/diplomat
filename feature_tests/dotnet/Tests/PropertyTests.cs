@@ -20,7 +20,7 @@ public class PropertyTests
     [Fact]
     public void GetterAndSetterPair_RoundTripsThroughOneProperty()
     {
-        using MyString value = MyString.New(Utf8("before"));
+        MyString value = MyString.New(Utf8("before"));
 
         value.Str = "after 餐";
 
@@ -33,7 +33,7 @@ public class PropertyTests
     [Fact]
     public void SetterWithoutAGetter_WritesThroughAWriteOnlyProperty()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
 
         vec.FirstC = "after";
 

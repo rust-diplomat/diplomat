@@ -7,7 +7,7 @@
 //! Module layout:
 //!
 //! * [`opaque`] — `Raw[T].cs` `[DllImport]` declarations + the idiomatic
-//!   wrapper class (`IDisposable` with a finalizer fallback).
+//!   wrapper class (finalizer-only by default, optional public `IDisposable`).
 //!   Self-contained for a single
 //!   `OpaqueDef`.
 //! * [`lower`] — pure type-leaf lowering shared across opaque / struct /
@@ -285,8 +285,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 let fields = self.lower_fields(struct_def)?;
                 let field_names: Vec<&str> =
                     fields.iter().map(|field| field.name.as_str()).collect();
-                let members =
-                    self.build_members(&display_name, &struct_def.methods, &field_names, false);
+                let members = self.build_members(
+                    &display_name,
+                    &struct_def.methods,
+                    &field_names,
+                    false,
+                    false,
+                );
                 PreparedType::Struct {
                     display_name,
                     fields,
@@ -298,7 +303,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 return None;
             }
             hir::TypeDef::Opaque(opaque_def) => {
-                let members = self.build_members(&display_name, &opaque_def.methods, &[], true);
+                let members = self.build_members(
+                    &display_name,
+                    &opaque_def.methods,
+                    &[],
+                    true,
+                    opaque_def.attrs.manually_disposable,
+                );
                 PreparedType::Opaque {
                     display_name,
                     opaque_def,
@@ -333,7 +344,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     properties,
                 } = members;
                 let raw = self.gen_opaque_raw(display_name.clone(), opaque_def, raw_methods);
-                let content = self.gen_opaque_impl(display_name, methods, properties);
+                let content = self.gen_opaque_impl(
+                    display_name,
+                    methods,
+                    properties,
+                    opaque_def.attrs.manually_disposable,
+                );
                 (Some(raw), content)
             }
             PreparedType::Struct {
@@ -367,6 +383,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         methods: &'tcx [hir::Method],
         field_names: &[&str],
         is_opaque: bool,
+        has_generated_dispose: bool,
     ) -> TypeMembers<'tcx> {
         let lowered: Vec<(Option<AccessorInfo>, MethodInfo<'tcx>)> = methods
             .iter()
@@ -380,6 +397,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             &methods,
             field_names,
             is_opaque,
+            has_generated_dispose,
             self.errors,
         );
         TypeMembers {

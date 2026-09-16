@@ -1,3 +1,58 @@
+struct DropRecord {
+    drops: &'static std::sync::atomic::AtomicU64,
+    sequence: Option<&'static std::sync::atomic::AtomicU64>,
+    checksum: Option<(&'static std::sync::atomic::AtomicU64, u64)>,
+}
+
+impl DropRecord {
+    fn counted(drops: &'static std::sync::atomic::AtomicU64) -> Self {
+        Self {
+            drops,
+            sequence: None,
+            checksum: None,
+        }
+    }
+
+    fn sequenced(
+        drops: &'static std::sync::atomic::AtomicU64,
+        sequence: &'static std::sync::atomic::AtomicU64,
+    ) -> Self {
+        Self {
+            drops,
+            sequence: Some(sequence),
+            checksum: None,
+        }
+    }
+
+    fn checksummed(
+        drops: &'static std::sync::atomic::AtomicU64,
+        sequence: &'static std::sync::atomic::AtomicU64,
+        checksum: &'static std::sync::atomic::AtomicU64,
+        value: u64,
+    ) -> Self {
+        Self {
+            drops,
+            sequence: Some(sequence),
+            checksum: Some((checksum, value)),
+        }
+    }
+}
+
+impl Drop for DropRecord {
+    fn drop(&mut self) {
+        self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        if let Some(sequence) = self.sequence {
+            sequence.store(
+                RC_CLOCK.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
+                std::sync::atomic::Ordering::SeqCst,
+            );
+        }
+        if let Some((checksum, value)) = self.checksum {
+            checksum.store(value, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+}
+
 #[diplomat::bridge]
 pub mod ffi {
     use std::fmt::Write;
@@ -308,6 +363,7 @@ pub mod ffi {
     // via transparent_convert and non-owning references. Iterators, iterables, and getters
     // are all handled via attributes, which may have slightly different codepaths.
     #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::transparent_convert]
     #[diplomat::attr(demo_gen, disable)]
     pub struct OpaqueThin(pub crate::lifetimes::Internal);
@@ -478,11 +534,11 @@ pub mod ffi {
     // other backends.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct GcRaceProbe(u64);
+    pub struct GcRaceProbe(super::DropRecord);
 
     impl GcRaceProbe {
         pub fn create() -> Box<Self> {
-            Box::new(GcRaceProbe(0))
+            Box::new(GcRaceProbe(super::DropRecord::counted(&super::PROBE_DROPS)))
         }
 
         pub fn drops_during_spin(&self, millis: u64) -> u64 {
@@ -492,14 +548,17 @@ pub mod ffi {
         }
     }
 
-    // Paired probes verify unmarked and legacy-marked opaques share lifecycle behavior.
+    // Dedicated drop probes for dotnet opt-in IDisposable behavior:
+    // one unmarked opaque (finalizer-only default), and one opt-in opaque.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct DefaultDropProbe;
+    pub struct DefaultDropProbe(super::DropRecord);
 
     impl DefaultDropProbe {
         pub fn create() -> Box<Self> {
-            Box::new(Self)
+            Box::new(Self(super::DropRecord::counted(
+                &super::DEFAULT_DROP_PROBE_DROPS,
+            )))
         }
 
         pub fn reset_drop_count() {
@@ -512,12 +571,15 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::opaque]
-    pub struct DisposableDropProbe;
+    pub struct DisposableDropProbe(super::DropRecord);
 
     impl DisposableDropProbe {
         pub fn create() -> Box<Self> {
-            Box::new(Self)
+            Box::new(Self(super::DropRecord::counted(
+                &super::DISPOSABLE_DROP_PROBE_DROPS,
+            )))
         }
 
         /// Exists so C# tests can observe that Dispose() invalidates the wrapper.
@@ -534,60 +596,42 @@ pub mod ffi {
         }
     }
 
-    // ── .NET non-atomic borrow-dependency RC fixtures ──────────────────────
+    // ── .NET managed source-edge fixtures ──────────────────────────────────
     //
-    // These exercise the .NET-only reference-counted borrow-dependency
-    // mechanism directly (see `tool/templates/dotnet/RustHandle.cs.jinja`):
-    // an IDisposable "source", a borrowed (non-owning) "view" of it,
-    // an owned-but-borrowing "dependent" that has its own Rust destructor
-    // while holding a reference into the source (a direct RC edge), a second
-    // layer of transitive dependency (a dependent of a dependent — only the
-    // *direct* edge at each layer is ever recorded by the generator; the
-    // full chain is only reachable by each layer's own recursive Release()),
-    // and a parent/child pair for the same
-    // destruction-ordering invariant exercised via the finalizer path
-    // instead of explicit `Dispose()`.
-    //
-    // A shared logical clock plus a per-type "drop sequence" cell let tests
-    // assert *relative* destruction order deterministically (dependent
-    // destroyed strictly before its source) instead of depending on GC
-    // timing. `reset_drop_stats()`/`drop_count()`/`drop_seq()` follow the
-    // existing `DefaultDropProbe`/`DisposableDropProbe` static-method
-    // convention above.
+    // These fixtures cover source-handle reachability, transitive cleanup,
+    // and independent child disposal.
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque_mut]
-    pub struct RcSource(u64);
+    #[diplomat::opaque]
+    pub struct RcSource(u64, super::DropRecord);
 
     impl RcSource {
         pub fn create(id: u64) -> Box<Self> {
-            Box::new(Self(id))
+            Box::new(Self(
+                id,
+                super::DropRecord::sequenced(&super::RC_SOURCE_DROPS, &super::RC_SOURCE_DROP_SEQ),
+            ))
         }
 
         pub fn id(&self) -> u64 {
             self.0
         }
 
-        /// A borrowed (non-owning) view of `self`: the RC dependency case
-        /// with no Rust destructor of its own — releasing it only ever
-        /// decrements `self`'s refcount.
+        /// A borrowed (non-owning) view of `self` held by a managed source edge.
         pub fn view<'b>(&'b self) -> &'b Self {
             self
         }
 
-        pub fn view_mut<'b>(&'b mut self) -> &'b mut Self {
-            self
-        }
-
-        pub fn ping_mutable(&mut self) -> bool {
-            true
-        }
-
-        /// An owned wrapper with its own Rust destructor that also borrows
-        /// `self`'s lifetime — the RC "destroy self, then release the
-        /// dependency" (owned-borrowing) case.
+        /// An owned wrapper with its own resource and a managed source edge.
         pub fn make_dependent<'b>(&'b self) -> Box<RcDependent<'b>> {
-            Box::new(RcDependent(self, self.0))
+            Box::new(RcDependent(
+                self,
+                self.0,
+                super::DropRecord::sequenced(
+                    &super::RC_DEPENDENT_DROPS,
+                    &super::RC_DEPENDENT_DROP_SEQ,
+                ),
+            ))
         }
 
         pub fn reset_drop_stats() {
@@ -606,7 +650,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct RcDependent<'a>(&'a RcSource, u64);
+    pub struct RcDependent<'a>(&'a RcSource, u64, super::DropRecord);
 
     impl<'a> RcDependent<'a> {
         pub fn id(&self) -> u64 {
@@ -617,10 +661,17 @@ pub mod ffi {
             self.0 .0
         }
 
-        /// A second, transitive layer: `RcDependent2` borrows `self`
-        /// (`RcDependent`), not `RcSource` directly.
+        /// A second, transitive layer: `RcDependent2` borrows `self`, not the
+        /// source directly.
         pub fn make_dependent2<'b>(&'b self) -> Box<RcDependent2<'b, 'a>> {
-            Box::new(RcDependent2(self, self.1))
+            Box::new(RcDependent2(
+                self,
+                self.1,
+                super::DropRecord::sequenced(
+                    &super::RC_DEPENDENT2_DROPS,
+                    &super::RC_DEPENDENT2_DROP_SEQ,
+                ),
+            ))
         }
 
         pub fn reset_drop_stats() {
@@ -638,8 +689,9 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::opaque]
-    pub struct RcDependent2<'b, 'a: 'b>(&'b RcDependent<'a>, u64);
+    pub struct RcDependent2<'b, 'a: 'b>(&'b RcDependent<'a>, u64, super::DropRecord);
 
     impl<'b, 'a: 'b> RcDependent2<'b, 'a> {
         pub fn id(&self) -> u64 {
@@ -661,87 +713,18 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque_mut]
-    pub struct BorrowSafetyProbe;
-
-    impl BorrowSafetyProbe {
-        pub fn create() -> Box<Self> {
-            Box::new(Self)
-        }
-
-        pub fn reset_drop_count() {
-            super::BORROW_SAFETY_DROPS.store(0, super::Ordering::SeqCst);
-        }
-
-        pub fn drop_count() -> u64 {
-            super::BORROW_SAFETY_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn reset_shared_call() {
-            super::BORROW_SAFETY_SHARED_ENTERED.store(false, super::Ordering::SeqCst);
-            super::BORROW_SAFETY_SHARED_RELEASE.store(false, super::Ordering::SeqCst);
-        }
-
-        pub fn shared_call_entered() -> bool {
-            super::BORROW_SAFETY_SHARED_ENTERED.load(super::Ordering::SeqCst)
-        }
-
-        pub fn release_shared_call() {
-            super::BORROW_SAFETY_SHARED_RELEASE.store(true, super::Ordering::SeqCst);
-        }
-
-        pub fn hold_shared(&self) {
-            super::BORROW_SAFETY_SHARED_ENTERED.store(true, super::Ordering::SeqCst);
-            while !super::BORROW_SAFETY_SHARED_RELEASE.load(super::Ordering::SeqCst) {
-                std::thread::yield_now();
-            }
-        }
-
-        pub fn ping_shared(&self) -> bool {
-            true
-        }
-
-        pub fn reset_mutable_call() {
-            super::BORROW_SAFETY_MUTABLE_ENTERED.store(false, super::Ordering::SeqCst);
-            super::BORROW_SAFETY_MUTABLE_RELEASE.store(false, super::Ordering::SeqCst);
-        }
-
-        pub fn mutable_call_entered() -> bool {
-            super::BORROW_SAFETY_MUTABLE_ENTERED.load(super::Ordering::SeqCst)
-        }
-
-        pub fn release_mutable_call() {
-            super::BORROW_SAFETY_MUTABLE_RELEASE.store(true, super::Ordering::SeqCst);
-        }
-
-        pub fn hold_mutable(&mut self) {
-            super::BORROW_SAFETY_MUTABLE_ENTERED.store(true, super::Ordering::SeqCst);
-            while !super::BORROW_SAFETY_MUTABLE_RELEASE.load(super::Ordering::SeqCst) {
-                std::thread::yield_now();
-            }
-        }
-
-        pub fn ping_mutable(&mut self) -> bool {
-            true
-        }
-
-        pub fn borrow_static_from_optional<'a>(
-            first: Option<&'a BorrowSafetyProbe>,
-            second: Option<&'a BorrowSafetyProbe>,
-        ) -> &'a [u8] {
-            let _ = (first, second);
-            &[1, 2, 3]
-        }
-    }
-
-    // This pair exercises the finalizer fallback without explicit `Dispose()`.
-    #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct RcFinalizerSource(u64);
+    pub struct RcFinalizerSource(u64, super::DropRecord);
 
     impl RcFinalizerSource {
         pub fn create(id: u64) -> Box<Self> {
-            Box::new(Self(id))
+            Box::new(Self(
+                id,
+                super::DropRecord::sequenced(
+                    &super::RC_FINALIZER_SOURCE_DROPS,
+                    &super::RC_FINALIZER_SOURCE_DROP_SEQ,
+                ),
+            ))
         }
 
         pub fn id(&self) -> u64 {
@@ -749,7 +732,14 @@ pub mod ffi {
         }
 
         pub fn make_dependent<'b>(&'b self) -> Box<RcFinalizerDependent<'b>> {
-            Box::new(RcFinalizerDependent(self, self.0))
+            Box::new(RcFinalizerDependent(
+                self,
+                self.0,
+                super::DropRecord::sequenced(
+                    &super::RC_FINALIZER_DEPENDENT_DROPS,
+                    &super::RC_FINALIZER_DEPENDENT_DROP_SEQ,
+                ),
+            ))
         }
 
         pub fn reset_drop_stats() {
@@ -768,7 +758,7 @@ pub mod ffi {
 
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct RcFinalizerDependent<'a>(&'a RcFinalizerSource, u64);
+    pub struct RcFinalizerDependent<'a>(&'a RcFinalizerSource, u64, super::DropRecord);
 
     impl<'a> RcFinalizerDependent<'a> {
         pub fn id(&self) -> u64 {
@@ -791,30 +781,38 @@ pub mod ffi {
 
     // ── Pin-lifetime regression fixture ─────────────────────────────────────
     //
-    // Combines the two keep-alive mechanisms that must compose correctly: an
-    // owned opaque that borrows its OWN pinned input buffer (like
-    // `OpaqueSliceView` in slices.rs) that is ALSO the source of an RC
-    // borrow-dependent (like `RcSource`/`RcDependent` above). This is exactly
-    // the shape that exposed the pin-lifetime bug: disposing the source while
-    // a dependent still holds an RC reference must defer BOTH the source's
-    // Rust destructor AND the release of the source's own pinned input —
-    // never unpinning while the (deferred) destructor might still read it.
-    // `Drop` reads the borrowed slice and records a checksum, so a
-    // moved/corrupted buffer is directly observable from C#.
+    // The checksum is saved as owned state before the native resource crosses
+    // the binding boundary. Field teardown never reads borrowed parent data.
     #[diplomat::attr(not(dotnet), disable)]
     #[diplomat::opaque]
-    pub struct PinnedRcSource<'a>(pub(crate) &'a [u8]);
+    pub struct PinnedRcSource<'a>(u64, super::DropRecord, std::marker::PhantomData<&'a [u8]>);
 
     impl<'a> PinnedRcSource<'a> {
         pub fn create(data: &'a [u8]) -> Box<Self> {
-            Box::new(Self(data))
+            let checksum = data.iter().map(|&b| b as u64).sum();
+            Box::new(Self(
+                checksum,
+                super::DropRecord::checksummed(
+                    &super::PINNED_RC_SOURCE_DROPS,
+                    &super::PINNED_RC_SOURCE_DROP_SEQ,
+                    &super::PINNED_RC_SOURCE_DROP_CHECKSUM,
+                    checksum,
+                ),
+                std::marker::PhantomData,
+            ))
         }
 
         /// An owned wrapper with its own Rust destructor that also borrows
         /// `self`'s lifetime, exactly like `RcSource::make_dependent` — but
         /// `self` here ALSO owns a pinned input buffer of its own.
         pub fn make_dependent<'b>(&'b self) -> Box<PinnedRcDependent<'b>> {
-            Box::new(PinnedRcDependent(self))
+            Box::new(PinnedRcDependent(
+                self,
+                super::DropRecord::sequenced(
+                    &super::PINNED_RC_DEPENDENT_DROPS,
+                    &super::PINNED_RC_DEPENDENT_DROP_SEQ,
+                ),
+            ))
         }
 
         pub fn reset_drop_stats() {
@@ -831,20 +829,22 @@ pub mod ffi {
             super::PINNED_RC_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
         }
 
-        /// Checksum of the borrowed slice, computed INSIDE `Drop` (see
-        /// below) — proves the pinned buffer was still valid/unmoved at the
-        /// moment the native destructor actually ran, however long that was
-        /// deferred by an outstanding RC dependent.
+        /// Checksum saved before the native resource is handed to the binding.
         pub fn drop_checksum() -> u64 {
             super::PINNED_RC_SOURCE_DROP_CHECKSUM.load(super::Ordering::SeqCst)
         }
     }
 
     #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::opaque]
-    pub struct PinnedRcDependent<'a>(&'a PinnedRcSource<'a>);
+    pub struct PinnedRcDependent<'a>(&'a PinnedRcSource<'a>, super::DropRecord);
 
     impl<'a> PinnedRcDependent<'a> {
+        pub fn source_checksum(&self) -> u64 {
+            self.0 .0
+        }
+
         pub fn reset_drop_stats() {
             super::PINNED_RC_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
             super::PINNED_RC_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
@@ -858,6 +858,66 @@ pub mod ffi {
             super::PINNED_RC_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
+
+    // ── .NET exclusive-borrow fixtures ─────────────────────────────────────
+    //
+    // A value born from `&mut self` is its source's only writer, so it keeps
+    // the exclusive borrow until disposed. The generator therefore requires
+    // such returned types to be `manually_disposable`.
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque_mut]
+    pub struct ExclusiveSource(ExclusiveView);
+
+    impl ExclusiveSource {
+        pub fn create(value: u64) -> Box<Self> {
+            Box::new(Self(ExclusiveView { value }))
+        }
+
+        pub fn value(&self) -> u64 {
+            self.0.value
+        }
+
+        pub fn set_value(&mut self, value: u64) {
+            self.0.value = value;
+        }
+
+        pub fn view_mut<'a>(&'a mut self) -> &'a mut ExclusiveView {
+            &mut self.0
+        }
+
+        pub fn take_writer<'a>(&'a mut self) -> Box<ExclusiveWriter<'a>> {
+            Box::new(ExclusiveWriter(&mut self.0))
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque_mut]
+    pub struct ExclusiveView {
+        value: u64,
+    }
+
+    impl ExclusiveView {
+        pub fn value(&self) -> u64 {
+            self.value
+        }
+
+        pub fn add(&mut self, delta: u64) {
+            self.value += delta;
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    #[diplomat::opaque_mut]
+    pub struct ExclusiveWriter<'a>(&'a mut ExclusiveView);
+
+    impl<'a> ExclusiveWriter<'a> {
+        pub fn add(&mut self, delta: u64) {
+            self.0.value += delta;
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
@@ -868,26 +928,13 @@ pub(crate) static DISPOSABLE_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) use std::sync::atomic::Ordering;
 
-// Shared logical clock + per-type "when did I drop" cells for the RC
-// borrow-dependency fixtures below: lets tests assert *relative* destruction
-// order deterministically (e.g. dependent-before-source) instead of
-// depending on GC timing. 0 means "not dropped yet"; the clock starts at 1
-// so a real sequence number is always non-zero and distinguishable.
+// Shared counters for the lifetime fixtures. The owned fields use these
+// counters without reading any borrowed parent storage.
 pub(crate) static RC_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 pub(crate) static RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static RC_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
-pub(crate) static BORROW_SAFETY_SHARED_ENTERED: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-pub(crate) static BORROW_SAFETY_SHARED_RELEASE: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-pub(crate) static BORROW_SAFETY_MUTABLE_ENTERED: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-pub(crate) static BORROW_SAFETY_MUTABLE_RELEASE: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
-pub(crate) static BORROW_SAFETY_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
@@ -917,91 +964,6 @@ pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static PINNED_RC_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-
-impl Drop for ffi::GcRaceProbe {
-    fn drop(&mut self) {
-        PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::DefaultDropProbe {
-    fn drop(&mut self) {
-        DEFAULT_DROP_PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::DisposableDropProbe {
-    fn drop(&mut self) {
-        DISPOSABLE_DROP_PROBE_DROPS.fetch_add(1, Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::BorrowSafetyProbe {
-    fn drop(&mut self) {
-        BORROW_SAFETY_DROPS.fetch_add(1, Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::RcSource {
-    fn drop(&mut self) {
-        RC_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
-        RC_SOURCE_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::RcDependent<'_> {
-    fn drop(&mut self) {
-        RC_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
-        RC_DEPENDENT_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::RcDependent2<'_, '_> {
-    fn drop(&mut self) {
-        RC_DEPENDENT2_DROPS.fetch_add(1, Ordering::SeqCst);
-        RC_DEPENDENT2_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::RcFinalizerSource {
-    fn drop(&mut self) {
-        RC_FINALIZER_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
-        RC_FINALIZER_SOURCE_DROP_SEQ
-            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::RcFinalizerDependent<'_> {
-    fn drop(&mut self) {
-        RC_FINALIZER_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
-        RC_FINALIZER_DEPENDENT_DROP_SEQ
-            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::PinnedRcSource<'_> {
-    fn drop(&mut self) {
-        // Reads the borrowed pinned slice DURING the destructor — exactly
-        // what would observe moved/freed memory if the .NET wrapper had
-        // already unpinned the buffer before this destructor actually ran
-        // (the bug: unpinning right after `Release()` regardless of whether
-        // that call's refcount decrement was the one that ran this
-        // destructor, or merely deferred it to a still-outstanding
-        // dependent).
-        let checksum: u64 = self.0.iter().map(|&b| b as u64).sum();
-        PINNED_RC_SOURCE_DROP_CHECKSUM.store(checksum, Ordering::SeqCst);
-        PINNED_RC_SOURCE_DROPS.fetch_add(1, Ordering::SeqCst);
-        PINNED_RC_SOURCE_DROP_SEQ.store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
-
-impl Drop for ffi::PinnedRcDependent<'_> {
-    fn drop(&mut self) {
-        PINNED_RC_DEPENDENT_DROPS.fetch_add(1, Ordering::SeqCst);
-        PINNED_RC_DEPENDENT_DROP_SEQ
-            .store(RC_CLOCK.fetch_add(1, Ordering::SeqCst), Ordering::SeqCst);
-    }
-}
 
 #[derive(Copy, Clone)]
 pub struct One<'a>(&'a ());

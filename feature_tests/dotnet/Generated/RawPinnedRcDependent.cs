@@ -9,6 +9,9 @@ namespace Somelib.Raw;
 internal partial struct PinnedRcDependent
 {
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "PinnedRcDependent_source_checksum", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern ulong SourceChecksum(PinnedRcDependent* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "PinnedRcDependent_reset_drop_stats", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void ResetDropStats();
 

@@ -6,169 +6,153 @@ namespace Somelib.Diplomat;
 
 #nullable enable
 
-/// Frees a Rust-owned <typeparamref name="T"/> by calling its native destructor.
 internal unsafe delegate void RustDestructor<T>(T* ptr) where T : unmanaged;
 
-/// <summary>
-/// Tracks the native lifetime and active borrow mode for one opaque value.
-/// The initial claim belongs to the wrapper. Each borrow lease adds one claim.
-/// </summary>
-/// <remarks>
-/// When the last claim ends, this runs the native destructor before releasing
-/// the value's dependency edges.
-/// </remarks>
-internal sealed unsafe class RustHandle<T> where T : unmanaged
+internal interface ILifetimeEdge
 {
-    private T* _ptr;
-    private readonly RustDestructor<T>? _destructor;
-    private object[] _edges;
-    private readonly BorrowKind _capability;
-    private int _refCount = 1;
-    private int _borrowState;
-    private int _scopeEnded;
-    private long _version;
+    void Release();
+}
 
-    private RustHandle(
-        T* ptr,
-        RustDestructor<T>? destructor,
-        BorrowKind capability,
-        object[] edges
-    )
+internal static class LifetimeEdge
+{
+    internal static ILifetimeEdge? Move<T>(ref BorrowLease<T>? lease) where T : unmanaged
     {
-        _ptr = ptr;
-        _destructor = destructor;
-        _capability = capability;
-        _edges = CaptureEdges(edges, destructor is null && capability == BorrowKind.Shared);
+        BorrowLease<T>? moved = Interlocked.Exchange(ref lease, null);
+        moved?.TransferToPersistent();
+        return moved;
+    }
+}
+
+internal enum BorrowKind
+{
+    Shared,
+    Exclusive,
+}
+
+internal enum WrapperKind
+{
+    Owned,
+    SharedView,
+    ExclusiveView,
+}
+
+internal readonly struct MutationVersion
+{
+    private readonly long _value;
+
+    internal MutationVersion(long value)
+    {
+        _value = value;
     }
 
-    /// The C# side owns the pointer and will run its destructor on release.
-    internal static RustHandle<T> Owned(T* ptr, RustDestructor<T> destructor) =>
-        new RustHandle<T>(ptr, destructor, BorrowKind.Exclusive, System.Array.Empty<object>());
+    internal bool Equals(MutationVersion other) => _value == other._value;
+}
 
-    /// Owned handle that also roots pins and/or borrow leases in <paramref name="edges"/>.
-    internal static RustHandle<T> Owned(T* ptr, RustDestructor<T> destructor, object[] edges) =>
-        new RustHandle<T>(ptr, destructor, BorrowKind.Exclusive, edges);
+internal struct LifetimeEdges
+{
+    private ILifetimeEdge?[] _edges;
 
-    /// Rust still owns the pointer; release never runs a destructor.
-    internal static RustHandle<T> Borrowed(T* ptr, BorrowKind capability) =>
-        new RustHandle<T>(ptr, null, capability, System.Array.Empty<object>());
-
-    /// Borrowed handle that also roots keep-alive edges.
-    internal static RustHandle<T> Borrowed(T* ptr, BorrowKind capability, object[] edges) =>
-        new RustHandle<T>(ptr, null, capability, edges);
-
-    internal T* Ptr => _ptr;
-
-    private static object[] CaptureEdges(object[] edges, bool versioned)
+    internal LifetimeEdges(WrapperKind kind, ILifetimeEdge?[] edges)
     {
-        for (int i = 0; i < edges.Length; i++)
+        _edges = edges;
+        for (int i = 0; i < _edges.Length; i++)
         {
-            if (edges[i] is IBorrowLease lease)
+            if (_edges[i] is IBorrowLease lease && IsReadView(kind, lease))
             {
-                edges[i] = versioned ? lease.TransferVersioned() : lease.Transfer();
+                _edges[i] = lease.IntoVersionedEdge();
             }
         }
-
-        return edges;
     }
 
-    /// True once this handle's native pointer has been cleared (refcount hit zero,
-    /// or a borrowed handle was never assigned).
-    internal bool IsNull => _ptr is null;
+    // A value born from an exclusive borrow is its source's only writer until released, so
+    // it keeps the borrow; every other dependent is a read view that only remembers a version.
+    private static bool IsReadView(WrapperKind kind, IBorrowLease lease) =>
+        kind == WrapperKind.SharedView
+        || (kind == WrapperKind.Owned && lease.Kind == BorrowKind.Shared);
 
-    internal long Version => Volatile.Read(ref _version);
-
-    internal bool IsScopeEnded => Volatile.Read(ref _scopeEnded) != 0;
-
-    internal BorrowLease<T> BorrowShared() => Acquire(BorrowKind.Shared);
-
-    internal BorrowLease<T> BorrowExclusive()
+    internal ILifetimeEdge[] AcquireOperationLeases()
     {
-        if (_capability == BorrowKind.Shared)
-        {
-            throw new InvalidOperationException("This wrapper only carries a shared borrow.");
-        }
-
-        return Acquire(BorrowKind.Exclusive);
-    }
-
-    private BorrowLease<T> Acquire(BorrowKind kind)
-    {
-        RetainClaim();
-        bool stateAcquired = false;
+        List<ILifetimeEdge>? acquired = null;
         try
         {
-            AcquireBorrowState(kind);
-            stateAcquired = true;
-            if (IsScopeEnded)
+            foreach (ILifetimeEdge? edge in Volatile.Read(ref _edges))
             {
-                throw new InvalidOperationException(
-                    "This borrowed view was invalidated by mutation of its source."
-                );
-            }
-            return new BorrowLease<T>(this, kind, AcquireDependencies());
-        }
-        catch
-        {
-            if (stateAcquired)
-            {
-                ReleaseBorrowState(kind);
-            }
-            Decrement();
-            throw;
-        }
-    }
-
-    private IDisposable[] AcquireDependencies()
-    {
-        List<IDisposable>? acquired = null;
-        try
-        {
-            foreach (object edge in _edges)
-            {
-                if (edge is IVersionedBorrow dependency)
+                ILifetimeEdge? operation = edge switch
                 {
-                    (acquired ??= new List<IDisposable>()).Add(dependency.Acquire());
+                    IVersionedReference versioned => versioned.Lease(),
+                    IBorrowLease borrow => borrow.AcquireOperation(),
+                    _ => null,
+                };
+                if (operation is not null)
+                {
+                    (acquired ??= new List<ILifetimeEdge>()).Add(operation);
                 }
             }
 
-            return acquired?.ToArray() ?? System.Array.Empty<IDisposable>();
+            return acquired?.ToArray() ?? Array.Empty<ILifetimeEdge>();
         }
         catch
         {
             if (acquired is not null)
             {
-                for (int i = acquired.Count - 1; i >= 0; i--)
-                {
-                    acquired[i].Dispose();
-                }
+                ReleaseNoThrow(acquired.ToArray());
             }
             throw;
         }
     }
 
-    private void RetainClaim()
+    internal void Release()
     {
-        while (true)
-        {
-            int current = Volatile.Read(ref _refCount);
-            if (current == 0)
-            {
-                throw new ObjectDisposedException(typeof(T).Name);
-            }
+        ILifetimeEdge?[] edges = Interlocked.Exchange(
+            ref _edges,
+            Array.Empty<ILifetimeEdge?>());
+        ReleaseNoThrow(edges);
+    }
 
-            if (Interlocked.CompareExchange(ref _refCount, current + 1, current) == current)
-            {
-                return;
-            }
+    internal static void ReleaseLeases(ILifetimeEdge[] leases)
+    {
+        for (int i = leases.Length - 1; i >= 0; i--)
+        {
+            leases[i].Release();
         }
     }
 
-    private void AcquireBorrowState(BorrowKind kind)
+    internal static void ReleaseNoThrow(ILifetimeEdge?[] edges)
+    {
+        for (int i = edges.Length - 1; i >= 0; i--)
+        {
+            try
+            {
+                edges[i]?.Release();
+            }
+            catch
+            {
+            }
+        }
+    }
+}
+
+internal struct BorrowLedger
+{
+    private const int Free = 0;
+    private const int Exclusive = -1;
+
+    private int _state;
+    private MutationClock _mutations;
+    private int _scopeEnded;
+
+    internal bool IsScopeOpen() => Volatile.Read(ref _scopeEnded) == 0;
+
+    internal bool IsCurrent(MutationVersion mutationVersion) =>
+        IsScopeOpen() && _mutations.Read().Equals(mutationVersion);
+
+    internal bool EndScope() => Interlocked.Exchange(ref _scopeEnded, 1) == 0;
+
+    internal void Enter(BorrowKind kind)
     {
         if (kind == BorrowKind.Exclusive)
         {
-            if (Interlocked.CompareExchange(ref _borrowState, -1, 0) != 0)
+            if (Interlocked.CompareExchange(ref _state, Exclusive, Free) != Free)
             {
                 throw new InvalidOperationException("Another borrow is already active.");
             }
@@ -178,99 +162,265 @@ internal sealed unsafe class RustHandle<T> where T : unmanaged
 
         while (true)
         {
-            int current = Volatile.Read(ref _borrowState);
-            if (current < 0)
+            int current = Volatile.Read(ref _state);
+            if (current < Free)
             {
                 throw new InvalidOperationException("An exclusive borrow is already active.");
             }
 
-            if (Interlocked.CompareExchange(ref _borrowState, current + 1, current) == current)
+            if (Interlocked.CompareExchange(ref _state, current + 1, current) == current)
             {
                 return;
             }
         }
     }
 
-    internal void ReleaseBorrow(BorrowKind kind)
-    {
-        ReleaseBorrowState(kind);
-        Decrement();
-    }
-
-    internal long ReleaseBorrowForVersion(BorrowKind kind) => ReleaseBorrowState(kind);
-
-    private long ReleaseBorrowState(BorrowKind kind)
+    internal MutationVersion Exit(BorrowKind kind)
     {
         if (kind == BorrowKind.Shared)
         {
-            long version = Volatile.Read(ref _version);
-            Interlocked.Decrement(ref _borrowState);
-            ReleaseScopedEdgesIfReady();
+            MutationVersion version = _mutations.Read();
+            Interlocked.Decrement(ref _state);
             return version;
         }
 
-        long nextVersion = Interlocked.Increment(ref _version);
-        Volatile.Write(ref _borrowState, 0);
-        ReleaseScopedEdgesIfReady();
+        MutationVersion nextVersion = _mutations.Advance();
+        Volatile.Write(ref _state, Free);
         return nextVersion;
     }
 
-    /// Releases this wrapper's own owner reference.
-    internal void Release()
+    private struct MutationClock
     {
-        if (_destructor is null && _capability == BorrowKind.Exclusive)
-        {
-            EndScope();
-        }
+        private long _version;
 
-        Decrement();
+        internal MutationVersion Read() => new MutationVersion(Volatile.Read(ref _version));
+
+        internal MutationVersion Advance() =>
+            new MutationVersion(Interlocked.Increment(ref _version));
+    }
+}
+
+internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanaged
+{
+    private RustHandle<T>? _owner;
+    private ILifetimeEdge[] _dependencies;
+
+    internal OperationLease(RustHandle<T> owner, ILifetimeEdge[] dependencies)
+    {
+        _owner = owner;
+        _dependencies = dependencies;
     }
 
-    internal void ReleaseClaim() => Decrement();
-
-    private void Decrement()
+    public void Release()
     {
-        if (Interlocked.Decrement(ref _refCount) != 0)
+        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        if (owner is null)
         {
             return;
         }
 
-        T* ptr = _ptr;
-        _ptr = null;
-        if (ptr != null && _destructor is not null)
+        ILifetimeEdge[] dependencies = Interlocked.Exchange(
+            ref _dependencies,
+            Array.Empty<ILifetimeEdge>());
+        try
         {
-            _destructor(ptr);
+            LifetimeEdges.ReleaseLeases(dependencies);
         }
+        finally
+        {
+            owner.ExitOperation();
+        }
+    }
+}
 
-        ReleaseEdges();
+internal sealed unsafe class RustHandle<T> where T : unmanaged
+{
+    private IntPtr _ptr;
+    private readonly RustDestructor<T>? _destructor;
+    private readonly WrapperKind _wrapperKind;
+    private LifetimeEdges _edges;
+    private BorrowLedger _borrows;
+    private int _activeOperations;
+    private int _closed;
+
+    private RustHandle(
+        T* ptr,
+        RustDestructor<T>? destructor,
+        WrapperKind kind,
+        ILifetimeEdge?[] edges)
+    {
+        _ptr = (IntPtr)ptr;
+        _destructor = destructor;
+        _wrapperKind = kind;
+        _edges = new LifetimeEdges(kind, edges);
     }
 
-    private void EndScope()
+    internal static RustHandle<T> Owned(T* ptr, RustDestructor<T> destructor) =>
+        Create(ptr, destructor, WrapperKind.Owned, Array.Empty<ILifetimeEdge?>());
+
+    internal static RustHandle<T> Owned(
+        T* ptr,
+        RustDestructor<T> destructor,
+        params ILifetimeEdge?[] edges) =>
+        Create(ptr, destructor, WrapperKind.Owned, edges);
+
+    internal static RustHandle<T> Borrowed(
+        T* ptr,
+        WrapperKind kind,
+        params ILifetimeEdge?[] edges) =>
+        Create(ptr, null, kind, edges);
+
+    private static RustHandle<T> Create(
+        T* ptr,
+        RustDestructor<T>? destructor,
+        WrapperKind kind,
+        ILifetimeEdge?[] edges)
     {
-        if (Interlocked.Exchange(ref _scopeEnded, 1) != 0)
+        try
+        {
+            return new RustHandle<T>(ptr, destructor, kind, edges);
+        }
+        catch
+        {
+            try
+            {
+                if (ptr != null && destructor is not null)
+                {
+                    destructor(ptr);
+                }
+            }
+            finally
+            {
+                LifetimeEdges.ReleaseNoThrow(edges);
+            }
+
+            throw;
+        }
+    }
+
+    ~RustHandle()
+    {
+        try
+        {
+            ReleaseWrapper();
+        }
+        catch
+        {
+        }
+    }
+
+    internal T* Ptr => (T*)Volatile.Read(ref _ptr);
+
+    internal bool IsNull => Volatile.Read(ref _closed) != 0 || Volatile.Read(ref _ptr) == IntPtr.Zero;
+
+    internal bool IsCurrent(MutationVersion mutationVersion) =>
+        !IsNull && _borrows.IsCurrent(mutationVersion);
+
+    internal BorrowLease<T> Lease(BorrowKind kind)
+    {
+        if (IsNull)
+        {
+            throw new ObjectDisposedException(typeof(T).Name);
+        }
+
+        if (kind == BorrowKind.Exclusive && _wrapperKind == WrapperKind.SharedView)
+        {
+            throw new InvalidOperationException("This wrapper only carries a shared borrow.");
+        }
+
+        _borrows.Enter(kind);
+        try
+        {
+            OperationLease<T> operation = AcquireOperation();
+            return new BorrowLease<T>(this, kind, Ptr, operation);
+        }
+        catch
+        {
+            _borrows.Exit(kind);
+            throw;
+        }
+    }
+
+    internal BorrowLease<T> LeaseCurrentVersion(MutationVersion mutationVersion)
+    {
+        if (!IsCurrent(mutationVersion))
+        {
+            throw new InvalidOperationException(
+                "This borrowed view was invalidated by disposal or mutation of its source.");
+        }
+
+        BorrowLease<T> lease = Lease(BorrowKind.Shared);
+        if (_borrows.IsCurrent(mutationVersion) && !IsNull)
+        {
+            return lease;
+        }
+
+        lease.Release();
+        throw new InvalidOperationException(
+            "This borrowed view was invalidated by disposal or mutation of its source.");
+    }
+
+    internal OperationLease<T> AcquireOperation()
+    {
+        if (IsNull)
+        {
+            throw new ObjectDisposedException(typeof(T).Name);
+        }
+
+        Interlocked.Increment(ref _activeOperations);
+        if (IsNull)
+        {
+            ExitOperation();
+            throw new ObjectDisposedException(typeof(T).Name);
+        }
+
+        try
+        {
+            return new OperationLease<T>(this, _edges.AcquireOperationLeases());
+        }
+        catch
+        {
+            ExitOperation();
+            throw;
+        }
+    }
+
+    internal void ExitBorrow(BorrowKind kind) => _borrows.Exit(kind);
+
+    internal MutationVersion ExitBorrowKeepingReference(BorrowKind kind) => _borrows.Exit(kind);
+
+    internal void ExitOperation() => Interlocked.Decrement(ref _activeOperations);
+
+    internal void ReleaseWrapper()
+    {
+        if (Volatile.Read(ref _activeOperations) != 0)
+        {
+            throw new InvalidOperationException(
+                "Cannot dispose a native value while an operation is active.");
+        }
+
+        if (Interlocked.Exchange(ref _closed, 1) != 0)
         {
             return;
         }
 
-        Interlocked.Increment(ref _version);
-        ReleaseScopedEdgesIfReady();
-    }
-
-    private void ReleaseScopedEdgesIfReady()
-    {
-        if (IsScopeEnded && Volatile.Read(ref _borrowState) == 0)
+        if (_wrapperKind == WrapperKind.ExclusiveView)
         {
-            ReleaseEdges();
+            _borrows.EndScope();
+        }
+
+        IntPtr ptr = Interlocked.Exchange(ref _ptr, IntPtr.Zero);
+        try
+        {
+            if (ptr != IntPtr.Zero && _destructor is not null)
+            {
+                _destructor((T*)ptr);
+            }
+        }
+        finally
+        {
+            _edges.Release();
+            GC.SuppressFinalize(this);
         }
     }
-
-    private void ReleaseEdges()
-    {
-        object[] edges = Interlocked.Exchange(ref _edges, System.Array.Empty<object>());
-        foreach (object edge in edges)
-        {
-            (edge as IDisposable)?.Dispose();
-        }
-    }
-
 }

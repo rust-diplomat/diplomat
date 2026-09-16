@@ -4,9 +4,8 @@ namespace Somelib;
 
 /// <summary>
 /// If <c>ErrorStruct</c> is an opaque error that borrows from an opaque
-/// parameter or the receiver, that dependency is retained by <c>Inner</c>'s
-/// own native resource state (see <c>RustHandle.cs</c>) rather than by
-/// this exception class — so no separate keep-alive plumbing is needed here.
+/// parameter or the receiver, that source handle is held by <c>Inner</c>'s
+/// managed lifetime edge rather than by this exception class.
 /// </summary>
 public class ErrorStructException : Exception
 {

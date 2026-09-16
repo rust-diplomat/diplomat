@@ -23,7 +23,7 @@ public class Utf16WrapTests
     [Fact]
     public void FromUtf16_GetDebugStr_ShowsUtf16CodeUnits()
     {
-        using Utf16Wrap value = Utf16Wrap.FromUtf16("AB");
+        Utf16Wrap value = Utf16Wrap.FromUtf16("AB");
 
         Assert.Equal("[65, 66]", value.GetDebugStr());
     }
@@ -35,7 +35,7 @@ public class Utf16WrapTests
     [Fact]
     public void FromUtf16_EmptyString_Works()
     {
-        using Utf16Wrap value = Utf16Wrap.FromUtf16("");
+        Utf16Wrap value = Utf16Wrap.FromUtf16("");
 
         Assert.Equal("[]", value.GetDebugStr());
     }
@@ -52,7 +52,7 @@ public class Utf16WrapTests
     [Fact]
     public void BorrowCont_WithSpan_MatchesSourceString()
     {
-        using Utf16Wrap value = Utf16Wrap.FromUtf16("hello 𐐷");
+        Utf16Wrap value = Utf16Wrap.FromUtf16("hello 𐐷");
 
         DiplomatBorrowedSpan<char> view = value.BorrowCont();
 

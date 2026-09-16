@@ -5,24 +5,7 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// Regression coverage for the pin-lifetime bug: an opaque wrapper's own
-// pinned input buffer(s) must only be unpinned once the SHARED
-// RustHandle refcount actually reaches zero — i.e. strictly after this
-// wrapper's own Rust destructor runs — even when that destructor call is
-// deferred behind a still-outstanding RC dependent rather than triggered by
-// this wrapper's own `Dispose()`/finalizer.
-//
-// Before the fix, an opaque's `Cleanup()` called `_inner.Release()` (which,
-// in the deferred case, only decrements the shared refcount without running
-// the destructor) and then *unconditionally* disposed its own pinned edges
-// right afterwards, regardless of whether the destructor had actually run.
-// A later deferred Rust `Drop` could then read an already-unpinned,
-// possibly-moved buffer.
-//
-// `PinnedRcSource` combines both mechanisms in one type (a pinned input AND
-// an RC borrow-dependency source), exactly matching the bug's shape. Its
-// Rust `Drop` reads the borrowed slice and records a checksum, so a
-// moved/corrupted buffer would be directly observable from here.
+[Collection(RcSharedNativeStateCollection.Name)]
 public class PinLifetimeTests
 {
     [MethodImpl(MethodImplOptions.NoInlining
@@ -41,6 +24,13 @@ public class PinLifetimeTests
     }
 
     private static readonly byte[] SourceBytes = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 };
+
+    private static void ResetPinnedDropStats()
+    {
+        RcTestGc.DrainFinalizers();
+        PinnedRcSource.ResetDropStats();
+        PinnedRcDependent.ResetDropStats();
+    }
 
     private static ulong ExpectedChecksum()
     {
@@ -61,135 +51,62 @@ public class PinLifetimeTests
         | MethodImplOptions.AggressiveOptimization
 #endif
     )]
-    private static (PinnedRcSource source, PinnedRcDependent dependent, WeakReference bufferRef)
+    private static (WeakReference sourceRef, PinnedRcDependent dependent, WeakReference bufferRef)
         CreatePinnedPairAndDropBufferReference()
     {
         byte[] buffer = (byte[])SourceBytes.Clone();
         PinnedRcSource source = PinnedRcSource.Create(buffer);
         PinnedRcDependent dependent = source.MakeDependent();
-        return (source, dependent, new WeakReference(buffer));
+        return (new WeakReference(source), dependent, new WeakReference(buffer));
     }
 
     [Fact]
-    public void Source_DisposedWhileDependentLive_DeferDestructorAndKeepsPinAlive()
+    public void DependentDispose_ReleasesSourcePinAndNativeState()
     {
-        PinnedRcSource.ResetDropStats();
-        PinnedRcDependent.ResetDropStats();
+        ResetPinnedDropStats();
 
-        (PinnedRcSource source, PinnedRcDependent dependent, WeakReference bufferRef) =
+        (WeakReference sourceRef, PinnedRcDependent dependent, WeakReference bufferRef) =
             CreatePinnedPairAndDropBufferReference();
 
-        // Dispose the source first ("outer to inner", the order a caller
-        // would naturally use) while the dependent still holds a retained
-        // reference. The Rust destructor — and therefore the unpin — must
-        // be deferred.
-        source.Dispose();
         Assert.Equal(0ul, PinnedRcSource.DropCount());
+        Assert.True(bufferRef.IsAlive);
 
-        // Force a full GC/compaction pass. If the fix is correct, the pin
-        // is still held inside the (still-outstanding) RustHandle, so
-        // the buffer must remain alive and reachable via the WeakReference
-        // — a deterministic signal, not a probabilistic one. Under the old
-        // buggy implementation, the pin would already have been disposed
-        // right after `_inner.Release()` regardless of deferral, making the
-        // buffer immediately collectible here.
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-        Assert.True(
-            bufferRef.IsAlive,
-            "the source's own pinned input buffer must stay pinned/alive while its Rust " +
-            "destructor is deferred behind an outstanding RC dependent"
-        );
-        Assert.Equal(0ul, PinnedRcSource.DropCount());
-
-        // Disposing the dependent releases the last reference, which must
-        // run the source's Rust destructor (reading the still-valid,
-        // still-pinned buffer) and only THEN unpin it.
         dependent.Dispose();
-        Assert.Equal(1ul, PinnedRcDependent.DropCount());
+        ForceGcUntil(() =>
+            !sourceRef.IsAlive
+            && !bufferRef.IsAlive
+            && PinnedRcSource.DropCount() == 1ul
+            && PinnedRcDependent.DropCount() == 1ul
+        );
+
         Assert.Equal(1ul, PinnedRcSource.DropCount());
         Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
-
-        ulong dependentSeq = PinnedRcDependent.DropSeq();
-        ulong sourceSeq = PinnedRcSource.DropSeq();
-        Assert.True(dependentSeq != 0 && sourceSeq != 0);
-        Assert.True(
-            dependentSeq < sourceSeq,
-            $"expected dependent (seq {dependentSeq}) to be destroyed before source (seq {sourceSeq})"
-        );
-
-        // Finally, the pin must eventually be released (no permanent leak):
-        // once nothing references it anymore, the buffer becomes
-        // collectible.
-        ForceGcUntil(() => !bufferRef.IsAlive);
-        Assert.False(
-            bufferRef.IsAlive,
-            "the pin must be released once the source's destructor has actually run, " +
-            "so the buffer eventually becomes collectible"
-        );
+        Assert.Equal(1ul, PinnedRcDependent.DropCount());
+        Assert.False(bufferRef.IsAlive);
     }
 
     [Fact]
-    public void Source_DisposedAfterDependent_RunsImmediatelyAndUnpinsAfterDestructor()
+    public void DependentDispose_IsIdempotentThenSourceFinalizesOnce()
     {
-        PinnedRcSource.ResetDropStats();
-        PinnedRcDependent.ResetDropStats();
+        ResetPinnedDropStats();
 
-        byte[] buffer = (byte[])SourceBytes.Clone();
-        PinnedRcSource source = PinnedRcSource.Create(buffer);
-        PinnedRcDependent dependent = source.MakeDependent();
+        WeakReference sourceRef = CreateDisposedDependentAndDropSourceReference();
 
-        // Dispose "inner to outer" this time: the dependent first, so by
-        // the time the source is disposed it is the last reference and its
-        // own Release() call is the one that actually reaches zero.
-        dependent.Dispose();
         Assert.Equal(1ul, PinnedRcDependent.DropCount());
-        Assert.Equal(0ul, PinnedRcSource.DropCount());
+        ForceGcUntil(() => !sourceRef.IsAlive && PinnedRcSource.DropCount() == 1ul);
 
-        source.Dispose();
         Assert.Equal(1ul, PinnedRcSource.DropCount());
         Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
-
-        GC.KeepAlive(buffer);
     }
 
     [Fact]
-    public void Source_DoubleDispose_UnpinsExactlyOnce_NoMatterHowManyDisposeCalls()
+    public void UnreferencedPinnedPair_EventuallyCleansUpAndReleasesPin()
     {
-        PinnedRcSource.ResetDropStats();
-        PinnedRcDependent.ResetDropStats();
-
-        byte[] buffer = (byte[])SourceBytes.Clone();
-        PinnedRcSource source = PinnedRcSource.Create(buffer);
-        PinnedRcDependent dependent = source.MakeDependent();
-
-        dependent.Dispose();
-        dependent.Dispose();
-        source.Dispose();
-        source.Dispose();
-        source.Dispose();
-
-        Assert.Equal(1ul, PinnedRcDependent.DropCount());
-        Assert.Equal(1ul, PinnedRcSource.DropCount());
-        Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
-
-        GC.KeepAlive(buffer);
-    }
-
-    [Fact]
-    public void Source_FinalizedWhileDependentLive_DeferDestructorAndKeepsPinAlive_ViaGc()
-    {
-        PinnedRcSource.ResetDropStats();
-        PinnedRcDependent.ResetDropStats();
+        ResetPinnedDropStats();
 
         (WeakReference sourceRef, WeakReference dependentRef, WeakReference bufferRef) =
             CreateUnreferencedPinnedPairAndDependent();
 
-        // Neither wrapper is explicitly disposed: both must eventually be
-        // collected and finalized. The dependent's finalizer must still run
-        // (and release its retained dependency) before the source's own
-        // destructor physically runs and unpins the buffer.
         ForceGcUntil(() =>
             !sourceRef.IsAlive
             && !dependentRef.IsAlive
@@ -203,16 +120,26 @@ public class PinLifetimeTests
         Assert.Equal(1ul, PinnedRcDependent.DropCount());
         Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
 
-        ulong dependentSeq = PinnedRcDependent.DropSeq();
-        ulong sourceSeq = PinnedRcSource.DropSeq();
-        Assert.True(dependentSeq != 0 && sourceSeq != 0);
-        Assert.True(
-            dependentSeq < sourceSeq,
-            $"expected finalized dependent (seq {dependentSeq}) to be destroyed before source (seq {sourceSeq})"
-        );
-
         ForceGcUntil(() => !bufferRef.IsAlive);
         Assert.False(bufferRef.IsAlive, "the pin must eventually be released after both finalizers ran");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WeakReference CreateDisposedDependentAndDropSourceReference()
+    {
+        byte[] buffer = (byte[])SourceBytes.Clone();
+        PinnedRcSource source = PinnedRcSource.Create(buffer);
+        PinnedRcDependent dependent = source.MakeDependent();
+
+        dependent.Dispose();
+        dependent.Dispose();
+
+        Assert.Equal(1ul, PinnedRcDependent.DropCount());
+        Assert.Equal(0ul, PinnedRcSource.DropCount());
+
+        WeakReference sourceRef = new WeakReference(source);
+        GC.KeepAlive(source);
+        return sourceRef;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining

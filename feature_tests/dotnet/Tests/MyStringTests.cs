@@ -26,7 +26,7 @@ public class MyStringTests
     [Fact]
     public void New_GetStr_RoundTripsUtf8()
     {
-        using MyString value = MyString.New(Utf8("hello 餐"));
+        MyString value = MyString.New(Utf8("hello 餐"));
 
         Assert.Equal("hello 餐", value.Str);
     }
@@ -34,7 +34,7 @@ public class MyStringTests
     [Fact]
     public void NewUnsafe_GetStr_RoundTripsUtf8()
     {
-        using MyString value = MyString.NewUnsafe("unsafe 𐐷");
+        MyString value = MyString.NewUnsafe("unsafe 𐐷");
 
         Assert.Equal("unsafe 𐐷", value.Str);
     }
@@ -42,7 +42,7 @@ public class MyStringTests
     [Fact]
     public void SetStr_ReplacesValue()
     {
-        using MyString value = MyString.New(Utf8("old"));
+        MyString value = MyString.New(Utf8("old"));
 
         value.Str = "new 餐";
 
@@ -54,7 +54,7 @@ public class MyStringTests
     {
         Assert.Throws<ArgumentNullException>(() => MyString.New(null!));
 
-        using MyString value = MyString.New(Utf8("value"));
+        MyString value = MyString.New(Utf8("value"));
         Assert.Throws<ArgumentNullException>(() => value.Str = null!);
     }
 
@@ -64,7 +64,7 @@ public class MyStringTests
     [Fact]
     public void Borrow_WithSpan_MatchesGetStr()
     {
-        using MyString value = MyString.New(Utf8("hello 餐"));
+        MyString value = MyString.New(Utf8("hello 餐"));
 
         DiplomatBorrowedSpan<byte> view = value.Borrow();
 
@@ -110,7 +110,7 @@ public class MyStringTests
     [Fact]
     public void Borrow_ThenMutate_InvalidatesView()
     {
-        using MyString value = MyString.New(Utf8("old"));
+        MyString value = MyString.New(Utf8("old"));
         DiplomatBorrowedSpan<byte> view = value.Borrow();
 
         value.Str = "new 餐";
@@ -122,7 +122,7 @@ public class MyStringTests
     [Fact]
     public void Borrow_Dispose_UnblocksMutationAndRejectsFurtherUse()
     {
-        using MyString value = MyString.New(Utf8("old"));
+        MyString value = MyString.New(Utf8("old"));
         DiplomatBorrowedSpan<byte> view = value.Borrow();
 
         view.Dispose();

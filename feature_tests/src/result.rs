@@ -6,6 +6,7 @@ pub mod ffi {
     super::cache_test_macro! {CachedIncludeZST}
 
     #[diplomat::opaque_mut]
+    #[diplomat::attr(dotnet, manually_disposable)]
     #[diplomat::attr(auto, error)]
     pub struct ResultOpaque(i32);
 

@@ -7,14 +7,14 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class PinnedRcDependent: IDisposable
+public partial class ExclusiveWriter: IDisposable
 {
-    private unsafe RustHandle<Raw.PinnedRcDependent>? _inner;
+    private unsafe RustHandle<Raw.ExclusiveWriter>? _inner;
 
-    private static readonly unsafe RustDestructor<Raw.PinnedRcDependent> _destroy = Raw.PinnedRcDependent.Destroy;
+    private static readonly unsafe RustDestructor<Raw.ExclusiveWriter> _destroy = Raw.ExclusiveWriter.Destroy;
 
     /// <summary>
-    /// Creates a managed <c>PinnedRcDependent</c> from a raw handle.
+    /// Creates a managed <c>ExclusiveWriter</c> from a raw handle.
     /// </summary>
     /// <remarks>
     /// Safety: you should not build two managed objects using the same raw handle (may cause use-after-free and double-free).
@@ -22,50 +22,50 @@ public partial class PinnedRcDependent: IDisposable
     /// This constructor assumes the raw struct is allocated on Rust side.
     /// If implemented, the custom Drop implementation on Rust side WILL run on destruction.
     /// </remarks>
-    internal unsafe PinnedRcDependent(Raw.PinnedRcDependent* handle)
+    internal unsafe ExclusiveWriter(Raw.ExclusiveWriter* handle)
     {
-        _inner = RustHandle<Raw.PinnedRcDependent>.Owned(handle, _destroy);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Owned(handle, _destroy);
     }
 
     /// <summary>
     /// Owned construction with lifetime edges released after the Rust
     /// destructor.
     /// </summary>
-    internal unsafe PinnedRcDependent(Raw.PinnedRcDependent* handle, params ILifetimeEdge?[] edges)
+    internal unsafe ExclusiveWriter(Raw.ExclusiveWriter* handle, params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.PinnedRcDependent>.Owned(handle, _destroy, edges);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Owned(handle, _destroy, edges);
     }
 
-    internal unsafe PinnedRcDependent(
-        Raw.PinnedRcDependent* handle,
+    internal unsafe ExclusiveWriter(
+        Raw.ExclusiveWriter* handle,
         WrapperKind kind,
         params ILifetimeEdge?[] edges)
     {
-        _inner = RustHandle<Raw.PinnedRcDependent>.Borrowed(handle, kind, edges);
+        _inner = RustHandle<Raw.ExclusiveWriter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.PinnedRcDependent> Handle
+    internal unsafe RustHandle<Raw.ExclusiveWriter> Handle
     {
         get
         {
-            RustHandle<Raw.PinnedRcDependent>? inner = _inner;
+            RustHandle<Raw.ExclusiveWriter>? inner = _inner;
             if (inner is null || inner.IsNull)
             {
-                throw new ObjectDisposedException("PinnedRcDependent");
+                throw new ObjectDisposedException("ExclusiveWriter");
             }
             return inner;
         }
     }
 
-    public ulong SourceChecksum()
+    public void Add(ulong delta)
     {
         unsafe
         {
-            BorrowLease<Raw.PinnedRcDependent>? selfLease = null;
+            BorrowLease<Raw.ExclusiveWriter>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
-                return Raw.PinnedRcDependent.SourceChecksum(selfLease!.Ptr);
+                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                Raw.ExclusiveWriter.Add(selfLease!.Ptr, delta);
             }
             finally
             {
@@ -74,35 +74,11 @@ public partial class PinnedRcDependent: IDisposable
         }
     }
 
-    public static void ResetDropStats()
-    {
-        unsafe
-        {
-            Raw.PinnedRcDependent.ResetDropStats();
-        }
-    }
-
-    public static ulong DropCount()
-    {
-        unsafe
-        {
-            return Raw.PinnedRcDependent.DropCount();
-        }
-    }
-
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.PinnedRcDependent.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe
         {
-            RustHandle<Raw.PinnedRcDependent>? inner = _inner;
+            RustHandle<Raw.ExclusiveWriter>? inner = _inner;
             if (inner is null)
             {
                 return;

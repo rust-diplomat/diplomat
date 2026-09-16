@@ -21,7 +21,7 @@ namespace Somelib.Diplomat;
 /// method that borrows a slice, add a reference to <c>System.Memory</c> or this
 /// file will not compile.
 /// </remarks>
-internal sealed unsafe class DiplomatPinnedMemory : IDisposable
+internal sealed unsafe class DiplomatPinnedMemory : IDisposable, ILifetimeEdge
 {
     private MemoryHandle _handle;
     private bool _disposed;
@@ -58,4 +58,6 @@ internal sealed unsafe class DiplomatPinnedMemory : IDisposable
         _disposed = true;
         _handle.Dispose();
     }
+
+    void ILifetimeEdge.Release() => Dispose();
 }

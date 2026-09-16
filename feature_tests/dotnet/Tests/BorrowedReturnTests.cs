@@ -17,12 +17,12 @@ public class BorrowedReturnTests
     [Fact]
     public void First_ReturnsReadableBorrowedView()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hello"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hello"));
         Assert.Equal((nuint)1, vec.Len());
 
-        OpaqueThin? first = vec.First;
+        using OpaqueThin first = vec.First!;
         Assert.NotNull(first);
-        Assert.Equal(7, first!.A);
+        Assert.Equal(7, first.A);
         Assert.Equal(1.5f, first.B);
         Assert.Equal("hello", first.C);
     }
@@ -30,37 +30,36 @@ public class BorrowedReturnTests
     [Fact]
     public void Get_InRangeBorrows_OutOfRangeReturnsNull()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // The indexer `get` is a borrowed return just like `First()`: an
         // in-range index hands back a non-owning view into the Vec slot.
-        OpaqueThin? at0 = vec.Get(0);
-        Assert.NotNull(at0);
-        Assert.Equal(7, at0!.A);
+        using OpaqueThin at0 = vec.Get(0)!;
+        Assert.Equal(7, at0.A);
         Assert.Equal("hi", at0.C);
 
         Assert.Null(vec.Get(1));
     }
 
     [Fact]
-    public void First_AllowsOwnerMutation_AndOldViewFailsOnNextUse()
+    public void SharedBorrow_IsInvalidatedByOwnerMutation()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("before"));
 
-        OpaqueThin borrow = vec.First!;
+        using OpaqueThin borrow = vec.First!;
         Assert.Equal("before", borrow.C);
 
         vec.FirstC = "after";
-        Assert.Throws<InvalidOperationException>(() => _ = borrow.C);
+        Assert.Throws<InvalidOperationException>(() => borrow.C);
 
-        OpaqueThin refreshed = vec.First!;
+        using OpaqueThin refreshed = vec.First!;
         Assert.Equal("after", refreshed.C);
     }
 
     [Fact]
     public void DisposingBorrowedView_DoesNotFreeOwnersMemory()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // A borrowed handle owns nothing, so Dispose must be a no-op on Rust's
         // pointer — even called twice, it must not double-free.
@@ -69,8 +68,24 @@ public class BorrowedReturnTests
         first.Dispose();
 
         // The owner is untouched: a fresh borrow still reads correctly.
-        OpaqueThin again = vec.First!;
+        using OpaqueThin again = vec.First!;
         Assert.Equal(7, again.A);
+    }
+
+    [Fact]
+    public void OwnerMutation_InvalidatesMultipleBorrowedViews()
+    {
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThin first = vec.First!;
+        OpaqueThin second = vec.Get(0)!;
+
+        vec.FirstC = "changed";
+
+        Assert.Throws<InvalidOperationException>(() => first.A);
+        Assert.Throws<InvalidOperationException>(() => second.A);
+
+        first.Dispose();
+        second.Dispose();
     }
 
     // Tier1's precise liveness can drop the `OpaqueThinVec` local at its last
@@ -141,7 +156,7 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleBorrowedReturn_Err_Throws()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         // The `Err(())` arm throws — and must not hand back a wrapper at all.
         Assert.Throws<InvalidOperationException>(() => vec.TryFirst(true));
     }
@@ -149,14 +164,13 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleOptionalBorrowedReturn_Composes()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // Result + Option + borrowing view: Ok(Some(_)) reads through the borrow.
-        OpaqueThin? at0 = vec.TryGet(0, false);
-        Assert.NotNull(at0);
-        Assert.Equal(7, at0!.A);
+        using OpaqueThin at0 = vec.TryGet(0, false)!;
+        Assert.Equal(7, at0.A);
 
-        // Ok(None): out-of-range index is null, not a throw.
+        // Ok(None): out-of-range index is a null return, not a throw.
         Assert.Null(vec.TryGet(5, false));
 
         // Err(()): the failure arm still throws.
@@ -218,24 +232,9 @@ public class BorrowedReturnTests
         // Reading through the iterator touches the Vec; the only thing keeping
         // that Vec alive is the owned iterator's edges. If they weren't wired,
         // the Vec would be finalized and this a UAF.
-        OpaqueThin? first = iter.Next();
-        Assert.NotNull(first);
-        Assert.Equal(42, first!.A);
-        Assert.Null(iter.Next());
-        GC.KeepAlive(iter);
-    }
-
-    [Fact]
-    public void IteratorAdvance_InvalidatesPreviouslyReturnedView()
-    {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(42, 2.5f, Utf8("first"));
-        OpaqueThinIter iter = vec.Iter();
-        OpaqueThin first = iter.Next()!;
-
-        Assert.Equal("first", first.C);
-        Assert.Null(iter.Next());
-
-        Assert.Throws<InvalidOperationException>(() => _ = first.C);
+        using OpaqueThin first = iter.Next()!;
+        Assert.Equal(42, first.A);
+        Assert.Null(iter.Next()); // single-element vec: exhausted after first Next()
         GC.KeepAlive(iter);
     }
 
@@ -255,7 +254,7 @@ public class BorrowedReturnTests
             GC.WaitForPendingFinalizers();
         }
 
-        OpaqueThin? view = iter.Next();
+        using OpaqueThin view = iter.Next()!;
         Assert.NotNull(view);
         Assert.Null(iter.Next());
         GC.KeepAlive(iter);
@@ -264,7 +263,7 @@ public class BorrowedReturnTests
     [Fact]
     public void FallibleOwnedBorrowingBoxReturn_Err_Throws()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         Assert.Throws<InvalidOperationException>(() => vec.TryIter(true));
     }
 
@@ -290,9 +289,8 @@ public class BorrowedReturnTests
             GC.WaitForPendingFinalizers();
         }
 
-        OpaqueThin? first = iter.Next();
-        Assert.NotNull(first);
-        Assert.Equal(42, first!.A);
+        using OpaqueThin first = iter.Next()!;
+        Assert.Equal(42, first.A);
         Assert.Equal("rooted", first.C);
         Assert.Null(iter.Next());
         GC.KeepAlive(iter);
@@ -301,14 +299,14 @@ public class BorrowedReturnTests
     [Fact]
     public void OptionalOwnedBorrowingBoxReturn_None_ReturnsNull()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
         Assert.Null(vec.OptionalIter(false));
     }
 
     [Fact]
     public void FallibleCustomBorrowingError_Throws_AndInnerExposesOwnerView()
     {
-        using OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
+        OpaqueThinVec vec = OpaqueThinVec.CreateSingle(7, 1.5f, Utf8("hi"));
 
         // The error is a custom opaque (`Box<BorrowingError<'a>>`) borrowing the
         // Vec, not a `()` mapped to InvalidOperationException. It surfaces as a
@@ -316,9 +314,8 @@ public class BorrowedReturnTests
         // view into the owner.
         BorrowingErrorException ex =
             Assert.Throws<BorrowingErrorException>(() => vec.TryBorrow(true));
-        OpaqueThin? view = ex.Inner.OwnerFirst();
-        Assert.NotNull(view);
-        Assert.Equal(7, view!.A);
+        using OpaqueThin view = ex.Inner.OwnerFirst()!;
+        Assert.Equal(7, view.A);
         Assert.Equal("hi", view.C);
     }
 
@@ -360,9 +357,8 @@ public class BorrowedReturnTests
         // through a real non-owning OpaqueThin view obtained from the caught
         // error: if the edges weren't wired, the Vec (and its heap-backed
         // String) would be finalized and `C()` here would be a use-after-free.
-        OpaqueThin? view = ex.Inner.OwnerFirst();
-        Assert.NotNull(view);
-        Assert.Equal(42, view!.A);
+        using OpaqueThin view = ex.Inner.OwnerFirst()!;
+        Assert.Equal(42, view.A);
         Assert.Equal("rooted", view.C);
         GC.KeepAlive(ex);
     }

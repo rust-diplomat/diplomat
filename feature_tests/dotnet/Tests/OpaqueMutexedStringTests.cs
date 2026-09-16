@@ -20,7 +20,7 @@ public class OpaqueMutexedStringTests
     [Fact]
     public void Change_UpdatesStoredStringLength()
     {
-        using OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
+        OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
 
         Assert.Equal((nuint)7, value.GetLenAndAdd(4));
 
@@ -32,8 +32,8 @@ public class OpaqueMutexedStringTests
     [Fact]
     public void Wrapper_ReturnsUtf16Opaque()
     {
-        using OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
-        using Utf16Wrap wrapper = value.Wrapper();
+        OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
+        Utf16Wrap wrapper = value.Wrapper();
 
         string debug = wrapper.GetDebugStr();
 
@@ -44,7 +44,7 @@ public class OpaqueMutexedStringTests
     [Fact]
     public void ToUnsignedFromUnsigned_RoundTripsValue()
     {
-        using OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
+        OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
 
         Assert.Equal((ushort)42, value.ToUnsignedFromUnsigned(42));
     }
@@ -56,7 +56,7 @@ public class OpaqueMutexedStringTests
     [Fact]
     public void DummyStr_WithSpan_DecodesToExpectedUtf8()
     {
-        using OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
+        OpaqueMutexedString value = OpaqueMutexedString.FromUsize(356);
 
         DiplomatBorrowedSpan<byte> view = value.DummyStr();
 

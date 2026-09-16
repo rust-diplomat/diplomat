@@ -5,77 +5,67 @@ namespace Somelib.Diplomat;
 
 #nullable enable
 
-internal enum BorrowKind
+internal interface IBorrowLease : ILifetimeEdge
 {
-    Shared,
-    Exclusive,
+    BorrowKind Kind { get; }
+
+    ILifetimeEdge AcquireOperation();
+
+    ILifetimeEdge IntoVersionedEdge();
 }
 
-internal interface IBorrowLease
+internal interface IVersionedReference : ILifetimeEdge
 {
-    IDisposable Transfer();
-    IDisposable TransferVersioned();
+    IBorrowLease Lease();
 }
 
-internal interface IVersionedBorrow
-{
-    IDisposable Acquire();
-}
-
-internal sealed unsafe class BorrowLease<T> : IBorrowLease, IDisposable where T : unmanaged
+internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 {
     private RustHandle<T>? _owner;
     private readonly BorrowKind _kind;
-    private IDisposable[] _dependencies;
+    private OperationLease<T>? _operation;
 
-    internal BorrowLease(RustHandle<T> owner, BorrowKind kind, IDisposable[] dependencies)
+    internal BorrowLease(
+        RustHandle<T> owner,
+        BorrowKind kind,
+        T* ptr,
+        OperationLease<T> operation)
     {
         _owner = owner;
         _kind = kind;
-        _dependencies = dependencies;
-        Ptr = owner.Ptr;
+        Ptr = ptr;
+        _operation = operation;
     }
 
     internal T* Ptr { get; }
 
-    internal IDisposable Transfer()
+    public BorrowKind Kind => _kind;
+
+    public ILifetimeEdge AcquireOperation()
     {
-        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        RustHandle<T>? owner = Volatile.Read(ref _owner);
         if (owner is null)
         {
             throw new ObjectDisposedException(nameof(BorrowLease<T>));
         }
 
-        return new BorrowToken(owner, _kind, TakeDependencies());
+        return owner.AcquireOperation();
     }
 
-    IDisposable IBorrowLease.Transfer() => Transfer();
-
-    internal IDisposable TransferVersioned()
+    public ILifetimeEdge IntoVersionedEdge()
     {
-        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
-        if (owner is null)
-        {
-            throw new ObjectDisposedException(nameof(BorrowLease<T>));
-        }
-
-        long version = owner.ReleaseBorrowForVersion(_kind);
-        VersionedBorrowToken token = new VersionedBorrowToken(owner, version);
-        try
-        {
-            ReleaseDependencies(TakeDependencies());
-            return token;
-        }
-        catch
-        {
-            token.Dispose();
-            throw;
-        }
+        RustHandle<T> owner = TakeOwner();
+        MutationVersion version = owner.ExitBorrowKeepingReference(_kind);
+        TakeOperation()?.Release();
+        return new VersionedReference(owner, version);
     }
 
-    IDisposable IBorrowLease.TransferVersioned() => TransferVersioned();
+    internal void TransferToPersistent()
+    {
+        TakeOperation()?.Release();
+    }
 
-    public void Dispose()
+    public void Release()
     {
         RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
         if (owner is null)
@@ -85,106 +75,52 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease, IDisposable where T 
 
         try
         {
-            ReleaseDependencies(TakeDependencies());
+            TakeOperation()?.Release();
         }
         finally
         {
-            owner.ReleaseBorrow(_kind);
+            owner.ExitBorrow(_kind);
         }
     }
 
-    private IDisposable[] TakeDependencies()
+    private RustHandle<T> TakeOwner()
     {
-        IDisposable[] dependencies = _dependencies;
-        _dependencies = System.Array.Empty<IDisposable>();
-        return dependencies;
-    }
-
-    private static void ReleaseDependencies(IDisposable[] dependencies)
-    {
-        for (int i = dependencies.Length - 1; i >= 0; i--)
+        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        if (owner is null)
         {
-            dependencies[i].Dispose();
+            throw new ObjectDisposedException(nameof(BorrowLease<T>));
         }
+
+        return owner;
     }
 
-    private sealed class BorrowToken : IDisposable
+    private OperationLease<T>? TakeOperation() => Interlocked.Exchange(ref _operation, null);
+
+    private sealed class VersionedReference : IVersionedReference
     {
         private RustHandle<T>? _owner;
-        private readonly BorrowKind _kind;
-        private IDisposable[] _dependencies;
+        private readonly MutationVersion _version;
 
-        internal BorrowToken(RustHandle<T> owner, BorrowKind kind, IDisposable[] dependencies)
-        {
-            _owner = owner;
-            _kind = kind;
-            _dependencies = dependencies;
-        }
-
-        public void Dispose()
-        {
-            RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
-            if (owner is null)
-            {
-                return;
-            }
-
-            try
-            {
-                IDisposable[] dependencies = _dependencies;
-                _dependencies = System.Array.Empty<IDisposable>();
-                ReleaseDependencies(dependencies);
-            }
-            finally
-            {
-                owner.ReleaseBorrow(_kind);
-            }
-        }
-    }
-
-    private sealed class VersionedBorrowToken : IVersionedBorrow, IDisposable
-    {
-        private RustHandle<T>? _owner;
-        private readonly long _version;
-
-        internal VersionedBorrowToken(RustHandle<T> owner, long version)
+        internal VersionedReference(RustHandle<T> owner, MutationVersion version)
         {
             _owner = owner;
             _version = version;
         }
 
-        IDisposable IVersionedBorrow.Acquire()
+        public IBorrowLease Lease()
         {
             RustHandle<T>? owner = Volatile.Read(ref _owner);
             if (owner is null)
             {
-                throw new ObjectDisposedException(nameof(VersionedBorrowToken));
+                throw new ObjectDisposedException(nameof(VersionedReference));
             }
 
-            if (owner.IsScopeEnded || owner.Version != _version)
-            {
-                throw Invalidated();
-            }
-
-            BorrowLease<T> lease = owner.BorrowShared();
-            if (!owner.IsScopeEnded && owner.Version == _version)
-            {
-                return lease;
-            }
-
-            lease.Dispose();
-            throw Invalidated();
+            return owner.LeaseCurrentVersion(_version);
         }
 
-        public void Dispose()
+        public void Release()
         {
-            RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
-            owner?.ReleaseClaim();
+            Interlocked.Exchange(ref _owner, null);
         }
-
-        private static InvalidOperationException Invalidated() =>
-            new InvalidOperationException(
-                "This borrowed view was invalidated by mutation of its source."
-            );
     }
 }
