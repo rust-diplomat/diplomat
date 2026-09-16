@@ -68,7 +68,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         {
             throw new ArgumentNullException(nameof(action));
         }
-        ILifetimeEdge[] acquired = AcquireLeases();
+        ILifetimeEdge[] held = HoldDependenciesForAccess();
         Interlocked.Increment(ref _activeCallbacks);
         try
         {
@@ -78,7 +78,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         {
             try
             {
-                LifetimeEdges.ReleaseLeases(acquired);
+                LifetimeEdges.ReleaseLeases(held);
             }
             finally
             {
@@ -91,14 +91,14 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
     /// <summary>An explicit, independent copy — never implicit.</summary>
     public T[] Clone()
     {
-        ILifetimeEdge[] acquired = AcquireLeases();
+        ILifetimeEdge[] held = HoldDependenciesForAccess();
         try
         {
             return new ReadOnlySpan<T>(_ptr, _len).ToArray();
         }
         finally
         {
-            LifetimeEdges.ReleaseLeases(acquired);
+            LifetimeEdges.ReleaseLeases(held);
             GC.KeepAlive(this);
         }
     }
@@ -126,7 +126,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         }
     }
 
-    private ILifetimeEdge[] AcquireLeases()
+    private ILifetimeEdge[] HoldDependenciesForAccess()
     {
         if (Volatile.Read(ref _disposed) != 0)
         {
@@ -134,7 +134,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         }
 
         return new LifetimeEdges(WrapperKind.SharedView, Volatile.Read(ref _edges))
-            .AcquireDependencyLeases();
+            .HoldDependenciesForCall();
     }
 
     private void Cleanup()

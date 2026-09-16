@@ -9,7 +9,7 @@ internal interface IBorrowLease : ILifetimeEdge
 {
     BorrowKind Kind { get; }
 
-    ILifetimeEdge AcquireDependencyOperation();
+    ILifetimeEdge HoldForCall();
 
     ILifetimeEdge IntoVersionedEdge();
 }
@@ -41,7 +41,7 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     public BorrowKind Kind => _kind;
 
-    public ILifetimeEdge AcquireDependencyOperation()
+    public ILifetimeEdge HoldForCall()
     {
         RustHandle<T>? owner = Volatile.Read(ref _owner);
         if (owner is null)
@@ -50,7 +50,7 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
                 "The source of this borrowed value is no longer available.");
         }
 
-        return owner.AcquireDependencyOperation();
+        return owner.HoldForCall();
     }
 
     public ILifetimeEdge IntoVersionedEdge()

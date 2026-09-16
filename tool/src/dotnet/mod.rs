@@ -1545,11 +1545,11 @@ mod test {
             "the runtime should own the pointer through one SafeHandle with explicit source edges:\n{rust_handle}"
         );
         assert!(
-            rust_handle.contains("DangerousAddRef(ref acquired)")
+            rust_handle.contains("DangerousAddRef(ref success)")
                 && rust_handle.contains("internal void ExitOperation() => DangerousRelease();")
-                && rust_handle.contains("AcquireDependencyOperation()")
-                && borrow_lease.contains("return owner.AcquireDependencyOperation();")
-                && !borrow_lease.contains("return owner.AcquireOperation();"),
+                && rust_handle.contains("HoldForCall()")
+                && borrow_lease.contains("return owner.HoldForCall();")
+                && !borrow_lease.contains("return owner.StartCall();"),
             "only the directly invoked handle should take a SafeHandle operation claim:\n\
              RustHandle.cs:\n{rust_handle}\nBorrowLease.cs:\n{borrow_lease}"
         );
