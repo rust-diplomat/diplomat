@@ -13,7 +13,7 @@ static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
 #[diplomat::bridge]
 pub mod ffi {
     use super::{Ordering, COUNTER_DROPS, NEXT_ID};
-    use diplomat_runtime::{DiplomatStr, DiplomatStrSlice};
+    use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatStrSlice};
 
     pub enum Mode {
         Idle = 0,
@@ -270,6 +270,57 @@ pub mod ffi {
             out.extend_from_slice(a);
             out.extend_from_slice(b);
             out.into_boxed_slice()
+        }
+    }
+
+    // ---- capability-gated shapes -------------------------------------------------
+    //
+    // Every API below sits behind a `BackendAttrSupport` flag this backend claims.
+    // They exist so the claims are exercised by the fixture rather than only
+    // declared: if a flag is claimed but not honoured, the gated API is missing from
+    // the generated package and the consumer tests stop compiling.
+
+    impl Counter {
+        /// An explicit named-constructor name becomes the generated function name.
+        #[diplomat::attr(auto, named_constructor = "with_value")]
+        pub fn new_named(value: u32) -> Box<Self> {
+            let mut counter = Self::new();
+            counter.value = value;
+            counter.child.value = value;
+            counter
+        }
+    }
+
+    impl Message {
+        #[diplomat::cfg(supports = utf8_strings)]
+        pub fn utf8_len(&self) -> u32 {
+            self.0.len() as u32
+        }
+    }
+
+    /// UTF-16 strings in both directions, gated on `utf16_strings`.
+    #[diplomat::opaque]
+    pub struct WideMessage(Vec<u16>);
+
+    impl WideMessage {
+        #[diplomat::cfg(supports = utf16_strings)]
+        pub fn new(v: &DiplomatStr16) -> Box<Self> {
+            Box::new(Self(v.to_vec()))
+        }
+
+        #[diplomat::cfg(supports = utf16_strings)]
+        pub fn units<'a>(&'a self) -> &'a DiplomatStr16 {
+            &self.0
+        }
+    }
+
+    impl Numbers {
+        /// Borrowed slice pointing at caller-owned memory, gated on `memory_sharing`.
+        #[diplomat::cfg(supports = memory_sharing)]
+        pub fn from_slice(values: &[u32]) -> Box<Self> {
+            Box::new(Self {
+                values: values.to_vec(),
+            })
         }
     }
 

@@ -230,6 +230,19 @@ impl Counter {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_drop_count() }
     }
+    /// An explicit named-constructor name becomes the generated function name.
+    pub fn with_value(value: u32) -> super::Counter {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Counter_new_named(value) };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Counter");
+            super::Counter {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
 }
 
 impl<'view> CounterRef<'view> {

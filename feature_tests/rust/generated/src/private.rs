@@ -41,6 +41,12 @@ pub trait SliceViewSharedSealed {
 pub trait SliceViewMutSealed: SliceViewSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::SliceView;
 }
+pub trait WideMessageSharedSealed {
+    fn __as_const_ptr(&self) -> *const crate::ffi::WideMessage;
+}
+pub trait WideMessageMutSealed: WideMessageSharedSealed {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::WideMessage;
+}
 
 /// Reconstruct a shared slice from a provider-returned pointer/length pair.
 ///

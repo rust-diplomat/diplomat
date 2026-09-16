@@ -97,7 +97,7 @@ API safe.
 | Value `Option<T>` | `DiplomatResult<T, ()>`: `repr(C)` union plus bool tag | Target option/nullable abstraction over raw tagged union | Public `Option<T>`; private generated `DiplomatOption<T: Copy>` mirror | `Type::DiplomatOption` and `ReturnType::Nullable`; reuse layout from `runtime/src/result.rs` | Unsafe active-union read only after checking the tag. Supported payloads are `Copy` ABI values, avoiding cross-library drop or double-free. |
 | Result/write | Tagged result or writer callback | Backend-specific result/exception/writer | Rejected | `ReturnType::Fallible`, `SuccessType::Write` identify it | No unsafe code is emitted. A diagnostic prevents all output until payload ownership and callback semantics are designed. |
 | Borrowed slices/strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`, `&DiplomatStr16`) | `repr(C)` `{ptr, len}` pair (`DiplomatSlice`/`DiplomatSliceMut`) | Pins/leases in .NET; spans/views in C++ | `&'a [T]` / `&'a mut [T]` / `&'a str` / `&'a [u8]` / `&'a [u16]` | `Type::Slice(Slice::Primitive|Str)`, `Slice::lifetime`, `LifetimeEdgeKind::SliceParam`; C layout informed mapping | `from_raw_parts` after null/empty normalization (`nullptr` with `len == 0` maps to `&[]`). The return lifetime is taken from the HIR edge (receiver or slice parameter), never `'static`. |
-| Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field: `from_raw_parts` on output, `as_ptr`/`len` on input. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. |
+| Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field: `from_raw_parts` on output, `as_ptr`/`len` on input. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. Declaring and using such a struct is supported; **returning** one from a method is limited to a single output lifetime, because the return path accepts exactly one method lifetime. A method that borrows the struct it returns from two inputs (e.g. `fn both<'a, 'b>(&'a self, other: &'b Bar) -> Both<'a, 'b>`) is rejected — see the rejected list below. |
 | Owned slice return (`Box<[u8]>`) | `DiplomatOwnedSlice<u8>` (ownership transferred) | Zero-copy `RustVec` in .NET | `Box<[u8]>` | `Slice::Primitive(MaybeOwn::Own, _)`, `owned_byte_slice_returns` capability gate | `Box::from_raw(slice_from_raw_parts_mut(ptr, len))`, matching Diplomat's owned-slice contract that the provider and consumer share an allocator. Null+zero maps to an empty `Box`. |
 | Slices of structs/strings/opaques (`&[Struct]`, `&[DiplomatStrSlice]`, `&[&Opaque]`) | Nested pointer/length shapes | Backend-specific | Rejected | `Slice::Struct`, `Slice::Strs`, `Slice::Opaque` identify them | Generated wrappers are not layout-compatible with raw pointers, so an intermediate buffer or a different API shape is required. |
 | Callback/trait/free function/async | Function pointer, vtable, or standalone symbols | Backend-specific runtime/trampolines | Rejected | HIR variants and `TypeContext` iterators identify them | No guessed trampoline or lifetime behavior is generated. |
@@ -171,6 +171,23 @@ expressed by its flags are checked during Rust generation. Any error makes
 the backend return an empty `FileMap`; the top-level driver also refuses all
 writes when diagnostics exist.
 
+The declared flags are not the whole story — what backs each one matters. Three are
+gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping the flag
+removes the API and the consumer tests stop compiling: `memory_sharing`
+(`Numbers::from_slice`), `utf8_strings` (`Message::utf8_len`) and `utf16_strings`
+(`WideMessage`). `named_constructors` is covered by
+`#[diplomat::attr(auto, named_constructor = "with_value")]` on `Counter`, which only
+reaches generation when the flag is on. The remaining flags (`constructors`,
+`option`, `mutable_slices`, `static_slices`, `owned_byte_slice_returns`) are
+exercised as shapes by existing fixture methods but are not yet individually gated;
+the fork's issue #8 tracks closing that gap.
+
+`memory_sharing` is claimed because generated code borrows directly out of
+provider-owned memory. Note the interaction with the rejected primitive set: the
+shared `feature_tests/src` corpus gates `&[f64]` constructors on that same flag, and
+floats are rejected, so pointing this backend at the shared corpus fails outright on
+those methods until floats are supported.
+
 ## Safety audit
 
 Ownership: only an owned wrapper implements `Drop`. Its private constructor is
@@ -194,9 +211,14 @@ functions and do not add `catch_unwind`. A provider panic therefore cannot
 unwind into the consumer, but may abort the process. The consumer backend adds
 no redundant catch layer and does not claim panic recovery.
 
-Allocation: the consumer never calls `Box::from_raw`, `Vec::from_raw_parts`,
-or a local allocator for provider-owned data. Allocation and deallocation
-stay in the provider cdylib.
+Allocation: for provider-owned handles the consumer never calls
+`Box::from_raw`, `Vec::from_raw_parts`, or a local allocator — allocation and
+deallocation stay in the provider cdylib, and borrowed views carry no `Drop`.
+The single exception is the owned-slice return contract
+(`owned_byte_slice_returns`): ownership of a provider-allocated `Box<[u8]>`
+transfers to the consumer, so the generated `private::owned_slice_into_box` does
+call `Box::from_raw`, under Diplomat's shared-allocator contract. Null with zero
+length normalizes to an empty `Box`.
 
 ## Fixture and binary evidence
 
@@ -280,8 +302,9 @@ generality. Type-level opaque lifetimes, borrowed slices/strings, and
 struct-contained lifetime edges are now implemented: the hard part was building
 a lifetime-graph emitter that maps HIR's `LifetimeEnv`/edge data onto Rust
 generic parameters and bounds (and a `repr(C)`-to-reference bridge for struct
-fields). Still remaining are owned slice returns, slices of
-structs/strings/opaques, multiple/transitive output lifetime graphs, callbacks,
+fields). Still remaining are owned slice returns of non-byte
+elements, slices of structs/strings/opaques, multiple/transitive output lifetime
+graphs, callbacks,
 results, writers, and arbitrary tagged-union payload ownership. HIR has enough
 information for the implemented lifetime subset. The material missing datum is
 a per-opaque `Send`/`Sync` contract; therefore conservative negative auto traits

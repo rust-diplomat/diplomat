@@ -94,6 +94,10 @@ impl Message {
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
         unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
     }
+    pub fn utf8_len(&self) -> u32 {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::Message_utf8_len(self.inner.as_ptr() as *const _) }
+    }
 }
 
 impl<'view> MessageRef<'view> {
@@ -107,6 +111,10 @@ impl<'view> MessageRef<'view> {
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
         unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
     }
+    pub fn utf8_len(&self) -> u32 {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::Message_utf8_len(self.inner.as_ptr() as *const _) }
+    }
 }
 
 impl<'view> MessageRefMut<'view> {
@@ -119,5 +127,9 @@ impl<'view> MessageRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
         unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
+    }
+    pub fn utf8_len(&self) -> u32 {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::Message_utf8_len(self.inner.as_ptr() as *const _) }
     }
 }

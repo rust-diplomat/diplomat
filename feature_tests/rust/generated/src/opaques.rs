@@ -6,6 +6,7 @@ mod counter;
 mod message;
 mod numbers;
 mod slice_view;
+mod wide_message;
 
 pub use bytes::*;
 pub use child::*;
@@ -13,3 +14,4 @@ pub use counter::*;
 pub use message::*;
 pub use numbers::*;
 pub use slice_view::*;
+pub use wide_message::*;

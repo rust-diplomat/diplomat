@@ -3,7 +3,9 @@
 
 use std::sync::Mutex;
 
-use diplomat_rust_backend_generated::{Bytes, Counter, Message, Mode, Numbers, SliceView};
+use diplomat_rust_backend_generated::{
+    Bytes, Counter, Message, Mode, Numbers, SliceView, WideMessage,
+};
 
 /// `Counter` reports destruction through a process-wide probe, so the tests that
 /// read it must not interleave with one another.
@@ -150,4 +152,34 @@ fn owned_slice_return_transfers_ownership() {
 
     let joined = Bytes::join(&[1, 2], &[3, 4, 5]);
     assert_eq!(&joined[..], &[1, 2, 3, 4, 5]);
+}
+
+/// An explicit `named_constructor = "with_value"` must become the generated name
+/// rather than being silently discarded in favour of the Rust method name.
+#[test]
+fn explicit_named_constructor_name_is_honoured() {
+    let _serial = counter_probe();
+    Counter::reset_drop_count();
+
+    let counter = Counter::with_value(7);
+    assert_eq!(counter.get(), 7);
+
+    drop(counter);
+    assert_eq!(Counter::drop_count(), 1);
+}
+
+/// Each of these APIs is gated in the provider on a capability flag the backend
+/// declares in `attr_support`. Their presence is what makes the declaration
+/// load-bearing: drop a flag and the gated API stops being generated, so this test
+/// stops compiling instead of silently passing.
+#[test]
+fn capability_gated_apis_are_generated() {
+    let numbers = Numbers::from_slice(&[3, 4, 5]);
+    assert_eq!(numbers.sum(), 12);
+
+    let message = Message::new(b"hello");
+    assert_eq!(message.utf8_len(), 5);
+
+    let wide = WideMessage::new(&[104, 105]);
+    assert_eq!(wide.units(), &[104, 105]);
 }

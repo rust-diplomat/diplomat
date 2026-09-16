@@ -94,6 +94,11 @@ pub struct SliceView {
 }
 
 #[repr(C)]
+pub struct WideMessage {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
 pub struct FieldView {
     pub(super) bytes: DiplomatSlice<u8>,
     pub(super) count: u32,
@@ -134,10 +139,12 @@ extern "C" {
     pub(super) fn Counter_maybe_child(this: *const Counter, present: bool) -> *const Child;
     pub(super) fn Counter_reset_drop_count();
     pub(super) fn Counter_drop_count() -> usize;
+    pub(super) fn Counter_new_named(value: u32) -> *mut Counter;
     pub(super) fn Message_destroy(this: *mut Message);
     pub(super) fn Message_new(v: DiplomatSlice<u8>) -> *mut Message;
     pub(super) fn Message_bytes(this: *const Message) -> DiplomatSlice<u8>;
     pub(super) fn Message_text(this: *const Message) -> DiplomatSlice<u8>;
+    pub(super) fn Message_utf8_len(this: *const Message) -> u32;
     pub(super) fn Numbers_destroy(this: *mut Numbers);
     pub(super) fn Numbers_new(values: DiplomatSlice<u32>) -> *mut Numbers;
     pub(super) fn Numbers_values(this: *const Numbers) -> DiplomatSlice<u32>;
@@ -145,6 +152,7 @@ extern "C" {
     pub(super) fn Numbers_sum(this: *const Numbers) -> u32;
     pub(super) fn Numbers_total(fields: FieldView) -> u32;
     pub(super) fn Numbers_fill(this: *const Numbers, out: DiplomatSliceMut<u32>);
+    pub(super) fn Numbers_from_slice(values: DiplomatSlice<u32>) -> *mut Numbers;
     pub(super) fn SliceView_destroy(this: *mut SliceView);
     pub(super) fn SliceView_wrap(data: DiplomatSlice<u8>) -> *mut SliceView;
     pub(super) fn SliceView_len(this: *const SliceView) -> u32;
@@ -153,4 +161,7 @@ extern "C" {
     pub(super) fn SliceView_sum(this: *const SliceView) -> u32;
     pub(super) fn SliceView_data(this: *const SliceView) -> DiplomatSlice<u8>;
     pub(super) fn SliceView_fields(this: *const SliceView) -> FieldView;
+    pub(super) fn WideMessage_destroy(this: *mut WideMessage);
+    pub(super) fn WideMessage_new(v: DiplomatSlice<u16>) -> *mut WideMessage;
+    pub(super) fn WideMessage_units(this: *const WideMessage) -> DiplomatSlice<u16>;
 }

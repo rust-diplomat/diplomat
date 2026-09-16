@@ -123,6 +123,24 @@ impl Numbers {
             )
         };
     }
+    /// Borrowed slice pointing at caller-owned memory, gated on `memory_sharing`.
+    pub fn from_slice(values: &[u32]) -> super::Numbers {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe {
+            ffi::Numbers_from_slice(ffi::DiplomatSlice::<u32> {
+                ptr: values.as_ptr(),
+                len: values.len(),
+            })
+        };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Numbers");
+            super::Numbers {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
 }
 
 impl<'view> NumbersRef<'view> {

@@ -10,9 +10,10 @@ use diplomat_core::hir::{
     PrimitiveType, ReturnType, ReturnableStructPath, SelfType, Slice, StringEncoding,
     StructPathLike, SuccessType, Type, TypeContext, TypeDef,
 };
+use heck::ToSnakeCase;
 use serde::{Deserialize, Serialize};
 
-use crate::{Config, ErrorStore, FileMap};
+use crate::{Config, ErrorContextGuard, ErrorStore, FileMap};
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct RustConfig {
@@ -38,13 +39,25 @@ impl RustConfig {
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut support = BackendAttrSupport::default();
+    // Generated code borrows directly out of provider-owned memory
+    // (`from_raw_parts` over the provider's pointer), so memory_sharing-gated
+    // shapes are ones this backend represents natively. Note the interaction with
+    // the rejected primitive set: the shared corpus gates `&[f64]` constructors on
+    // this flag, and floats are rejected, so pointing this backend at the shared
+    // corpus fails on those methods until floats land (issue #10 on the fork).
     support.memory_sharing = true;
     support.constructors = true;
+    // `named_constructor` maps to an associated function named after the declared
+    // constructor name; see `method_name`.
     support.named_constructors = true;
     support.option = true;
     support.mutable_slices = true;
     support.static_slices = true;
     support.owned_byte_slice_returns = true;
+    // The generated API surface is Rust, so it is UTF-8 by construction, and
+    // `&DiplomatStr16` maps to `&[u16]`.
+    support.utf8_strings = true;
+    support.utf16_strings = true;
     support
 }
 
@@ -57,8 +70,9 @@ pub(crate) fn run<'tcx>(
     let errors = ErrorStore::default();
     let invalid = Cell::new(false);
 
-    validate(tcx, &errors, &invalid);
-    if invalid.get() {
+    let reporter = Reporter::new(&errors, &invalid);
+    validate(tcx, &reporter);
+    if reporter.is_invalid() {
         return (files, errors);
     }
 
@@ -120,7 +134,49 @@ pub(crate) fn run<'tcx>(
     (files, errors)
 }
 
-fn validate<'tcx>(tcx: &'tcx TypeContext, errors: &ErrorStore<'tcx, String>, invalid: &Cell<bool>) {
+/// Collects the validation failures recorded while generation is attempted.
+///
+/// `ErrorStore` carries each message together with the type/method context it
+/// arose under; the `Cell<bool>` records only whether *anything* was rejected,
+/// which `run` uses to bail out without emitting partial bindings. The two are
+/// meaningless apart, so they are passed around as one value.
+struct Reporter<'a, 'tcx> {
+    errors: &'a ErrorStore<'tcx, String>,
+    invalid: &'a Cell<bool>,
+}
+
+impl<'a, 'tcx> Reporter<'a, 'tcx> {
+    fn new(errors: &'a ErrorStore<'tcx, String>, invalid: &'a Cell<bool>) -> Self {
+        Self { errors, invalid }
+    }
+
+    /// Record a validation failure, marking the whole run as ungeneratable.
+    fn reject(&self, message: impl Into<String>) {
+        self.invalid.set(true);
+        self.errors.push_error(message.into());
+    }
+
+    /// Whether any failure has been recorded so far.
+    fn is_invalid(&self) -> bool {
+        self.invalid.get()
+    }
+
+    /// Set the current error context to a named type; see [`ErrorStore::set_context_ty`].
+    fn set_context_ty(&self, ty: Cow<'tcx, hir::LocIdent>) -> ErrorContextGuard<'_, 'tcx, String> {
+        self.errors.set_context_ty(ty)
+    }
+
+    /// Set the current error context to a named method; see
+    /// [`ErrorStore::set_context_method`].
+    fn set_context_method(
+        &self,
+        method: Cow<'tcx, hir::LocIdent>,
+    ) -> ErrorContextGuard<'_, 'tcx, String> {
+        self.errors.set_context_method(method)
+    }
+}
+
+fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tcx>) {
     let mut generated_names = HashSet::new();
     let mut module_names = HashSet::new();
 
@@ -128,25 +184,19 @@ fn validate<'tcx>(tcx: &'tcx TypeContext, errors: &ErrorStore<'tcx, String>, inv
         if def.attrs().disable {
             continue;
         }
-        let _type_guard = errors.set_context_ty(def.name_with_span().into());
+        let _type_guard = reporter.set_context_ty(def.name_with_span().into());
         let name = type_def_name(def);
         let mut names = vec![name.clone()];
         if let TypeDef::Opaque(opaque) = def {
             let module = opaque_module_name(opaque);
             if !valid_rust_ident(&module) {
-                reject(
-                    errors,
-                    invalid,
-                    format!("[Rust backend] `{module}` is not a valid generated Rust module name"),
-                );
+                reporter.reject(format!(
+                    "[Rust backend] `{module}` is not a valid generated Rust module name"
+                ));
             } else if !module_names.insert(module.clone()) {
-                reject(
-                    errors,
-                    invalid,
-                    format!(
-                        "[Rust backend] generated module name collision for `{module}` (from `{name}`)"
-                    ),
-                );
+                reporter.reject(format!(
+                    "[Rust backend] generated module name collision for `{module}` (from `{name}`)"
+                ));
             }
         }
         if matches!(def, TypeDef::Opaque(_)) {
@@ -159,131 +209,90 @@ fn validate<'tcx>(tcx: &'tcx TypeContext, errors: &ErrorStore<'tcx, String>, inv
         }
         for generated in names {
             if !valid_rust_ident(&generated) {
-                reject(
-                    errors,
-                    invalid,
-                    format!("[Rust backend] `{generated}` is not a valid Rust identifier"),
-                );
+                reporter.reject(format!(
+                    "[Rust backend] `{generated}` is not a valid Rust identifier"
+                ));
             } else if !generated_names.insert(generated.clone()) {
-                reject(
-                    errors,
-                    invalid,
-                    format!("[Rust backend] generated name collision for `{generated}`"),
-                );
+                reporter.reject(format!(
+                    "[Rust backend] generated name collision for `{generated}`"
+                ));
             }
         }
 
         match def {
             TypeDef::Opaque(opaque) => {
                 if !valid_rust_ident(opaque.dtor_abi_name.as_str()) {
-                    reject(
-                        errors,
-                        invalid,
-                        format!(
-                            "[Rust backend] ABI destructor name `{}` is not a valid Rust identifier",
-                            opaque.dtor_abi_name
-                        ),
-                    );
+                    reporter.reject(format!(
+                        "[Rust backend] ABI destructor name `{}` is not a valid Rust identifier",
+                        opaque.dtor_abi_name
+                    ));
                 }
                 validate_methods(
                     tcx,
                     &opaque.methods,
                     opaque.lifetimes.num_lifetimes(),
-                    errors,
-                    invalid,
+                    reporter,
                 );
             }
             TypeDef::Struct(strct) => {
                 let mut field_names = HashSet::new();
                 for field in &strct.fields {
                     if !valid_rust_ident(&field_name(field)) {
-                        reject(
-                            errors,
-                            invalid,
-                            format!(
-                                "[Rust backend] `{}` is not a valid Rust field identifier",
-                                field_name(field)
-                            ),
-                        );
+                        reporter.reject(format!(
+                            "[Rust backend] `{}` is not a valid Rust field identifier",
+                            field_name(field)
+                        ));
                     }
                     if !field_names.insert(field_name(field)) {
-                        reject(
-                            errors,
-                            invalid,
-                            "[Rust backend] generated struct field name collision",
-                        );
+                        reporter.reject("[Rust backend] generated struct field name collision");
                     }
-                    if !supported_struct_field(&field.ty) {
-                        reject(
-                            errors,
-                            invalid,
+                    if !supported_struct_field(&field.ty, tcx) {
+                        reporter.reject(
                             "[Rust backend] structs may contain only supported primitives, enums, and borrowed slices",
                         );
                     }
                 }
                 if !strct.methods.is_empty() {
-                    reject(
-                        errors,
-                        invalid,
+                    reporter.reject(
                         "[Rust backend] methods on value structs are not supported in this experiment",
                     );
                 }
             }
-            TypeDef::OutStruct(_) => reject(
-                errors,
-                invalid,
-                "[Rust backend] output-only structs are unsupported",
-            ),
+            TypeDef::OutStruct(_) => {
+                reporter.reject("[Rust backend] output-only structs are unsupported")
+            }
             TypeDef::Enum(enm) => {
                 let mut variant_names = HashSet::new();
                 for variant in &enm.variants {
                     let name = enum_variant_name(variant);
                     if !valid_rust_ident(&name) {
-                        reject(
-                            errors,
-                            invalid,
-                            format!("[Rust backend] `{name}` is not a valid Rust enum variant"),
-                        );
+                        reporter.reject(format!(
+                            "[Rust backend] `{name}` is not a valid Rust enum variant"
+                        ));
                     }
                     if !variant_names.insert(name) {
-                        reject(
-                            errors,
-                            invalid,
-                            "[Rust backend] generated enum variant name collision",
-                        );
+                        reporter.reject("[Rust backend] generated enum variant name collision");
                     }
                 }
                 if !enm.methods.is_empty() {
-                    reject(
-                        errors,
-                        invalid,
+                    reporter.reject(
                         "[Rust backend] methods on enums are not supported in this experiment",
                     );
                 }
             }
-            _ => reject(
-                errors,
-                invalid,
-                "[Rust backend] unsupported type definition",
-            ),
+            _ => reporter.reject("[Rust backend] unsupported type definition"),
         }
     }
 
     for (_, method) in tcx.all_free_functions() {
-        let _guard = errors.set_context_method((&method.name).into());
-        reject(
-            errors,
-            invalid,
+        let _guard = reporter.set_context_method((&method.name).into());
+        reporter.reject(
             "[Rust backend] free functions are unsupported; place the function on an opaque type",
         );
     }
     for (_, trt) in tcx.all_traits() {
-        let _guard = errors.set_context_ty((&trt.name).into());
-        reject(
-            errors,
-            invalid,
-            "[Rust backend] traits and callbacks are unsupported",
-        );
+        let _guard = reporter.set_context_ty((&trt.name).into());
+        reporter.reject("[Rust backend] traits and callbacks are unsupported");
     }
 }
 
@@ -291,64 +300,61 @@ fn validate_methods<'tcx>(
     tcx: &'tcx TypeContext,
     methods: &'tcx [hir::Method],
     type_lifetime_count: usize,
-    errors: &ErrorStore<'tcx, String>,
-    invalid: &Cell<bool>,
+    reporter: &Reporter<'_, 'tcx>,
 ) {
     let mut names = HashSet::new();
     for method in methods {
         if method.attrs.disable {
             continue;
         }
-        let _method_guard = errors.set_context_method((&method.name).into());
+        let _method_guard = reporter.set_context_method((&method.name).into());
         let method_name = method_name(method);
         if !valid_rust_ident(method.abi_name.as_str()) {
-            reject(
-                errors,
-                invalid,
-                format!(
-                    "[Rust backend] ABI symbol `{}` is not a valid Rust identifier",
-                    method.abi_name
-                ),
-            );
+            reporter.reject(format!(
+                "[Rust backend] ABI symbol `{}` is not a valid Rust identifier",
+                method.abi_name
+            ));
         }
         if !valid_rust_ident(&method_name) {
-            reject(
-                errors,
-                invalid,
-                format!("[Rust backend] `{method_name}` is not a valid Rust method identifier"),
-            );
+            reporter.reject(format!(
+                "[Rust backend] `{method_name}` is not a valid Rust method identifier"
+            ));
         } else if !names.insert(method_name.clone()) {
-            reject(
-                errors,
-                invalid,
-                format!("[Rust backend] generated method name collision for `{method_name}`"),
-            );
+            reporter.reject(format!(
+                "[Rust backend] generated method name collision for `{method_name}`"
+            ));
         }
 
         for param in &method.params {
             if !valid_rust_ident(param.name.as_str()) {
-                reject(
-                    errors,
-                    invalid,
-                    format!(
-                        "[Rust backend] `{}` is not a valid Rust parameter identifier",
-                        param.name
-                    ),
-                );
+                reporter.reject(format!(
+                    "[Rust backend] `{}` is not a valid Rust parameter identifier",
+                    param.name
+                ));
             }
-            if !is_input_type(&param.ty, tcx) {
-                reject(
-                    errors,
-                    invalid,
-                    format!(
-                        "[Rust backend] unsupported parameter type for `{}`",
-                        param.name
-                    ),
-                );
+            if let Some(disabled) = disabled_type_name(&param.ty, tcx) {
+                reporter.reject(format!(
+                    "[Rust backend] found usage of disabled type `{disabled}` as parameter `{}`",
+                    param.name
+                ));
+            } else if !is_input_type(&param.ty, tcx) {
+                reporter.reject(format!(
+                    "[Rust backend] unsupported parameter type for `{}`",
+                    param.name
+                ));
             }
         }
-        if !is_return_type(&method.output, tcx) {
-            reject(errors, invalid, "[Rust backend] unsupported return type");
+        let disabled_output = match &method.output {
+            ReturnType::Infallible(SuccessType::OutType(ty))
+            | ReturnType::Nullable(SuccessType::OutType(ty)) => disabled_type_name(ty, tcx),
+            _ => None,
+        };
+        if let Some(disabled) = disabled_output {
+            reporter.reject(format!(
+                "[Rust backend] found usage of disabled type `{disabled}` in the return type"
+            ));
+        } else if !is_return_type(&method.output, tcx) {
+            reporter.reject("[Rust backend] unsupported return type");
         }
 
         let used = method.output.used_method_lifetimes();
@@ -366,11 +372,8 @@ fn validate_methods<'tcx>(
             .collect();
         if !borrowed_outputs.is_empty() {
             if borrowed_outputs.len() != 1 {
-                reject(
-                    errors,
-                    invalid,
-                    "[Rust backend] borrowed returns may use exactly one output lifetime",
-                );
+                reporter
+                    .reject("[Rust backend] borrowed returns may use exactly one output lifetime");
                 continue;
             }
             let mut visitor = method.borrowing_param_visitor(tcx, false);
@@ -382,19 +385,11 @@ fn validate_methods<'tcx>(
             }
             let map = visitor.borrow_map();
             let Some(info) = map.get(&borrowed_outputs[0]) else {
-                reject(
-                    errors,
-                    invalid,
-                    "[Rust backend] borrowed return has no lifetime edge",
-                );
+                reporter.reject("[Rust backend] borrowed return has no lifetime edge");
                 continue;
             };
             if info.incoming_edges.is_empty() {
-                reject(
-                    errors,
-                    invalid,
-                    "[Rust backend] borrowed return has no owning input",
-                );
+                reporter.reject("[Rust backend] borrowed return has no owning input");
             }
             if info.incoming_edges.iter().any(|edge| {
                 !matches!(
@@ -403,9 +398,7 @@ fn validate_methods<'tcx>(
                         | hir::borrowing_param::LifetimeEdgeKind::SliceParam
                 )
             }) {
-                reject(
-                    errors,
-                    invalid,
+                reporter.reject(
                     "[Rust backend] borrowed returns may only borrow directly from opaque or slice inputs",
                 );
             }
@@ -413,9 +406,24 @@ fn validate_methods<'tcx>(
     }
 }
 
-fn reject(errors: &ErrorStore<'_, String>, invalid: &Cell<bool>, message: impl Into<String>) {
-    invalid.set(true);
-    errors.push_error(message.into());
+/// The declared name of a type the provider disabled for this backend with
+/// `#[diplomat::attr(rust, disable)]`, if `ty` names one.
+///
+/// Disabled definitions are never emitted, so a signature that mentions one would
+/// otherwise generate references to types that do not exist. Other backends report
+/// the same situation as "Found usage of disabled type".
+fn disabled_type_name<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> Option<String> {
+    let def = match ty {
+        Type::Enum(path) => tcx.resolve_type(path.tcx_id.into()),
+        Type::Opaque(path) => tcx.resolve_type(path.tcx_id.into()),
+        Type::Struct(path) => tcx.resolve_type(path.id()),
+        // `Option<T>` reaches generation as a nested payload; unwrap it here so the
+        // report names the disabled type instead of falling back to the generic
+        // "unsupported parameter type".
+        Type::DiplomatOption(inner) => return disabled_type_name(inner.as_ref(), tcx),
+        _ => return None,
+    };
+    def.attrs().disable.then(|| type_def_name(def))
 }
 
 fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
@@ -426,7 +434,8 @@ fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
             let def = tcx.resolve_type(path.id());
             match def {
                 TypeDef::Struct(def) => {
-                    def.lifetimes.num_lifetimes() == 0
+                    !def.attrs.disable
+                        && def.lifetimes.num_lifetimes() == 0
                         && def.fields.iter().all(|field| is_value_type(&field.ty, tcx))
                 }
                 _ => false,
@@ -438,7 +447,7 @@ fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
 
 fn is_input_type(ty: &Type<hir::InputOnly>, tcx: &TypeContext) -> bool {
     match ty {
-        Type::Opaque(path) => !path.is_optional(),
+        Type::Opaque(path) => !path.is_optional() && !path.resolve(tcx).attrs.disable,
         Type::DiplomatOption(inner) => is_value_type(inner.as_ref(), tcx),
         Type::Slice(slice) => is_supported_slice(slice),
         Type::Struct(path) => {
@@ -453,14 +462,14 @@ fn is_input_type(ty: &Type<hir::InputOnly>, tcx: &TypeContext) -> bool {
 
 fn is_output_type(ty: &OutType, tcx: &TypeContext) -> bool {
     match ty {
-        Type::Opaque(_) => true,
+        Type::Opaque(path) => !path.resolve(tcx).attrs.disable,
         Type::DiplomatOption(inner) => is_value_type(inner.as_ref(), tcx),
         Type::Struct(ReturnableStructPath::Struct(path)) => {
             let def = path.resolve(tcx);
             if is_lifetime_struct(def) {
                 def.fields
                     .iter()
-                    .all(|field| supported_struct_field(&field.ty))
+                    .all(|field| supported_struct_field(&field.ty, tcx))
             } else {
                 def.lifetimes.num_lifetimes() == 0
                     && def.fields.iter().all(|field| is_value_type(&field.ty, tcx))
@@ -543,16 +552,40 @@ fn safe_slice_type<P: hir::TyPosition>(slice: &Slice<P>, lifetime: &str) -> Stri
     }
 }
 
+/// The native ABI slice container for a borrowed slice: `DiplomatSlice` for a
+/// shared borrow, `DiplomatSliceMut` for an exclusive one.
+fn ffi_slice_container<P: hir::TyPosition>(slice: &Slice<P>) -> &'static str {
+    if slice_is_mutable(slice) {
+        "DiplomatSliceMut"
+    } else {
+        "DiplomatSlice"
+    }
+}
+
+/// The slice method producing the raw element pointer an ABI container stores.
+fn slice_ptr_accessor<P: hir::TyPosition>(slice: &Slice<P>) -> &'static str {
+    if slice_is_mutable(slice) {
+        "as_mut_ptr"
+    } else {
+        "as_ptr"
+    }
+}
+
+/// Convert a safe Rust slice expression into the native ABI borrow of it, e.g.
+/// `ffi::DiplomatSlice::<u8> { ptr: samples.as_ptr(), len: samples.len() }`.
+fn ffi_borrowed_slice_expr<P: hir::TyPosition>(slice: &Slice<P>, expr: &str) -> String {
+    let container = ffi_slice_container(slice);
+    let element = slice_element_ty(slice);
+    let accessor = slice_ptr_accessor(slice);
+    format!("ffi::{container}::<{element}> {{ ptr: {expr}.{accessor}(), len: {expr}.len() }}")
+}
+
 /// The native ABI type of a slice.
 fn ffi_slice_type<P: hir::TyPosition>(slice: &Slice<P>) -> String {
     if is_owned_slice(slice) {
         return format!("DiplomatOwnedSlice<{}>", slice_element_ty(slice));
     }
-    let container = if slice_is_mutable(slice) {
-        "DiplomatSliceMut"
-    } else {
-        "DiplomatSlice"
-    };
+    let container = ffi_slice_container(slice);
     format!("{container}<{}>", slice_element_ty(slice))
 }
 
@@ -882,22 +915,7 @@ fn generate_opaque_file(
 
 /// The module name used for an opaque type's generated file.
 fn opaque_module_name(opaque: &hir::OpaqueDef) -> String {
-    snake_case(&type_def_name(TypeDef::Opaque(opaque)))
-}
-
-fn snake_case(name: &str) -> String {
-    let mut out = String::new();
-    for (index, ch) in name.char_indices() {
-        if ch.is_ascii_uppercase() {
-            if index != 0 && !out.ends_with('_') {
-                out.push('_');
-            }
-            out.push(ch.to_ascii_lowercase());
-        } else {
-            out.push(ch);
-        }
-    }
-    out
+    type_def_name(TypeDef::Opaque(opaque)).to_snake_case()
 }
 
 /// Whether a type mentions a generated enum or struct (both live in `types`).
@@ -932,15 +950,9 @@ fn opaque_uses_value_types(opaque: &hir::OpaqueDef) -> bool {
 
 /// The declared names of an opaque's type-level lifetimes, e.g. `["'a", "'b"]`.
 fn opaque_lifetime_names(opaque: &hir::OpaqueDef) -> Vec<String> {
-    opaque
-        .lifetimes
-        .all_lifetimes()
-        .map(|lifetime| format!("'{}", opaque.lifetimes.fmt_lifetime(lifetime)))
-        .collect()
+    lifetime_names(&opaque.lifetimes)
 }
 
-/// Generic parameter list (with bounds) and use-site argument list for an opaque.
-/// When `view` is set, a leading `'view` borrow lifetime is included.
 /// A value struct that carries lifetime parameters (and therefore borrowed
 /// slice fields) rather than being a plain `repr(C)` value.
 fn is_lifetime_struct(strct: &hir::StructDef) -> bool {
@@ -948,10 +960,10 @@ fn is_lifetime_struct(strct: &hir::StructDef) -> bool {
 }
 
 /// A field type that this backend can place in a generated struct.
-fn supported_struct_field<P: hir::TyPosition>(ty: &Type<P>) -> bool {
+fn supported_struct_field<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
     match ty {
         Type::Primitive(primitive) => primitive_name(*primitive).is_some(),
-        Type::Enum(_) => true,
+        Type::Enum(path) => !path.resolve(tcx).attrs.disable,
         Type::Slice(slice) => is_supported_slice(slice),
         _ => false,
     }
@@ -1014,22 +1026,7 @@ fn struct_input_expr(name: &str, strct: &hir::StructDef) -> String {
 
 fn safe_field_to_ffi(ty: &Type<hir::Everywhere>, expr: &str) -> String {
     match ty {
-        Type::Slice(slice) => {
-            let container = if slice_is_mutable(slice) {
-                "DiplomatSliceMut"
-            } else {
-                "DiplomatSlice"
-            };
-            let element = slice_element_ty(slice);
-            let accessor = if slice_is_mutable(slice) {
-                "as_mut_ptr"
-            } else {
-                "as_ptr"
-            };
-            format!(
-                "ffi::{container}::<{element}> {{ ptr: {expr}.{accessor}(), len: {expr}.len() }}"
-            )
-        }
+        Type::Slice(slice) => ffi_borrowed_slice_expr(slice, expr),
         _ => expr.to_string(),
     }
 }
@@ -1075,40 +1072,63 @@ fn ffi_field_to_safe(ty: &Type<hir::Everywhere>, expr: &str) -> String {
     }
 }
 
-fn struct_generics(strct: &hir::StructDef) -> (String, String) {
-    let mut params = Vec::new();
-    let mut args = Vec::new();
-    for longer in strct.lifetimes.all_lifetimes() {
-        let name = format!("'{}", strct.lifetimes.fmt_lifetime(longer));
-        let shorter: Vec<String> = strct
-            .lifetimes
-            .all_shorter_lifetimes(longer)
-            .filter(|shorter| *shorter != longer)
-            .map(|shorter| format!("'{}", strct.lifetimes.fmt_lifetime(shorter)))
-            .collect();
-        if shorter.is_empty() {
-            params.push(name.clone());
-        } else {
-            params.push(format!("{name}: {}", shorter.join(" + ")));
-        }
-        args.push(name);
-    }
-    let render = |items: &[String]| {
-        if items.is_empty() {
-            String::new()
-        } else {
-            format!("<{}>", items.join(", "))
-        }
-    };
-    (render(&params), render(&args))
+/// The declared names of a set of type-level lifetimes, e.g. `["'a", "'b"]`.
+fn lifetime_names(lifetimes: &hir::LifetimeEnv) -> Vec<String> {
+    lifetimes
+        .all_lifetimes()
+        .map(|lifetime| format!("'{}", lifetimes.fmt_lifetime(lifetime)))
+        .collect()
 }
 
-fn struct_lifetime_phantom(strct: &hir::StructDef) -> String {
-    let names: Vec<String> = strct
-        .lifetimes
-        .all_lifetimes()
-        .map(|lifetime| format!("'{}", strct.lifetimes.fmt_lifetime(lifetime)))
+/// One lifetime parameter with its bounds: `'a` when it outlives nothing else,
+/// otherwise `'a: 'b + 'c`, naming the shorter lifetimes it transitively outlives.
+fn bounded_lifetime_name(lifetimes: &hir::LifetimeEnv, longer: hir::Lifetime) -> String {
+    let name = format!("'{}", lifetimes.fmt_lifetime(longer));
+    let shorter: Vec<String> = lifetimes
+        .all_shorter_lifetimes(longer)
+        .filter(|shorter| *shorter != longer)
+        .map(|shorter| format!("'{}", lifetimes.fmt_lifetime(shorter)))
         .collect();
+    if shorter.is_empty() {
+        name
+    } else {
+        format!("{name}: {}", shorter.join(" + "))
+    }
+}
+
+/// Render a generic parameter or argument list, e.g. `<a, b>`, or nothing when
+/// there is nothing to declare.
+fn render_generics(items: &[String]) -> String {
+    if items.is_empty() {
+        String::new()
+    } else {
+        format!("<{}>", items.join(", "))
+    }
+}
+
+/// The generic parameter list (with bounds) and the use-site argument list for a
+/// set of type-level lifetimes.
+fn lifetime_generics(lifetimes: &hir::LifetimeEnv) -> (Vec<String>, Vec<String>) {
+    let params: Vec<String> = lifetimes
+        .all_lifetimes()
+        .map(|longer| bounded_lifetime_name(lifetimes, longer))
+        .collect();
+    let args = lifetime_names(lifetimes);
+    (params, args)
+}
+
+fn struct_generics(strct: &hir::StructDef) -> (String, String) {
+    let (params, args) = lifetime_generics(&strct.lifetimes);
+    (render_generics(&params), render_generics(&args))
+}
+
+/// The invariant `PhantomData` field of a lifetime-carrying struct.
+fn struct_lifetime_phantom(strct: &hir::StructDef) -> String {
+    lifetime_phantom(&lifetime_names(&strct.lifetimes))
+}
+
+/// An invariant `PhantomData` field tying a wrapper to the listed lifetimes.
+fn lifetime_phantom(names: &[String]) -> String {
     if names.is_empty() {
         return String::new();
     }
@@ -1122,52 +1142,21 @@ fn struct_lifetime_phantom(strct: &hir::StructDef) -> String {
     format!("    pub(crate) _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
 }
 
-fn opaque_generics(opaque: &hir::OpaqueDef, view: bool) -> (String, String) {
-    let mut params = Vec::new();
-    let mut args = Vec::new();
-    if view {
-        params.push("'view".to_string());
-        args.push("'view".to_string());
+/// Generic parameter list (with bounds) and use-site argument list for an opaque.
+/// A borrowing wrapper ([`Wrapper::Ref`] or [`Wrapper::RefMut`]) additionally
+/// carries a leading `'view` borrow lifetime.
+fn opaque_generics(opaque: &hir::OpaqueDef, wrapper: Wrapper) -> (String, String) {
+    let (mut params, mut args) = lifetime_generics(&opaque.lifetimes);
+    if wrapper.borrows() {
+        params.insert(0, "'view".to_string());
+        args.insert(0, "'view".to_string());
     }
-    for longer in opaque.lifetimes.all_lifetimes() {
-        let name = format!("'{}", opaque.lifetimes.fmt_lifetime(longer));
-        let shorter: Vec<String> = opaque
-            .lifetimes
-            .all_shorter_lifetimes(longer)
-            .filter(|shorter| *shorter != longer)
-            .map(|shorter| format!("'{}", opaque.lifetimes.fmt_lifetime(shorter)))
-            .collect();
-        if shorter.is_empty() {
-            params.push(name.clone());
-        } else {
-            params.push(format!("{name}: {}", shorter.join(" + ")));
-        }
-        args.push(name);
-    }
-    let render = |items: &[String]| {
-        if items.is_empty() {
-            String::new()
-        } else {
-            format!("<{}>", items.join(", "))
-        }
-    };
-    (render(&params), render(&args))
+    (render_generics(&params), render_generics(&args))
 }
 
 /// An invariant `PhantomData` field tying a wrapper to its type-level lifetimes.
 fn opaque_lifetime_phantom(opaque: &hir::OpaqueDef) -> String {
-    let names = opaque_lifetime_names(opaque);
-    if names.is_empty() {
-        return String::new();
-    }
-    let refs: Vec<String> = names.iter().map(|name| format!("&{name} ()")).collect();
-    let joined = refs.join(", ");
-    let output = if refs.len() == 1 {
-        refs[0].clone()
-    } else {
-        format!("({joined})")
-    };
-    format!("    pub(crate) _lifetimes: PhantomData<fn({joined}) -> {output}>,\n")
+    lifetime_phantom(&opaque_lifetime_names(opaque))
 }
 
 /// The safe public Rust type of an opaque output, including type-level lifetimes,
@@ -1205,8 +1194,8 @@ fn emit_opaque(
     docs_url_gen: &DocsUrlGenerator,
 ) {
     let name = type_def_name(TypeDef::Opaque(opaque));
-    let (owned_params, owned_args) = opaque_generics(opaque, false);
-    let (ref_params, ref_args) = opaque_generics(opaque, true);
+    let (owned_params, owned_args) = opaque_generics(opaque, Wrapper::Owned);
+    let (ref_params, ref_args) = opaque_generics(opaque, Wrapper::Ref);
     let phantom = opaque_lifetime_phantom(opaque);
     emit_docs(out, &opaque.docs, docs_url_gen, "");
     writeln!(
@@ -1255,15 +1244,27 @@ fn emit_opaque(
     writeln!(out, "impl{owned_params} Drop for {name}{owned_args} {{\n    fn drop(&mut self) {{\n        // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.\n        unsafe {{ ffi::{}(self.inner.as_ptr()) }};\n    }}\n}}\n", opaque.dtor_abi_name).unwrap();
 
     emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Owned);
-    emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Shared);
-    emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Mutable);
+    emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Ref);
+    emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::RefMut);
 }
 
+/// Which generated wrapper an impl block belongs to, named after the suffix each
+/// wrapper carries: `Owned` is `T`, `Ref` is `TRef`, `RefMut` is `TRefMut`.
 #[derive(Clone, Copy)]
 enum Wrapper {
     Owned,
-    Shared,
-    Mutable,
+    /// `TRef`, holding a shared `'view` borrow of the opaque.
+    Ref,
+    /// `TRefMut`, holding an exclusive `'view` borrow of the opaque.
+    RefMut,
+}
+
+impl Wrapper {
+    /// Whether this wrapper holds a `'view` borrow of the opaque, as opposed to
+    /// owning the handle outright.
+    fn borrows(self) -> bool {
+        !matches!(self, Self::Owned)
+    }
 }
 
 fn emit_impl(
@@ -1274,24 +1275,24 @@ fn emit_impl(
     wrapper: Wrapper,
 ) {
     let name = type_def_name(TypeDef::Opaque(opaque));
-    let (params, args) = opaque_generics(opaque, !matches!(wrapper, Wrapper::Owned));
+    let (params, args) = opaque_generics(opaque, wrapper);
     match wrapper {
         Wrapper::Owned => writeln!(out, "impl{params} {name}{args} {{").unwrap(),
-        Wrapper::Shared => writeln!(out, "impl{params} {name}Ref{args} {{").unwrap(),
-        Wrapper::Mutable => writeln!(out, "impl{params} {name}RefMut{args} {{").unwrap(),
+        Wrapper::Ref => writeln!(out, "impl{params} {name}Ref{args} {{").unwrap(),
+        Wrapper::RefMut => writeln!(out, "impl{params} {name}RefMut{args} {{").unwrap(),
     }
     for method in opaque.methods.iter().filter(|method| !method.attrs.disable) {
         let include = match (&method.param_self, wrapper) {
             (None, Wrapper::Owned) => true,
             (None, _) => false,
             (Some(param), Wrapper::Owned) => matches!(param.ty, SelfType::Opaque(_)),
-            (Some(param), Wrapper::Shared) => param.ty.is_immutably_borrowed(),
-            (Some(param), Wrapper::Mutable) => matches!(param.ty, SelfType::Opaque(_)),
+            (Some(param), Wrapper::Ref) => param.ty.is_immutably_borrowed(),
+            (Some(param), Wrapper::RefMut) => matches!(param.ty, SelfType::Opaque(_)),
         };
         let include = include
             && !matches!(
                 (&method.param_self, wrapper),
-                (Some(param), Wrapper::Shared) if param.ty.is_mutably_borrowed()
+                (Some(param), Wrapper::Ref) if param.ty.is_mutably_borrowed()
             );
         if include {
             emit_method(out, opaque, method, tcx, docs_url_gen);
@@ -1400,23 +1401,7 @@ fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
             }
         }
         Type::DiplomatOption(_) => format!("ffi::DiplomatOption::from_option({})", param.name),
-        Type::Slice(slice) => {
-            let container = if slice_is_mutable(slice) {
-                "DiplomatSliceMut"
-            } else {
-                "DiplomatSlice"
-            };
-            let element = slice_element_ty(slice);
-            let accessor = if slice_is_mutable(slice) {
-                "as_mut_ptr"
-            } else {
-                "as_ptr"
-            };
-            format!(
-                "ffi::{container}::<{element}> {{ ptr: {name}.{accessor}(), len: {name}.len() }}",
-                name = param.name
-            )
-        }
+        Type::Slice(slice) => ffi_borrowed_slice_expr(slice, param.name.as_str()),
         Type::Struct(path) => {
             let def = tcx.resolve_type(path.id());
             match def {
@@ -1540,7 +1525,7 @@ fn ffi_return_type(ret: &ReturnType, tcx: &TypeContext) -> String {
             format!("DiplomatOption<{}>", ffi_value_type(inner, tcx))
         }
         ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice))) => ffi_slice_type(slice),
-        ReturnType::Infallible(SuccessType::OutType(ty)) => ffi_output_value_type(ty, tcx),
+        ReturnType::Infallible(SuccessType::OutType(ty)) => ffi_value_type(ty, tcx),
         _ => unreachable!("validated return shape"),
     }
 }
@@ -1619,60 +1604,45 @@ fn safe_return_type(ret: &ReturnType, method: &hir::Method, tcx: &TypeContext) -
         ReturnType::Nullable(SuccessType::OutType(inner)) => {
             format!("Option<{}>", safe_value_type(inner, tcx))
         }
-        ReturnType::Infallible(SuccessType::OutType(ty)) => safe_output_value_type(ty, tcx),
+        ReturnType::Infallible(SuccessType::OutType(ty)) => safe_value_type(ty, tcx),
         _ => unreachable!("validated return shape"),
     }
 }
 
+/// How the native ABI layer names a value type definition: enums and plain value
+/// structs live in the parent module, while a lifetime-carrying struct is emitted
+/// at the crate root.
+fn ffi_value_name(def: TypeDef<'_>) -> String {
+    let name = type_def_name(def);
+    match def {
+        TypeDef::Struct(strct) if is_lifetime_struct(strct) => name,
+        _ => format!("super::{name}"),
+    }
+}
+
+/// The native ABI Rust type of a value type: a primitive, enum, or struct.
+///
+/// Input and output positions share it, since validation rejects output-only
+/// structs before generation runs.
 fn ffi_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> String {
     match ty {
         Type::Primitive(p) => primitive_name(*p).unwrap().into(),
-        Type::Enum(path) => format!("super::{}", enum_name(path.tcx_id, tcx)),
-        Type::Struct(path) => {
-            let def = tcx.resolve_type(path.id());
-            match def {
-                TypeDef::Struct(strct) if is_lifetime_struct(strct) => type_def_name(def),
-                _ => format!("super::{}", type_def_name(def)),
-            }
-        }
+        Type::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx))),
+        Type::Struct(path) => ffi_value_name(tcx.resolve_type(path.id())),
         _ => unreachable!("validated value type"),
     }
 }
 
-fn ffi_output_value_type(ty: &OutType, tcx: &TypeContext) -> String {
-    match ty {
-        Type::Primitive(p) => primitive_name(*p).unwrap().into(),
-        Type::Enum(path) => format!("super::{}", enum_name(path.tcx_id, tcx)),
-        Type::Struct(ReturnableStructPath::Struct(path)) => {
-            let strct = path.resolve(tcx);
-            let name = type_def_name(TypeDef::Struct(strct));
-            if is_lifetime_struct(strct) {
-                name
-            } else {
-                format!("super::{name}")
-            }
-        }
-        _ => unreachable!("validated output value type"),
-    }
-}
-
+/// The safe public Rust type of a value type: a primitive, enum, or struct.
+///
+/// Input and output positions share it, since validation rejects output-only
+/// structs before generation runs.
 fn safe_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> String {
     match ty {
         Type::Primitive(p) => primitive_name(*p).unwrap().into(),
-        Type::Enum(path) => enum_name(path.tcx_id, tcx),
+        Type::Enum(path) => type_def_name(TypeDef::Enum(path.resolve(tcx))),
         Type::Struct(path) => type_def_name(tcx.resolve_type(path.id())),
         _ => unreachable!("validated safe value type"),
-    }
-}
-
-fn safe_output_value_type(ty: &OutType, tcx: &TypeContext) -> String {
-    match ty {
-        Type::Primitive(p) => primitive_name(*p).unwrap().into(),
-        Type::Enum(path) => enum_name(path.tcx_id, tcx),
-        Type::Struct(ReturnableStructPath::Struct(path)) => {
-            type_def_name(TypeDef::Struct(path.resolve(tcx)))
-        }
-        _ => unreachable!("validated output value type"),
     }
 }
 
@@ -1708,29 +1678,13 @@ fn method_generics(method: &hir::Method, skip: usize, tcx: &TypeContext) -> Stri
     if !method_declares_lifetimes(method, tcx) {
         return String::new();
     }
-    let lifetimes: Vec<_> = method
+    let params: Vec<String> = method
         .lifetime_env
         .all_lifetimes()
         .skip(skip)
-        .map(|longer| {
-            let name = format!("'{}", method.lifetime_env.fmt_lifetime(longer));
-            let shorter: Vec<_> = method
-                .lifetime_env
-                .all_shorter_lifetimes(longer)
-                .filter(|shorter| *shorter != longer)
-                .map(|shorter| format!("'{}", method.lifetime_env.fmt_lifetime(shorter)))
-                .collect();
-            if shorter.is_empty() {
-                name
-            } else {
-                format!("{name}: {}", shorter.join(" + "))
-            }
-        })
+        .map(|longer| bounded_lifetime_name(&method.lifetime_env, longer))
         .collect();
-    if lifetimes.is_empty() {
-        return String::new();
-    }
-    format!("<{}>", lifetimes.join(", "))
+    render_generics(&params)
 }
 
 fn lifetime_name(lifetime: MaybeStatic<hir::Lifetime>, method: &hir::Method) -> String {
@@ -1765,11 +1719,20 @@ fn enum_name(id: hir::EnumId, tcx: &TypeContext) -> String {
     type_def_name(TypeDef::Enum(tcx.resolve_enum(id)))
 }
 
+/// The name a method is emitted under.
+///
+/// An explicit `#[diplomat::attr(named_constructor = "name")]` replaces the Rust
+/// method name; a bare `named_constructor` leaves it alone. `rename` is applied on
+/// top of whichever name was declared, matching the other backends.
 fn method_name(method: &hir::Method) -> String {
+    let declared = match &method.attrs.special_method {
+        Some(hir::SpecialMethod::NamedConstructor(Some(name))) => name.as_str(),
+        _ => method.name.as_str(),
+    };
     method
         .attrs
         .rename
-        .apply(Cow::Borrowed(method.name.as_str()))
+        .apply(Cow::Borrowed(declared))
         .into_owned()
 }
 
@@ -2226,6 +2189,136 @@ mod tests {
         assert!(
             safe.contains("pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a>"),
             "{safe}"
+        );
+    }
+
+    /// `#[diplomat::attr(rust, disable)]` types are never generated, so a signature
+    /// that mentions one has to be rejected. It used to be accepted — enums were
+    /// checked but structs and opaques were not — and the emitted package then
+    /// referenced types that do not exist and could not compile.
+    #[test]
+    fn disabled_types_in_signatures_are_rejected() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                #[diplomat::attr(rust, disable)]
+                pub struct HiddenOpaque(u32);
+
+                #[diplomat::attr(rust, disable)]
+                pub struct HiddenStruct {
+                    pub value: u32,
+                }
+
+                #[diplomat::attr(rust, disable)]
+                pub enum HiddenEnum {
+                    Only,
+                }
+
+                pub struct Holder {
+                    pub hidden: HiddenEnum,
+                }
+
+                #[diplomat::opaque]
+                pub struct Visible(u32);
+
+                impl Visible {
+                    pub fn takes_disabled_opaque(&self, hidden: &HiddenOpaque) { unimplemented!() }
+                    pub fn takes_disabled_struct(&self, hidden: HiddenStruct) { unimplemented!() }
+                    pub fn takes_optional_disabled(&self, hidden_opt: Option<HiddenStruct>) { unimplemented!() }
+                    pub fn returns_disabled_opaque(&self) -> Box<HiddenOpaque> { unimplemented!() }
+                }
+            }
+        });
+        for expected in [
+            "disabled type `HiddenOpaque` as parameter `hidden`",
+            "disabled type `HiddenStruct` as parameter `hidden_opt`",
+            "disabled type `HiddenOpaque` in the return type",
+            "structs may contain only supported primitives, enums, and borrowed slices",
+        ] {
+            assert!(
+                errors.iter().any(|error| error.contains(expected)),
+                "missing {expected:?} in {errors:#?}"
+            );
+        }
+        assert!(
+            files.is_empty(),
+            "nothing may be emitted for a rejected signature: {:#?}",
+            files.keys()
+        );
+    }
+
+    /// An explicit `named_constructor` name is the emitted function name; a bare
+    /// `named_constructor` keeps the Rust method name. The name used to be discarded
+    /// silently, so the declaration and the generated API disagreed.
+    #[test]
+    fn named_constructor_names_are_honoured() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Thing(u32);
+                impl Thing {
+                    #[diplomat::attr(auto, named_constructor = "with_value")]
+                    pub fn new_named(value: u32) -> Box<Self> { unimplemented!() }
+                    #[diplomat::attr(auto, named_constructor)]
+                    pub fn new_plain(value: u32) -> Box<Self> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("pub fn with_value(value: u32)"), "{safe}");
+        assert!(safe.contains("pub fn new_plain(value: u32)"), "{safe}");
+        assert!(!safe.contains("pub fn new_named("), "{safe}");
+    }
+
+    /// A `#[diplomat::cfg(supports = ...)]` method is generated only when the backend
+    /// declares that flag. This ties each declaration in `attr_support` to an
+    /// observable effect, so a flag cannot be dropped or added without changing what
+    /// comes out.
+    #[test]
+    fn capability_flags_gate_generated_apis() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Thing(Vec<u16>);
+                impl Thing {
+                    #[diplomat::cfg(supports = utf16_strings)]
+                    pub fn utf16_len(&self) -> u32 { unimplemented!() }
+                    #[diplomat::cfg(supports = callbacks)]
+                    pub fn needs_callbacks(&self) { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("pub fn utf16_len("), "{safe}");
+        assert!(!safe.contains("needs_callbacks"), "{safe}");
+    }
+
+    /// Generated module names follow the repo-wide `heck` snake_case convention, the
+    /// one every sibling backend's formatter uses. This is deliberately different from
+    /// a naive per-underscore split for acronyms: `HTTPServer` becomes `http_server`,
+    /// not `h_t_t_p_server`.
+    #[test]
+    fn opaque_module_names_use_snake_case() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct HTTPServer(u32);
+                impl HTTPServer {
+                    pub fn new() -> Box<Self> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        assert!(
+            files.contains_key("src/opaques/http_server.rs"),
+            "{:#?}",
+            files.keys()
         );
     }
 }
