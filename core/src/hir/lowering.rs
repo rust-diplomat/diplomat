@@ -29,7 +29,18 @@ pub enum SignatureLocation {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum LoweringError {
-    /// Trying to evaluate something at the given location resulted in an error.
+    /// The provided type is incorrect.
+    InvalidType {
+        /// The name of the type, plus its definition location.
+        type_name : ast::Ident,
+        /// An explainer about the definition of the type.
+        type_def_explainer : Option<String>,
+        /// Why evaluating the type failed.
+        reason : String,
+    },
+    /// Trying to evaluate something at the provided [`TypeLoweringContext`] resulted in an error.
+    /// Note that the type may be evaluated correctly elsewhere.
+    /// This most frequently occurs in [`LoweringContext::lower_type`] and [`LoweringContext::lower_out_type`]
     InvalidLocation {
         /// Where specifically the error occured.
         /// Errors already insert the type/method name into context, so this just adds more specific info:
@@ -51,6 +62,9 @@ pub enum LoweringError {
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
+            Self::InvalidType { ref type_name, ref reason, type_def_explainer: _ } => {
+                write!(f, "Could not evaluate {type_name}: {reason}")
+            }
             Self::InvalidLocation { ref context, ref reason } => {
                 match context {
                     ctx @ (TypeLoweringContext::Method(location) | TypeLoweringContext::Callback(location)) => {
@@ -131,6 +145,9 @@ impl LoweringReport {
                         }
                         _ => vec![],
                     }
+                }
+                LoweringError::InvalidType { type_name, reason, type_def_explainer } if let Some(sp) = type_name.span() => {
+                    vec![ContextLocation::new(sp, type_def_explainer.clone().unwrap_or_default())]
                 }
                 _ => vec![]
             },
@@ -1008,7 +1025,10 @@ impl<'ast> LoweringContext<'ast> {
         match ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
-                self.errors.push(LoweringError::Other("Found cmp::Ordering in parameter or struct field, it is only allowed in return types".to_string()));
+                self.errors.push(LoweringError::InvalidLocation {
+                    context: context.clone(),
+                    reason: "Found cmp::Ordering in input, it is only allowed in return types".to_string()
+                });
                 Err(())
             }
             ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
@@ -1016,9 +1036,10 @@ impl<'ast> LoweringContext<'ast> {
             {
                 ast::CustomType::Struct(strct) => {
                     if strct.fields.is_empty() {
-                        self.errors.push(LoweringError::Other(format!(
-                            "zero-size types are not allowed as method arguments: {ty} in {path}"
-                        )));
+                        self.errors.push(LoweringError::InvalidLocation {
+                            context: context.clone(),
+                            reason: "zero-size types are not allowed as method arguments".to_string(),
+                        });
                         return Err(());
                     }
                     if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
@@ -1033,17 +1054,19 @@ impl<'ast> LoweringContext<'ast> {
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::InvalidLocation {
                             context: context.clone(),
-                            reason: format!("{ty} in {path} is marked with #[diplomat::out], but found in input.")
+                            reason: format!("{ty} is marked with #[diplomat::out], but found in input")
                         });
                         Err(())
                     } else {
                         unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                     }
                 }
-                ast::CustomType::Opaque(_) => {
-                    self.errors.push(LoweringError::Other(format!(
-                        "Opaque passed by value: {path}"
-                    )));
+                ast::CustomType::Opaque(op) => {
+                    self.errors.push(LoweringError::InvalidType {
+                        type_name: op.name.clone(),
+                        reason: "Opaque passed by value".to_string(),
+                        type_def_explainer: Some("#[diplomat::opaque] types can only be passed by reference in input".to_string()),
+                    });
                     Err(())
                 }
                 ast::CustomType::Enum(enm) => {
