@@ -3782,6 +3782,45 @@ mod test {
     }
 
     #[test]
+    fn an_opaque_property_colliding_with_handle_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "handle")]
+            pub fn handle_value(&self) -> bool {
+                unimplemented!()
+            }
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Handle`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_method_colliding_with_handle_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            pub fn handle(&self) {}
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `Handle`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
     fn a_struct_property_named_cleanup_is_accepted() {
         let (files, errors) = run_dotnet(quote! {
             #[diplomat::bridge]

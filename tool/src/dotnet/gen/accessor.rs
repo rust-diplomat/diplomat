@@ -390,6 +390,7 @@ pub(super) fn reject_member_collisions(
         generated_members.insert(member, "a member Diplomat always generates");
     }
     if is_opaque {
+        generated_members.insert("Handle", "a member Diplomat always generates for opaques");
         generated_members.insert("Cleanup", "a member Diplomat always generates for opaques");
     }
     if has_generated_dispose {
