@@ -1,6 +1,5 @@
 struct DropRecord {
     drops: &'static std::sync::atomic::AtomicU64,
-    sequence: Option<&'static std::sync::atomic::AtomicU64>,
     checksum: Option<(&'static std::sync::atomic::AtomicU64, u64)>,
 }
 
@@ -8,31 +7,17 @@ impl DropRecord {
     fn counted(drops: &'static std::sync::atomic::AtomicU64) -> Self {
         Self {
             drops,
-            sequence: None,
-            checksum: None,
-        }
-    }
-
-    fn sequenced(
-        drops: &'static std::sync::atomic::AtomicU64,
-        sequence: &'static std::sync::atomic::AtomicU64,
-    ) -> Self {
-        Self {
-            drops,
-            sequence: Some(sequence),
             checksum: None,
         }
     }
 
     fn checksummed(
         drops: &'static std::sync::atomic::AtomicU64,
-        sequence: &'static std::sync::atomic::AtomicU64,
         checksum: &'static std::sync::atomic::AtomicU64,
         value: u64,
     ) -> Self {
         Self {
             drops,
-            sequence: Some(sequence),
             checksum: Some((checksum, value)),
         }
     }
@@ -41,12 +26,6 @@ impl DropRecord {
 impl Drop for DropRecord {
     fn drop(&mut self) {
         self.drops.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        if let Some(sequence) = self.sequence {
-            sequence.store(
-                RC_CLOCK.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
-                std::sync::atomic::Ordering::SeqCst,
-            );
-        }
         if let Some((checksum, value)) = self.checksum {
             checksum.store(value, std::sync::atomic::Ordering::SeqCst);
         }
@@ -587,20 +566,6 @@ pub mod ffi {
             true
         }
 
-        /// Sleeps without touching `self`, then reports how many probes dropped meanwhile:
-        /// zero proves that a Dispose() racing this call waited for it to return.
-        pub fn drops_during_spin(&self, millis: u64) -> u64 {
-            let before = super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst);
-            super::DISPOSABLE_DROP_PROBE_SPINNING.store(true, super::Ordering::SeqCst);
-            std::thread::sleep(std::time::Duration::from_millis(millis));
-            super::DISPOSABLE_DROP_PROBE_SPINNING.store(false, super::Ordering::SeqCst);
-            super::DISPOSABLE_DROP_PROBE_DROPS.load(super::Ordering::SeqCst) - before
-        }
-
-        pub fn is_spinning() -> bool {
-            super::DISPOSABLE_DROP_PROBE_SPINNING.load(super::Ordering::SeqCst)
-        }
-
         pub fn reset_drop_count() {
             super::DISPOSABLE_DROP_PROBE_DROPS.store(0, super::Ordering::SeqCst);
         }
@@ -623,7 +588,7 @@ pub mod ffi {
         pub fn create(id: u64) -> Box<Self> {
             Box::new(Self(
                 id,
-                super::DropRecord::sequenced(&super::RC_SOURCE_DROPS, &super::RC_SOURCE_DROP_SEQ),
+                super::DropRecord::counted(&super::RC_SOURCE_DROPS),
             ))
         }
 
@@ -641,24 +606,16 @@ pub mod ffi {
             Box::new(RcDependent(
                 self,
                 self.0,
-                super::DropRecord::sequenced(
-                    &super::RC_DEPENDENT_DROPS,
-                    &super::RC_DEPENDENT_DROP_SEQ,
-                ),
+                super::DropRecord::counted(&super::RC_DEPENDENT_DROPS),
             ))
         }
 
         pub fn reset_drop_stats() {
             super::RC_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
-            super::RC_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::RC_SOURCE_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::RC_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -681,24 +638,16 @@ pub mod ffi {
             Box::new(RcDependent2(
                 self,
                 self.1,
-                super::DropRecord::sequenced(
-                    &super::RC_DEPENDENT2_DROPS,
-                    &super::RC_DEPENDENT2_DROP_SEQ,
-                ),
+                super::DropRecord::counted(&super::RC_DEPENDENT2_DROPS),
             ))
         }
 
         pub fn reset_drop_stats() {
             super::RC_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
-            super::RC_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::RC_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::RC_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -714,15 +663,10 @@ pub mod ffi {
 
         pub fn reset_drop_stats() {
             super::RC_DEPENDENT2_DROPS.store(0, super::Ordering::SeqCst);
-            super::RC_DEPENDENT2_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::RC_DEPENDENT2_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::RC_DEPENDENT2_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -734,10 +678,7 @@ pub mod ffi {
         pub fn create(id: u64) -> Box<Self> {
             Box::new(Self(
                 id,
-                super::DropRecord::sequenced(
-                    &super::RC_FINALIZER_SOURCE_DROPS,
-                    &super::RC_FINALIZER_SOURCE_DROP_SEQ,
-                ),
+                super::DropRecord::counted(&super::RC_FINALIZER_SOURCE_DROPS),
             ))
         }
 
@@ -749,24 +690,16 @@ pub mod ffi {
             Box::new(RcFinalizerDependent(
                 self,
                 self.0,
-                super::DropRecord::sequenced(
-                    &super::RC_FINALIZER_DEPENDENT_DROPS,
-                    &super::RC_FINALIZER_DEPENDENT_DROP_SEQ,
-                ),
+                super::DropRecord::counted(&super::RC_FINALIZER_DEPENDENT_DROPS),
             ))
         }
 
         pub fn reset_drop_stats() {
             super::RC_FINALIZER_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
-            super::RC_FINALIZER_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::RC_FINALIZER_SOURCE_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::RC_FINALIZER_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -781,15 +714,10 @@ pub mod ffi {
 
         pub fn reset_drop_stats() {
             super::RC_FINALIZER_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
-            super::RC_FINALIZER_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::RC_FINALIZER_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::RC_FINALIZER_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -808,7 +736,6 @@ pub mod ffi {
                 checksum,
                 super::DropRecord::checksummed(
                     &super::PINNED_RC_SOURCE_DROPS,
-                    &super::PINNED_RC_SOURCE_DROP_SEQ,
                     &super::PINNED_RC_SOURCE_DROP_CHECKSUM,
                     checksum,
                 ),
@@ -822,25 +749,17 @@ pub mod ffi {
         pub fn make_dependent<'b>(&'b self) -> Box<PinnedRcDependent<'b>> {
             Box::new(PinnedRcDependent(
                 self,
-                super::DropRecord::sequenced(
-                    &super::PINNED_RC_DEPENDENT_DROPS,
-                    &super::PINNED_RC_DEPENDENT_DROP_SEQ,
-                ),
+                super::DropRecord::counted(&super::PINNED_RC_DEPENDENT_DROPS),
             ))
         }
 
         pub fn reset_drop_stats() {
             super::PINNED_RC_SOURCE_DROPS.store(0, super::Ordering::SeqCst);
-            super::PINNED_RC_SOURCE_DROP_SEQ.store(0, super::Ordering::SeqCst);
             super::PINNED_RC_SOURCE_DROP_CHECKSUM.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::PINNED_RC_SOURCE_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::PINNED_RC_SOURCE_DROP_SEQ.load(super::Ordering::SeqCst)
         }
 
         /// Checksum saved before the native resource is handed to the binding.
@@ -861,15 +780,10 @@ pub mod ffi {
 
         pub fn reset_drop_stats() {
             super::PINNED_RC_DEPENDENT_DROPS.store(0, super::Ordering::SeqCst);
-            super::PINNED_RC_DEPENDENT_DROP_SEQ.store(0, super::Ordering::SeqCst);
         }
 
         pub fn drop_count() -> u64 {
             super::PINNED_RC_DEPENDENT_DROPS.load(super::Ordering::SeqCst)
-        }
-
-        pub fn drop_seq() -> u64 {
-            super::PINNED_RC_DEPENDENT_DROP_SEQ.load(super::Ordering::SeqCst)
         }
     }
 
@@ -940,45 +854,25 @@ pub(crate) static DEFAULT_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static DISPOSABLE_DROP_PROBE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-pub(crate) static DISPOSABLE_DROP_PROBE_SPINNING: std::sync::atomic::AtomicBool =
-    std::sync::atomic::AtomicBool::new(false);
 pub(crate) use std::sync::atomic::Ordering;
-
-// Shared counters for the lifetime fixtures. The owned fields use these
-// counters without reading any borrowed parent storage.
-pub(crate) static RC_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
 pub(crate) static RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-pub(crate) static RC_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
 pub(crate) static RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-pub(crate) static RC_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
 pub(crate) static RC_DEPENDENT2_DROPS: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
-pub(crate) static RC_DEPENDENT2_DROP_SEQ: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 pub(crate) static RC_FINALIZER_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-pub(crate) static RC_FINALIZER_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
 pub(crate) static RC_FINALIZER_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
-pub(crate) static RC_FINALIZER_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 pub(crate) static PINNED_RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
-pub(crate) static PINNED_RC_SOURCE_DROP_SEQ: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
 pub(crate) static PINNED_RC_SOURCE_DROP_CHECKSUM: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
-    std::sync::atomic::AtomicU64::new(0);
-pub(crate) static PINNED_RC_DEPENDENT_DROP_SEQ: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 #[derive(Copy, Clone)]

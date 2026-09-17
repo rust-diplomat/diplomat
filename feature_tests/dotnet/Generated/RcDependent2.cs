@@ -90,14 +90,6 @@ public partial class RcDependent2: IDisposable
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.RcDependent2.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe

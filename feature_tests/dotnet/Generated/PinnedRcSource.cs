@@ -128,14 +128,6 @@ public partial class PinnedRcSource
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.PinnedRcSource.DropSeq();
-        }
-    }
-
     public static ulong DropChecksum()
     {
         unsafe

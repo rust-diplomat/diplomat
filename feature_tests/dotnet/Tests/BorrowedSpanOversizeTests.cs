@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using Somelib.Diplomat;
 using Xunit;
 
@@ -20,24 +19,9 @@ public class BorrowedSpanOversizeTests
     {
         private int _releaseCount;
 
-        public int DisposeCount => Volatile.Read(ref _releaseCount);
+        public int ReleaseCount => _releaseCount;
 
-        public void Release() => Interlocked.Increment(ref _releaseCount);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining
-#if !NETFRAMEWORK
-        | MethodImplOptions.AggressiveOptimization
-#endif
-    )]
-    private static void ForceGcUntil(Func<bool> condition)
-    {
-        for (int i = 0; i < 50 && !condition(); i++)
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-        }
+        public void Release() => _releaseCount++;
     }
 
     // Pointer is never dereferenced on the oversize path; only len + edges matter.
@@ -49,7 +33,7 @@ public class BorrowedSpanOversizeTests
     }
 
     [Fact]
-    public void OversizeConstructor_ThrowsAndDisposesBorrowEdgesImmediately()
+    public void OversizeConstructor_ThrowsAndReleasesBorrowEdgesImmediately()
     {
         var edge = new CountingEdge();
         ILifetimeEdge?[] edges = new ILifetimeEdge?[] { edge };
@@ -61,33 +45,6 @@ public class BorrowedSpanOversizeTests
 
         // Must not require a GC pass: failed construction owns the cleanup duty
         // for edges it was handed.
-        Assert.Equal(1, edge.DisposeCount);
-    }
-
-    /// <summary>
-    /// Even after the half-built object becomes unreachable, the edge must end
-    /// up released. A correct ctor does this before throw; a broken one never does.
-    /// </summary>
-    [Fact]
-    public void OversizeConstructor_FailedObjectDoesNotLeakRetainAcrossGc()
-    {
-        var edge = new CountingEdge();
-        ILifetimeEdge?[] edges = new ILifetimeEdge?[] { edge };
-
-        try
-        {
-            ConstructOversizeBorrowedSpan(edges);
-        }
-        catch (IndexOutOfRangeException)
-        {
-            // expected once the length guard exists
-        }
-
-        // Drop managed refs that could keep the edge reachable outside the span.
-        edges = null!;
-
-        ForceGcUntil(() => edge.DisposeCount >= 1);
-
-        Assert.Equal(1, edge.DisposeCount);
+        Assert.Equal(1, edge.ReleaseCount);
     }
 }

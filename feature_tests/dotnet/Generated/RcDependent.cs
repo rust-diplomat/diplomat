@@ -132,14 +132,6 @@ public partial class RcDependent
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.RcDependent.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe

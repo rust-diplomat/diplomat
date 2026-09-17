@@ -21,9 +21,6 @@ internal partial struct PinnedRcSource
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "PinnedRcSource_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ulong DropCount();
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "PinnedRcSource_drop_seq", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern ulong DropSeq();
-
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "PinnedRcSource_drop_checksum", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ulong DropChecksum();
 

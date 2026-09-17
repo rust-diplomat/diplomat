@@ -90,14 +90,6 @@ public partial class RcFinalizerDependent
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.RcFinalizerDependent.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe

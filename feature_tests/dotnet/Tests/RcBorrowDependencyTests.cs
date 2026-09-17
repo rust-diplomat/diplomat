@@ -12,7 +12,7 @@ public class RcSharedNativeStateCollection
     public const string Name = "RcSharedNativeState";
 }
 
-internal static class RcTestGc
+internal static class TestGc
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
     internal static void DrainFinalizers()
@@ -21,27 +21,27 @@ internal static class RcTestGc
         GC.WaitForPendingFinalizers();
         GC.Collect();
     }
-}
 
-[Collection(RcSharedNativeStateCollection.Name)]
-public class RcBorrowDependencyTests
-{
     [MethodImpl(MethodImplOptions.NoInlining
 #if !NETFRAMEWORK
         | MethodImplOptions.AggressiveOptimization
 #endif
     )]
-    private static void ForceGcUntil(Func<bool> condition)
+    internal static void ForceUntil(Func<bool> condition)
     {
         for (int i = 0; i < 50 && !condition(); i++)
         {
-            RcTestGc.DrainFinalizers();
+            DrainFinalizers();
         }
     }
+}
 
+[Collection(RcSharedNativeStateCollection.Name)]
+public class RcBorrowDependencyTests
+{
     private static void ResetAllDropStats()
     {
-        RcTestGc.DrainFinalizers();
+        TestGc.DrainFinalizers();
         RcSource.ResetDropStats();
         RcDependent.ResetDropStats();
         RcDependent2.ResetDropStats();
@@ -80,7 +80,7 @@ public class RcBorrowDependencyTests
 
         Assert.False(sourceRef.IsAlive);
 
-        ForceGcUntil(() =>
+        TestGc.ForceUntil(() =>
             !dependentRef.IsAlive
             && RcSource.DropCount() == 1ul
             && RcDependent.DropCount() == 1ul
@@ -96,7 +96,7 @@ public class RcBorrowDependencyTests
 
         (WeakReference sourceRef, WeakReference dependentRef, WeakReference dependent2Ref) =
             CreateTransitivePairAndDropReferences();
-        ForceGcUntil(() =>
+        TestGc.ForceUntil(() =>
             !sourceRef.IsAlive
             && !dependentRef.IsAlive
             && !dependent2Ref.IsAlive
@@ -145,7 +145,7 @@ public class RcBorrowDependencyTests
     {
         (WeakReference sourceRef, RcDependent dependent) =
             CreateDependentAndDropSourceReference();
-        ForceGcUntil(() => !sourceRef.IsAlive);
+        TestGc.ForceUntil(() => !sourceRef.IsAlive);
 
         Assert.False(sourceRef.IsAlive);
         Assert.Equal(42ul, dependent.SourceId());
@@ -198,7 +198,7 @@ public class RcBorrowDependencyTests
 
         (WeakReference sourceRef, WeakReference dependentRef) = CreateFinalizerPairAndDropReferences();
 
-        ForceGcUntil(() =>
+        TestGc.ForceUntil(() =>
             !sourceRef.IsAlive
             && !dependentRef.IsAlive
             && RcFinalizerSource.DropCount() == 1ul

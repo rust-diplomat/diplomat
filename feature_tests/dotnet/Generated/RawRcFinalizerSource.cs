@@ -24,9 +24,6 @@ internal partial struct RcFinalizerSource
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcFinalizerSource_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ulong DropCount();
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcFinalizerSource_drop_seq", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern ulong DropSeq();
-
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcFinalizerSource_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(RcFinalizerSource* handle);
 }

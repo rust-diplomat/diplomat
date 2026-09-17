@@ -86,31 +86,6 @@ public partial class DisposableDropProbe: IDisposable
         }
     }
 
-    public ulong DropsDuringSpin(ulong millis)
-    {
-        unsafe
-        {
-            BorrowLease<Raw.DisposableDropProbe>? selfLease = null;
-            try
-            {
-                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                return Raw.DisposableDropProbe.DropsDuringSpin(selfLease!.Ptr, millis);
-            }
-            finally
-            {
-                selfLease?.Release();
-            }
-        }
-    }
-
-    public static bool IsSpinning()
-    {
-        unsafe
-        {
-            return Raw.DisposableDropProbe.IsSpinning();
-        }
-    }
-
     public static void ResetDropCount()
     {
         unsafe
