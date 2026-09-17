@@ -145,7 +145,9 @@ internal struct BorrowLedger
     internal bool IsScopeOpen() => Volatile.Read(ref _scopeEnded) == 0;
 
     internal bool IsCurrent(MutationVersion mutationVersion) =>
-        IsScopeOpen() && _mutations.Read().Equals(mutationVersion);
+        IsScopeOpen()
+        && Volatile.Read(ref _state) != Exclusive
+        && _mutations.Read().Equals(mutationVersion);
 
     internal bool EndScope() => Interlocked.Exchange(ref _scopeEnded, 1) == 0;
 
