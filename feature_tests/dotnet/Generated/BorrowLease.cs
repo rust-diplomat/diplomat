@@ -11,8 +11,6 @@ internal interface IBorrowLease : ILifetimeReference
     ILifetimeEdge IntoVersionedEdge();
 }
 
-internal interface IVersionedReference : ILifetimeReference { }
-
 internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 {
     private RustHandle<T>? _owner;
@@ -100,7 +98,7 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
         return operation;
     }
 
-    private sealed class VersionedReference : IVersionedReference
+    private sealed class VersionedReference : ILifetimeReference
     {
         private RustHandle<T>? _owner;
         private readonly MutationVersion _version;
