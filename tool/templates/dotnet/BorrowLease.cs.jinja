@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 
 namespace {{ namespace }}.Diplomat;
 
@@ -9,14 +8,18 @@ internal interface IBorrowLease : ILifetimeEdge
 {
     BorrowKind Kind { get; }
 
-    ILifetimeEdge HoldForCall();
+    void Validate();
+
+    ILifetimeEdge LeaseForAccess();
 
     ILifetimeEdge IntoVersionedEdge();
 }
 
 internal interface IVersionedReference : ILifetimeEdge
 {
-    IBorrowLease LeaseForOperation();
+    void Validate();
+
+    IBorrowLease LeaseForAccess();
 }
 
 internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
@@ -41,16 +44,28 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     public BorrowKind Kind => _kind;
 
-    public ILifetimeEdge HoldForCall()
+    public void Validate()
     {
-        RustHandle<T>? owner = Volatile.Read(ref _owner);
+        RustHandle<T>? owner = _owner;
         if (owner is null)
         {
             throw new InvalidOperationException(
                 "The source of this borrowed value is no longer available.");
         }
 
-        return owner.HoldForCall();
+        owner.ValidateDependency();
+    }
+
+    public ILifetimeEdge LeaseForAccess()
+    {
+        RustHandle<T>? owner = _owner;
+        if (owner is null)
+        {
+            throw new InvalidOperationException(
+                "The source of this borrowed value is no longer available.");
+        }
+
+        return owner.LeaseDependenciesForAccess();
     }
 
     public ILifetimeEdge IntoVersionedEdge()
@@ -68,7 +83,8 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     public void Release()
     {
-        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        RustHandle<T>? owner = _owner;
+        _owner = null;
         if (owner is null)
         {
             return;
@@ -86,7 +102,8 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     private RustHandle<T> TakeOwner()
     {
-        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
+        RustHandle<T>? owner = _owner;
+        _owner = null;
         if (owner is null)
         {
             throw new ObjectDisposedException(nameof(BorrowLease<T>));
@@ -95,7 +112,12 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
         return owner;
     }
 
-    private ILifetimeEdge? TakeOperation() => Interlocked.Exchange(ref _operation, null);
+    private ILifetimeEdge? TakeOperation()
+    {
+        ILifetimeEdge? operation = _operation;
+        _operation = null;
+        return operation;
+    }
 
     private sealed class VersionedReference : IVersionedReference
     {
@@ -108,21 +130,33 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
             _version = version;
         }
 
-        public IBorrowLease LeaseForOperation()
+        public void Validate()
         {
-            RustHandle<T>? owner = Volatile.Read(ref _owner);
+            RustHandle<T>? owner = _owner;
             if (owner is null)
             {
                 throw new InvalidOperationException(
                     "The source of this borrowed value is no longer available.");
             }
 
-            return owner.LeaseVersionForOperation(_version);
+            owner.ValidateVersionAccessible(_version);
+        }
+
+        public IBorrowLease LeaseForAccess()
+        {
+            RustHandle<T>? owner = _owner;
+            if (owner is null)
+            {
+                throw new InvalidOperationException(
+                    "The source of this borrowed value is no longer available.");
+            }
+
+            return owner.LeaseVersionForAccess(_version);
         }
 
         public void Release()
         {
-            Interlocked.Exchange(ref _owner, null);
+            _owner = null;
         }
     }
 }

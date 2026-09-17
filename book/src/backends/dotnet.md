@@ -129,10 +129,12 @@ impl Source {
 }
 ```
 
-A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
-instead of invalidating that pointer. Every handle is a `SafeHandle`; a scoped operation guard
-protects the directly invoked value during its native call. Source edges validate borrow state
-without recursively taking `SafeHandle` claims.
+While a `WithSpan` delegate exposes borrowed memory, a scoped source lease rejects reentrant
+mutation of that source. The span itself may be disposed inside the delegate; the scoped lease
+keeps the memory valid until the delegate returns. Every handle is a `SafeHandle`; a scoped
+operation guard protects only the directly invoked value during its native call. Ordinary calls
+validate source edges without temporarily borrowing them or recursively taking `SafeHandle`
+claims.
 
 The generated API does not synchronize calls, mutation, or disposal across threads. Callers
 must serialize access to every value in a dependency chain; racing these operations is outside
@@ -147,14 +149,12 @@ opaque: the runtime may finalize the parent first, and this backend no longer ke
 alive for a dependent's destructor. The generator cannot check this; keep it in review.
 
 By default, generated opaques are **finalizer-only**: no public `Dispose()`, cleanup runs
-through a private idempotent path invoked by the handle finalizer. Add
+through the handle finalizer. Add
 `#[diplomat::attr(dotnet, manually_disposable)]` on an opaque type declaration to generate
-`: IDisposable` plus a public `Dispose()` that runs the same cleanup and
-`GC.SuppressFinalize(this)`. Callers must not race `Dispose()` with calls from another thread.
-After release, calls on the wrapper throw `ObjectDisposedException`. Methods that would expose
-a retained borrow from this source are rejected during generation, so `Dispose()` is not a
-parent-invalidation API. Native operations use scoped leases so the directly invoked handle
-stays alive and its source edges remain reachable and validated through P/Invoke.
+`: IDisposable` plus a public `Dispose()` that disposes the handle. Callers must not race
+`Dispose()` with calls from another thread. After release, calls on the wrapper throw
+`ObjectDisposedException`. Methods that would expose a retained borrow from this source are
+rejected during generation, so `Dispose()` is not a parent-invalidation API.
 
 ## String encoding
 

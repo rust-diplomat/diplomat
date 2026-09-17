@@ -1547,10 +1547,13 @@ mod test {
         assert!(
             rust_handle.contains("DangerousAddRef(ref success)")
                 && rust_handle.contains("internal void ExitOperation() => DangerousRelease();")
-                && rust_handle.contains("HoldForCall()")
-                && borrow_lease.contains("return owner.HoldForCall();")
-                && !borrow_lease.contains("return owner.StartCall();"),
-            "only the directly invoked handle should take a SafeHandle operation claim:\n\
+                && rust_handle.contains("_edges.Validate();")
+                && borrow_lease.contains("owner.ValidateDependency();")
+                && !borrow_lease.contains("owner.StartCall();")
+                && !rust_handle.contains("HoldForCall")
+                && !rust_handle.contains("HoldDependenciesForCall"),
+            "only the directly invoked handle should take a SafeHandle operation claim, and \
+             dependencies should only be validated for ordinary calls:\n\
              RustHandle.cs:\n{rust_handle}\nBorrowLease.cs:\n{borrow_lease}"
         );
         assert!(!rust_handle.contains("_refCount") && !rust_handle.contains("_activeOperations"));
@@ -2896,8 +2899,9 @@ mod test {
             "the view should release its managed source edges explicitly:\n{span}"
         );
         assert!(
-            span.contains("Cannot dispose DiplomatBorrowedSpan during a WithSpan callback"),
-            "disposing a borrowed span from its active callback must fail before releasing edges:\n{span}"
+            !span.contains("_activeCallbacks")
+                && !span.contains("Cannot dispose DiplomatBorrowedSpan during a WithSpan callback"),
+            "the callback's scoped source lease makes a reentrant-disposal guard unnecessary:\n{span}"
         );
         assert!(
             span.contains("LifetimeEdges.ReleaseNoThrow(edges)"),
