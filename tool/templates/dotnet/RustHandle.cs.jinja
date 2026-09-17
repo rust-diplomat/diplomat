@@ -14,6 +14,13 @@ internal interface ILifetimeEdge
     void Release();
 }
 
+internal interface ILifetimeReference : ILifetimeEdge
+{
+    void Validate();
+
+    ILifetimeEdge LeaseForAccess();
+}
+
 internal static class LifetimeEdge
 {
     internal static ILifetimeEdge? Move<T>(ref BorrowLease<T>? lease) where T : unmanaged
@@ -76,15 +83,7 @@ internal struct LifetimeEdges
     {
         foreach (ILifetimeEdge? edge in _edges)
         {
-            switch (edge)
-            {
-                case IVersionedReference versioned:
-                    versioned.Validate();
-                    break;
-                case IBorrowLease borrow:
-                    borrow.Validate();
-                    break;
-            }
+            (edge as ILifetimeReference)?.Validate();
         }
     }
 
@@ -95,12 +94,7 @@ internal struct LifetimeEdges
         {
             foreach (ILifetimeEdge? edge in _edges)
             {
-                ILifetimeEdge? access = edge switch
-                {
-                    IVersionedReference versioned => versioned.LeaseForAccess(),
-                    IBorrowLease borrow => borrow.LeaseForAccess(),
-                    _ => null,
-                };
+                ILifetimeEdge? access = (edge as ILifetimeReference)?.LeaseForAccess();
                 if (access is not null)
                 {
                     (leased ??= new List<ILifetimeEdge>()).Add(access);

@@ -1548,7 +1548,7 @@ mod test {
             rust_handle.contains("DangerousAddRef(ref success)")
                 && rust_handle.contains("internal void ExitOperation() => DangerousRelease();")
                 && rust_handle.contains("_edges.Validate();")
-                && borrow_lease.contains("owner.ValidateDependency();")
+                && borrow_lease.contains("RequireOwner().ValidateDependency();")
                 && !borrow_lease.contains("owner.StartCall();")
                 && !rust_handle.contains("HoldForCall")
                 && !rust_handle.contains("HoldDependenciesForCall"),

@@ -4,23 +4,14 @@ namespace Somelib.Diplomat;
 
 #nullable enable
 
-internal interface IBorrowLease : ILifetimeEdge
+internal interface IBorrowLease : ILifetimeReference
 {
     BorrowKind Kind { get; }
-
-    void Validate();
-
-    ILifetimeEdge LeaseForAccess();
 
     ILifetimeEdge IntoVersionedEdge();
 }
 
-internal interface IVersionedReference : ILifetimeEdge
-{
-    void Validate();
-
-    IBorrowLease LeaseForAccess();
-}
+internal interface IVersionedReference : ILifetimeReference { }
 
 internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 {
@@ -46,26 +37,12 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
     public void Validate()
     {
-        RustHandle<T>? owner = _owner;
-        if (owner is null)
-        {
-            throw new InvalidOperationException(
-                "The source of this borrowed value is no longer available.");
-        }
-
-        owner.ValidateDependency();
+        RequireOwner().ValidateDependency();
     }
 
     public ILifetimeEdge LeaseForAccess()
     {
-        RustHandle<T>? owner = _owner;
-        if (owner is null)
-        {
-            throw new InvalidOperationException(
-                "The source of this borrowed value is no longer available.");
-        }
-
-        return owner.LeaseDependenciesForAccess();
+        return RequireOwner().LeaseDependenciesForAccess();
     }
 
     public ILifetimeEdge IntoVersionedEdge()
@@ -112,6 +89,10 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
         return owner;
     }
 
+    private RustHandle<T> RequireOwner() =>
+        _owner ?? throw new InvalidOperationException(
+            "The source of this borrowed value is no longer available.");
+
     private ILifetimeEdge? TakeOperation()
     {
         ILifetimeEdge? operation = _operation;
@@ -132,31 +113,21 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
 
         public void Validate()
         {
-            RustHandle<T>? owner = _owner;
-            if (owner is null)
-            {
-                throw new InvalidOperationException(
-                    "The source of this borrowed value is no longer available.");
-            }
-
-            owner.ValidateVersionAccessible(_version);
+            RequireOwner().ValidateVersionAccessible(_version);
         }
 
-        public IBorrowLease LeaseForAccess()
+        public ILifetimeEdge LeaseForAccess()
         {
-            RustHandle<T>? owner = _owner;
-            if (owner is null)
-            {
-                throw new InvalidOperationException(
-                    "The source of this borrowed value is no longer available.");
-            }
-
-            return owner.LeaseVersionForAccess(_version);
+            return RequireOwner().LeaseVersionForAccess(_version);
         }
 
         public void Release()
         {
             _owner = null;
         }
+
+        private RustHandle<T> RequireOwner() =>
+            _owner ?? throw new InvalidOperationException(
+                "The source of this borrowed value is no longer available.");
     }
 }
