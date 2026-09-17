@@ -330,19 +330,4 @@ public partial class OpaqueThinVec
             }
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.OpaqueThinVec>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

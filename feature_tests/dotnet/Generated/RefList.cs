@@ -82,19 +82,4 @@ public partial class RefList
             }
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.RefList>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

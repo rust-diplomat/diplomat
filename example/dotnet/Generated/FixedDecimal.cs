@@ -116,19 +116,4 @@ public partial class FixedDecimal
             }
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.FixedDecimal>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

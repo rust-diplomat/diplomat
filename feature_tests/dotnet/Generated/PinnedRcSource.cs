@@ -143,19 +143,4 @@ public partial class PinnedRcSource
             return Raw.PinnedRcSource.DropChecksum();
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.PinnedRcSource>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

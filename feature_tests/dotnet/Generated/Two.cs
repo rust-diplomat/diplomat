@@ -56,19 +56,4 @@ public partial class Two
             return inner;
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.Two>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

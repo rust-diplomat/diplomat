@@ -56,19 +56,4 @@ public partial class RenamedDeprecatedOpaque
             return inner;
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.RenamedDeprecatedOpaque>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

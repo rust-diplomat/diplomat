@@ -88,19 +88,4 @@ public partial class OwnedSliceReturn
             return result.IsSome ? new RustVec(result.Value.Ptr, result.Value.Len) : null;
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.OwnedSliceReturn>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

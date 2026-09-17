@@ -7,7 +7,7 @@ namespace Somelib;
 
 #nullable enable
 
-public partial class OpaqueThin: IDisposable
+public partial class OpaqueThin : IDisposable
 {
     private unsafe RustHandle<Raw.OpaqueThin>? _inner;
 
@@ -125,8 +125,16 @@ public partial class OpaqueThin: IDisposable
             return inner;
         }
     }
-
-    private void Cleanup()
+    /// <summary>
+    /// Releases this wrapper's native resource immediately.
+    /// </summary>
+    /// <remarks>
+    /// Retained-borrow returns sourced from a manually_disposable opaque are
+    /// rejected during generation, so Dispose is not a parent-invalidation API.
+    /// Callers must not race Dispose with calls from another thread. Later calls
+    /// throw <see cref="ObjectDisposedException"/>.
+    /// </remarks>
+    public void Dispose()
     {
         unsafe
         {
@@ -139,19 +147,5 @@ public partial class OpaqueThin: IDisposable
             inner.ReleaseWrapper();
             _inner = null;
         }
-    }
-    /// <summary>
-    /// Releases this wrapper's native resource immediately.
-    /// </summary>
-    /// <remarks>
-    /// Retained-borrow returns sourced from a manually_disposable opaque are
-    /// rejected during generation, so Dispose is not a parent-invalidation API.
-    /// Callers must not race Dispose with calls from another thread. Later calls
-    /// throw <see cref="ObjectDisposedException"/>.
-    /// </remarks>
-    public void Dispose()
-    {
-        Cleanup();
-        GC.SuppressFinalize(this);
     }
 }

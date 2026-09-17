@@ -97,19 +97,4 @@ public partial class RcFinalizerDependent
             return Raw.RcFinalizerDependent.DropSeq();
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.RcFinalizerDependent>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

@@ -84,19 +84,4 @@ public partial class DefaultDropProbe
             return Raw.DefaultDropProbe.DropCount();
         }
     }
-
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.DefaultDropProbe>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
 }

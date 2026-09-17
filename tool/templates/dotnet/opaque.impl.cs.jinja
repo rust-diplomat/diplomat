@@ -7,7 +7,7 @@ namespace {{ namespace }};
 
 #nullable enable
 
-public partial class {{ name }}{% if manually_disposable %}: IDisposable{% endif %}
+public partial class {{ name }}{% if manually_disposable %} : IDisposable{% endif %}
 {
     private unsafe RustHandle<Raw.{{ name }}>? _inner;
 
@@ -76,21 +76,6 @@ public partial class {{ name }}{% if manually_disposable %}: IDisposable{% endif
     }
     {%- endfor %}
 
-    private void Cleanup()
-    {
-        unsafe
-        {
-            RustHandle<Raw.{{ name }}>? inner = _inner;
-            if (inner is null)
-            {
-                return;
-            }
-
-            inner.ReleaseWrapper();
-            _inner = null;
-        }
-    }
-
 {%- if manually_disposable %}
     /// <summary>
     /// Releases this wrapper's native resource immediately.
@@ -103,8 +88,17 @@ public partial class {{ name }}{% if manually_disposable %}: IDisposable{% endif
     /// </remarks>
     public void Dispose()
     {
-        Cleanup();
-        GC.SuppressFinalize(this);
+        unsafe
+        {
+            RustHandle<Raw.{{ name }}>? inner = _inner;
+            if (inner is null)
+            {
+                return;
+            }
+
+            inner.ReleaseWrapper();
+            _inner = null;
+        }
     }
 
 {%- endif %}

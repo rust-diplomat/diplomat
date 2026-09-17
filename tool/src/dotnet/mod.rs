@@ -1223,8 +1223,8 @@ mod test {
             "borrowed return should build a shared non-owning view:\n{foo}"
         );
         assert!(
-            foo.contains("RustHandle<Raw.Foo>") && foo.contains("inner.ReleaseWrapper()"),
-            "a wrapper should release its own handle without owning the borrowed pointer:\n{foo}"
+            foo.contains("RustHandle<Raw.Foo>") && !foo.contains("private void Cleanup()"),
+            "a borrowed wrapper should leave finalization to its non-owning handle:\n{foo}"
         );
         assert!(
             !foo.contains("_owned"),
@@ -3128,8 +3128,8 @@ mod test {
             "default opaque should not expose public Dispose:\n{plain}"
         );
         assert!(
-            plain.contains("private void Cleanup()") && !plain.contains("~Plain()"),
-            "default opaque leaves finalization to its RustHandle; the wrapper has no finalizer:\n{plain}"
+            !plain.contains("private void Cleanup()") && !plain.contains("~Plain()"),
+            "default opaque leaves all cleanup to its RustHandle:\n{plain}"
         );
     }
 
@@ -3183,21 +3183,21 @@ mod test {
             "unmarked opaque must stay finalizer-only:\n{finalizer_only}"
         );
         assert!(
-            finalizer_only.contains("private void Cleanup()")
+            !finalizer_only.contains("private void Cleanup()")
                 && !finalizer_only.contains("~FinalizerOnly()"),
-            "unmarked opaque keeps private cleanup and leaves finalization to its RustHandle:\n{finalizer_only}"
+            "unmarked opaque leaves all cleanup to its RustHandle:\n{finalizer_only}"
         );
 
         let manual = files.get("Manual.cs").expect("expected Manual.cs output");
         assert!(
-            manual.contains("public partial class Manual: IDisposable"),
+            manual.contains("public partial class Manual : IDisposable"),
             "`manually_disposable` must generate `: IDisposable`:\n{manual}"
         );
         assert!(
             manual.contains("public void Dispose()")
-                && manual.contains("Cleanup();")
-                && manual.contains("GC.SuppressFinalize(this);"),
-            "`manually_disposable` must expose Dispose() that suppresses finalization:\n{manual}"
+                && manual.contains("inner.ReleaseWrapper();")
+                && !manual.contains("GC.SuppressFinalize(this);"),
+            "`manually_disposable` must release its RustHandle directly:\n{manual}"
         );
         assert!(
             !manual.contains("~Manual()"),
@@ -3741,43 +3741,43 @@ mod test {
     }
 
     #[test]
-    fn an_opaque_property_colliding_with_cleanup_is_rejected() {
-        let (_files, errors) = run_dotnet(property_test_module(quote! {
+    fn an_opaque_property_named_cleanup_is_accepted() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
             #[diplomat::attr(auto, getter = "cleanup")]
             pub fn cleanup_state(&self) -> bool {
                 unimplemented!()
             }
         }));
 
-        assert_eq!(
-            errors.len(),
-            1,
-            "expected exactly one diagnostic: {errors:?}"
-        );
         assert!(
-            errors[0].contains("two members named `Cleanup`"),
-            "the collision must be reported; got: {}",
-            errors[0]
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Cleanup"),
+            "opaque wrappers no longer reserve a private Cleanup member:\n{config}"
         );
     }
 
     #[test]
-    fn an_opaque_method_colliding_with_cleanup_is_rejected() {
-        let (_files, errors) = run_dotnet(property_test_module(quote! {
+    fn an_opaque_method_named_cleanup_is_accepted() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
             pub fn cleanup(&self) {
                 unimplemented!()
             }
         }));
 
-        assert_eq!(
-            errors.len(),
-            1,
-            "expected exactly one diagnostic: {errors:?}"
-        );
         assert!(
-            errors[0].contains("two members named `Cleanup`"),
-            "the collision must be reported; got: {}",
-            errors[0]
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public void Cleanup()"),
+            "opaque wrappers no longer reserve a private Cleanup member:\n{config}"
         );
     }
 
@@ -4191,17 +4191,47 @@ mod test {
     }
 
     // `#[diplomat::rename]` lands verbatim, after case conversion, so it is the
-    // one thing that can produce a name case-folding never would — including the
-    // exact spelling of a member the template always generates.
+    // one thing that can produce a name case-folding never would.
     #[test]
-    fn a_renamed_property_colliding_with_as_ffi_is_rejected() {
-        let (_files, errors) = run_dotnet(property_test_module(quote! {
+    fn an_opaque_property_named_as_ffi_is_accepted() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
             #[diplomat::attr(dotnet, rename = "AsFFI")]
             #[diplomat::attr(auto, getter)]
             pub fn handle(&self) -> u8 {
                 unimplemented!()
             }
         }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public byte AsFFI"),
+            "opaque wrappers do not generate AsFFI:\n{config}"
+        );
+    }
+
+    #[test]
+    fn a_struct_property_colliding_with_as_ffi_is_rejected() {
+        let (_files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Config {
+                    value: u8,
+                }
+
+                impl Config {
+                    #[diplomat::attr(dotnet, rename = "AsFFI")]
+                    #[diplomat::attr(auto, getter)]
+                    pub fn handle(self) -> u8 {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
 
         assert_eq!(
             errors.len(),
@@ -4210,7 +4240,7 @@ mod test {
         );
         assert!(
             errors[0].contains("two members named `AsFFI`"),
-            "the collision must be reported; got: {}",
+            "structs still generate AsFFI; got: {}",
             errors[0]
         );
     }

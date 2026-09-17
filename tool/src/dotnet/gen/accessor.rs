@@ -366,11 +366,10 @@ pub(super) fn route_members<'ctx>(
 /// Refuse anything C# would not compile: a property sharing its name with
 /// another member (CS0102), or with the type that contains it (CS0542).
 ///
-/// The generated type is not only what Diplomat was asked for. The templates
-/// always add `AsFFI` and `FromFFI`; opaques always get private `Cleanup` and
-/// may opt into public `Dispose`; and a struct's fields are members too — so a
-/// property named after any of those, or after the type itself, compiles to
-/// nothing.
+/// The generated type is not only what Diplomat was asked for. Struct templates
+/// add `AsFFI` and `FromFFI`, opaques may opt into public `Dispose`, and a
+/// struct's fields are members too. A property named after any generated member
+/// or after the type itself would not compile.
 pub(super) fn reject_member_collisions(
     ty: &str,
     properties: &[PropertyInfo<'_>],
@@ -386,11 +385,12 @@ pub(super) fn reject_member_collisions(
     let mut seen = BTreeMap::<&str, &str>::new();
     seen.insert(ty, ENCLOSING_TYPE);
     let mut generated_members = BTreeMap::<&str, &str>::new();
-    for member in ["AsFFI", "FromFFI"] {
-        generated_members.insert(member, "a member Diplomat always generates");
-    }
     if is_opaque {
-        generated_members.insert("Cleanup", "a member Diplomat always generates for opaques");
+        generated_members.insert("Handle", "a member Diplomat generates for opaques");
+    } else {
+        for member in ["AsFFI", "FromFFI"] {
+            generated_members.insert(member, "a member Diplomat generates for structs");
+        }
     }
     if has_generated_dispose {
         generated_members.insert("Dispose", "a member Diplomat generates for this opaque");
