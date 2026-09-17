@@ -123,6 +123,7 @@ public class RuntimeBorrowSafetyTests
 
         Assert.Equal(Utf8("value"), view.Clone());
         view.Dispose();
+        Assert.Throws<ObjectDisposedException>(() => _ = view.Length);
         Assert.Throws<ObjectDisposedException>(() => view.Clone());
     }
 }

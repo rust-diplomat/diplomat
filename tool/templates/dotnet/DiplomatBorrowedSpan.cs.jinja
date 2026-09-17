@@ -56,7 +56,17 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         }
     }
 
-    public int Length => _len;
+    public int Length
+    {
+        get
+        {
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                throw new ObjectDisposedException(nameof(DiplomatBorrowedSpan<T>));
+            }
+            return _len;
+        }
+    }
 
     /// <summary>
     /// Synchronous, zero-copy, read-only access. The span is valid only for
