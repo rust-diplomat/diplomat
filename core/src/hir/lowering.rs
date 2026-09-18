@@ -1184,11 +1184,21 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(_) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
-                        _ => LoweringError::Other(format!("found Box<T> in input where T is a custom type but not opaque. non-opaques can't be behind pointers, and opaques in inputs can't be owned. T = {path}")),
+                        ast::CustomType::Opaque(_) => LoweringError::InvalidLocation {
+                            context: context.clone(),
+                            reason: "found Box<T> in input, where T is an opaque; owned opaques aren't allowed in inputs. Try referencing the opaque (&T) instead".to_string(),
+                        },
+                        _ => LoweringError::InvalidLocation {
+                            context: context.clone(),
+                            reason: "found Box<T> in input, where T is non-opaque; non-opaques can't be behind pointers".into()
+                        }
                     }
                 }
-                _ => LoweringError::Other(format!("found Box<T> in input where T isn't a custom type. T = {box_ty}")),
+                ty => LoweringError::InvalidType {
+                    type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                    type_def_explainer: None,
+                    reason: "found Box<T> in input, were T isn't a custom type".into()
+                }
             });
                 Err(())
             }
@@ -1201,7 +1211,11 @@ impl<'ast> LoweringContext<'ast> {
                         {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    self.errors.push(LoweringError::InvalidType {
+                                        type_name: opaque.name.clone(),
+                                        type_def_explainer: Some("Opaques cannot be referenced behind DiplomatOption<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()),
+                                        reason: "found DiplomatOption<&T>, please use Option<&T>".to_string(),
+                                    });
                                     return Err(());
                                 }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
@@ -1223,27 +1237,43 @@ impl<'ast> LoweringContext<'ast> {
                                     tcx_id,
                                 )))
                             }
-                            _ => {
-                                self.errors.push(LoweringError::Other(format!("found Option<&T> in input where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                            ty => {
+                                self.errors.push(LoweringError::InvalidType{
+                                    type_name: ty.name().clone(),
+                                    type_def_explainer: Some("Type must be marked #[diplomat::opaque] to be passed as Option<&T>".to_string()),
+                                    reason: "found Option<&T> in input, where T is not opaque".into()
+                                });
                                 Err(())
                             }
                         },
-                        _ => {
-                            self.errors.push(LoweringError::Other(format!("found Option<&T> in input, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                        ty => {
+                            self.errors.push(LoweringError::InvalidType {
+                                type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                                type_def_explainer: None,
+                                reason: "found Option<&T> in input, but T is not an opaque type".into()
+                            });
                             Err(())
                         }
                     },
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(_) => {
-                                self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                            ast::CustomType::Opaque(op) => {
+                                self.errors.push(LoweringError::InvalidType {
+                                    type_name: op.name.clone(),
+                                    type_def_explainer: Some("opaque types are passed through FFI as pointers".to_string()),
+                                    reason: "found Option<T> where T is opaque, opaque types must be behind a reference".to_string(),
+                                });
                                 Err(())
                             }
-                            _ => {
+                            ty => {
                                 if matches!(context, TypeLoweringContext::Struct(..))
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
-                                    self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                    self.errors.push(LoweringError::InvalidType {
+                                        type_name: ty.name().clone(),
+                                        type_def_explainer: Some("Struct and enum options must be stored in the C-ABI friendly DiplomatOption type".to_string()),
+                                        reason: "found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()
+                                    });
                                     return Err(());
                                 }
                                 if !self.attr_validator.attrs_supported().option {
@@ -1261,7 +1291,11 @@ impl<'ast> LoweringContext<'ast> {
                         if matches!(context, TypeLoweringContext::Struct(..))
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
-                            self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                            self.errors.push(LoweringError::InvalidType {
+                                type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                                type_def_explainer: None,
+                                reason: "found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()
+                            });
                             return Err(());
                         }
                         if !self.attr_validator.attrs_supported().option {
@@ -1281,9 +1315,12 @@ impl<'ast> LoweringContext<'ast> {
                         let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
-                    ast::TypeName::Box(box_ty) => {
+                    ast::TypeName::Box(..) => {
                         // we could see whats in the box here too
-                        self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));
+                        self.errors.push(LoweringError::InvalidLocation {
+                            context: context.clone(),
+                            reason: "found Option<Box<T>>, Box<T> is not allowed in inputs".to_string()
+                        });
                         Err(())
                     }
                     _ => {
