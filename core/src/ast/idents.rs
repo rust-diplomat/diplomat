@@ -45,6 +45,11 @@ pub enum SpanLocation {
 pub struct Ident(Cow<'static, str>, Option<Span>);
 
 impl Ident {
+    /// Currently only to be used in lowering code for types that don't have location information.
+    pub(crate) fn new_locationless(name : Cow<'static, str>) -> Self {
+        Ident(name.into(), None)
+    }
+
     /// Validate a string
     fn validate(string: &str) -> syn::Result<()> {
         syn::parse_str::<syn::Ident>(string).map(|_| {})
