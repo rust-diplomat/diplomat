@@ -44,7 +44,7 @@ public partial class OwnedSliceReturn
         _inner = RustHandle<Raw.OwnedSliceReturn>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OwnedSliceReturn> Handle
+    internal unsafe RustHandle<Raw.OwnedSliceReturn> _diplomatHandle
     {
         get
         {

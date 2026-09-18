@@ -2115,7 +2115,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     borrow_declaration: Some(format!(
                         "BorrowLease<Raw.{name}>? {lease_var} = null;"
                     )),
-                    borrow_statement: Some(format!("{lease_var} = Handle.Lease({kind});")),
+                    borrow_statement: Some(format!("{lease_var} = _diplomatHandle.Lease({kind});")),
                     borrow_lease: Some(OpaqueBorrowLease {
                         source: "this".into(),
                         lease_expr: lease_var,
@@ -2309,10 +2309,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 };
                 let borrow_statement = if optional {
                     format!(
-                        "{lease_var} = {arg_name} == null ? null : {arg_name}.Handle.Lease({kind});"
+                        "{lease_var} = {arg_name} == null ? null : {arg_name}._diplomatHandle.Lease({kind});"
                     )
                 } else {
-                    format!("{lease_var} = {arg_name}.Handle.Lease({kind});")
+                    format!("{lease_var} = {arg_name}._diplomatHandle.Lease({kind});")
                 };
                 InputLowering {
                     raw_param: format!("{ty}* {raw_name}"),

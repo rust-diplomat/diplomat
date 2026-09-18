@@ -29,7 +29,7 @@ public partial class OpaqueThinVec
                 BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     Raw.OpaqueThin* result = Raw.OpaqueThinVec.First(selfLease!.Ptr);
                     return result == null ? null : new OpaqueThin(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
                 }
@@ -52,7 +52,7 @@ public partial class OpaqueThinVec
                 BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Exclusive);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                     fixed (byte* valuePtr = valueBytes)
                     {
                         Raw.OpaqueThinVec.SetFirstC(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
@@ -97,7 +97,7 @@ public partial class OpaqueThinVec
         _inner = RustHandle<Raw.OpaqueThinVec>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueThinVec> Handle
+    internal unsafe RustHandle<Raw.OpaqueThinVec> _diplomatHandle
     {
         get
         {
@@ -140,7 +140,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.Iter(selfLease!.Ptr);
                 return new OpaqueThinIter(result, LifetimeEdge.Move(ref selfLease));
             }
@@ -158,7 +158,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueThinVec.Len(selfLease!.Ptr);
             }
             finally
@@ -182,7 +182,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OpaqueThin* result = Raw.OpaqueThinVec.Get(selfLease!.Ptr, idx);
                 return result == null ? null : new OpaqueThin(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
             }
@@ -208,7 +208,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OpaqueThinVec.TryFirst(selfLease!.Ptr, fail);
                 if (!result.IsOk)
                 {
@@ -238,7 +238,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OpaqueThinVec.TryGet(selfLease!.Ptr, idx, fail);
                 if (!result.IsOk)
                 {
@@ -268,7 +268,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OpaqueThinVec.TryIter(selfLease!.Ptr, fail);
                 if (!result.IsOk)
                 {
@@ -297,7 +297,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OpaqueThinIter* result = Raw.OpaqueThinVec.OptionalIter(selfLease!.Ptr, some);
                 return result == null ? null : new OpaqueThinIter(result, LifetimeEdge.Move(ref selfLease));
             }
@@ -316,7 +316,7 @@ public partial class OpaqueThinVec
             BorrowLease<Raw.OpaqueThinVec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OpaqueThinVec.TryBorrow(selfLease!.Ptr, fail);
                 if (!result.IsOk)
                 {

@@ -44,7 +44,7 @@ public partial class DefaultDropProbe
         _inner = RustHandle<Raw.DefaultDropProbe>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.DefaultDropProbe> Handle
+    internal unsafe RustHandle<Raw.DefaultDropProbe> _diplomatHandle
     {
         get
         {

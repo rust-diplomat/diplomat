@@ -44,7 +44,7 @@ public partial class MethodOverloading: IDisposable
         _inner = RustHandle<Raw.MethodOverloading>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.MethodOverloading> Handle
+    internal unsafe RustHandle<Raw.MethodOverloading> _diplomatHandle
     {
         get
         {

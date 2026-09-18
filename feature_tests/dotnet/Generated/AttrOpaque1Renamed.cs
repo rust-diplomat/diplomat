@@ -22,7 +22,7 @@ public partial class AttrOpaque1Renamed: IDisposable
                 BorrowLease<Raw.AttrOpaque1Renamed>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     return Raw.AttrOpaque1Renamed.Abirenamed(selfLease!.Ptr);
                 }
                 finally
@@ -42,7 +42,7 @@ public partial class AttrOpaque1Renamed: IDisposable
                 BorrowLease<Raw.AttrOpaque1Renamed>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     return Raw.AttrOpaque1Renamed.method_renamed(selfLease!.Ptr);
                 }
                 finally
@@ -84,7 +84,7 @@ public partial class AttrOpaque1Renamed: IDisposable
         _inner = RustHandle<Raw.AttrOpaque1Renamed>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.AttrOpaque1Renamed> Handle
+    internal unsafe RustHandle<Raw.AttrOpaque1Renamed> _diplomatHandle
     {
         get
         {
@@ -146,8 +146,8 @@ public partial class AttrOpaque1Renamed: IDisposable
             BorrowLease<Raw.Unnamespaced>? unLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
-                unLease = un.Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                unLease = un._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.AttrOpaque1Renamed.UseUnnamespaced(selfLease!.Ptr, unLease!.Ptr);
             }
             finally
@@ -165,7 +165,7 @@ public partial class AttrOpaque1Renamed: IDisposable
             BorrowLease<Raw.AttrOpaque1Renamed>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.AttrOpaque1Renamed.UseNamespaced(selfLease!.Ptr, n);
             }
             finally

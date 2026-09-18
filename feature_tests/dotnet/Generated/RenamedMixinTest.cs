@@ -44,7 +44,7 @@ public partial class RenamedMixinTest
         _inner = RustHandle<Raw.RenamedMixinTest>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedMixinTest> Handle
+    internal unsafe RustHandle<Raw.RenamedMixinTest> _diplomatHandle
     {
         get
         {

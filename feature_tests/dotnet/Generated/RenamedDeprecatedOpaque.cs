@@ -44,7 +44,7 @@ public partial class RenamedDeprecatedOpaque
         _inner = RustHandle<Raw.RenamedDeprecatedOpaque>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedDeprecatedOpaque> Handle
+    internal unsafe RustHandle<Raw.RenamedDeprecatedOpaque> _diplomatHandle
     {
         get
         {

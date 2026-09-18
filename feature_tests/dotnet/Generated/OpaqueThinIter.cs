@@ -44,7 +44,7 @@ public partial class OpaqueThinIter
         _inner = RustHandle<Raw.OpaqueThinIter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueThinIter> Handle
+    internal unsafe RustHandle<Raw.OpaqueThinIter> _diplomatHandle
     {
         get
         {
@@ -71,7 +71,7 @@ public partial class OpaqueThinIter
             BorrowLease<Raw.OpaqueThinIter>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.OpaqueThin* result = Raw.OpaqueThinIter.Next(selfLease!.Ptr);
                 return result == null ? null : new OpaqueThin(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
             }

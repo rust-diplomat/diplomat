@@ -44,7 +44,7 @@ public partial class Utf16Wrap
         _inner = RustHandle<Raw.Utf16Wrap>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Utf16Wrap> Handle
+    internal unsafe RustHandle<Raw.Utf16Wrap> _diplomatHandle
     {
         get
         {
@@ -80,7 +80,7 @@ public partial class Utf16Wrap
             BorrowLease<Raw.Utf16Wrap>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {
@@ -110,7 +110,7 @@ public partial class Utf16Wrap
             BorrowLease<Raw.Utf16Wrap>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.Utf16Wrap.BorrowCont(selfLease!.Ptr);
                 return new DiplomatBorrowedSpan<char>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) });
             }

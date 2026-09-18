@@ -44,7 +44,7 @@ public partial class ExclusiveWriter: IDisposable
         _inner = RustHandle<Raw.ExclusiveWriter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.ExclusiveWriter> Handle
+    internal unsafe RustHandle<Raw.ExclusiveWriter> _diplomatHandle
     {
         get
         {
@@ -64,7 +64,7 @@ public partial class ExclusiveWriter: IDisposable
             BorrowLease<Raw.ExclusiveWriter>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.ExclusiveWriter.Add(selfLease!.Ptr, delta);
             }
             finally

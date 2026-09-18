@@ -44,7 +44,7 @@ public partial class DataProvider
         _inner = RustHandle<Raw.DataProvider>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.DataProvider> Handle
+    internal unsafe RustHandle<Raw.DataProvider> _diplomatHandle
     {
         get
         {
