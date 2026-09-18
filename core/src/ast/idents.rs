@@ -5,7 +5,7 @@ use std::fmt;
 use std::ops::Range;
 
 /// Equivalent to `proc_macro2::LineColumn`
-#[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Serialize, Deserialize, Clone, Debug)]
 pub struct LineColumn {
     /// The 1-indexed row of where we are in a file
     /// (Alternatively, the offset by the number of newline characters + 1)
@@ -16,7 +16,7 @@ pub struct LineColumn {
 }
 
 /// Equivalent to `proc_macro2::Span`.
-#[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[non_exhaustive]
 pub struct Span {
     pub start: LineColumn,
@@ -28,7 +28,7 @@ pub struct Span {
     pub span_location: SpanLocation,
 }
 
-#[derive(Hash, Eq, PartialEq, Serialize, Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Serialize, Deserialize,  Clone, Debug)]
 #[non_exhaustive]
 pub enum SpanLocation {
     /// For testing or when accessing SpanLocation is not possible.
