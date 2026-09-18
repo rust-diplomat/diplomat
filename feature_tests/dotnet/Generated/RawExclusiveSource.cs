@@ -18,6 +18,9 @@ internal partial struct ExclusiveSource
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "ExclusiveSource_set_value", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void SetValue(ExclusiveSource* handle, ulong value);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "ExclusiveSource_view", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern ExclusiveView* View(ExclusiveSource* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "ExclusiveSource_view_mut", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ExclusiveView* ViewMut(ExclusiveSource* handle);
 

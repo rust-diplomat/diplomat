@@ -117,7 +117,7 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
                     "The source of this borrowed value is no longer available.");
             }
 
-            return owner.LeaseCurrentVersion(_version);
+            return owner.LeaseVersionForOperation(_version);
         }
 
         public void Release()

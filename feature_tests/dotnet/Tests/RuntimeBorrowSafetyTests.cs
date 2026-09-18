@@ -54,6 +54,22 @@ public class RuntimeBorrowSafetyTests
     }
 
     [Fact]
+    public void ExclusiveView_InvalidatesOlderReadViewImmediately()
+    {
+        ExclusiveSource source = ExclusiveSource.Create(1);
+        using ExclusiveView read = source.View();
+
+        using (ExclusiveView writer = source.ViewMut())
+        {
+            Assert.Throws<InvalidOperationException>(() => read.Value());
+            writer.Add(2);
+        }
+
+        Assert.Throws<InvalidOperationException>(() => read.Value());
+        Assert.Equal(3ul, source.Value());
+    }
+
+    [Fact]
     public void ExclusiveOwnedChild_BlocksSourceUntilDisposed()
     {
         ExclusiveSource source = ExclusiveSource.Create(1);

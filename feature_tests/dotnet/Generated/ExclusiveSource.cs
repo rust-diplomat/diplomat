@@ -110,6 +110,31 @@ public partial class ExclusiveSource
     /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
     /// Source handles stay reachable while the returned value exists.
     /// </remarks>
+    public ExclusiveView View()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.ExclusiveSource>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                Raw.ExclusiveView* result = Raw.ExclusiveSource.View(selfLease!.Ptr);
+                return new ExclusiveView(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>ExclusiveView</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// Source handles stay reachable while the returned value exists.
+    /// </remarks>
     public ExclusiveView ViewMut()
     {
         unsafe

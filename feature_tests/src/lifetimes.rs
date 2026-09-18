@@ -896,6 +896,10 @@ pub mod ffi {
             self.0.value = value;
         }
 
+        pub fn view<'a>(&'a self) -> &'a ExclusiveView {
+            &self.0
+        }
+
         pub fn view_mut<'a>(&'a mut self) -> &'a mut ExclusiveView {
             &mut self.0
         }
