@@ -8,6 +8,7 @@ use super::{
     SpecialMethodPresence, StructDef, StructField, StructPath, SuccessType, TraitDef,
     TraitParamSelf, TraitPath, TyPosition, Type, TypeDef, TypeId,
 };
+use crate::ast::SpannedTypeName;
 use crate::ast::attrs::AttrInheritContext;
 use crate::ast::logging::{ContextLocation, write_report};
 use crate::hir::{Docs, LocIdent, StructPathLike, SymbolId, TypingUseInfo};
@@ -891,7 +892,11 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if is_comparison {
-            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) = &method.return_type {
+            let is_optional_ord = if let Some(
+                SpannedTypeName {
+                ty: ast::TypeName::Option(t, _),
+                ..
+            }) = &method.return_type {
                 if matches!(**t, ast::TypeName::Ordering) {
                     if !self.attr_validator.attrs_supported().partial_comparators {
                         self.errors.push(LoweringError::Other("Comparators that return `Option` are not supported by this backend (Filter with #[diplomat::cfg(supports=partial_comparators)]).".into()));
@@ -905,7 +910,7 @@ impl<'ast> LoweringContext<'ast> {
                 false
             };
 
-            if !(method.return_type == Some(ast::TypeName::Ordering) || is_optional_ord) {
+            if !(method.return_type.as_ref().map(|t| &t.ty) == Some(&ast::TypeName::Ordering) || is_optional_ord) {
                 self.errors.push(LoweringError::InvalidLocation{
                     context: TypeLoweringContext::Method(SignatureLocation::Return),
                     reason: "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>".into(),
@@ -2215,7 +2220,7 @@ impl<'ast> LoweringContext<'ast> {
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     fn lower_return_type(
         &mut self,
-        return_type: Option<&ast::TypeName>,
+        return_type: Option<&ast::SpannedTypeName>,
         takes_write: bool,
         mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
@@ -2225,9 +2230,10 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             SuccessType::Unit
         };
-        match return_type.unwrap_or(&ast::TypeName::Unit) {
+        let return_type_name = return_type.map(|t| &t.ty).unwrap_or(&ast::TypeName::Unit);
+        match return_type_name {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
+                self.maybe_error_on_option_result(return_type_name)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self

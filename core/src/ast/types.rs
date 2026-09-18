@@ -578,6 +578,13 @@ pub enum TypeName {
     ImplTrait(PathType),
 }
 
+/// [`TypeName`] that was evaluated at a paritcular location.
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct SpannedTypeName {
+    pub(crate) ty : TypeName,
+    pub(crate) location : Option<super::Span>,
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
 #[non_exhaustive]
 pub enum StringEncoding {
