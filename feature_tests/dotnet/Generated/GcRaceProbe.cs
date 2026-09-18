@@ -44,7 +44,7 @@ public partial class GcRaceProbe
         _inner = RustHandle<Raw.GcRaceProbe>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.GcRaceProbe> Handle
+    internal unsafe RustHandle<Raw.GcRaceProbe> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class GcRaceProbe
             BorrowLease<Raw.GcRaceProbe>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.GcRaceProbe.DropsDuringSpin(selfLease!.Ptr, millis);
             }
             finally

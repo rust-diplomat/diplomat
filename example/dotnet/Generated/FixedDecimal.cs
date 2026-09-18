@@ -44,7 +44,7 @@ public partial class FixedDecimal
         _inner = RustHandle<Raw.FixedDecimal>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.FixedDecimal> Handle
+    internal unsafe RustHandle<Raw.FixedDecimal> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class FixedDecimal
             BorrowLease<Raw.FixedDecimal>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.FixedDecimal.MultiplyPow10(selfLease!.Ptr, power);
             }
             finally
@@ -94,7 +94,7 @@ public partial class FixedDecimal
             BorrowLease<Raw.FixedDecimal>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {

@@ -44,7 +44,7 @@ public partial class MyOpaqueEnum: IDisposable
         _inner = RustHandle<Raw.MyOpaqueEnum>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.MyOpaqueEnum> Handle
+    internal unsafe RustHandle<Raw.MyOpaqueEnum> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class MyOpaqueEnum: IDisposable
             BorrowLease<Raw.MyOpaqueEnum>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {

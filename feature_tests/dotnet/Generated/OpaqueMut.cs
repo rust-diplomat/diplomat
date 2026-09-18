@@ -44,7 +44,7 @@ public partial class OpaqueMut
         _inner = RustHandle<Raw.OpaqueMut>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueMut> Handle
+    internal unsafe RustHandle<Raw.OpaqueMut> _diplomatHandle
     {
         get
         {

@@ -1,7 +1,7 @@
 {#- Shared idiomatic method body — encoding setup, pin chain, raw call,
     return wrap. The caller is responsible for the method declaration line
     and the `unsafe { }` wrap. A disposed opaque receiver is rejected by the
-    `Handle` getter that the borrow statements go through.
+    `_diplomatHandle` getter that the borrow statements go through.
 
     Body indent comes from `method.body_indent(extra_indent)`:
       - 12 spaces normally (inside `unsafe { }` inside a class method)

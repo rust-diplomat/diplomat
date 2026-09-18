@@ -44,7 +44,7 @@ public partial class SliceParseError
         _inner = RustHandle<Raw.SliceParseError>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.SliceParseError> Handle
+    internal unsafe RustHandle<Raw.SliceParseError> _diplomatHandle
     {
         get
         {

@@ -44,7 +44,7 @@ public partial class Opaque: IDisposable
         _inner = RustHandle<Raw.Opaque>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Opaque> Handle
+    internal unsafe RustHandle<Raw.Opaque> _diplomatHandle
     {
         get
         {
@@ -109,7 +109,7 @@ public partial class Opaque: IDisposable
             BorrowLease<Raw.Opaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {
@@ -135,7 +135,7 @@ public partial class Opaque: IDisposable
             BorrowLease<Raw.Opaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.Opaque.AssertStruct(selfLease!.Ptr, s.AsFFI());
             }
             finally

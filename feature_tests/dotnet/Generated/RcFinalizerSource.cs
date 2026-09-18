@@ -44,7 +44,7 @@ public partial class RcFinalizerSource
         _inner = RustHandle<Raw.RcFinalizerSource>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RcFinalizerSource> Handle
+    internal unsafe RustHandle<Raw.RcFinalizerSource> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class RcFinalizerSource
             BorrowLease<Raw.RcFinalizerSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.RcFinalizerSource.Id(selfLease!.Ptr);
             }
             finally
@@ -100,7 +100,7 @@ public partial class RcFinalizerSource
             BorrowLease<Raw.RcFinalizerSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.RcFinalizerDependent* result = Raw.RcFinalizerSource.MakeDependent(selfLease!.Ptr);
                 return new RcFinalizerDependent(result, LifetimeEdge.Move(ref selfLease));
             }

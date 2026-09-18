@@ -44,7 +44,7 @@ public partial class RefList
         _inner = RustHandle<Raw.RefList>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RefList> Handle
+    internal unsafe RustHandle<Raw.RefList> _diplomatHandle
     {
         get
         {
@@ -72,7 +72,7 @@ public partial class RefList
             BorrowLease<Raw.RefListParameter>? dataLease = null;
             try
             {
-                dataLease = data.Handle.Lease(BorrowKind.Shared);
+                dataLease = data._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.RefList* result = Raw.RefList.Node(dataLease!.Ptr);
                 return new RefList(result, LifetimeEdge.Move(ref dataLease));
             }

@@ -46,7 +46,7 @@ public partial class {{ name }}{% if manually_disposable %}: IDisposable{% endif
         _inner = RustHandle<Raw.{{ name }}>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.{{ name }}> Handle
+    internal unsafe RustHandle<Raw.{{ name }}> _diplomatHandle
     {
         get
         {

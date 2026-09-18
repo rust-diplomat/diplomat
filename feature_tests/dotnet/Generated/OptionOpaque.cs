@@ -44,7 +44,7 @@ public partial class OptionOpaque: IDisposable
         _inner = RustHandle<Raw.OptionOpaque>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OptionOpaque> Handle
+    internal unsafe RustHandle<Raw.OptionOpaque> _diplomatHandle
     {
         get
         {
@@ -88,7 +88,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OptionOpaque.OptionIsize(selfLease!.Ptr);
                 return result.IsSome ? result.Value : (nint?)null;
             }
@@ -106,7 +106,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OptionOpaque.OptionUsize(selfLease!.Ptr);
                 return result.IsSome ? result.Value : (nuint?)null;
             }
@@ -124,7 +124,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OptionOpaque.OptionI32(selfLease!.Ptr);
                 return result.IsSome ? result.Value : (int?)null;
             }
@@ -142,7 +142,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OptionOpaque.OptionU32(selfLease!.Ptr);
                 return result.IsSome ? result.Value : (uint?)null;
             }
@@ -160,7 +160,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OptionOpaque.AssertInteger(selfLease!.Ptr, i);
             }
             finally
@@ -177,7 +177,7 @@ public partial class OptionOpaque: IDisposable
             BorrowLease<Raw.OptionOpaque>? argLease = null;
             try
             {
-                argLease = arg == null ? null : arg.Handle.Lease(BorrowKind.Shared);
+                argLease = arg == null ? null : arg._diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OptionOpaque.OptionOpaqueArgument(argLease == null ? null : argLease.Ptr);
             }
             finally

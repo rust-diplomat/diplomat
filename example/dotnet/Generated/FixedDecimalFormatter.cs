@@ -44,7 +44,7 @@ public partial class FixedDecimalFormatter
         _inner = RustHandle<Raw.FixedDecimalFormatter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.FixedDecimalFormatter> Handle
+    internal unsafe RustHandle<Raw.FixedDecimalFormatter> _diplomatHandle
     {
         get
         {
@@ -71,8 +71,8 @@ public partial class FixedDecimalFormatter
             BorrowLease<Raw.DataProvider>? providerLease = null;
             try
             {
-                localeLease = locale.Handle.Lease(BorrowKind.Shared);
-                providerLease = provider.Handle.Lease(BorrowKind.Shared);
+                localeLease = locale._diplomatHandle.Lease(BorrowKind.Shared);
+                providerLease = provider._diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.FixedDecimalFormatter.TryNew(localeLease!.Ptr, providerLease!.Ptr, options.AsFFI());
                 if (!result.IsOk)
                 {
@@ -97,8 +97,8 @@ public partial class FixedDecimalFormatter
             BorrowLease<Raw.FixedDecimal>? valueLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
-                valueLease = value.Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                valueLease = value._diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {

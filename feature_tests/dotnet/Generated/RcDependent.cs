@@ -44,7 +44,7 @@ public partial class RcDependent
         _inner = RustHandle<Raw.RcDependent>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RcDependent> Handle
+    internal unsafe RustHandle<Raw.RcDependent> _diplomatHandle
     {
         get
         {
@@ -64,7 +64,7 @@ public partial class RcDependent
             BorrowLease<Raw.RcDependent>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.RcDependent.Id(selfLease!.Ptr);
             }
             finally
@@ -81,7 +81,7 @@ public partial class RcDependent
             BorrowLease<Raw.RcDependent>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.RcDependent.SourceId(selfLease!.Ptr);
             }
             finally
@@ -105,7 +105,7 @@ public partial class RcDependent
             BorrowLease<Raw.RcDependent>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.RcDependent2* result = Raw.RcDependent.MakeDependent2(selfLease!.Ptr);
                 return new RcDependent2(result, LifetimeEdge.Move(ref selfLease));
             }

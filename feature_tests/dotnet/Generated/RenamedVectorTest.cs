@@ -22,7 +22,7 @@ public partial class RenamedVectorTest: IDisposable
                 BorrowLease<Raw.RenamedVectorTest>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     return Raw.RenamedVectorTest.Len(selfLease!.Ptr);
                 }
                 finally
@@ -64,7 +64,7 @@ public partial class RenamedVectorTest: IDisposable
         _inner = RustHandle<Raw.RenamedVectorTest>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedVectorTest> Handle
+    internal unsafe RustHandle<Raw.RenamedVectorTest> _diplomatHandle
     {
         get
         {
@@ -96,7 +96,7 @@ public partial class RenamedVectorTest: IDisposable
             BorrowLease<Raw.RenamedVectorTest>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.RenamedVectorTest.Get(selfLease!.Ptr, idx);
                 return result.IsSome ? result.Value : (double?)null;
             }
@@ -114,7 +114,7 @@ public partial class RenamedVectorTest: IDisposable
             BorrowLease<Raw.RenamedVectorTest>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.RenamedVectorTest.Push(selfLease!.Ptr, value);
             }
             finally

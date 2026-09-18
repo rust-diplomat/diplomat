@@ -44,7 +44,7 @@ public partial class OptionOpaqueChar
         _inner = RustHandle<Raw.OptionOpaqueChar>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OptionOpaqueChar> Handle
+    internal unsafe RustHandle<Raw.OptionOpaqueChar> _diplomatHandle
     {
         get
         {
@@ -64,7 +64,7 @@ public partial class OptionOpaqueChar
             BorrowLease<Raw.OptionOpaqueChar>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OptionOpaqueChar.AssertChar(selfLease!.Ptr, ch);
             }
             finally

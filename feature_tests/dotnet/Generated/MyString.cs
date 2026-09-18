@@ -22,7 +22,7 @@ public partial class MyString
                 BorrowLease<Raw.MyString>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     DiplomatWrite writeable = new DiplomatWrite();
                     try
                     {
@@ -49,7 +49,7 @@ public partial class MyString
                 BorrowLease<Raw.MyString>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Exclusive);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                     fixed (byte* valuePtr = valueBytes)
                     {
                         Raw.MyString.SetStr(selfLease!.Ptr, new DiplomatSliceU8 { Ptr = valuePtr, Len = (nuint)valueBytes.Length });
@@ -94,7 +94,7 @@ public partial class MyString
         _inner = RustHandle<Raw.MyString>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.MyString> Handle
+    internal unsafe RustHandle<Raw.MyString> _diplomatHandle
     {
         get
         {
@@ -173,7 +173,7 @@ public partial class MyString
             BorrowLease<Raw.MyString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.MyString.Borrow(selfLease!.Ptr);
                 return new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) });
             }

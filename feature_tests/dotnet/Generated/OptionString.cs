@@ -44,7 +44,7 @@ public partial class OptionString: IDisposable
         _inner = RustHandle<Raw.OptionString>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OptionString> Handle
+    internal unsafe RustHandle<Raw.OptionString> _diplomatHandle
     {
         get
         {
@@ -81,7 +81,7 @@ public partial class OptionString: IDisposable
             BorrowLease<Raw.OptionString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {

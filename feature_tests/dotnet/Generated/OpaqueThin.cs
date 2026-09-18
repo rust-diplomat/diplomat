@@ -22,7 +22,7 @@ public partial class OpaqueThin: IDisposable
                 BorrowLease<Raw.OpaqueThin>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     return Raw.OpaqueThin.A(selfLease!.Ptr);
                 }
                 finally
@@ -42,7 +42,7 @@ public partial class OpaqueThin: IDisposable
                 BorrowLease<Raw.OpaqueThin>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     return Raw.OpaqueThin.B(selfLease!.Ptr);
                 }
                 finally
@@ -62,7 +62,7 @@ public partial class OpaqueThin: IDisposable
                 BorrowLease<Raw.OpaqueThin>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     DiplomatWrite writeable = new DiplomatWrite();
                     try
                     {
@@ -113,7 +113,7 @@ public partial class OpaqueThin: IDisposable
         _inner = RustHandle<Raw.OpaqueThin>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueThin> Handle
+    internal unsafe RustHandle<Raw.OpaqueThin> _diplomatHandle
     {
         get
         {

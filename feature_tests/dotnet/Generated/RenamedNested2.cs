@@ -44,7 +44,7 @@ public partial class RenamedNested2
         _inner = RustHandle<Raw.RenamedNested2>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedNested2> Handle
+    internal unsafe RustHandle<Raw.RenamedNested2> _diplomatHandle
     {
         get
         {
