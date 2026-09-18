@@ -10,7 +10,7 @@ use super::{
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::ast::logging::{ContextLocation, write_report};
-use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
+use crate::hir::{Docs, LocIdent, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
 use std::collections::HashMap;
@@ -254,7 +254,7 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
 }
 
 impl<'ast> LoweringContext<'ast> {
-    /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].
+    /// Lowers an [`ast::Ident`]s into an [`IdentBuf`].
     ///
     /// If there are any errors, they're pushed to `errors` and `Err` is returned.
     pub(super) fn lower_ident(
@@ -368,7 +368,7 @@ impl<'ast> LoweringContext<'ast> {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
                         docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
-                        name,
+                        name: LocIdent::new(name, ident.span()),
                         discriminant: *discriminant,
                         attrs,
                     };
@@ -506,7 +506,7 @@ impl<'ast> LoweringContext<'ast> {
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
                         docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
-                        name,
+                        name: LocIdent::new(name, field_name.span()),
                         ty,
                         attrs: field_attrs,
                     }),
@@ -778,7 +778,7 @@ impl<'ast> LoweringContext<'ast> {
                                 self.attr_validator.as_ref(),
                                 &mut self.errors,
                             ),
-                            name,
+                            name: LocIdent::new(name, field_name.span()),
                             ty,
                             attrs: self.attr_validator.attr_from_ast(
                                 attrs,
@@ -2091,7 +2091,7 @@ impl<'ast> LoweringContext<'ast> {
         self.attr_validator
             .validate(&attrs, AttributeContext::Param, &mut self.errors);
 
-        Ok(Param::new(name?, ty?, attrs))
+        Ok(Param::new(LocIdent::new(name?, param.name.span()), ty?, attrs))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.
