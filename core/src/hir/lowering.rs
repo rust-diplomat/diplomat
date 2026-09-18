@@ -171,6 +171,7 @@ impl fmt::Display for LoweringReport {
 pub type ErrorAndContext = LoweringReport;
 
 /// Where a type was found
+// TODO: For errors, this can be used as a context setter.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TypeLoweringContext {
     /// Stores the name of the field currently being evaluated.
@@ -1103,7 +1104,11 @@ impl<'ast> LoweringContext<'ast> {
                             if *mutability == Mutability::Mutable
                                 && opaque.mutability != Mutability::Mutable
                             {
-                                self.errors.push(LoweringError::Other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
+                                self.errors.push(LoweringError::InvalidType{
+                                    type_name: opaque.name.clone(),
+                                    type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
+                                    reason: format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
+                                });
                             }
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(
@@ -1154,14 +1159,24 @@ impl<'ast> LoweringContext<'ast> {
                                 Err(())
                             }
                         }
-                        _ => {
-                            self.errors.push(LoweringError::Other(format!("found &T in input where T is a custom type, but not opaque. T = {ref_ty}")));
+                        custom_type => {
+                            self.errors.push(LoweringError::InvalidType{
+                                type_name: custom_type.name().clone(),
+                                type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
+                                reason: format!("found &T in input where T is a custom type, but not opaque")
+                            });
                             Err(())
                         }
                     }
                 }
-                _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in input where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                ty => {
+                    // `ast::TypeName` currently does not store where the TypeName was found, so this is a quick way to get the type name:
+                    let name = ast::Ident::new_locationless(ty.to_string().into());
+                    self.errors.push(LoweringError::InvalidType{
+                        type_name: name,
+                        type_def_explainer: None,
+                        reason: "found &T in input where T isn't a custom type and therefore not opaque".to_string()
+                    });
                     Err(())
                 }
             },
