@@ -133,7 +133,7 @@ pub type OutStructField = StructField<OutputOnly>;
 #[non_exhaustive]
 pub struct StructField<P: TyPosition = Everywhere> {
     pub docs: Docs,
-    pub name: IdentBuf,
+    pub name: Ident,
     pub ty: Type<P>,
     pub attrs: Attrs,
 }
@@ -209,7 +209,7 @@ impl TypeUsage for TraitDef {
 #[non_exhaustive]
 pub struct EnumVariant {
     pub docs: Docs,
-    pub name: IdentBuf,
+    pub name: Ident,
     pub discriminant: isize,
     pub attrs: Attrs,
 }
