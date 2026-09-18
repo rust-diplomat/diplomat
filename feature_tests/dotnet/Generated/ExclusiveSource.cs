@@ -117,7 +117,7 @@ public partial class ExclusiveSource
             BorrowLease<Raw.ExclusiveSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.ExclusiveView* result = Raw.ExclusiveSource.View(selfLease!.Ptr);
                 return new ExclusiveView(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
             }
