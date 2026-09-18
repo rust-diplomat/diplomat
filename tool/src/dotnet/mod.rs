@@ -686,10 +686,10 @@ mod test {
         }
     }
 
-    // Property accessors and the internal `Handle` getter share one indentation,
+    // Property accessors and the internal `_diplomatHandle` getter share one indentation,
     // so count getters without the handle's.
     fn property_getter_count(config: &str) -> usize {
-        config.matches("        get").count() - config.matches("> Handle").count()
+        config.matches("        get").count() - config.matches("> _diplomatHandle").count()
     }
 
     fn run_dotnet(tk_stream: proc_macro2::TokenStream) -> (HashMap<String, String>, Vec<String>) {
@@ -3776,6 +3776,66 @@ mod test {
         );
         assert!(
             errors[0].contains("two members named `Cleanup`"),
+            "the collision must be reported; got: {}",
+            errors[0]
+        );
+    }
+
+    #[test]
+    fn an_opaque_property_named_handle_is_accepted() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(auto, getter = "handle")]
+            pub fn handle_value(&self) -> bool {
+                unimplemented!()
+            }
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public bool Handle")
+                && config.contains("RustHandle<Raw.Config> _diplomatHandle"),
+            "the public property and internal handle must use distinct names:\n{config}"
+        );
+    }
+
+    #[test]
+    fn an_opaque_method_named_handle_is_accepted() {
+        let (files, errors) = run_dotnet(property_test_module(quote! {
+            pub fn handle(&self) {}
+        }));
+
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let config = files.get("Config.cs").expect("expected Config.cs output");
+        assert!(
+            config.contains("public void Handle()")
+                && config.contains("RustHandle<Raw.Config> _diplomatHandle"),
+            "the public method and internal handle must use distinct names:\n{config}"
+        );
+    }
+
+    #[test]
+    fn an_opaque_method_colliding_with_internal_diplomat_handle_is_rejected() {
+        let (_files, errors) = run_dotnet(property_test_module(quote! {
+            #[diplomat::attr(dotnet, rename = "_diplomatHandle")]
+            pub fn internal_name_collision(&self) {}
+        }));
+
+        assert_eq!(
+            errors.len(),
+            1,
+            "expected exactly one diagnostic: {errors:?}"
+        );
+        assert!(
+            errors[0].contains("two members named `_diplomatHandle`"),
             "the collision must be reported; got: {}",
             errors[0]
         );

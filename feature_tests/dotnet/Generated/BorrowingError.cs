@@ -44,7 +44,7 @@ public partial class BorrowingError
         _inner = RustHandle<Raw.BorrowingError>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.BorrowingError> Handle
+    internal unsafe RustHandle<Raw.BorrowingError> _diplomatHandle
     {
         get
         {
@@ -71,7 +71,7 @@ public partial class BorrowingError
             BorrowLease<Raw.BorrowingError>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OpaqueThin* result = Raw.BorrowingError.OwnerFirst(selfLease!.Ptr);
                 return result == null ? null : new OpaqueThin(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
             }

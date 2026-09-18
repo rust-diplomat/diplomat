@@ -44,7 +44,7 @@ public partial class RenamedAttrOpaque2
         _inner = RustHandle<Raw.RenamedAttrOpaque2>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedAttrOpaque2> Handle
+    internal unsafe RustHandle<Raw.RenamedAttrOpaque2> _diplomatHandle
     {
         get
         {

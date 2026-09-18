@@ -44,7 +44,7 @@ public partial class Locale
         _inner = RustHandle<Raw.Locale>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Locale> Handle
+    internal unsafe RustHandle<Raw.Locale> _diplomatHandle
     {
         get
         {

@@ -44,7 +44,7 @@ public partial class RenamedTestOpaque
         _inner = RustHandle<Raw.RenamedTestOpaque>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedTestOpaque> Handle
+    internal unsafe RustHandle<Raw.RenamedTestOpaque> _diplomatHandle
     {
         get
         {

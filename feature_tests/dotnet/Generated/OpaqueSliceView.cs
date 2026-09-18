@@ -44,7 +44,7 @@ public partial class OpaqueSliceView: IDisposable
         _inner = RustHandle<Raw.OpaqueSliceView>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueSliceView> Handle
+    internal unsafe RustHandle<Raw.OpaqueSliceView> _diplomatHandle
     {
         get
         {
@@ -164,7 +164,7 @@ public partial class OpaqueSliceView: IDisposable
             BorrowLease<Raw.OpaqueSliceView>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueSliceView.Length(selfLease!.Ptr);
             }
             finally
@@ -181,7 +181,7 @@ public partial class OpaqueSliceView: IDisposable
             BorrowLease<Raw.OpaqueSliceView>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueSliceView.Get(selfLease!.Ptr, index);
             }
             finally
@@ -198,7 +198,7 @@ public partial class OpaqueSliceView: IDisposable
             BorrowLease<Raw.OpaqueSliceView>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueSliceView.Sum(selfLease!.Ptr);
             }
             finally

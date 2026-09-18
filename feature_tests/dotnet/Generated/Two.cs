@@ -44,7 +44,7 @@ public partial class Two
         _inner = RustHandle<Raw.Two>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Two> Handle
+    internal unsafe RustHandle<Raw.Two> _diplomatHandle
     {
         get
         {

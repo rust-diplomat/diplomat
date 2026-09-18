@@ -44,7 +44,7 @@ public partial class RcDependent2: IDisposable
         _inner = RustHandle<Raw.RcDependent2>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RcDependent2> Handle
+    internal unsafe RustHandle<Raw.RcDependent2> _diplomatHandle
     {
         get
         {
@@ -64,7 +64,7 @@ public partial class RcDependent2: IDisposable
             BorrowLease<Raw.RcDependent2>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.RcDependent2.Id(selfLease!.Ptr);
             }
             finally

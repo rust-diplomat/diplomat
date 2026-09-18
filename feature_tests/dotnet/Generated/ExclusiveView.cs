@@ -44,7 +44,7 @@ public partial class ExclusiveView: IDisposable
         _inner = RustHandle<Raw.ExclusiveView>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.ExclusiveView> Handle
+    internal unsafe RustHandle<Raw.ExclusiveView> _diplomatHandle
     {
         get
         {
@@ -64,7 +64,7 @@ public partial class ExclusiveView: IDisposable
             BorrowLease<Raw.ExclusiveView>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.ExclusiveView.Value(selfLease!.Ptr);
             }
             finally
@@ -81,7 +81,7 @@ public partial class ExclusiveView: IDisposable
             BorrowLease<Raw.ExclusiveView>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.ExclusiveView.Add(selfLease!.Ptr, delta);
             }
             finally

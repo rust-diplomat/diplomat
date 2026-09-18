@@ -44,7 +44,7 @@ public partial class Float64Vec: IDisposable
         _inner = RustHandle<Raw.Float64Vec>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Float64Vec> Handle
+    internal unsafe RustHandle<Raw.Float64Vec> _diplomatHandle
     {
         get
         {
@@ -80,7 +80,7 @@ public partial class Float64Vec: IDisposable
             BorrowLease<Raw.Float64Vec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 DiplomatWrite writeable = new DiplomatWrite();
                 try
                 {
@@ -106,7 +106,7 @@ public partial class Float64Vec: IDisposable
             BorrowLease<Raw.Float64Vec>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.Float64Vec.Get(selfLease!.Ptr, i);
                 return result.IsSome ? result.Value : (double?)null;
             }

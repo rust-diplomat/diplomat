@@ -44,7 +44,7 @@ public partial class Unnamespaced: IDisposable
         _inner = RustHandle<Raw.Unnamespaced>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Unnamespaced> Handle
+    internal unsafe RustHandle<Raw.Unnamespaced> _diplomatHandle
     {
         get
         {
@@ -78,8 +78,8 @@ public partial class Unnamespaced: IDisposable
             BorrowLease<Raw.AttrOpaque1Renamed>? nLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
-                nLease = n.Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                nLease = n._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.Unnamespaced.UseNamespaced(selfLease!.Ptr, nLease!.Ptr);
             }
             finally

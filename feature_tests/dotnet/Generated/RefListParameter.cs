@@ -44,7 +44,7 @@ public partial class RefListParameter
         _inner = RustHandle<Raw.RefListParameter>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RefListParameter> Handle
+    internal unsafe RustHandle<Raw.RefListParameter> _diplomatHandle
     {
         get
         {

@@ -29,7 +29,7 @@ public partial class Bar
                 BorrowLease<Raw.Bar>? selfLease = null;
                 try
                 {
-                    selfLease = Handle.Lease(BorrowKind.Shared);
+                    selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                     Raw.Foo* result = Raw.Bar.Foo(selfLease!.Ptr);
                     return new Foo(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
                 }
@@ -72,7 +72,7 @@ public partial class Bar
         _inner = RustHandle<Raw.Bar>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.Bar> Handle
+    internal unsafe RustHandle<Raw.Bar> _diplomatHandle
     {
         get
         {

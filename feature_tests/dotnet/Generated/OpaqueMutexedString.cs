@@ -44,7 +44,7 @@ public partial class OpaqueMutexedString
         _inner = RustHandle<Raw.OpaqueMutexedString>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.OpaqueMutexedString> Handle
+    internal unsafe RustHandle<Raw.OpaqueMutexedString> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class OpaqueMutexedString
             BorrowLease<Raw.OpaqueMutexedString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.OpaqueMutexedString.Change(selfLease!.Ptr, number);
             }
             finally
@@ -93,7 +93,7 @@ public partial class OpaqueMutexedString
             BorrowLease<Raw.OpaqueMutexedString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueMutexedString.GetLenAndAdd(selfLease!.Ptr, other);
             }
             finally
@@ -114,7 +114,7 @@ public partial class OpaqueMutexedString
             BorrowLease<Raw.OpaqueMutexedString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 var result = Raw.OpaqueMutexedString.DummyStr(selfLease!.Ptr);
                 return new DiplomatBorrowedSpan<byte>(result.Ptr, result.Len, new ILifetimeEdge?[] { LifetimeEdge.Move(ref selfLease) });
             }
@@ -135,7 +135,7 @@ public partial class OpaqueMutexedString
             BorrowLease<Raw.OpaqueMutexedString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.Utf16Wrap* result = Raw.OpaqueMutexedString.Wrapper(selfLease!.Ptr);
                 return new Utf16Wrap(result);
             }
@@ -153,7 +153,7 @@ public partial class OpaqueMutexedString
             BorrowLease<Raw.OpaqueMutexedString>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.OpaqueMutexedString.ToUnsignedFromUnsigned(selfLease!.Ptr, input);
             }
             finally

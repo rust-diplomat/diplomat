@@ -44,7 +44,7 @@ public partial class ExclusiveSource
         _inner = RustHandle<Raw.ExclusiveSource>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.ExclusiveSource> Handle
+    internal unsafe RustHandle<Raw.ExclusiveSource> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class ExclusiveSource
             BorrowLease<Raw.ExclusiveSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.ExclusiveSource.Value(selfLease!.Ptr);
             }
             finally
@@ -93,7 +93,7 @@ public partial class ExclusiveSource
             BorrowLease<Raw.ExclusiveSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.ExclusiveSource.SetValue(selfLease!.Ptr, value);
             }
             finally
@@ -142,7 +142,7 @@ public partial class ExclusiveSource
             BorrowLease<Raw.ExclusiveSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.ExclusiveView* result = Raw.ExclusiveSource.ViewMut(selfLease!.Ptr);
                 return new ExclusiveView(result, WrapperKind.ExclusiveView, LifetimeEdge.Move(ref selfLease));
             }
@@ -167,7 +167,7 @@ public partial class ExclusiveSource
             BorrowLease<Raw.ExclusiveSource>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Exclusive);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
                 Raw.ExclusiveWriter* result = Raw.ExclusiveSource.TakeWriter(selfLease!.Ptr);
                 return new ExclusiveWriter(result, LifetimeEdge.Move(ref selfLease));
             }

@@ -44,7 +44,7 @@ public partial class RenamedOpaqueZSTIndexer
         _inner = RustHandle<Raw.RenamedOpaqueZSTIndexer>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.RenamedOpaqueZSTIndexer> Handle
+    internal unsafe RustHandle<Raw.RenamedOpaqueZSTIndexer> _diplomatHandle
     {
         get
         {
@@ -79,7 +79,7 @@ public partial class RenamedOpaqueZSTIndexer
             BorrowLease<Raw.RenamedOpaqueZSTIndexer>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.RenamedOpaqueZSTIndexer* result = Raw.RenamedOpaqueZSTIndexer.Index(selfLease!.Ptr, idx);
                 return result == null ? null : new RenamedOpaqueZSTIndexer(result);
             }

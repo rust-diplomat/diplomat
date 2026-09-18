@@ -44,7 +44,7 @@ public partial class DisposableDropProbe: IDisposable
         _inner = RustHandle<Raw.DisposableDropProbe>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.DisposableDropProbe> Handle
+    internal unsafe RustHandle<Raw.DisposableDropProbe> _diplomatHandle
     {
         get
         {
@@ -76,7 +76,7 @@ public partial class DisposableDropProbe: IDisposable
             BorrowLease<Raw.DisposableDropProbe>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.DisposableDropProbe.IsAlive(selfLease!.Ptr);
             }
             finally
@@ -93,7 +93,7 @@ public partial class DisposableDropProbe: IDisposable
             BorrowLease<Raw.DisposableDropProbe>? selfLease = null;
             try
             {
-                selfLease = Handle.Lease(BorrowKind.Shared);
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 return Raw.DisposableDropProbe.DropsDuringSpin(selfLease!.Ptr, millis);
             }
             finally

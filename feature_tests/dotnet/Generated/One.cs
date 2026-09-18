@@ -44,7 +44,7 @@ public partial class One
         _inner = RustHandle<Raw.One>.Borrowed(handle, kind, edges);
     }
 
-    internal unsafe RustHandle<Raw.One> Handle
+    internal unsafe RustHandle<Raw.One> _diplomatHandle
     {
         get
         {
@@ -74,8 +74,8 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                holdLease = hold.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                holdLease = hold._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.Transitivity(holdLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref holdLease));
             }
@@ -104,8 +104,8 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                holdLease = hold.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                holdLease = hold._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.Cycle(holdLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref holdLease));
             }
@@ -140,11 +140,11 @@ public partial class One
             BorrowLease<Raw.Two>? noholdLease = null;
             try
             {
-                aLease = a.Handle.Lease(BorrowKind.Shared);
-                bLease = b.Handle.Lease(BorrowKind.Shared);
-                cLease = c.Handle.Lease(BorrowKind.Shared);
-                dLease = d.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                aLease = a._diplomatHandle.Lease(BorrowKind.Shared);
+                bLease = b._diplomatHandle.Lease(BorrowKind.Shared);
+                cLease = c._diplomatHandle.Lease(BorrowKind.Shared);
+                dLease = d._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.ManyDependents(aLease!.Ptr, bLease!.Ptr, cLease!.Ptr, dLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref aLease), LifetimeEdge.Move(ref bLease), LifetimeEdge.Move(ref cLease), LifetimeEdge.Move(ref dLease));
             }
@@ -176,8 +176,8 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                holdLease = hold.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                holdLease = hold._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.ReturnOutlivesParam(holdLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref holdLease));
             }
@@ -210,10 +210,10 @@ public partial class One
             BorrowLease<Raw.One>? bottomLease = null;
             try
             {
-                topLease = top.Handle.Lease(BorrowKind.Shared);
-                leftLease = left.Handle.Lease(BorrowKind.Shared);
-                rightLease = right.Handle.Lease(BorrowKind.Shared);
-                bottomLease = bottom.Handle.Lease(BorrowKind.Shared);
+                topLease = top._diplomatHandle.Lease(BorrowKind.Shared);
+                leftLease = left._diplomatHandle.Lease(BorrowKind.Shared);
+                rightLease = right._diplomatHandle.Lease(BorrowKind.Shared);
+                bottomLease = bottom._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.DiamondTop(topLease!.Ptr, leftLease!.Ptr, rightLease!.Ptr, bottomLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref topLease), LifetimeEdge.Move(ref leftLease), LifetimeEdge.Move(ref rightLease), LifetimeEdge.Move(ref bottomLease));
             }
@@ -248,10 +248,10 @@ public partial class One
             BorrowLease<Raw.One>? bottomLease = null;
             try
             {
-                topLease = top.Handle.Lease(BorrowKind.Shared);
-                leftLease = left.Handle.Lease(BorrowKind.Shared);
-                rightLease = right.Handle.Lease(BorrowKind.Shared);
-                bottomLease = bottom.Handle.Lease(BorrowKind.Shared);
+                topLease = top._diplomatHandle.Lease(BorrowKind.Shared);
+                leftLease = left._diplomatHandle.Lease(BorrowKind.Shared);
+                rightLease = right._diplomatHandle.Lease(BorrowKind.Shared);
+                bottomLease = bottom._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.DiamondLeft(topLease!.Ptr, leftLease!.Ptr, rightLease!.Ptr, bottomLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref leftLease), LifetimeEdge.Move(ref bottomLease));
             }
@@ -286,10 +286,10 @@ public partial class One
             BorrowLease<Raw.One>? bottomLease = null;
             try
             {
-                topLease = top.Handle.Lease(BorrowKind.Shared);
-                leftLease = left.Handle.Lease(BorrowKind.Shared);
-                rightLease = right.Handle.Lease(BorrowKind.Shared);
-                bottomLease = bottom.Handle.Lease(BorrowKind.Shared);
+                topLease = top._diplomatHandle.Lease(BorrowKind.Shared);
+                leftLease = left._diplomatHandle.Lease(BorrowKind.Shared);
+                rightLease = right._diplomatHandle.Lease(BorrowKind.Shared);
+                bottomLease = bottom._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.DiamondRight(topLease!.Ptr, leftLease!.Ptr, rightLease!.Ptr, bottomLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref rightLease), LifetimeEdge.Move(ref bottomLease));
             }
@@ -324,10 +324,10 @@ public partial class One
             BorrowLease<Raw.One>? bottomLease = null;
             try
             {
-                topLease = top.Handle.Lease(BorrowKind.Shared);
-                leftLease = left.Handle.Lease(BorrowKind.Shared);
-                rightLease = right.Handle.Lease(BorrowKind.Shared);
-                bottomLease = bottom.Handle.Lease(BorrowKind.Shared);
+                topLease = top._diplomatHandle.Lease(BorrowKind.Shared);
+                leftLease = left._diplomatHandle.Lease(BorrowKind.Shared);
+                rightLease = right._diplomatHandle.Lease(BorrowKind.Shared);
+                bottomLease = bottom._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.DiamondBottom(topLease!.Ptr, leftLease!.Ptr, rightLease!.Ptr, bottomLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref bottomLease));
             }
@@ -364,11 +364,11 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                aLease = a.Handle.Lease(BorrowKind.Shared);
-                bLease = b.Handle.Lease(BorrowKind.Shared);
-                cLease = c.Handle.Lease(BorrowKind.Shared);
-                dLease = d.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                aLease = a._diplomatHandle.Lease(BorrowKind.Shared);
+                bLease = b._diplomatHandle.Lease(BorrowKind.Shared);
+                cLease = c._diplomatHandle.Lease(BorrowKind.Shared);
+                dLease = d._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.DiamondAndNestedTypes(aLease!.Ptr, bLease!.Ptr, cLease!.Ptr, dLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref aLease), LifetimeEdge.Move(ref bLease), LifetimeEdge.Move(ref cLease), LifetimeEdge.Move(ref dLease));
             }
@@ -402,9 +402,9 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                explicitHoldLease = explicitHold.Handle.Lease(BorrowKind.Shared);
-                implicitHoldLease = implicitHold.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                explicitHoldLease = explicitHold._diplomatHandle.Lease(BorrowKind.Shared);
+                implicitHoldLease = implicitHold._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.ImplicitBounds(explicitHoldLease!.Ptr, implicitHoldLease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref explicitHoldLease), LifetimeEdge.Move(ref implicitHoldLease));
             }
@@ -438,10 +438,10 @@ public partial class One
             BorrowLease<Raw.One>? noholdLease = null;
             try
             {
-                explicitLease = @explicit.Handle.Lease(BorrowKind.Shared);
-                implicit1lease = implicit1.Handle.Lease(BorrowKind.Shared);
-                implicit2lease = implicit2.Handle.Lease(BorrowKind.Shared);
-                noholdLease = nohold.Handle.Lease(BorrowKind.Shared);
+                explicitLease = @explicit._diplomatHandle.Lease(BorrowKind.Shared);
+                implicit1lease = implicit1._diplomatHandle.Lease(BorrowKind.Shared);
+                implicit2lease = implicit2._diplomatHandle.Lease(BorrowKind.Shared);
+                noholdLease = nohold._diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.One* result = Raw.One.ImplicitBoundsDeep(explicitLease!.Ptr, implicit1lease!.Ptr, implicit2lease!.Ptr, noholdLease!.Ptr);
                 return new One(result, LifetimeEdge.Move(ref explicitLease), LifetimeEdge.Move(ref implicit1lease), LifetimeEdge.Move(ref implicit2lease));
             }
