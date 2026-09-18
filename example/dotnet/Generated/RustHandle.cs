@@ -144,7 +144,7 @@ internal struct BorrowLedger
 
     internal bool IsScopeOpen() => Volatile.Read(ref _scopeEnded) == 0;
 
-    internal bool IsCurrent(MutationVersion mutationVersion) =>
+    internal bool IsVersionAccessible(MutationVersion mutationVersion) =>
         IsScopeOpen()
         && Volatile.Read(ref _state) != Exclusive
         && _mutations.Read().Equals(mutationVersion);
@@ -338,8 +338,8 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 
     internal T* Ptr => (T*)handle;
 
-    internal bool IsCurrent(MutationVersion mutationVersion) =>
-        !IsClosed && _borrows.IsCurrent(mutationVersion);
+    internal bool IsVersionAccessible(MutationVersion mutationVersion) =>
+        !IsClosed && _borrows.IsVersionAccessible(mutationVersion);
 
     internal BorrowLease<T> Lease(BorrowKind kind)
     {
@@ -366,9 +366,9 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
         }
     }
 
-    internal BorrowLease<T> LeaseCurrentVersion(MutationVersion mutationVersion)
+    internal BorrowLease<T> LeaseVersionForOperation(MutationVersion mutationVersion)
     {
-        if (!IsCurrent(mutationVersion))
+        if (!IsVersionAccessible(mutationVersion))
         {
             throw new InvalidOperationException(
                 "This borrowed view was invalidated by disposal or mutation of its source.");
@@ -379,7 +379,7 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
         try
         {
             operation = HoldForCall();
-            if (_borrows.IsCurrent(mutationVersion) && !IsClosed)
+            if (_borrows.IsVersionAccessible(mutationVersion) && !IsClosed)
             {
                 return new BorrowLease<T>(
                     this,
