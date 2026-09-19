@@ -152,14 +152,6 @@ public partial class RcSource
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.RcSource.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe

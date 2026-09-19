@@ -5,11 +5,9 @@ using Xunit;
 
 namespace Somelib.FeatureTests;
 
-// Caller-synchronized lifetime coverage. The no-RC contract does not promise
-// safe concurrent call/dispose races, so this test keeps every operation on
-// one thread and checks that temporary views release only borrow bookkeeping.
+// Temporary views release only borrow bookkeeping; they never retain native ownership.
 [Collection(RcSharedNativeStateCollection.Name)]
-public class RcFinalizerRaceTests
+public class RcBorrowReleaseTests
 {
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static WeakReference CreateSourceAfterRepeatedBorrowedViews()
@@ -25,23 +23,14 @@ public class RcFinalizerRaceTests
         return new WeakReference(source);
     }
 
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void ForceGcUntil(Func<bool> condition)
-    {
-        for (int i = 0; i < 50 && !condition(); i++)
-        {
-            RcTestGc.DrainFinalizers();
-        }
-    }
-
     [Fact]
     public void RepeatedBorrowedViewsReleaseWithoutRetainingNativeOwnership()
     {
-        RcTestGc.DrainFinalizers();
+        TestGc.DrainFinalizers();
         RcSource.ResetDropStats();
 
         WeakReference sourceRef = CreateSourceAfterRepeatedBorrowedViews();
-        ForceGcUntil(() => !sourceRef.IsAlive && RcSource.DropCount() == 1ul);
+        TestGc.ForceUntil(() => !sourceRef.IsAlive && RcSource.DropCount() == 1ul);
 
         Assert.False(sourceRef.IsAlive);
         Assert.Equal(1ul, RcSource.DropCount());

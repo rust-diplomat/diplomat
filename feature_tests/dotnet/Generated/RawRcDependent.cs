@@ -24,9 +24,6 @@ internal partial struct RcDependent
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcDependent_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern ulong DropCount();
 
-    [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcDependent_drop_seq", CallingConvention = CallingConvention.Cdecl)]
-    internal static unsafe extern ulong DropSeq();
-
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "RcDependent_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(RcDependent* handle);
 }

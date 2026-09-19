@@ -8,26 +8,11 @@ namespace Somelib.FeatureTests;
 [Collection(RcSharedNativeStateCollection.Name)]
 public class PinLifetimeTests
 {
-    [MethodImpl(MethodImplOptions.NoInlining
-#if !NETFRAMEWORK
-        | MethodImplOptions.AggressiveOptimization
-#endif
-    )]
-    private static void ForceGcUntil(Func<bool> condition)
-    {
-        for (int i = 0; i < 50 && !condition(); i++)
-        {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-        }
-    }
-
     private static readonly byte[] SourceBytes = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 };
 
     private static void ResetPinnedDropStats()
     {
-        RcTestGc.DrainFinalizers();
+        TestGc.DrainFinalizers();
         PinnedRcSource.ResetDropStats();
         PinnedRcDependent.ResetDropStats();
     }
@@ -72,7 +57,7 @@ public class PinLifetimeTests
         Assert.True(bufferRef.IsAlive);
 
         dependent.Dispose();
-        ForceGcUntil(() =>
+        TestGc.ForceUntil(() =>
             !sourceRef.IsAlive
             && !bufferRef.IsAlive
             && PinnedRcSource.DropCount() == 1ul
@@ -93,7 +78,7 @@ public class PinLifetimeTests
         WeakReference sourceRef = CreateDisposedDependentAndDropSourceReference();
 
         Assert.Equal(1ul, PinnedRcDependent.DropCount());
-        ForceGcUntil(() => !sourceRef.IsAlive && PinnedRcSource.DropCount() == 1ul);
+        TestGc.ForceUntil(() => !sourceRef.IsAlive && PinnedRcSource.DropCount() == 1ul);
 
         Assert.Equal(1ul, PinnedRcSource.DropCount());
         Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
@@ -107,7 +92,7 @@ public class PinLifetimeTests
         (WeakReference sourceRef, WeakReference dependentRef, WeakReference bufferRef) =
             CreateUnreferencedPinnedPairAndDependent();
 
-        ForceGcUntil(() =>
+        TestGc.ForceUntil(() =>
             !sourceRef.IsAlive
             && !dependentRef.IsAlive
             && PinnedRcSource.DropCount() == 1ul
@@ -120,7 +105,7 @@ public class PinLifetimeTests
         Assert.Equal(1ul, PinnedRcDependent.DropCount());
         Assert.Equal(ExpectedChecksum(), PinnedRcSource.DropChecksum());
 
-        ForceGcUntil(() => !bufferRef.IsAlive);
+        TestGc.ForceUntil(() => !bufferRef.IsAlive);
         Assert.False(bufferRef.IsAlive, "the pin must eventually be released after both finalizers ran");
     }
 

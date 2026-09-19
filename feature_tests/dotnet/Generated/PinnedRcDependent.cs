@@ -90,14 +90,6 @@ public partial class PinnedRcDependent: IDisposable
         }
     }
 
-    public static ulong DropSeq()
-    {
-        unsafe
-        {
-            return Raw.PinnedRcDependent.DropSeq();
-        }
-    }
-
     private void Cleanup()
     {
         unsafe
