@@ -13,6 +13,23 @@ fail() {
     exit 1
 }
 
+# Cargo resolves `rustdoc` through PATH, so a machine whose PATH serves a different
+# toolchain's rustdoc than the `rustc` cargo compiles with (a Homebrew rustdoc ahead
+# of the rustup one is the common shape) fails every doc-test with E0514. Because this
+# script stops at the first error, that would silently skip the format, lint and symbol
+# proofs below and read as an ordinary test failure. Pin RUSTDOC to the toolchain cargo
+# is actually using; an explicit RUSTDOC from the caller still wins.
+if [ -z "${RUSTDOC:-}" ]; then
+    toolchain_rustdoc="$(rustc --print sysroot)/bin/rustdoc"
+    if [ -x "$toolchain_rustdoc" ]; then
+        RUSTDOC="$toolchain_rustdoc"
+        export RUSTDOC
+        if command -v rustdoc >/dev/null 2>&1 && [ "$(command -v rustdoc)" != "$RUSTDOC" ]; then
+            echo "note: PATH rustdoc is not rustc's ($(rustdoc --version)); pinning RUSTDOC=$RUSTDOC"
+        fi
+    fi
+fi
+
 echo "== generate Safe Rust package from provider HIR =="
 cargo run --quiet --manifest-path "$repo_dir/Cargo.toml" -p diplomat-tool -- \
     rust "$generated_dir" \
