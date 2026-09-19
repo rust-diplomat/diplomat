@@ -2461,7 +2461,7 @@ mod tests {
     const FLAG_COVERAGE: &[(&str, &str)] = &[
         (
             "constructors",
-            "plain_constructors_are_accepted; Counter::new at runtime",
+            "plain_constructors_are_accepted; gated: Counter::from_value; Counter::new at runtime",
         ),
         (
             "memory_sharing",
@@ -2469,7 +2469,7 @@ mod tests {
         ),
         (
             "mutable_slices",
-            "borrowed_slices_and_strings_are_lowered; Numbers::values_mut",
+            "borrowed_slices_and_strings_are_lowered; gated: Numbers::values_mut, Numbers::fill",
         ),
         (
             "named_constructors",
@@ -2477,11 +2477,11 @@ mod tests {
         ),
         (
             "option",
-            "value_types_and_options_are_lowered; Counter::maybe_new",
+            "value_types_and_options_are_lowered; gated: Counter::add, Counter::maybe_snapshot",
         ),
         (
             "owned_byte_slice_returns",
-            "owned_slice_returns_are_boxed; Bytes::make",
+            "owned_slice_returns_are_boxed; gated: Bytes::make, Bytes::join",
         ),
         ("static_slices", "gated: Numbers::from_static"),
         (

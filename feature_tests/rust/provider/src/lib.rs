@@ -72,6 +72,11 @@ pub mod ffi {
             self.child.value = self.value;
         }
 
+        /// `Option` over a primitive, in the parameter and in the return, gated on
+        /// `option`. Lowering is what checks the flag, and it only consults it for
+        /// `Option<struct/enum/primitive>` — a nullable owned opaque is a different
+        /// lowering path that this flag does not govern.
+        #[diplomat::cfg(supports = option)]
         pub fn add(&mut self, amount: Option<u32>) -> Option<u32> {
             self.value += amount?;
             self.child.value = self.value;
@@ -90,6 +95,8 @@ pub mod ffi {
             }
         }
 
+        /// `Option<Struct>`, the struct arm of the same `option` lowering check.
+        #[diplomat::cfg(supports = option)]
         pub fn maybe_snapshot(&self, present: bool) -> Option<Snapshot> {
             present.then(|| self.snapshot())
         }
@@ -174,6 +181,8 @@ pub mod ffi {
             &self.values
         }
 
+        /// `&mut [T]` in the return position, gated on `mutable_slices`.
+        #[diplomat::cfg(supports = mutable_slices)]
         pub fn values_mut<'a>(&'a mut self) -> &'a mut [u32] {
             &mut self.values
         }
@@ -186,6 +195,8 @@ pub mod ffi {
             fields.count + fields.bytes.iter().map(|&b| b as u32).sum::<u32>()
         }
 
+        /// `&mut [T]` in the parameter position, gated on the same flag.
+        #[diplomat::cfg(supports = mutable_slices)]
         pub fn fill(&self, out: &mut [u32]) {
             out.copy_from_slice(&self.values);
         }
@@ -261,10 +272,15 @@ pub mod ffi {
     pub struct Bytes;
 
     impl Bytes {
+        /// An owned byte-slice return: ownership of the provider's allocation crosses
+        /// the ABI, which is what `owned_byte_slice_returns` promises.
+        #[diplomat::cfg(supports = owned_byte_slice_returns)]
         pub fn make(len: u32) -> Box<[u8]> {
             (0..len).map(|i| (i % 256) as u8).collect()
         }
 
+        /// The same flag with borrowed-slice parameters alongside the owned return.
+        #[diplomat::cfg(supports = owned_byte_slice_returns)]
         pub fn join<'a>(a: &'a [u8], b: &'a [u8]) -> Box<[u8]> {
             let mut out = Vec::with_capacity(a.len() + b.len());
             out.extend_from_slice(a);
@@ -282,8 +298,28 @@ pub mod ffi {
 
     impl Counter {
         /// An explicit named-constructor name becomes the generated function name.
+        ///
+        /// The `cfg` guard is load-bearing rather than redundant: `attr(auto, ...)` only
+        /// checks support through `BackendAttrSupport::check_string`, whose keys are the
+        /// flag names (`named_constructors`), while the attribute path it is called with
+        /// is singular (`named_constructor`). That lookup misses, so the `auto` gate is
+        /// skipped and this attribute would be applied even with the flag off. Guarding
+        /// the method explicitly is what makes `named_constructors` load-bearing here.
+        #[diplomat::cfg(supports = named_constructors)]
         #[diplomat::attr(auto, named_constructor = "with_value")]
         pub fn new_named(value: u32) -> Box<Self> {
+            let mut counter = Self::new();
+            counter.value = value;
+            counter.child.value = value;
+            counter
+        }
+
+        /// A plain `#[diplomat::attr(auto, constructor)]`, gated on `constructors`.
+        /// Rust lowers this to an ordinary associated function, so the flag's promise is
+        /// only that such a method is accepted and emitted at all.
+        #[diplomat::cfg(supports = constructors)]
+        #[diplomat::attr(auto, constructor)]
+        pub fn from_value(value: u32) -> Box<Self> {
             let mut counter = Self::new();
             counter.value = value;
             counter.child.value = value;

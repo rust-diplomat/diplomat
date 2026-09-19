@@ -85,6 +85,7 @@ impl Numbers {
         let result = unsafe { ffi::Numbers_values(self.inner.as_ptr() as *const _) };
         result.into()
     }
+    /// `&mut [T]` in the return position, gated on `mutable_slices`.
     pub fn values_mut<'a>(&'a mut self) -> &'a mut [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values_mut(self.inner.as_ptr()) };
@@ -103,6 +104,7 @@ impl Numbers {
             })
         }
     }
+    /// `&mut [T]` in the parameter position, gated on the same flag.
     pub fn fill(&self, out: &mut [u32]) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
@@ -151,6 +153,7 @@ impl<'view> NumbersRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Numbers_sum(self.inner.as_ptr() as *const _) }
     }
+    /// `&mut [T]` in the parameter position, gated on the same flag.
     pub fn fill(&self, out: &mut [u32]) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
@@ -168,6 +171,7 @@ impl<'view> NumbersRefMut<'view> {
         let result = unsafe { ffi::Numbers_values(self.inner.as_ptr() as *const _) };
         result.into()
     }
+    /// `&mut [T]` in the return position, gated on `mutable_slices`.
     pub fn values_mut<'a>(&'a mut self) -> &'a mut [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values_mut(self.inner.as_ptr()) };
@@ -177,6 +181,7 @@ impl<'view> NumbersRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Numbers_sum(self.inner.as_ptr() as *const _) }
     }
+    /// `&mut [T]` in the parameter position, gated on the same flag.
     pub fn fill(&self, out: &mut [u32]) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {

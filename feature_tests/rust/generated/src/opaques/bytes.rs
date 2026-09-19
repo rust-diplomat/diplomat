@@ -67,11 +67,14 @@ impl Drop for Bytes {
 }
 
 impl Bytes {
+    /// An owned byte-slice return: ownership of the provider's allocation crosses
+    /// the ABI, which is what `owned_byte_slice_returns` promises.
     pub fn make(len: u32) -> Box<[u8]> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Bytes_make(len) };
         Box::from(result)
     }
+    /// The same flag with borrowed-slice parameters alongside the owned return.
     pub fn join(a: &[u8], b: &[u8]) -> Box<[u8]> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =

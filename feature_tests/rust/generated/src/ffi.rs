@@ -90,6 +90,7 @@ extern "C" {
     pub(super) fn Counter_reset_drop_count();
     pub(super) fn Counter_drop_count() -> usize;
     pub(super) fn Counter_new_named(value: u32) -> *mut Counter;
+    pub(super) fn Counter_from_value(value: u32) -> *mut Counter;
     pub(super) fn Float64Vec_destroy(this: *mut Float64Vec);
     pub(super) fn Float64Vec_new(values: DiplomatSlice<f64>) -> *mut Float64Vec;
     pub(super) fn Float64Vec_sum(this: *const Float64Vec) -> f64;

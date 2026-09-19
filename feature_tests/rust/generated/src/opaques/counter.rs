@@ -101,6 +101,10 @@ impl Counter {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_increment(self.inner.as_ptr()) };
     }
+    /// `Option` over a primitive, in the parameter and in the return, gated on
+    /// `option`. Lowering is what checks the flag, and it only consults it for
+    /// `Option<struct/enum/primitive>` — a nullable owned opaque is a different
+    /// lowering path that this flag does not govern.
     pub fn add(&mut self, amount: Option<u32>) -> Option<u32> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
@@ -111,6 +115,7 @@ impl Counter {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_snapshot(self.inner.as_ptr() as *const _) }
     }
+    /// `Option<Struct>`, the struct arm of the same `option` lowering check.
     pub fn maybe_snapshot(&self, present: bool) -> Option<Snapshot> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
@@ -227,9 +232,31 @@ impl Counter {
         unsafe { ffi::Counter_drop_count() }
     }
     /// An explicit named-constructor name becomes the generated function name.
+    ///
+    /// The `cfg` guard is load-bearing rather than redundant: `attr(auto, ...)` only
+    /// checks support through `BackendAttrSupport::check_string`, whose keys are the
+    /// flag names (`named_constructors`), while the attribute path it is called with
+    /// is singular (`named_constructor`). That lookup misses, so the `auto` gate is
+    /// skipped and this attribute would be applied even with the flag off. Guarding
+    /// the method explicitly is what makes `named_constructors` load-bearing here.
     pub fn with_value(value: u32) -> super::Counter {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Counter_new_named(value) };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Counter");
+            super::Counter {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
+    /// A plain `#[diplomat::attr(auto, constructor)]`, gated on `constructors`.
+    /// Rust lowers this to an ordinary associated function, so the flag's promise is
+    /// only that such a method is accepted and emitted at all.
+    pub fn from_value(value: u32) -> super::Counter {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Counter_from_value(value) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Counter");
@@ -254,6 +281,7 @@ impl<'view> CounterRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_snapshot(self.inner.as_ptr() as *const _) }
     }
+    /// `Option<Struct>`, the struct arm of the same `option` lowering check.
     pub fn maybe_snapshot(&self, present: bool) -> Option<Snapshot> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
@@ -332,6 +360,10 @@ impl<'view> CounterRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_increment(self.inner.as_ptr()) };
     }
+    /// `Option` over a primitive, in the parameter and in the return, gated on
+    /// `option`. Lowering is what checks the flag, and it only consults it for
+    /// `Option<struct/enum/primitive>` — a nullable owned opaque is a different
+    /// lowering path that this flag does not govern.
     pub fn add(&mut self, amount: Option<u32>) -> Option<u32> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
@@ -342,6 +374,7 @@ impl<'view> CounterRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Counter_snapshot(self.inner.as_ptr() as *const _) }
     }
+    /// `Option<Struct>`, the struct arm of the same `option` lowering check.
     pub fn maybe_snapshot(&self, present: bool) -> Option<Snapshot> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =

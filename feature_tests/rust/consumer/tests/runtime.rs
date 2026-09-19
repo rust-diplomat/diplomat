@@ -174,6 +174,10 @@ fn explicit_named_constructor_name_is_honoured() {
 /// stops compiling instead of silently passing.
 #[test]
 fn capability_gated_apis_are_generated() {
+    // Constructing and dropping `Counter`s moves the process-wide destruction probe, so
+    // this test takes the same lock the drop-count tests use.
+    let _serial = counter_probe();
+
     let numbers = Numbers::from_slice(&[3, 4, 5]);
     assert_eq!(numbers.sum(), 12);
 
@@ -186,6 +190,36 @@ fn capability_gated_apis_are_generated() {
 
     let wide = WideMessage::new(&[104, 105]);
     assert_eq!(wide.units(), &[104, 105]);
+
+    // `constructors`: a plain `constructor` attribute is lowered at all.
+    let constructed = Counter::from_value(11);
+    assert_eq!(constructed.get(), 11);
+
+    // `option`: `Option<primitive>` in both positions, and `Option<struct>`.
+    let mut counter = Counter::from_value(1);
+    assert_eq!(counter.add(Some(2)), Some(3));
+    assert_eq!(counter.add(None), None);
+    assert_eq!(
+        counter.maybe_snapshot(true).map(|snapshot| snapshot.value),
+        Some(3)
+    );
+    assert!(counter.maybe_snapshot(false).is_none());
+
+    // `mutable_slices`: `&mut [T]` out of and back into the generated API.
+    let mut mutable_numbers = Numbers::new(&[1, 2, 3]);
+    {
+        let values = mutable_numbers.values_mut();
+        values[0] = 9;
+    }
+    let mut buffer = [0u32; 3];
+    mutable_numbers.fill(&mut buffer);
+    assert_eq!(buffer, [9, 2, 3]);
+
+    // `owned_byte_slice_returns`: provider-allocated memory crosses to the consumer.
+    let bytes = Bytes::make(3);
+    assert_eq!(&bytes[..], &[0u8, 1, 2]);
+    let joined = Bytes::join(&[1], &[2, 3]);
+    assert_eq!(&joined[..], &[1, 2, 3]);
 }
 
 /// Floats are the same type on both sides of this ABI, so they need no conversion.
