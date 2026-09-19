@@ -1,6 +1,7 @@
 # Experimental Safe Rust native-ABI backend
 
-Status: implemented and exercised against Diplomat `main` at `84f57d78`.
+Status: implemented and exercised against Diplomat `main` at `84f57d78`, then rebased
+onto `002db80c`.
 
 This is specifically a **Safe Rust backend that consumes Diplomat's native
 ABI**. It does not call the provider through the Rust ABI, depend on the
@@ -219,16 +220,47 @@ expressed by its flags are checked during Rust generation. Any error makes
 the backend return an empty `FileMap`; the top-level driver also refuses all
 writes when diagnostics exist.
 
-The declared flags are not the whole story — what backs each one matters. Three are
-gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping the flag
-removes the API and the consumer tests stop compiling: `memory_sharing`
-(`Numbers::from_slice`), `utf8_strings` (`Message::utf8_len`) and `utf16_strings`
-(`WideMessage`). `named_constructors` is covered by
-`#[diplomat::attr(auto, named_constructor = "with_value")]` on `Counter`, which only
-reaches generation when the flag is on. The remaining flags (`constructors`,
-`option`, `mutable_slices`, `static_slices`, `owned_byte_slice_returns`) are
-exercised as shapes by existing fixture methods but are not yet individually gated;
-the fork's issue #8 tracks closing that gap.
+The declared flags are not the whole story — what backs each one matters. All nine are
+gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping a flag removes
+the API and the consumer's test targets stop compiling:
+
+| flag | gated fixture API |
+|---|---|
+| `constructors` | `Counter::from_value` (a plain `attr(auto, constructor)`) |
+| `memory_sharing` | `Numbers::from_slice`, `Float64Vec::new` |
+| `mutable_slices` | `Numbers::values_mut`, `Numbers::fill` |
+| `named_constructors` | `Counter::with_value` (from `new_named`) |
+| `option` | `Counter::add`, `Counter::maybe_snapshot` |
+| `owned_byte_slice_returns` | `Bytes::make`, `Bytes::join` |
+| `static_slices` | `Numbers::from_static` |
+| `utf8_strings` | `Message::utf8_len` |
+| `utf16_strings` | `WideMessage::new`, `WideMessage::units` |
+
+The gating was verified by turning each flag off in turn, regenerating, and requiring
+three things: generation still succeeds (the guard must *disable* an API, not raise a
+diagnostic), the gated symbol disappears from the generated source, and
+`cargo check --all-targets` on the consumer fails. `--all-targets` is load-bearing here:
+the consumer's lib target references no gated API — every reference lives in
+`tests/runtime.rs` — so a plain `cargo check` passes with all nine flags off.
+
+Two of the guards are not the obvious ones, and both were found by that experiment
+rather than by reading the fixture:
+
+- **`option` does not cover nullable owned opaques.** Lowering reads the flag only for
+  `Option<struct/enum/primitive>` (`Type::DiplomatOption`); `Option<Box<Opaque>>` is a
+  different arm that never consults it. Gating `Counter::maybe_new` on `option` would
+  therefore have been a false claim, so the gated shapes are the value-type ones.
+- **`named_constructors` cannot gate its own attribute.** The `auto` support check calls
+  `BackendAttrSupport::check_string` with the *attribute path*, but that match's keys are
+  the *flag* names — `named_constructors`, plural — while the path is
+  `named_constructor`, singular. The lookup returns `None`, the check is skipped, and the
+  attribute is applied even with the flag off: with `support.named_constructors = false`
+  the generated `Counter` still exposed `with_value`. Nothing else in `core` reads that
+  flag either, so an explicit `cfg` guard is the only thing that can gate it. The same
+  spelling mismatch applies to every `attr(auto, ...)` whose path is not spelled exactly
+  like a flag name (`constructor`, `comparison`, `stringifier`, `getter`, `setter`,
+  `iterator`, `namespace`, `indexer`); `constructors` *is* read in `core`, but only to
+  decide whether to diagnose a fallible constructor, not to gate `attr(auto, constructor)`.
 
 `memory_sharing` is claimed because generated code borrows directly out of
 provider-owned memory. Note the interaction with the rejected primitive set: the
@@ -331,15 +363,21 @@ Verification completed for this implementation:
 - `cargo fmt --all --check`;
 - `cargo clippy --workspace --all-targets -- -D warnings` for the main workspace and
   for the generated/provider/consumer fixture workspace;
-- all 115 `diplomat-tool` tests, including fourteen Rust-backend generator tests;
+- all 134 `diplomat-tool` unit tests, including 23 Rust-backend generator tests;
 - the complete `cargo test --workspace --no-fail-fast` unit and doc-test suite;
 - `feature_tests/rust/scripts/check.sh`, including the safe runtime and
-  compile-fail test suites (8 + 12 cases);
+  compile-fail test suites (11 + 12 cases);
+- every capability flag turned off in turn, with generation, generated-symbol and
+  consumer `--all-targets` compilation checked each time (see the flag table above).
 
-The host PATH initially selected rustc 1.96 with Homebrew rustdoc 1.97, so the
-workspace doc-test pass used the matching rustup rustdoc 1.96 explicitly. The
-first run's failures were compiler metadata-version errors; all test binaries
-had already passed, and the matched-toolchain rerun passed in full.
+Cargo resolves `rustdoc` through PATH, and on the development host that served Homebrew
+rustdoc 1.97.1 while `rustc` was rustup 1.96.0 (there is no rustdoc shim beside the rustc
+shim), so every doc-test failed with `E0514`. Because `check.sh` stops at the first
+error, that also silently skipped the format, lint, symbol and dynamic-dependency proofs
+that follow it — the script reported a test failure while most of its evidence never ran.
+`check.sh` now pins `RUSTDOC` to the toolchain cargo is using
+(`$(rustc --print sysroot)/bin/rustdoc`) unless the caller set it, and says so when PATH
+would have picked a different one.
 
 ## Assessment
 
