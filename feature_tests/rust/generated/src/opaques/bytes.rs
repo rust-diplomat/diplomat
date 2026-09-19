@@ -70,23 +70,13 @@ impl Bytes {
     pub fn make(len: u32) -> Box<[u8]> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Bytes_make(len) };
-        unsafe { crate::private::owned_slice_into_box(result.ptr, result.len) }
+        Box::from(result)
     }
     pub fn join(a: &[u8], b: &[u8]) -> Box<[u8]> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Bytes_join(
-                ffi::DiplomatSlice::<u8> {
-                    ptr: a.as_ptr(),
-                    len: a.len(),
-                },
-                ffi::DiplomatSlice::<u8> {
-                    ptr: b.as_ptr(),
-                    len: b.len(),
-                },
-            )
-        };
-        unsafe { crate::private::owned_slice_into_box(result.ptr, result.len) }
+        let result =
+            unsafe { ffi::Bytes_join(ffi::DiplomatSlice::from(a), ffi::DiplomatSlice::from(b)) };
+        Box::from(result)
     }
 }
 

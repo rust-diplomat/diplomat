@@ -34,21 +34,30 @@ case "$(uname -s)" in
 esac
 [ -f "$provider_lib" ] || fail "provider cdylib not found: $provider_lib"
 
-echo "== prove dependency graphs exclude provider implementation =="
+echo "== prove dependency graphs exclude provider implementation and codegen =="
 consumer_tree=$(cargo tree --manifest-path "$fixture_dir/consumer/Cargo.toml")
 generated_tree=$(cargo tree --manifest-path "$fixture_dir/generated/Cargo.toml")
 case "$consumer_tree" in
-    *diplomat-rust-backend-provider*|*diplomat-runtime*|*"diplomat v"*)
-        fail "consumer dependency tree contains provider implementation machinery"
+    *diplomat-rust-backend-provider*|*"diplomat v"*|*diplomat_core*)
+        fail "consumer dependency tree contains provider implementation or codegen machinery"
         ;;
 esac
 case "$generated_tree" in
-    *diplomat-rust-backend-provider*|*diplomat-runtime*|*"diplomat v"*)
-        fail "generated dependency tree contains provider implementation machinery"
+    *diplomat-rust-backend-provider*|*"diplomat v"*|*diplomat_core*)
+        fail "generated dependency tree contains provider implementation or codegen machinery"
         ;;
 esac
 printf '%s\n' "$consumer_tree" >"$target_dir/consumer-cargo-tree.txt"
 printf '%s\n' "$generated_tree" >"$target_dir/generated-cargo-tree.txt"
+
+echo "== prove generated crate owns no ABI types and does depend on diplomat-runtime =="
+grep -F 'diplomat-runtime' "$generated_dir/Cargo.toml" >/dev/null \
+    || fail "generated Cargo.toml does not declare a diplomat-runtime dependency"
+if grep -rF -e 'struct DiplomatSlice' -e 'struct DiplomatSliceMut' \
+    -e 'struct DiplomatOwnedSlice' -e 'struct DiplomatOption' \
+    -e 'union DiplomatOptionValue' "$generated_dir/src" >/dev/null; then
+    fail "generated crate defines a local ABI type instead of using diplomat-runtime"
+fi
 
 native_dir="$target_dir/debug"
 export DIPLOMAT_RUST_NATIVE_LIB_DIR="$native_dir"

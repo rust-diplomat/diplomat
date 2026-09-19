@@ -103,13 +103,9 @@ impl Counter {
     }
     pub fn add(&mut self, amount: Option<u32>) -> Option<u32> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Counter_add(
-                self.inner.as_ptr(),
-                ffi::DiplomatOption::from_option(amount),
-            )
-        };
-        unsafe { result.into_option() }
+        let result =
+            unsafe { ffi::Counter_add(self.inner.as_ptr(), ffi::DiplomatOption::from(amount)) };
+        result.into()
     }
     pub fn snapshot(&self) -> Snapshot {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -119,7 +115,7 @@ impl Counter {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::Counter_maybe_snapshot(self.inner.as_ptr() as *const _, present) };
-        unsafe { result.into_option() }
+        result.into()
     }
     pub fn view<'a>(&'a self) -> super::CounterRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -262,7 +258,7 @@ impl<'view> CounterRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::Counter_maybe_snapshot(self.inner.as_ptr() as *const _, present) };
-        unsafe { result.into_option() }
+        result.into()
     }
     pub fn view<'a>(&'a self) -> super::CounterRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -338,13 +334,9 @@ impl<'view> CounterRefMut<'view> {
     }
     pub fn add(&mut self, amount: Option<u32>) -> Option<u32> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Counter_add(
-                self.inner.as_ptr(),
-                ffi::DiplomatOption::from_option(amount),
-            )
-        };
-        unsafe { result.into_option() }
+        let result =
+            unsafe { ffi::Counter_add(self.inner.as_ptr(), ffi::DiplomatOption::from(amount)) };
+        result.into()
     }
     pub fn snapshot(&self) -> Snapshot {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -354,7 +346,7 @@ impl<'view> CounterRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::Counter_maybe_snapshot(self.inner.as_ptr() as *const _, present) };
-        unsafe { result.into_option() }
+        result.into()
     }
     pub fn view<'a>(&'a self) -> super::CounterRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.

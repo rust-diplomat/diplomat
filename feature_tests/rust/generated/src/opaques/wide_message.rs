@@ -69,12 +69,7 @@ impl Drop for WideMessage {
 impl WideMessage {
     pub fn new(v: &[u16]) -> super::WideMessage {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::WideMessage_new(ffi::DiplomatSlice::<u16> {
-                ptr: v.as_ptr(),
-                len: v.len(),
-            })
-        };
+        let result = unsafe { ffi::WideMessage_new(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null WideMessage");
@@ -87,7 +82,7 @@ impl WideMessage {
     pub fn units<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::WideMessage_units(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
 }
 
@@ -95,7 +90,7 @@ impl<'view> WideMessageRef<'view> {
     pub fn units<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::WideMessage_units(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
 }
 
@@ -103,6 +98,6 @@ impl<'view> WideMessageRefMut<'view> {
     pub fn units<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::WideMessage_units(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
 }

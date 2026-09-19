@@ -73,12 +73,7 @@ impl<'a> Drop for SliceView<'a> {
 impl<'a> SliceView<'a> {
     pub fn wrap(data: &'a [u8]) -> super::SliceView<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::SliceView_wrap(ffi::DiplomatSlice::<u8> {
-                ptr: data.as_ptr(),
-                len: data.len(),
-            })
-        };
+        let result = unsafe { ffi::SliceView_wrap(ffi::DiplomatSlice::from(data)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null SliceView");
@@ -108,15 +103,13 @@ impl<'a> SliceView<'a> {
     pub fn data<'b>(&'b self) -> &'b [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_data(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn fields<'anon_0>(&'anon_0 self) -> FieldView<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_fields(self.inner.as_ptr() as *const _) };
         FieldView {
-            bytes: unsafe {
-                crate::private::slice_from_raw_parts(result.bytes.ptr, result.bytes.len)
-            },
+            bytes: result.bytes.into(),
             count: result.count,
             _lifetimes: PhantomData,
         }
@@ -143,15 +136,13 @@ impl<'view, 'a> SliceViewRef<'view, 'a> {
     pub fn data<'b>(&'b self) -> &'b [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_data(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn fields<'anon_0>(&'anon_0 self) -> FieldView<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_fields(self.inner.as_ptr() as *const _) };
         FieldView {
-            bytes: unsafe {
-                crate::private::slice_from_raw_parts(result.bytes.ptr, result.bytes.len)
-            },
+            bytes: result.bytes.into(),
             count: result.count,
             _lifetimes: PhantomData,
         }
@@ -178,15 +169,13 @@ impl<'view, 'a> SliceViewRefMut<'view, 'a> {
     pub fn data<'b>(&'b self) -> &'b [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_data(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn fields<'anon_0>(&'anon_0 self) -> FieldView<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::SliceView_fields(self.inner.as_ptr() as *const _) };
         FieldView {
-            bytes: unsafe {
-                crate::private::slice_from_raw_parts(result.bytes.ptr, result.bytes.len)
-            },
+            bytes: result.bytes.into(),
             count: result.count,
             _lifetimes: PhantomData,
         }

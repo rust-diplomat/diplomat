@@ -8,3 +8,6 @@ publish = false
 [lib]
 path = "src/lib.rs"
 
+[dependencies]
+diplomat-runtime = "0.16"
+

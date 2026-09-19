@@ -69,12 +69,7 @@ impl Drop for Message {
 impl Message {
     pub fn new(v: &[u8]) -> super::Message {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Message_new(ffi::DiplomatSlice::<u8> {
-                ptr: v.as_ptr(),
-                len: v.len(),
-            })
-        };
+        let result = unsafe { ffi::Message_new(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Message");
@@ -87,12 +82,12 @@ impl Message {
     pub fn bytes<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_bytes(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn text<'a>(&'a self) -> &'a str {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
+        unsafe { crate::private::utf8_str_from_slice(result) }
     }
     pub fn utf8_len(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -104,12 +99,12 @@ impl<'view> MessageRef<'view> {
     pub fn bytes<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_bytes(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn text<'a>(&'a self) -> &'a str {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
+        unsafe { crate::private::utf8_str_from_slice(result) }
     }
     pub fn utf8_len(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -121,12 +116,12 @@ impl<'view> MessageRefMut<'view> {
     pub fn bytes<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_bytes(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn text<'a>(&'a self) -> &'a str {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Message_text(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::str_from_raw_parts(result.ptr, result.len) }
+        unsafe { crate::private::utf8_str_from_slice(result) }
     }
     pub fn utf8_len(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.

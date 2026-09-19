@@ -46,8 +46,8 @@ The new target follows that architecture in `tool/src/rust/` and
 Cargo.toml
 build.rs
 src/lib.rs                  # crate facade: module declarations and flat re-exports
-src/ffi.rs                  # private raw layer: repr(C) mirrors and extern declarations
-src/private.rs              # private: sealed capability traits + unsafe rebuild helpers
+src/ffi.rs                  # private raw layer: runtime ABI types and extern declarations
+src/private.rs              # private: sealed capability traits + one unsafe UTF-8 rebuild helper
 src/types.rs                # enums and value structs
 src/opaques.rs              # `mod <type>;` + `pub use <type>::*;` for each opaque
 src/opaques/<type>.rs       # one module per opaque: wrappers, sealed impls, Drop, methods
@@ -56,6 +56,52 @@ src/opaques/<type>.rs       # one module per opaque: wrappers, sealed impls, Dro
 `[rust] crate-name` selects the generated package name. `[rust] dylib-name`
 selects the `#[link]` name. `build.rs` has no dependencies and only turns
 `DIPLOMAT_RUST_NATIVE_LIB_DIR` into a native link-search path.
+
+## ABI types come from `diplomat-runtime`
+
+The generated package declares one dependency:
+
+```toml
+diplomat-runtime = "0.16"
+```
+
+`DiplomatSlice`, `DiplomatSliceMut`, `DiplomatOwnedSlice`, and `DiplomatOption`
+are the runtime's types, re-exported into the private `ffi` module. The backend
+no longer transcribes them.
+
+This keeps the property the experiment is about: the consumer reaches the
+provider only through exported native symbols, never through the provider's
+implementation crate. `diplomat-runtime` is ABI-support machinery, not the
+provider, so consuming it does not weaken that boundary. The in-repo fixture
+resolves the dependency against this checkout with a `[patch.crates-io]` entry in
+`feature_tests/rust/Cargo.toml`; a real generated package resolves the published
+crate, which is why the emitted dependency is a version requirement and not a
+path.
+
+Three consequences are deliberate:
+
+- The hand-mirror is gone because a transcription with no layout check is a
+  silent-UB hazard: nothing failed if the runtime's `repr(C)` layouts moved.
+- A version skew between the generated package and the runtime it resolves is a
+  live risk — but the mirror carried the same risk with none of the checking,
+  since a hand-written copy has to be kept in step by hand.
+- The old mirror constrained `DiplomatOption<T: Copy>`. The runtime type has no
+  such bound, so the artificial `Copy` constraint that fork issue #11 is about
+  no longer exists at the type level. What still limits `Option<T>` payloads is
+  the backend's own value-type validation, not the ABI container.
+
+One conversion cannot be expressed with the runtime's public API:
+`DiplomatUtf8StrSlice`'s field is private, so a `DiplomatSlice<'a, u8>` cannot
+become a `&'a str` by conversion alone. `src/private.rs` keeps a single
+`unsafe fn utf8_str_from_slice` for that, carrying the assumption that the
+provider sends valid UTF-8 — which the ABI type itself cannot express.
+
+Because the runtime's slice types carry a lifetime, lifetimes have to be spelled
+out where the local mirror needed none. A `repr(C)` mirror struct's field types
+cannot elide them at all, and a borrowed return value cannot either (elision in
+return position needs exactly one input lifetime, and a raw-pointer receiver
+contributes none). So a borrowed slice return gets a named lifetime parameter on
+its extern declaration, and a lifetime-bearing struct return names its own.
 
 ## What existing backends establish
 
@@ -94,11 +140,11 @@ API safe.
 | Destructor | `T_destroy(T*)` exported by provider | `IDisposable`/finalizer or C++ destructor | `Drop for T` only | `OpaqueDef::dtor_abi_name` | One unsafe provider call. Borrowed wrappers have no `Drop`; provider allocation is never freed locally. |
 | Simple enum | C-compatible enum value | Native target enum | `#[repr(C)]` Rust enum | `EnumDef`, variant discriminants, docs/renames; C layout informed mapping | Extern call passes by value. HIR guarantees provider-produced variants; the backend emits every variant and exact discriminant. |
 | Simple struct | `repr(C)` value fields | Target value struct/class | `#[repr(C)]`, `Copy` struct with public primitive/enum fields | `StructDef`, field types/docs/renames | Passed/read by value. The backend rejects lifetimes, output-only structs, nested/owning fields, and anything outside the proven primitive/enum set. |
-| Value `Option<T>` | `DiplomatResult<T, ()>`: `repr(C)` union plus bool tag | Target option/nullable abstraction over raw tagged union | Public `Option<T>`; private generated `DiplomatOption<T: Copy>` mirror | `Type::DiplomatOption` and `ReturnType::Nullable`; reuse layout from `runtime/src/result.rs` | Unsafe active-union read only after checking the tag. Supported payloads are `Copy` ABI values, avoiding cross-library drop or double-free. |
+| Value `Option<T>` | `DiplomatResult<T, ()>`: `repr(C)` union plus bool tag | Target option/nullable abstraction over raw tagged union | Public `Option<T>`; `diplomat_runtime::DiplomatOption<T>` | `Type::DiplomatOption` and `ReturnType::Nullable`; reuse `diplomat-runtime`'s `DiplomatOption`/`DiplomatResult` | The runtime's `From<Option<T>>`/`From<DiplomatOption<T>>` conversions replace the earlier tag-checked read. Supported payloads are still value types, so no cross-library drop is introduced; the old mirror's `T: Copy` bound is gone. |
 | Result/write | Tagged result or writer callback | Backend-specific result/exception/writer | Rejected | `ReturnType::Fallible`, `SuccessType::Write` identify it | No unsafe code is emitted. A diagnostic prevents all output until payload ownership and callback semantics are designed. |
-| Borrowed slices/strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`, `&DiplomatStr16`) | `repr(C)` `{ptr, len}` pair (`DiplomatSlice`/`DiplomatSliceMut`) | Pins/leases in .NET; spans/views in C++ | `&'a [T]` / `&'a mut [T]` / `&'a str` / `&'a [u8]` / `&'a [u16]` | `Type::Slice(Slice::Primitive|Str)`, `Slice::lifetime`, `LifetimeEdgeKind::SliceParam`; C layout informed mapping | `from_raw_parts` after null/empty normalization (`nullptr` with `len == 0` maps to `&[]`). The return lifetime is taken from the HIR edge (receiver or slice parameter), never `'static`. |
-| Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field: `from_raw_parts` on output, `as_ptr`/`len` on input. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. Declaring and using such a struct is supported; **returning** one from a method is limited to a single output lifetime, because the return path accepts exactly one method lifetime. A method that borrows the struct it returns from two inputs (e.g. `fn both<'a, 'b>(&'a self, other: &'b Bar) -> Both<'a, 'b>`) is rejected — see the rejected list below. |
-| Owned slice return (`Box<[u8]>`) | `DiplomatOwnedSlice<u8>` (ownership transferred) | Zero-copy `RustVec` in .NET | `Box<[u8]>` | `Slice::Primitive(MaybeOwn::Own, _)`, `owned_byte_slice_returns` capability gate | `Box::from_raw(slice_from_raw_parts_mut(ptr, len))`, matching Diplomat's owned-slice contract that the provider and consumer share an allocator. Null+zero maps to an empty `Box`. |
+| Borrowed slices/strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`, `&DiplomatStr16`) | `repr(C)` `{ptr, len}` pair (`DiplomatSlice`/`DiplomatSliceMut`) | Pins/leases in .NET; spans/views in C++ | `&'a [T]` / `&'a mut [T]` / `&'a str` / `&'a [u8]` / `&'a [u16]` | `Type::Slice(Slice::Primitive|Str)`, `Slice::lifetime`, `LifetimeEdgeKind::SliceParam`; C layout informed mapping | The runtime's `From<DiplomatSlice<T>>`/`From<DiplomatSliceMut<T>>` impls reconstruct the borrow after null/empty normalization (`nullptr` with `len == 0` maps to `&[]`). The return lifetime is taken from the HIR edge (receiver or slice parameter), never `'static`. |
+| Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field through the runtime slice conversions: `DiplomatSlice::from(slice)` on input, `.into()` on output. The `repr(C)` mirror struct carries the struct's lifetimes, so its field types name them explicitly. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. Declaring and using such a struct is supported; **returning** one from a method is limited to a single output lifetime, because the return path accepts exactly one method lifetime. A method that borrows the struct it returns from two inputs (e.g. `fn both<'a, 'b>(&'a self, other: &'b Bar) -> Both<'a, 'b>`) is rejected — see the rejected list below. |
+| Owned slice return (`Box<[u8]>`) | `DiplomatOwnedSlice<u8>` (ownership transferred) | Zero-copy `RustVec` in .NET | `Box<[u8]>` | `Slice::Primitive(MaybeOwn::Own, _)`, `owned_byte_slice_returns` capability gate | `Box::from(result)` over the runtime's `DiplomatOwnedSlice<u8>`, whose `From` impl reclaims the provider's allocation under Diplomat's owned-slice contract that provider and consumer share an allocator. Null+zero maps to an empty `Box`. |
 | Slices of structs/strings/opaques (`&[Struct]`, `&[DiplomatStrSlice]`, `&[&Opaque]`) | Nested pointer/length shapes | Backend-specific | Rejected | `Slice::Struct`, `Slice::Strs`, `Slice::Opaque` identify them | Generated wrappers are not layout-compatible with raw pointers, so an intermediate buffer or a different API shape is required. |
 | Callback/trait/free function/async | Function pointer, vtable, or standalone symbols | Backend-specific runtime/trampolines | Rejected | HIR variants and `TypeContext` iterators identify them | No guessed trampoline or lifetime behavior is generated. |
 
@@ -150,7 +196,7 @@ Supported:
 - `repr(C)` value structs whose fields are supported primitives/enums;
 - lifetime-bearing value structs whose fields are supported primitives/enums or
   borrowed slices (e.g. `BorrowedFields<'a>`), with per-field lifetime mapping;
-- value `Option<T>` for supported `Copy` ABI values;
+- value `Option<T>` for supported value-type payloads (the old local mirror's `Copy` bound is gone);
 - docs and applicable HIR renames;
 - invalid-name and generated-name collision diagnostics.
 
@@ -213,28 +259,31 @@ functions and do not add `catch_unwind`. A provider panic therefore cannot
 unwind into the consumer, but may abort the process. The consumer backend adds
 no redundant catch layer and does not claim panic recovery.
 
-Allocation: for provider-owned handles the consumer never calls
+Allocation: for provider-owned handles the consumer never names
 `Box::from_raw`, `Vec::from_raw_parts`, or a local allocator — allocation and
 deallocation stay in the provider cdylib, and borrowed views carry no `Drop`.
 The single exception is the owned-slice return contract
 (`owned_byte_slice_returns`): ownership of a provider-allocated `Box<[u8]>`
-transfers to the consumer, so the generated `private::owned_slice_into_box` does
-call `Box::from_raw`, under Diplomat's shared-allocator contract. Null with zero
-length normalizes to an empty `Box`.
+transfers to the consumer, so `Box::from(result)` converts the returned
+`diplomat_runtime::DiplomatOwnedSlice<u8>` back into a `Box`, under Diplomat's
+shared-allocator contract. Null with zero length normalizes to an empty `Box`.
 
 ## Fixture and binary evidence
 
 `feature_tests/rust/` is a separate workspace:
 
 - `provider`: real `#[diplomat::bridge]` crate configured as `cdylib` only;
-- `generated`: the complete output of `diplomat-tool rust`;
+- `generated`: the complete output of `diplomat-tool rust`, depending on
+  `diplomat-runtime` by version (the fixture workspace patches that version to
+  this checkout so the fixture builds against the local runtime);
 - `consumer`: `#![forbid(unsafe_code)]`, depending only on `generated`, whose
   `tests/runtime.rs` and `tests/compile_fail.rs` carry the coverage as ordinary
   `#[test]` functions run by `cargo test`;
 - `compile_fail`: standalone negative sources, excluded from normal workspace
   builds and driven case-by-case from `tests/compile_fail.rs`;
 - `scripts/check.sh`: reproducible generation, `cargo test`, lint/format gates,
-  and graph/binary evidence.
+  and graph/binary evidence, including checks that the generated crate declares
+  `diplomat-runtime` and defines no local ABI types.
 
 The safe consumer creates one `Counter`, increments the same native object
 three times, checks its value and identity through `CounterRef`, uses a
@@ -253,9 +302,11 @@ Observed on macOS after a clean nested target:
 $ cargo tree --manifest-path feature_tests/rust/consumer/Cargo.toml
 diplomat-rust-backend-consumer
 └── diplomat-rust-backend-generated
+    └── diplomat-runtime
 
 $ cargo tree --manifest-path feature_tests/rust/generated/Cargo.toml
 diplomat-rust-backend-generated
+└── diplomat-runtime
 
 $ nm feature_tests/rust/target/debug/libdiplomat_rust_backend_provider.dylib
 ... T _Counter_destroy
@@ -316,7 +367,9 @@ Production quality would require shared ABI-lowering utilities rather than
 parallel formatting, broader conformance/layout tests on all supported
 platforms, richer name/module handling, semver and packaging policy, better
 formatted generated source without an external rustfmt step, documentation
-tests, and deliberate designs for the rejected HIR shapes. The implementation
+tests, and deliberate designs for the rejected HIR shapes. The ABI containers
+are no longer duplicated — they are the runtime's — so what remains parallel is
+the lowering logic around them, not the layout. The implementation
 uses the real backend dispatch, config, HIR, diagnostics, and generated-package
 patterns, so it is plausibly structured as the start of an upstream
 contribution. That is not evidence that maintainers would accept its API or

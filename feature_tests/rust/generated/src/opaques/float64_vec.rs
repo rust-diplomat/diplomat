@@ -71,12 +71,7 @@ impl Drop for Float64Vec {
 impl Float64Vec {
     pub fn new(values: &[f64]) -> super::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Float64Vec_new(ffi::DiplomatSlice::<f64> {
-                ptr: values.as_ptr(),
-                len: values.len(),
-            })
-        };
+        let result = unsafe { ffi::Float64Vec_new(ffi::DiplomatSlice::from(values)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");

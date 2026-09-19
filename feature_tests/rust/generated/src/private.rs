@@ -54,55 +54,19 @@ pub trait WideMessageMutSealed: WideMessageSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::WideMessage;
 }
 
-/// Reconstruct a shared slice from a provider-returned pointer/length pair.
+/// Reconstruct a validated `&str` from a provider-returned UTF-8 slice.
 ///
-/// # Safety
-///
-/// The caller must uphold the provider's validity, alignment, aliasing, and
-/// lifetime contract for `ptr`/`len` for the returned lifetime.
-pub(crate) unsafe fn slice_from_raw_parts<'a, T>(ptr: *const T, len: usize) -> &'a [T] {
-    if ptr.is_null() {
-        debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
-        return &[];
-    }
-    core::slice::from_raw_parts(ptr, len)
-}
-
-/// Reconstruct an exclusive slice from a provider-returned pointer/length pair.
-///
-/// # Safety
-///
-/// The caller must uphold the provider's validity, alignment, uniqueness, and
-/// lifetime contract for `ptr`/`len` for the returned lifetime.
-pub(crate) unsafe fn slice_from_raw_parts_mut<'a, T>(ptr: *mut T, len: usize) -> &'a mut [T] {
-    if ptr.is_null() {
-        debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
-        return &mut [];
-    }
-    core::slice::from_raw_parts_mut(ptr, len)
-}
-
-/// Reconstruct a validated `&str` from a provider-returned pointer/length pair.
+/// The runtime can turn a `DiplomatSlice` back into a `&[T]`, but
+/// `DiplomatUtf8StrSlice`'s field is private, so this is the one conversion the
+/// runtime cannot express and the generated crate keeps locally.
 ///
 /// # Safety
 ///
 /// The caller must uphold the provider's validity, alignment, aliasing, UTF-8,
-/// and lifetime contract for `ptr`/`len` for the returned lifetime.
-pub(crate) unsafe fn str_from_raw_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
-    core::str::from_utf8_unchecked(slice_from_raw_parts(ptr, len))
-}
-
-/// Take ownership of a provider-allocated `Box<[T]>` returned across the ABI.
-///
-/// # Safety
-///
-/// `ptr`/`len` must describe a `Box<[T]>` allocated by the provider, and the
-/// provider and consumer must share an allocator (Diplomat's owned-slice
-/// contract). Ownership transfers to the returned `Box`.
-pub(crate) unsafe fn owned_slice_into_box<T>(ptr: *mut T, len: usize) -> Box<[T]> {
-    if ptr.is_null() {
-        debug_assert_eq!(len, 0, "provider returned a null slice with nonzero length");
-        return Box::new([]);
-    }
-    Box::from_raw(core::ptr::slice_from_raw_parts_mut(ptr, len))
+/// and lifetime contract for the slice for the returned lifetime. The ABI type
+/// cannot express UTF-8 validity, so the provider must send valid UTF-8.
+pub(crate) unsafe fn utf8_str_from_slice<'a>(
+    slice: diplomat_runtime::DiplomatSlice<'a, u8>,
+) -> &'a str {
+    core::str::from_utf8_unchecked(<&[u8]>::from(slice))
 }

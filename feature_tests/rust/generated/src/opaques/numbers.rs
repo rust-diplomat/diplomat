@@ -70,12 +70,7 @@ impl Drop for Numbers {
 impl Numbers {
     pub fn new(values: &[u32]) -> super::Numbers {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Numbers_new(ffi::DiplomatSlice::<u32> {
-                ptr: values.as_ptr(),
-                len: values.len(),
-            })
-        };
+        let result = unsafe { ffi::Numbers_new(ffi::DiplomatSlice::from(values)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Numbers");
@@ -88,12 +83,12 @@ impl Numbers {
     pub fn values<'a>(&'a self) -> &'a [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn values_mut<'a>(&'a mut self) -> &'a mut [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values_mut(self.inner.as_ptr()) };
-        unsafe { crate::private::slice_from_raw_parts_mut(result.ptr, result.len) }
+        result.into()
     }
     pub fn sum(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -103,10 +98,7 @@ impl Numbers {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
             ffi::Numbers_total(ffi::FieldView {
-                bytes: ffi::DiplomatSlice::<u8> {
-                    ptr: fields.bytes.as_ptr(),
-                    len: fields.bytes.len(),
-                },
+                bytes: ffi::DiplomatSlice::from(fields.bytes),
                 count: fields.count,
             })
         }
@@ -116,22 +108,14 @@ impl Numbers {
         unsafe {
             ffi::Numbers_fill(
                 self.inner.as_ptr() as *const _,
-                ffi::DiplomatSliceMut::<u32> {
-                    ptr: out.as_mut_ptr(),
-                    len: out.len(),
-                },
+                ffi::DiplomatSliceMut::from(out),
             )
         };
     }
     /// Borrowed slice pointing at caller-owned memory, gated on `memory_sharing`.
     pub fn from_slice(values: &[u32]) -> super::Numbers {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Numbers_from_slice(ffi::DiplomatSlice::<u32> {
-                ptr: values.as_ptr(),
-                len: values.len(),
-            })
-        };
+        let result = unsafe { ffi::Numbers_from_slice(ffi::DiplomatSlice::from(values)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Numbers");
@@ -145,12 +129,7 @@ impl Numbers {
     /// caller lifetime, so the generated signature must not introduce one.
     pub fn from_static(values: &'static [u32]) -> super::Numbers {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
-        let result = unsafe {
-            ffi::Numbers_from_static(ffi::DiplomatSlice::<u32> {
-                ptr: values.as_ptr(),
-                len: values.len(),
-            })
-        };
+        let result = unsafe { ffi::Numbers_from_static(ffi::DiplomatSlice::from(values)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Numbers");
@@ -166,7 +145,7 @@ impl<'view> NumbersRef<'view> {
     pub fn values<'a>(&'a self) -> &'a [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn sum(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -177,10 +156,7 @@ impl<'view> NumbersRef<'view> {
         unsafe {
             ffi::Numbers_fill(
                 self.inner.as_ptr() as *const _,
-                ffi::DiplomatSliceMut::<u32> {
-                    ptr: out.as_mut_ptr(),
-                    len: out.len(),
-                },
+                ffi::DiplomatSliceMut::from(out),
             )
         };
     }
@@ -190,12 +166,12 @@ impl<'view> NumbersRefMut<'view> {
     pub fn values<'a>(&'a self) -> &'a [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values(self.inner.as_ptr() as *const _) };
-        unsafe { crate::private::slice_from_raw_parts(result.ptr, result.len) }
+        result.into()
     }
     pub fn values_mut<'a>(&'a mut self) -> &'a mut [u32] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Numbers_values_mut(self.inner.as_ptr()) };
-        unsafe { crate::private::slice_from_raw_parts_mut(result.ptr, result.len) }
+        result.into()
     }
     pub fn sum(&self) -> u32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -206,10 +182,7 @@ impl<'view> NumbersRefMut<'view> {
         unsafe {
             ffi::Numbers_fill(
                 self.inner.as_ptr() as *const _,
-                ffi::DiplomatSliceMut::<u32> {
-                    ptr: out.as_mut_ptr(),
-                    len: out.len(),
-                },
+                ffi::DiplomatSliceMut::from(out),
             )
         };
     }
