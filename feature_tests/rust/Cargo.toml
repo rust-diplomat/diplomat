@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["provider", "generated", "consumer"]
+members = ["generated", "consumer"]
 exclude = ["compile_fail"]
 
 [workspace.package]

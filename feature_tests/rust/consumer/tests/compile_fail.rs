@@ -3,6 +3,12 @@
 //! Every case is a standalone file under `compile_fail/src/bin/` that must be
 //! rejected by rustc for a specific reason. Driving `cargo check` from a test
 //! keeps `cargo test` the single entry point for the fixture's coverage.
+//!
+//! These cases are the part of the coverage that has no analogue in another
+//! backend's suite. The C# consumer gets borrow safety from `BorrowLease` and
+//! `IDisposable` at run time; here the same defects have to be rejected by the
+//! type system, and that is what is asserted. The provider in every case is a
+//! type from the shared `feature_tests/src` corpus.
 #![forbid(unsafe_code)]
 
 use std::path::{Path, PathBuf};
@@ -88,26 +94,24 @@ macro_rules! compile_fail_case {
     };
 }
 
-// Returning a value that borrows a child of `self`: the borrowed child cannot
-// outlive the local borrow it was taken through.
-compile_fail_case!(borrowed_child_outlives_parent => "E0515");
+// Returning a view borrowed from a local owner: it cannot outlive the owner.
+compile_fail_case!(borrowed_view_outlives_owner => ["E0515", "E0597"]);
 // Borrowed views of an opaque are deliberately neither `Send` nor `Sync`.
 compile_fail_case!(borrowed_not_send => "E0277");
 compile_fail_case!(borrowed_not_sync => "E0277");
 // Owned opaques are deliberately neither `Send` nor `Sync`.
 compile_fail_case!(not_send => "E0277");
 compile_fail_case!(not_sync => "E0277");
-// A shared view has no `&mut self` methods at all.
-compile_fail_case!(shared_cannot_mutate => "E0599");
-// A shared view does not implement the mutable capability trait.
-compile_fail_case!(shared_cannot_satisfy_mut_param => "E0277");
-// Two live views of the same buffer, one mutable.
-compile_fail_case!(slice_mut_while_shared => "E0502");
-// A slice view outliving the receiver it was borrowed from.
-compile_fail_case!(slice_outlives_receiver => ["E0597", "E0515"]);
-// A value struct field outliving the source it was borrowed from.
-compile_fail_case!(struct_field_outlives_source => ["E0597", "E0515"]);
-// Two exclusive views of the same opaque at once.
+// A live shared borrow of provider memory blocks the exclusive borrow.
+compile_fail_case!(shared_borrow_blocks_mutation => "E0502");
+// The shared-argument capability is sealed against downstream implementations.
+compile_fail_case!(capability_trait_is_sealed => ["E0277", "E0603", "E0624"]);
+// A borrowed slice cannot outlive the opaque owning the buffer.
+compile_fail_case!(slice_view_outlives_receiver => ["E0597", "E0515"]);
+compile_fail_case!(slice_outlives_owner => ["E0597", "E0515"]);
+// Two exclusive views of one opaque.
 compile_fail_case!(two_exclusive_views => "E0499");
-// A view outliving the buffer it was created from.
-compile_fail_case!(view_outlives_buffer => ["E0597", "E0515"]);
+// An exclusive view blocks any further borrow of its source.
+compile_fail_case!(mutable_view_blocks_source => ["E0502", "E0499"]);
+// A shared borrow of provider-owned memory blocks an exclusive borrow.
+compile_fail_case!(borrowed_view_blocks_source => "E0502");

@@ -1,0 +1,9 @@
+fn main() {
+    println!("cargo:rerun-if-env-changed=DIPLOMAT_RUST_NATIVE_LIB_DIR");
+    if let Some(path) = std::env::var_os("DIPLOMAT_RUST_NATIVE_LIB_DIR") {
+        println!(
+            "cargo:rustc-link-search=native={}",
+            std::path::PathBuf::from(path).display()
+        );
+    }
+}

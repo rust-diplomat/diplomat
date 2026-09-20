@@ -45,14 +45,14 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct BorrowedFields<'a> {
         a: DiplomatStr16Slice<'a>,
         b: DiplomatStrSlice<'a>,
         c: DiplomatUtf8StrSlice<'a>,
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: DiplomatStr16Slice<'a>,
         field_b: DiplomatStrSlice<'b>,
@@ -89,14 +89,14 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b.into()))
         }
 
         // Don't yet support borrowing from slices
         #[diplomat::attr(auto, named_constructor)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         /// Test that the extraction logic correctly pins the right fields
         pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
             bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
@@ -138,7 +138,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
@@ -357,6 +357,7 @@ pub mod ffi {
             self.0.b
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter)]
         pub fn c(&self, w: &mut DiplomatWrite) {
             w.write_str(&self.0.c).unwrap();

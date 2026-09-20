@@ -3,10 +3,17 @@ set -eu
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 fixture_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
+corpus_dir=$(CDPATH= cd -- "$fixture_dir/../" && pwd)
 repo_dir=$(CDPATH= cd -- "$fixture_dir/../.." && pwd)
 target_dir=${CARGO_TARGET_DIR:-"$fixture_dir/target"}
 generated_dir="$fixture_dir/generated"
-provider_name=diplomat_rust_backend_provider
+# The provider is the shared feature test corpus crate, exactly as it is for
+# every other backend. There is no Rust-specific provider.
+provider_pkg=diplomat-feature-tests
+provider_name=diplomat_feature_tests
+# A constructor/destructor pair the provider really exports.
+probe_ctor=OptionOpaque_new
+probe_dtor=OptionOpaque_destroy
 
 fail() {
     echo "safe-rust fixture: $*" >&2
@@ -30,18 +37,18 @@ if [ -z "${RUSTDOC:-}" ]; then
     fi
 fi
 
-echo "== generate Safe Rust package from provider HIR =="
+echo "== generate Safe Rust package from the shared feature test corpus =="
 cargo run --quiet --manifest-path "$repo_dir/Cargo.toml" -p diplomat-tool -- \
     rust "$generated_dir" \
-    --entry "$fixture_dir/provider/src/lib.rs" \
-    --config-file "$fixture_dir/provider/config.toml" \
+    --entry "$corpus_dir/src/lib.rs" \
+    --config-file "$corpus_dir/config.toml" \
     --silent
 cargo fmt --manifest-path "$generated_dir/Cargo.toml"
 
 export CARGO_TARGET_DIR="$target_dir"
 
-echo "== build provider as its only configured artifact: cdylib =="
-cargo build --manifest-path "$fixture_dir/Cargo.toml" -p diplomat-rust-backend-provider
+echo "== build the provider: the shared corpus crate =="
+cargo build --manifest-path "$repo_dir/Cargo.toml" -p "$provider_pkg"
 
 case "$(uname -s)" in
     Darwin) provider_lib="$target_dir/debug/lib${provider_name}.dylib" ;;
@@ -51,23 +58,20 @@ case "$(uname -s)" in
 esac
 [ -f "$provider_lib" ] || fail "provider cdylib not found: $provider_lib"
 
-echo "== prove dependency graphs exclude provider implementation and codegen =="
+echo "== prove dependency graphs exclude the provider implementation and codegen =="
 consumer_tree=$(cargo tree --manifest-path "$fixture_dir/consumer/Cargo.toml")
-generated_tree=$(cargo tree --manifest-path "$fixture_dir/generated/Cargo.toml")
-case "$consumer_tree" in
-    *diplomat-rust-backend-provider*|*"diplomat v"*|*diplomat_core*)
-        fail "consumer dependency tree contains provider implementation or codegen machinery"
-        ;;
-esac
-case "$generated_tree" in
-    *diplomat-rust-backend-provider*|*"diplomat v"*|*diplomat_core*)
-        fail "generated dependency tree contains provider implementation or codegen machinery"
-        ;;
-esac
+generated_tree=$(cargo tree --manifest-path "$generated_dir/Cargo.toml")
+for tree in "consumer:$consumer_tree" "generated:$generated_tree"; do
+    case "$tree" in
+        *diplomat-feature-tests*|*"diplomat v"*|*diplomat_core*)
+            fail "${tree%%:*} dependency tree contains the provider implementation or codegen machinery"
+            ;;
+    esac
+done
 printf '%s\n' "$consumer_tree" >"$target_dir/consumer-cargo-tree.txt"
 printf '%s\n' "$generated_tree" >"$target_dir/generated-cargo-tree.txt"
 
-echo "== prove generated crate owns no ABI types and does depend on diplomat-runtime =="
+echo "== prove the generated crate owns no ABI types and does depend on diplomat-runtime =="
 grep -F 'diplomat-runtime' "$generated_dir/Cargo.toml" >/dev/null \
     || fail "generated Cargo.toml does not declare a diplomat-runtime dependency"
 if grep -rF -e 'struct DiplomatSlice' -e 'struct DiplomatSliceMut' \
@@ -89,9 +93,7 @@ echo "== prove a rejected provider reports its diagnostic instead of aborting on
 # The bridge module below is inline in the *entry* file, which is the shape that makes
 # the tool record the entry file's parent directory as the module's source location.
 # Reading that directory as a file used to abort the whole report, so a provider in
-# this shape got a bare panic instead of a diagnostic — which is the entire point of
-# this backend's "explicitly rejected with contextual backend errors" contract. Keep
-# a provider in that shape in the gate so it cannot regress unnoticed.
+# this shape got a bare panic instead of a diagnostic.
 probe_dir="$target_dir/reject-probe"
 rm -rf "$probe_dir"
 mkdir -p "$probe_dir/src"
@@ -109,7 +111,7 @@ PROBE
 cat >"$probe_dir/config.toml" <<'PROBE'
 [rust]
 crate-name = "diplomat-rust-backend-reject-probe"
-dylib-name = "diplomat_rust_backend_provider"
+dylib-name = "diplomat_rust_backend_probe"
 PROBE
 probe_log="$probe_dir/output.txt"
 if cargo run --quiet --manifest-path "$repo_dir/Cargo.toml" -p diplomat-tool -- \
@@ -155,15 +157,15 @@ for line in sys.stdin:
 
 nm "$provider_lib" >"$target_dir/provider-symbols.txt"
 nm -u "$consumer_bin" >"$target_dir/consumer-undefined-symbols.txt" 2>/dev/null || true
-grep 'Counter_new' "$target_dir/provider-symbols.txt" >/dev/null || fail "provider does not define Counter_new"
-grep 'Counter_destroy' "$target_dir/provider-symbols.txt" >/dev/null || fail "provider does not define Counter_destroy"
-grep 'Counter_new' "$target_dir/consumer-undefined-symbols.txt" >/dev/null || fail "consumer does not import Counter_new"
-grep 'Counter_destroy' "$target_dir/consumer-undefined-symbols.txt" >/dev/null || fail "consumer does not import Counter_destroy"
-if nm "$consumer_bin" | grep -E '[[:space:]][Tt][[:space:]].*Counter_(new|destroy)' >/dev/null; then
+grep "$probe_ctor" "$target_dir/provider-symbols.txt" >/dev/null || fail "provider does not define $probe_ctor"
+grep "$probe_dtor" "$target_dir/provider-symbols.txt" >/dev/null || fail "provider does not define $probe_dtor"
+grep "$probe_ctor" "$target_dir/consumer-undefined-symbols.txt" >/dev/null || fail "consumer does not import $probe_ctor"
+grep "$probe_dtor" "$target_dir/consumer-undefined-symbols.txt" >/dev/null || fail "consumer does not import $probe_dtor"
+if nm "$consumer_bin" | grep -E "[[:space:]][Tt][[:space:]].*$probe_ctor" >/dev/null; then
     fail "consumer defines provider constructor/destructor symbols"
 fi
 
-echo "== prove provider is a dynamic dependency =="
+echo "== prove the provider is a dynamic dependency =="
 case "$(uname -s)" in
     Darwin)
         command -v otool >/dev/null 2>&1 || fail "otool is required on macOS"

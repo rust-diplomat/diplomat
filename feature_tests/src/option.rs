@@ -21,20 +21,21 @@ pub mod ffi {
             Some(Box::new(OptionString(string)))
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn write<'a>(&'a self, write: &'a mut DiplomatWrite) -> Result<(), ()> {
             use std::fmt::Write;
             write!(write, "{}", self.0).map_err(|_| ())?;
             Ok(())
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn borrow<'a>(&'a self) -> Option<&'a DiplomatStr> {
             Some(self.0.as_bytes())
         }
     }
 
     #[diplomat::out]
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct OptionStruct {
         a: Option<Box<OptionOpaque>>,
         b: Option<Box<OptionOpaqueChar>>,
@@ -43,7 +44,7 @@ pub mod ffi {
     }
 
     #[diplomat::cfg(supports = option)]
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
@@ -52,7 +53,7 @@ pub mod ffi {
     }
 
     #[diplomat::cfg(supports = option)]
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     #[derive(Debug)]
     pub struct BorrowingOptionStruct<'a> {
         a: DiplomatOption<&'a DiplomatStr>,
@@ -103,7 +104,7 @@ pub mod ffi {
             None
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn returns() -> Option<OptionStruct> {
             None
         }
@@ -124,7 +125,7 @@ pub mod ffi {
             Some(10)
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_struct() -> OptionStruct {
             OptionStruct {
                 a: Some(Box::new(OptionOpaque(101))),
@@ -134,7 +135,7 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_struct_nones() -> OptionStruct {
             OptionStruct {
                 a: None,
@@ -158,6 +159,7 @@ pub mod ffi {
             assert_eq!(i, self.0);
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn option_opaque_argument(arg: Option<&OptionOpaque>) -> bool {
             arg.is_some()
         }
@@ -177,7 +179,7 @@ pub mod ffi {
         }
 
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn accepts_borrowing_option_struct(arg: BorrowingOptionStruct) {
             assert_eq!(arg.a.into_option(), Some("test string".as_bytes()));
         }
@@ -199,7 +201,7 @@ pub mod ffi {
         }
 
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,
             sentinel: u8,
@@ -208,7 +210,7 @@ pub mod ffi {
             arg
         }
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn returns_option_input_struct() -> OptionInputStruct {
             OptionInputStruct {
                 a: Some(6).into(),
@@ -241,6 +243,7 @@ pub mod ffi {
     }
 
     impl OptionOpaqueChar {
+        #[diplomat::attr(rust, disable)]
         pub fn assert_char(&self, ch: DiplomatChar) {
             assert_eq!(ch, self.0 as u32)
         }

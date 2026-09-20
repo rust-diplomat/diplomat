@@ -460,14 +460,17 @@ dependencies = ["gen-dotnet-feature", "gen-dotnet-example"]
 category = "Code generation"
 run_task = { name = ["gen-rust-feature-bindings", "gen-rust-feature-format"] }
 
+# Like every other backend, the Rust backend generates from the shared
+# `feature_tests/src` corpus. There is no Rust-specific provider: a shape the
+# backend cannot express is a backend bug, not a reason to write a second corpus.
 [tasks.gen-rust-feature-bindings]
 category = "Code generation"
 command = "cargo"
 args = [
     "run", "-p", "diplomat-tool", "--", "rust",
     "feature_tests/rust/generated",
-    "--entry", "feature_tests/rust/provider/src/lib.rs",
-    "--config-file", "feature_tests/rust/provider/config.toml",
+    "--entry", "feature_tests/src/lib.rs",
+    "--config-file", "feature_tests/config.toml",
 ]
 
 [tasks.gen-rust-feature-format]

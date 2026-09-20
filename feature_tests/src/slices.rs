@@ -24,12 +24,12 @@ pub mod ffi {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_from_first(v: &[DiplomatStrSlice]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0].into()).unwrap().into()))
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_from_utf16(v: &[DiplomatStr16Slice]) -> Box<MyString> {
             let first: &[u16] = v[0].into();
             Box::new(Self(String::from_utf16(first).unwrap()))
@@ -40,6 +40,7 @@ pub mod ffi {
             self.0 = String::from_utf8(new_str.to_owned()).unwrap();
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "str")]
         pub fn get_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{}", self.0);
@@ -50,6 +51,7 @@ pub mod ffi {
             "hello"
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn string_transform(foo: &str, write: &mut DiplomatWrite) {
             let _ = foo;
             let _ = write;
@@ -153,6 +155,7 @@ pub mod ffi {
             self.0 = new_slice.to_vec();
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, stringifier)]
         pub fn to_string(&self, w: &mut DiplomatWrite) {
             let _infallible = write!(w, "{:?}", self.0);
@@ -245,6 +248,7 @@ pub mod ffi {
             Ok((0..len).map(|i| (i % 256) as u8).collect())
         }
 
+        #[diplomat::attr(rust, disable)]
         /// Optional variant of [`Self::make_bytes`]: `None` on `len == 0`.
         /// Exercises the `Option<Box<[u8]>>` bridge shape.
         pub fn maybe_make_bytes(len: u32) -> Option<Box<[u8]>> {

@@ -18,6 +18,7 @@ pub mod ffi {
     #[diplomat::opaque]
     pub struct Utf16Wrap(Vec<u16>);
 
+    #[diplomat::attr(rust, disable)]
     #[derive(Debug, PartialEq, Eq)]
     pub enum MyEnum {
         A = -2,
@@ -49,11 +50,13 @@ pub mod ffi {
         D(i32, ImportedStruct),
     }
 
+    #[diplomat::attr(rust, disable)]
     pub enum DefaultEnum {
         A,
         B,
     }
 
+    #[diplomat::attr(rust, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
     pub struct MyStruct {
         a: u8,
@@ -67,7 +70,7 @@ pub mod ffi {
 
     // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
     // `diplomat-tool js` was crashing when trying to process options-in-structs
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct MyStructContainingAnOption {
         pub(crate) a: DiplomatOption<MyStruct>,
         pub(crate) b: DiplomatOption<DefaultEnum>,
@@ -91,10 +94,12 @@ pub mod ffi {
             Box::new(Self(input.into()))
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{:?}", self.0);
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::rust_link(Something::something, FnInStruct)]
         #[diplomat::rust_link(Something::something_else, FnInStruct)]
         #[diplomat::rust_link(Something::something_small, FnInStruct, compact)]
@@ -119,7 +124,7 @@ pub mod ffi {
             unimplemented!()
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn cmp() -> core::cmp::Ordering {
             unimplemented!()
         }
@@ -186,6 +191,7 @@ pub mod ffi {
             Box::new(Self(input.into()))
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{:?}", self.0);
         }
@@ -211,6 +217,7 @@ pub mod ffi {
             Box::new(MyOpaqueEnum::A("a".into()))
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(*, stringifier)]
         pub fn to_string(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(
@@ -321,10 +328,11 @@ pub mod ffi {
     // they reference each other in the methods
     #[derive(Default)]
     #[diplomat::attr(auto, abi_compatible)]
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
+    #[diplomat::attr(rust, disable)]
     #[derive(Default)]
     #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructB {
@@ -333,7 +341,7 @@ pub mod ffi {
 
     // For demo_gen testing. How many layers in are we going?
     #[derive(Default)]
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct CyclicStructC {
         pub a: CyclicStructA,
     }
@@ -390,6 +398,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(rust, disable)]
     /// Testing JS-specific layout/padding behavior
     #[diplomat::cfg(any(js, supports=abi_compatibles))]
     #[diplomat::attr(auto, abi_compatible)]
@@ -406,6 +415,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(rust, disable)]
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
     #[diplomat::cfg(any(js, supports=abi_compatibles))]
@@ -493,7 +503,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct StructWithSlices<'a> {
         pub first: DiplomatStrSlice<'a>,
         pub second: DiplomatSlice<'a, u16>,
@@ -505,6 +515,7 @@ pub mod ffi {
         }
     }
 
+    #[diplomat::attr(rust, disable)]
     #[diplomat::attr(auto, abi_compatible)]
     #[diplomat::attr(auto, mut_struct_ref)]
     #[derive(Clone)]
@@ -553,6 +564,7 @@ pub mod ffi {
             Box::new(Self(Vec::new()))
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(nanobind, rename = "append")]
         pub fn push(&mut self, value: PrimitiveStruct) {
             self.0.push(value);
@@ -563,17 +575,20 @@ pub mod ffi {
             self.0.len()
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "asSlice")]
         pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
             &self.0
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "asSliceMut")]
         #[diplomat::cfg(supports=mutable_slices)]
         pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
             &mut self.0
         }
 
+        #[diplomat::attr(rust, disable)]
         // Technically we could rename this to __getitem__, but this is not best practice,
         // as there are additional considerations that the Nanobind backend has for indexers.
         #[diplomat::attr(nanobind, indexer)]
@@ -581,11 +596,13 @@ pub mod ffi {
             self.0.get(idx).cloned()
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::cfg(supports=abi_compatibles)]
         pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn take_in_slice(a: &[PrimitiveStruct]) -> Box<Self> {
             Box::new(Self(a.iter().cloned().collect()))
         }
@@ -602,7 +619,7 @@ pub mod ffi {
     }
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
-    #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(any(dart, rust), disable)]
     #[diplomat::attr(dotnet, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
     pub struct StructOfOpaque<'a> {

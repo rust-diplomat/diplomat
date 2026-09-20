@@ -15,3 +15,11 @@ dylib-name = "diplomat_feature_tests"
 
 [demo-gen]
 relative-js-path = "../../js/api/"
+
+[rust]
+# Same idea as the dotnet block: pin the generated package name and the real
+# cdylib name (the crate builds `libdiplomat_feature_tests`) so the generated
+# crate and its consumer are loadable and the shared corpus stays the only
+# provider.
+crate-name = "diplomat-rust-backend-generated"
+dylib-name = "diplomat_feature_tests"

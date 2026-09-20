@@ -1,0 +1,13 @@
+[package]
+name = "diplomat-rust-backend-generated"
+version = "0.0.0"
+edition = "2021"
+rust-version = "1.88"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+diplomat-runtime = "0.16"
+
