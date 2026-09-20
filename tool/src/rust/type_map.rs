@@ -10,10 +10,39 @@ use diplomat_core::hir::{
 use super::formatter::{enum_name, field_name, opaque_name, type_def_name};
 use super::lifetimes::{lifetime_name, lifetime_prefix, struct_generics};
 
-pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>) -> bool {
+/// A primitive, enum, or plain `repr(C)` value struct — the payload this backend
+/// can copy across the ABI without a wrapper. Nested owning/lifetime fields fail
+/// the recursive field check; that is the whitelist `is_supported_slice` uses for
+/// `&[S]`, rather than `is_lifetime_struct` alone.
+pub(super) fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
+    match ty {
+        Type::Primitive(p) => primitive_name(*p).is_some(),
+        Type::Enum(path) => !path.resolve(tcx).attrs.disable,
+        Type::Struct(path) => {
+            let def = tcx.resolve_type(path.id());
+            match def {
+                TypeDef::Struct(def) => {
+                    !def.attrs.disable
+                        && def.lifetimes.num_lifetimes() == 0
+                        && def.fields.iter().all(|field| is_value_type(&field.ty, tcx))
+                }
+                _ => false,
+            }
+        }
+        _ => false,
+    }
+}
+
+pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>, tcx: &TypeContext) -> bool {
     match slice {
         Slice::Primitive(MaybeOwn::Borrow(_), primitive) => primitive_name(*primitive).is_some(),
         Slice::Str(Some(_), _) => true,
+        // A plain `repr(C)` value struct is already the same layout on both sides, so
+        // `&[S]` is a native `DiplomatSlice<S>`. `is_value_type` is the whitelist:
+        // a lifetime-bearing struct carries a `PhantomData` the provider does not have.
+        Slice::Struct(MaybeOwn::Borrow(_), path) => {
+            is_value_type(&Type::<P>::Struct(path.clone()), tcx)
+        }
         _ => false,
     }
 }
@@ -40,31 +69,45 @@ pub(super) fn slice_lifetime<P: hir::TyPosition>(
 pub(super) fn slice_is_mutable<P: hir::TyPosition>(slice: &Slice<P>) -> bool {
     matches!(
         slice,
-        Slice::Primitive(MaybeOwn::Borrow(borrow), _) if borrow.mutability == Mutability::Mutable
+        Slice::Primitive(MaybeOwn::Borrow(borrow), _)
+        | Slice::Struct(MaybeOwn::Borrow(borrow), _) if borrow.mutability == Mutability::Mutable
     )
 }
 
-/// The Rust scalar type stored in a supported slice.
-pub(super) fn slice_element_ty<P: hir::TyPosition>(slice: &Slice<P>) -> &'static str {
+/// The Rust type stored in a supported slice: a scalar, or a generated value struct.
+pub(super) fn slice_element_ty<P: hir::TyPosition>(slice: &Slice<P>, tcx: &TypeContext) -> String {
     match slice {
-        Slice::Primitive(_, primitive) => primitive_name(*primitive).unwrap(),
-        Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "u16",
-        Slice::Str(_, StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8) => "u8",
+        Slice::Primitive(_, primitive) => primitive_name(*primitive).unwrap().into(),
+        Slice::Str(_, StringEncoding::UnvalidatedUtf16) => "u16".into(),
+        Slice::Str(_, StringEncoding::Utf8 | StringEncoding::UnvalidatedUtf8) => "u8".into(),
+        Slice::Struct(_, path) => type_def_name(tcx.resolve_type(path.id())),
         _ => unreachable!("validated slice shape"),
     }
 }
 
+/// The same element type as named from `src/ffi.rs`, where value structs live in `super`.
+fn ffi_slice_element_ty<P: hir::TyPosition>(slice: &Slice<P>, tcx: &TypeContext) -> String {
+    match slice {
+        Slice::Struct(_, _) => format!("super::{}", slice_element_ty(slice, tcx)),
+        _ => slice_element_ty(slice, tcx),
+    }
+}
+
 /// The safe public Rust type of a slice, e.g. `&'a [f64]`, `&'a mut str`, `Box<[u8]>`.
-pub(super) fn safe_slice_type<P: hir::TyPosition>(slice: &Slice<P>, lifetime: &str) -> String {
+pub(super) fn safe_slice_type<P: hir::TyPosition>(
+    slice: &Slice<P>,
+    lifetime: &str,
+    tcx: &TypeContext,
+) -> String {
     if is_owned_slice(slice) {
-        return format!("Box<[{}]>", slice_element_ty(slice));
+        return format!("Box<[{}]>", slice_element_ty(slice, tcx));
     }
     if slice_is_mutable(slice) {
-        return format!("&{lifetime}mut [{}]", slice_element_ty(slice));
+        return format!("&{lifetime}mut [{}]", slice_element_ty(slice, tcx));
     }
     match slice {
         Slice::Str(_, StringEncoding::Utf8) => format!("&{lifetime}str"),
-        _ => format!("&{lifetime}[{}]", slice_element_ty(slice)),
+        _ => format!("&{lifetime}[{}]", slice_element_ty(slice, tcx)),
     }
 }
 
@@ -93,12 +136,16 @@ pub(super) fn ffi_borrowed_slice_expr<P: hir::TyPosition>(slice: &Slice<P>, expr
 /// The native ABI type of a slice, with an explicit lifetime argument where the
 /// position needs one: `DiplomatSlice<'a, u8>`, `DiplomatSliceMut<u8>`,
 /// `DiplomatOwnedSlice<u8>`.
-pub(super) fn ffi_slice_type<P: hir::TyPosition>(slice: &Slice<P>, lifetime: &str) -> String {
+pub(super) fn ffi_slice_type<P: hir::TyPosition>(
+    slice: &Slice<P>,
+    lifetime: &str,
+    tcx: &TypeContext,
+) -> String {
     if is_owned_slice(slice) {
-        return format!("DiplomatOwnedSlice<{}>", slice_element_ty(slice));
+        return format!("DiplomatOwnedSlice<{}>", ffi_slice_element_ty(slice, tcx));
     }
     let container = ffi_slice_container(slice);
-    let element = slice_element_ty(slice);
+    let element = ffi_slice_element_ty(slice, tcx);
     if lifetime.is_empty() {
         format!("{container}<{element}>")
     } else {
@@ -111,6 +158,7 @@ pub(super) fn references_value_type<P: hir::TyPosition>(ty: &Type<P>) -> bool {
     match ty {
         Type::Enum(_) | Type::Struct(_) => true,
         Type::DiplomatOption(inner) => references_value_type(inner.as_ref()),
+        Type::Slice(Slice::Struct(_, _)) => true,
         _ => false,
     }
 }
@@ -154,7 +202,7 @@ pub(super) fn ffi_struct_field_type(
     match ty {
         Type::Primitive(primitive) => primitive_name(*primitive).unwrap().into(),
         Type::Enum(path) => format!("super::{}", enum_name(path.tcx_id, tcx)),
-        Type::Slice(slice) => ffi_struct_slice_type(slice, strct),
+        Type::Slice(slice) => ffi_struct_slice_type(slice, strct, tcx),
         _ => unreachable!("validated struct field"),
     }
 }
@@ -163,9 +211,10 @@ pub(super) fn ffi_struct_field_type(
 pub(super) fn ffi_struct_slice_type(
     slice: &Slice<hir::Everywhere>,
     strct: &hir::StructDef,
+    tcx: &TypeContext,
 ) -> String {
     let container = ffi_slice_container(slice);
-    let element = slice_element_ty(slice);
+    let element = ffi_slice_element_ty(slice, tcx);
     // Validation admits only borrowed slice fields carrying a lifetime; `'static`
     // is the same spelling the safe field type uses for a `MaybeStatic` lifetime.
     let lifetime = slice_lifetime(slice)
@@ -197,7 +246,7 @@ pub(super) fn safe_struct_field_type(
                     }
                 })
                 .unwrap_or_default();
-            safe_slice_type(slice, &lifetime)
+            safe_slice_type(slice, &lifetime, tcx)
         }
         _ => unreachable!("validated struct field"),
     }
@@ -295,7 +344,7 @@ pub(super) fn ffi_input_type(ty: &Type<hir::InputOnly>, tcx: &TypeContext) -> St
         Type::DiplomatOption(inner) => {
             format!("DiplomatOption<{}>", ffi_value_type(inner, tcx))
         }
-        Type::Slice(slice) => ffi_slice_type(slice, ""),
+        Type::Slice(slice) => ffi_slice_type(slice, "", tcx),
         _ => ffi_value_type(ty, tcx),
     }
 }
@@ -341,7 +390,7 @@ pub(super) fn ffi_success_type(success: &SuccessType, tcx: &TypeContext) -> Stri
                 ffi_value_name(TypeDef::Struct(strct))
             }
         }
-        SuccessType::OutType(Type::Slice(slice)) => ffi_slice_type(slice, RETURN_LIFETIME),
+        SuccessType::OutType(Type::Slice(slice)) => ffi_slice_type(slice, RETURN_LIFETIME, tcx),
         SuccessType::OutType(ty) => ffi_value_type(ty, tcx),
         // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
         // anything reaching here is a shape codegen has never been taught.
@@ -413,7 +462,7 @@ pub(super) fn safe_input_type(
             let lifetime = slice_lifetime(slice)
                 .map(|lifetime| lifetime_prefix(lifetime, method))
                 .unwrap_or_default();
-            safe_slice_type(slice, &lifetime)
+            safe_slice_type(slice, &lifetime, tcx)
         }
         Type::Struct(path) => {
             let name = type_def_name(tcx.resolve_type(path.id()));
@@ -473,7 +522,7 @@ pub(super) fn safe_success_type(
             let lifetime = slice_lifetime(slice)
                 .map(|lifetime| format!("{} ", lifetime_name(lifetime, method)))
                 .unwrap_or_default();
-            safe_slice_type(slice, &lifetime)
+            safe_slice_type(slice, &lifetime, tcx)
         }
         SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let name = type_def_name(TypeDef::Struct(path.resolve(tcx)));

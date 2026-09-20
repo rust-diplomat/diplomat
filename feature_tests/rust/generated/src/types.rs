@@ -28,6 +28,16 @@ pub struct FieldView<'a> {
     pub(crate) _lifetimes: PhantomData<fn(&'a ()) -> &'a ()>,
 }
 
+/// A plain `repr(C)` value struct. Marked `abi_compatible` so it can appear in
+/// slices; both sides already share the layout, so `&[Point]` is a native
+/// `DiplomatSlice<Point>` rather than an intermediate buffer.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Point {
+    pub x: i32,
+    pub y: i32,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Snapshot {

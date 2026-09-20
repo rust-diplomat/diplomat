@@ -12,7 +12,9 @@ use diplomat_core::hir::{
 use super::formatter::{
     enum_variant_name, field_name, method_name, opaque_module_name, type_def_name, valid_rust_ident,
 };
-use super::type_map::{is_lifetime_struct, is_owned_slice, is_supported_slice, primitive_name};
+use super::type_map::{
+    is_lifetime_struct, is_owned_slice, is_supported_slice, is_value_type, primitive_name,
+};
 use crate::{ErrorContextGuard, ErrorStore};
 
 pub(super) struct Reporter<'a, 'tcx> {
@@ -320,30 +322,11 @@ pub(super) fn disabled_type_name<P: hir::TyPosition>(
     def.attrs().disable.then(|| type_def_name(def))
 }
 
-pub(super) fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> bool {
-    match ty {
-        Type::Primitive(p) => primitive_name(*p).is_some(),
-        Type::Enum(path) => !path.resolve(tcx).attrs.disable,
-        Type::Struct(path) => {
-            let def = tcx.resolve_type(path.id());
-            match def {
-                TypeDef::Struct(def) => {
-                    !def.attrs.disable
-                        && def.lifetimes.num_lifetimes() == 0
-                        && def.fields.iter().all(|field| is_value_type(&field.ty, tcx))
-                }
-                _ => false,
-            }
-        }
-        _ => false,
-    }
-}
-
 pub(super) fn is_input_type(ty: &Type<hir::InputOnly>, tcx: &TypeContext) -> bool {
     match ty {
         Type::Opaque(path) => !path.is_optional() && !path.resolve(tcx).attrs.disable,
         Type::DiplomatOption(inner) => is_value_type(inner.as_ref(), tcx),
-        Type::Slice(slice) => is_supported_slice(slice),
+        Type::Slice(slice) => is_supported_slice(slice, tcx),
         Type::Struct(path) => {
             matches!(
                 tcx.resolve_type(path.id()),
@@ -370,7 +353,7 @@ pub(super) fn is_output_type(ty: &OutType, tcx: &TypeContext) -> bool {
             }
         }
         Type::Struct(ReturnableStructPath::OutStruct(_)) => false,
-        Type::Slice(slice) => is_supported_slice(slice) || is_owned_slice(slice),
+        Type::Slice(slice) => is_supported_slice(slice, tcx) || is_owned_slice(slice),
         _ => is_value_type(ty, tcx),
     }
 }
@@ -460,7 +443,11 @@ pub(super) fn supported_struct_field<P: hir::TyPosition>(ty: &Type<P>, tcx: &Typ
     match ty {
         Type::Primitive(primitive) => primitive_name(*primitive).is_some(),
         Type::Enum(path) => !path.resolve(tcx).attrs.disable,
-        Type::Slice(slice) => is_supported_slice(slice),
+        // A slice-of-structs field is a nested pointer shape this backend has not
+        // promised; borrowed primitive/string slices remain the only field slices.
+        Type::Slice(slice) => {
+            !matches!(slice, hir::Slice::Struct(_, _)) && is_supported_slice(slice, tcx)
+        }
         _ => false,
     }
 }

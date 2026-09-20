@@ -4,8 +4,8 @@
 use std::sync::Mutex;
 
 use diplomat_rust_backend_generated::{
-    AllocationFailure, Bytes, Counter, Float64Vec, Message, Mode, Numbers, SliceView, ValueError,
-    WideMessage,
+    AllocationFailure, Bytes, Counter, Float64Vec, Message, Mode, Numbers, Point, Points,
+    SliceView, ValueError, WideMessage,
 };
 
 /// `Counter` reports destruction through a process-wide probe, so the tests that
@@ -273,6 +273,33 @@ fn fallible_calls_return_result_and_free_owned_errors() {
 fn take_twice_or_propagate(counter: &mut Counter, n: u32) -> Result<u32, AllocationFailure> {
     let taken = counter.take(n)?;
     Ok(taken * 2)
+}
+
+/// A slice of value structs crosses the ABI once. The consumer does not loop with
+/// one call per element — `total` takes the whole slice and the provider sums it.
+#[test]
+fn value_struct_slice_crosses_the_abi_once() {
+    assert_eq!(
+        Points::total(&[Point { x: 1, y: 2 }, Point { x: 3, y: 4 }]),
+        10
+    );
+    assert_eq!(Points::total(&[]), 0);
+}
+
+/// The consumer borrows the slice once and sums in Rust — no per-element FFI.
+#[test]
+fn value_struct_slice_is_summed_on_the_consumer() {
+    let points = Points::new(&[Point { x: 1, y: 2 }, Point { x: 10, y: 20 }]);
+    let sum: i32 = points.as_slice().iter().map(|p| p.x + p.y).sum();
+    assert_eq!(sum, 33);
+}
+
+/// `&mut [Point]` writes through the same layout, in place, in one call.
+#[test]
+fn mutable_value_struct_slice_is_updated_in_place() {
+    let mut points = [Point { x: 1, y: 2 }, Point { x: 3, y: 4 }];
+    Points::scale(&mut points, 10);
+    assert_eq!(points, [Point { x: 10, y: 20 }, Point { x: 30, y: 40 }]);
 }
 
 /// Floats are the same type on both sides of this ABI, so they need no conversion.

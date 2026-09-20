@@ -16,6 +16,16 @@ pub mod ffi {
         pub mode: Mode,
     }
 
+    /// A plain `repr(C)` value struct. Marked `abi_compatible` so it can appear in
+    /// slices; both sides already share the layout, so `&[Point]` is a native
+    /// `DiplomatSlice<Point>` rather than an intermediate buffer.
+    #[diplomat::attr(auto, abi_compatible)]
+    #[derive(Clone, Copy)]
+    pub struct Point {
+        pub x: i32,
+        pub y: i32,
+    }
+
     /// Owner-side mutable value. The generated Rust API is expected to expose
     /// Counter, CounterRef<'a>, and CounterRefMut<'a>.
     #[diplomat::opaque_mut]
@@ -151,6 +161,42 @@ pub mod ffi {
 
         pub fn owner_identity(&self) -> usize {
             self.owner_identity
+        }
+    }
+
+    /// Owner of a `Vec<Point>`. Slice APIs cannot live on the value struct itself
+    /// (methods on structs are still rejected).
+    #[diplomat::opaque]
+    pub struct Points(Vec<Point>);
+
+    impl Points {
+        /// Sum of `x + y` over the whole slice in one call. Gated on `abi_compatibles`:
+        /// without the flag, `#[diplomat::attr(auto, abi_compatible)]` does not stick
+        /// and HIR refuses the slice, so this symbol disappears from the generated API.
+        #[diplomat::cfg(supports = abi_compatibles)]
+        pub fn total(points: &[Point]) -> i32 {
+            points.iter().map(|p| p.x + p.y).sum()
+        }
+
+        #[diplomat::cfg(supports = abi_compatibles)]
+        pub fn new(points: &[Point]) -> Box<Self> {
+            Box::new(Self(points.to_vec()))
+        }
+
+        /// Borrow the stored points. The consumer loops over this in Rust.
+        #[diplomat::cfg(supports = abi_compatibles)]
+        pub fn as_slice<'a>(&'a self) -> &'a [Point] {
+            &self.0
+        }
+
+        /// Scale each point in place. Gated on both `abi_compatibles` and
+        /// `mutable_slices` so dropping either flag removes the symbol.
+        #[diplomat::cfg(all(supports = abi_compatibles, supports = mutable_slices))]
+        pub fn scale(points: &mut [Point], factor: i32) {
+            for point in points.iter_mut() {
+                point.x *= factor;
+                point.y *= factor;
+            }
         }
     }
 

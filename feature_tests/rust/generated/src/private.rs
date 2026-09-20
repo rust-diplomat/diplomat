@@ -47,6 +47,12 @@ pub trait NumbersSharedSealed {
 pub trait NumbersMutSealed: NumbersSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Numbers;
 }
+pub trait PointsSharedSealed {
+    fn __as_const_ptr(&self) -> *const crate::ffi::Points;
+}
+pub trait PointsMutSealed: PointsSharedSealed {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Points;
+}
 pub trait SliceViewSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::SliceView;
 }

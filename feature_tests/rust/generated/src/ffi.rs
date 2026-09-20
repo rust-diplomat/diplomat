@@ -44,6 +44,11 @@ pub struct Numbers {
 }
 
 #[repr(C)]
+pub struct Points {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
 pub struct SliceView {
     _private: [u8; 0],
 }
@@ -126,6 +131,11 @@ extern "C" {
     pub(super) fn Numbers_fill(this: *const Numbers, out: DiplomatSliceMut<u32>);
     pub(super) fn Numbers_from_slice(values: DiplomatSlice<u32>) -> *mut Numbers;
     pub(super) fn Numbers_from_static(values: DiplomatSlice<u32>) -> *mut Numbers;
+    pub(super) fn Points_destroy(this: *mut Points);
+    pub(super) fn Points_total(points: DiplomatSlice<super::Point>) -> i32;
+    pub(super) fn Points_new(points: DiplomatSlice<super::Point>) -> *mut Points;
+    pub(super) fn Points_as_slice<'a>(this: *const Points) -> DiplomatSlice<'a, super::Point>;
+    pub(super) fn Points_scale(points: DiplomatSliceMut<super::Point>, factor: i32);
     pub(super) fn SliceView_destroy(this: *mut SliceView);
     pub(super) fn SliceView_wrap(data: DiplomatSlice<u8>) -> *mut SliceView;
     pub(super) fn SliceView_len(this: *const SliceView) -> u32;

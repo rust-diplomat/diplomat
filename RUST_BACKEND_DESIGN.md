@@ -145,9 +145,10 @@ API safe.
 | Fallible return (`Result<T, E>`) | `DiplomatResult<T, E>`: `repr(C)` union plus bool tag | Backend-specific result or exception | `Result<SafeT, SafeE>` | `ReturnType::Fallible`; reuse `diplomat-runtime`'s `DiplomatResult<T, E>` | The runtime's `From<DiplomatResult<T, E>> for Result<T, E>` owns the tag check, so the generated code only converts each payload in its own arm. An owned opaque on either side becomes the owning wrapper, so its `Drop` frees the provider's allocation even when `?` discards the error. The success side is any shape a plain return accepts; `E` is `()`, a supported primitive, an owned opaque, or an enum/struct the provider marked with `#[diplomat::attr(auto, error)]`. |
 | Writer (`SuccessType::Write`) | Writer callback | Backend-specific writer | Rejected | `SuccessType::Write` identifies it | No unsafe code is emitted. A diagnostic prevents all output until callback semantics are designed. |
 | Borrowed slices/strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`, `&DiplomatStr16`) | `repr(C)` `{ptr, len}` pair (`DiplomatSlice`/`DiplomatSliceMut`) | Pins/leases in .NET; spans/views in C++ | `&'a [T]` / `&'a mut [T]` / `&'a str` / `&'a [u8]` / `&'a [u16]` | `Type::Slice(Slice::Primitive|Str)`, `Slice::lifetime`, `LifetimeEdgeKind::SliceParam`; C layout informed mapping | The runtime's `From<DiplomatSlice<T>>`/`From<DiplomatSliceMut<T>>` impls reconstruct the borrow after null/empty normalization (`nullptr` with `len == 0` maps to `&[]`). The return lifetime is taken from the HIR edge (receiver or slice parameter), never `'static`. |
+| Slices of plain `repr(C)` value structs (`&[S]`, `&mut [S]`) | `DiplomatSlice<S>` / `DiplomatSliceMut<S>` | Backend-specific | `&'a [S]` / `&'a mut [S]` | `Type::Slice(Slice::Struct(MaybeOwn::Borrow(_), _))`, `abi_compatibles` | Both sides already emit the same `repr(C)` layout with all-`pub` fields, so the slice is a native `{ptr, len}` with no per-element call and no intermediate buffer. The element type must be a value struct (`abi_compatible`, no lifetimes); a lifetime-bearing struct carries a `PhantomData` field the provider does not have. `Box<[S]>` is rejected — it is an owned allocation and inherits the undecided allocator contract (#15). |
 | Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field through the runtime slice conversions: `DiplomatSlice::from(slice)` on input, `.into()` on output. The `repr(C)` mirror struct carries the struct's lifetimes, so its field types name them explicitly. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. Declaring and using such a struct is supported; **returning** one from a method is limited to a single output lifetime, because the return path accepts exactly one method lifetime. A method that borrows the struct it returns from two inputs (e.g. `fn both<'a, 'b>(&'a self, other: &'b Bar) -> Both<'a, 'b>`) is rejected — see the rejected list below. |
 | Owned slice return (`Box<[u8]>`) | `DiplomatOwnedSlice<u8>` (ownership transferred) | Zero-copy `RustVec` in .NET | `Box<[u8]>` | `Slice::Primitive(MaybeOwn::Own, _)`, `owned_byte_slice_returns` capability gate | `Box::from(result)` over the runtime's `DiplomatOwnedSlice<u8>`, whose `From` impl reclaims the provider's allocation under Diplomat's owned-slice contract that provider and consumer share an allocator. Null+zero maps to an empty `Box`. |
-| Slices of structs/strings/opaques (`&[Struct]`, `&[DiplomatStrSlice]`, `&[&Opaque]`) | Nested pointer/length shapes | Backend-specific | Rejected | `Slice::Struct`, `Slice::Strs`, `Slice::Opaque` identify them | Generated wrappers are not layout-compatible with raw pointers, so an intermediate buffer or a different API shape is required. |
+| Slices of lifetime-bearing structs/strings/opaques (`&[Borrowed<'a>]`, `&[DiplomatStrSlice]`, `&[&Opaque]`) | Nested pointer/length shapes | Backend-specific | Rejected | `Slice::Struct` of a lifetime-bearing def, `Slice::Strs`, `Slice::Opaque` | Generated wrappers are not layout-compatible with the provider's type (a lifetime struct carries a `PhantomData` the provider does not), so an intermediate buffer or a different API shape is required. A plain `repr(C)` value struct is the exception: see the supported row above. |
 | Callback/trait/free function/async | Function pointer, vtable, or standalone symbols | Backend-specific runtime/trampolines | Rejected | HIR variants and `TypeContext` iterators identify them | No guessed trampoline or lifetime behavior is generated. |
 
 ## Generated opaque capabilities
@@ -192,6 +193,9 @@ Supported:
 - borrowed slices and strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`,
   `&DiplomatStr16`) as parameters and as returns, with the HIR lifetime edge
   re-materialized as a Rust lifetime;
+- borrowed slices of plain `repr(C)` value structs (`&[S]`, `&mut [S]`) as
+  parameters and as returns (`abi_compatibles`): one `DiplomatSlice<S>` across
+  the ABI, then a native Rust loop, with no per-element call;
 - owned `Box<[u8]>` returns (`owned_byte_slice_returns`), taking ownership of
   provider-allocated memory;
 - `Result<T, E>` returns (`custom_errors`), where the success payload is any of the
@@ -214,9 +218,11 @@ Explicitly rejected with contextual backend errors:
   accepting it would need a code-point validity decision), `Ordering` (no agreed ABI
   shape), and 128-bit integers (not FFI-safe on every target);
 - nested/owning struct fields and output-only structs;
-- owned slice *inputs* and owned slices of non-byte elements;
-- slices of structs/strings/opaques and `Option`/`Result` composition of owned
-  slices;
+- owned slice *inputs* and owned slices of non-byte elements, including
+  `Box<[S]>` for a value struct `S` (core rejects it at the AST with "Owned
+  slices only support primitives"; the allocator contract is #15);
+- slices of lifetime-bearing structs, strings-of-strings, and opaques, and
+  `Option`/`Result` composition of owned slices;
 - writers (`SuccessType::Write`), and every `Result` shape outside the subset above:
   a nullable owned opaque error (`Result<T, Option<Box<E>>>`, which has no single owner
   to destruct), a `#[diplomat::attr(auto, error)]`-marked struct that is not a plain
@@ -232,7 +238,7 @@ expressed by its flags are checked during Rust generation. Any error makes
 the backend return an empty `FileMap`; the top-level driver also refuses all
 writes when diagnostics exist.
 
-The declared flags are not the whole story — what backs each one matters. All ten are
+The declared flags are not the whole story — what backs each one matters. All eleven are
 gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping a flag removes
 the API and the consumer's test targets stop compiling:
 
@@ -240,7 +246,7 @@ the API and the consumer's test targets stop compiling:
 |---|---|
 | `constructors` | `Counter::from_value` (a plain `attr(auto, constructor)`) |
 | `memory_sharing` | `Numbers::from_slice`, `Float64Vec::new` |
-| `mutable_slices` | `Numbers::values_mut`, `Numbers::fill` |
+| `mutable_slices` | `Numbers::values_mut`, `Numbers::fill`, `Points::scale` |
 | `named_constructors` | `Counter::with_value` (from `new_named`) |
 | `option` | `Counter::add`, `Counter::maybe_snapshot` |
 | `owned_byte_slice_returns` | `Bytes::make`, `Bytes::join` |
@@ -248,13 +254,14 @@ the API and the consumer's test targets stop compiling:
 | `static_slices` | `Numbers::from_static` |
 | `utf8_strings` | `Message::utf8_len` |
 | `utf16_strings` | `WideMessage::new`, `WideMessage::units` |
+| `abi_compatibles` | `Points::total`, `Points::new`, `Points::as_slice`, `Points::scale` |
 
 The gating was verified by turning each flag off in turn, regenerating, and requiring
 three things: generation still succeeds (the guard must *disable* an API, not raise a
 diagnostic), the gated symbol disappears from the generated source, and
 `cargo check --all-targets` on the consumer fails. `--all-targets` is load-bearing here:
 the consumer's lib target references no gated API — every reference lives in
-`tests/runtime.rs` — so a plain `cargo check` passes with all nine flags off.
+`tests/runtime.rs` — so a plain `cargo check` passes with all eleven flags off.
 
 Two of the guards are not the obvious ones, and both were found by that experiment
 rather than by reading the fixture:
@@ -336,10 +343,12 @@ borrowed `ChildRef`, exercises shared/mutable opaque parameters, enums,
 structs, options, and observes the provider-side atomic destructor count. It
 also exercises the newer surface: `Numbers` (borrowed `&[u32]` read/write and a
 `&mut [u32]` out-parameter), `Message` (`&[u8]` and `&str` borrows), `SliceView`
-(an owned opaque carrying a type-level `'a` tied to the caller's buffer), and
+(an owned opaque carrying a type-level `'a` tied to the caller's buffer),
 `FieldView<'a>` (a lifetime-bearing value struct returned and consumed by
-value), and `Bytes` (owned `Box<[u8]>` returns, including an empty buffer and a
-return built from two borrowed slice parameters).
+value), `Bytes` (owned `Box<[u8]>` returns, including an empty buffer and a
+return built from two borrowed slice parameters), and `Points` (a slice of
+plain `repr(C)` `Point` values: one call to sum, a consumer-side loop over
+`as_slice()`, and an in-place `&mut [Point]` scale).
 
 Observed on macOS after a clean nested target:
 

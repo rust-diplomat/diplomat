@@ -20,7 +20,8 @@ Coverage is ordinary `#[test]` code run by `cargo test` — there is no bespoke
   `#![forbid(unsafe_code)]`: owner-side destruction exactly once, shared and
   exclusive views reaching the same native object, optional owned opaques,
   borrowed slices/strings, an opaque carrying a type-level lifetime, a
-  lifetime-bearing value struct round-tripped by value, and owned slice returns.
+  lifetime-bearing value struct round-tripped by value, owned slice returns,
+  and slices of plain `repr(C)` value structs (`&[Point]`, `&mut [Point]`).
 - `consumer/tests/compile_fail.rs` — one `#[test]` per case under
   `compile_fail/src/bin/`, each driving `cargo check` and asserting that the case
   is rejected for a specific reason (borrow escapes, mutability violations,

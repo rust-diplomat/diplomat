@@ -74,6 +74,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // `&DiplomatStr16` maps to `&[u16]`.
     support.utf8_strings = true;
     support.utf16_strings = true;
+    // A plain `repr(C)` value struct has the same layout on both sides of this ABI,
+    // so `&[S]` is a native `DiplomatSlice<S>` rather than an intermediate buffer.
+    // Claiming the flag is what makes `#[diplomat::attr(auto, abi_compatible)]` stick;
+    // without it, HIR refuses the slice before this backend sees it.
+    support.abi_compatibles = true;
     support
 }
 
@@ -176,14 +181,24 @@ mod tests {
         let file = syn::parse2::<syn::File>(tokens).unwrap();
         let mut validator = BasicAttributeValidator::new("rust");
         validator.support = super::attr_support();
-        let tcx = TypeContext::from_syn(
+        let tcx = match TypeContext::from_syn(
             &file,
             Default::default(),
             validator,
             None,
             &diplomat_core::ast::SpanLocation::None,
-        )
-        .unwrap_or_else(|errors| panic!("HIR errors: {errors:#?}"));
+        ) {
+            Ok(tcx) => tcx,
+            Err(errors) => {
+                return (
+                    HashMap::new(),
+                    errors
+                        .into_iter()
+                        .map(|error| format!("{error:?}"))
+                        .collect(),
+                );
+            }
+        };
         let mut config = Config::default();
         config.shared_config.lib_name = Some("safe_rust_test".into());
         let docs = DocsUrlGenerator::with_base_urls(None, HashMap::new());
@@ -641,6 +656,178 @@ mod tests {
             "{safe}"
         );
     }
+
+    /// A slice of a plain `repr(C)` value struct is the same `{ptr, len}` as a
+    /// primitive slice: both sides already share the layout, so the generated API
+    /// is `&[S]` with a single `DiplomatSlice::from` — no per-element call.
+    #[test]
+    fn slices_of_value_structs_are_lowered_as_parameters() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Point {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                #[diplomat::opaque]
+                pub struct Points;
+                impl Points {
+                    pub fn total(points: &[Point]) -> i32 {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(safe.contains("pub fn total(points: &[Point])"), "{safe}");
+        assert!(safe.contains("ffi::DiplomatSlice::from(points)"), "{safe}");
+        let ffi = &files["src/ffi.rs"];
+        assert!(ffi.contains("DiplomatSlice<super::Point>"), "{ffi}");
+        // `&[Point]` names a value type that lives in `types`; concatenating every
+        // generated file would hide a missing import on the opaque module itself.
+        let opaque = &files["src/opaques/points.rs"];
+        assert!(opaque.contains("use crate::types::*;"), "{opaque}");
+    }
+
+    /// Returning `&[S]` is the other half of the same layout: the consumer borrows
+    /// the slice once and loops in Rust, instead of one FFI call per element.
+    #[test]
+    fn slices_of_value_structs_are_returned() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Point {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                #[diplomat::opaque]
+                pub struct Points(Vec<Point>);
+                impl Points {
+                    pub fn as_slice<'a>(&'a self) -> &'a [Point] {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(
+            safe.contains("pub fn as_slice<'a>(&'a self) -> &'a [Point]"),
+            "{safe}"
+        );
+        let ffi = &files["src/ffi.rs"];
+        assert!(ffi.contains("DiplomatSlice<'a, super::Point>"), "{ffi}");
+        let opaque = &files["src/opaques/points.rs"];
+        assert!(opaque.contains("use crate::types::*;"), "{opaque}");
+        assert!(opaque.contains("result.into()"), "{opaque}");
+    }
+
+    #[test]
+    fn mutable_slices_of_value_structs_are_lowered() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Point {
+                    pub x: i32,
+                    pub y: i32,
+                }
+
+                #[diplomat::opaque]
+                pub struct Points;
+                impl Points {
+                    pub fn scale(points: &mut [Point], factor: i32) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(
+            safe.contains("pub fn scale(points: &mut [Point], factor: i32)"),
+            "{safe}"
+        );
+        assert!(
+            safe.contains("ffi::DiplomatSliceMut::from(points)"),
+            "{safe}"
+        );
+        let ffi = &files["src/ffi.rs"];
+        assert!(ffi.contains("DiplomatSliceMut<super::Point>"), "{ffi}");
+    }
+
+    /// A lifetime-bearing struct is not layout-compatible: the generated wrapper
+    /// has a `PhantomData` field the provider does not. Marking it `abi_compatible`
+    /// so a slice is even considered, HIR refuses it because of the lifetimes.
+    #[test]
+    fn slices_of_lifetime_structs_are_rejected() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStrSlice;
+
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct Borrowed<'a> {
+                    bytes: DiplomatStrSlice<'a>,
+                }
+
+                #[diplomat::opaque]
+                pub struct Wrap;
+                impl Wrap {
+                    pub fn take(fields: &[Borrowed]) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(files.is_empty(), "no partial output: {:#?}", files.keys());
+        assert!(
+            errors.iter().any(|error| error.contains("lifetime")),
+            "{errors:#?}"
+        );
+    }
+
+    /// `Box<[S]>` is an owned allocation. Core rejects it at the AST with a
+    /// diagnostic rather than lowering it into a shape this backend could mis-emit.
+    #[test]
+    fn owned_slices_of_value_structs_are_rejected() {
+        let panicked = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            generate(quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::attr(auto, abi_compatible)]
+                    pub struct Point {
+                        pub x: i32,
+                        pub y: i32,
+                    }
+
+                    #[diplomat::opaque]
+                    pub struct Points;
+                    impl Points {
+                        pub fn take(points: Box<[Point]>) {
+                            unimplemented!()
+                        }
+                    }
+                }
+            })
+        }));
+        let payload = panicked.expect_err("Box<[S]> must be rejected, not lowered");
+        let message = payload
+            .downcast_ref::<String>()
+            .map(|s| s.as_str())
+            .or_else(|| payload.downcast_ref::<&str>().copied())
+            .unwrap_or("");
+        assert!(
+            message.contains("Owned slices only support primitives"),
+            "{message}"
+        );
+    }
+
     #[test]
     fn owned_slice_returns_are_boxed() {
         let (files, errors) = generate(quote! {
@@ -967,7 +1154,7 @@ mod tests {
         ),
         (
             "mutable_slices",
-            "borrowed_slices_and_strings_are_lowered; gated: Numbers::values_mut, Numbers::fill",
+            "borrowed_slices_and_strings_are_lowered; gated: Numbers::values_mut, Numbers::fill, Points::scale",
         ),
         (
             "named_constructors",
@@ -991,6 +1178,10 @@ mod tests {
             "gated: WideMessage; capability_flags_gate_generated_apis",
         ),
         ("utf8_strings", "gated: Message::utf8_len"),
+        (
+            "abi_compatibles",
+            "slices_of_value_structs_are_lowered_as_parameters; slices_of_value_structs_are_returned; mutable_slices_of_value_structs_are_lowered; gated: Points::total, Points::new, Points::as_slice, Points::scale",
+        ),
     ];
 
     /// Every `support.<flag> = true` in `attr_support` needs a [`FLAG_COVERAGE`] row, so
