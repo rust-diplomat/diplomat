@@ -84,6 +84,50 @@ export LD_LIBRARY_PATH="$native_dir${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 echo "== run the safe consumer and compile-fail test suites =="
 cargo test --manifest-path "$fixture_dir/Cargo.toml" --workspace
 
+echo "== prove a rejected provider reports its diagnostic instead of aborting on the span =="
+# The bridge module below is inline in the *entry* file, which is the shape that makes
+# the tool record the entry file's parent directory as the module's source location.
+# Reading that directory as a file used to abort the whole report, so a provider in
+# this shape got a bare panic instead of a diagnostic — which is the entire point of
+# this backend's "explicitly rejected with contextual backend errors" contract. Keep
+# a provider in that shape in the gate so it cannot regress unnoticed.
+probe_dir="$target_dir/reject-probe"
+rm -rf "$probe_dir"
+mkdir -p "$probe_dir/src"
+cat >"$probe_dir/src/lib.rs" <<'PROBE'
+#[diplomat::bridge]
+pub mod ffi {
+    #[diplomat::opaque]
+    pub struct Probe;
+
+    impl Probe {
+        pub fn bad(&self, c: char) {}
+    }
+}
+PROBE
+cat >"$probe_dir/config.toml" <<'PROBE'
+[rust]
+crate-name = "diplomat-rust-backend-reject-probe"
+dylib-name = "diplomat_rust_backend_provider"
+PROBE
+probe_log="$probe_dir/output.txt"
+if cargo run --quiet --manifest-path "$repo_dir/Cargo.toml" -p diplomat-tool -- \
+    rust "$probe_dir/generated" \
+    --entry "$probe_dir/src/lib.rs" \
+    --config-file "$probe_dir/config.toml" >"$probe_log" 2>&1
+then
+    fail "a provider that uses char was accepted instead of rejected"
+fi
+if grep -q 'Could not read source file' "$probe_log"; then
+    fail "diagnostic reporting aborted on an unreadable span instead of reporting"
+fi
+if ! grep -q 'Could not resolve char' "$probe_log"; then
+    cat "$probe_log" >&2
+    fail "the diagnostic for a rejected provider was not reported"
+fi
+echo "   rejected provider reported: $(head -n 2 "$probe_log" | tr '\n' ' ')"
+rm -rf "$probe_dir"
+
 echo "== prove fixture sources, generated code, and tests are fmt- and lint-clean =="
 cargo fmt --manifest-path "$fixture_dir/Cargo.toml" --all --check
 cargo clippy --manifest-path "$fixture_dir/Cargo.toml" --workspace --all-targets -- -D warnings
