@@ -100,7 +100,15 @@ pub(super) fn generate_lib() -> String {
          //! The unsafe ABI layer lives in the private `ffi` module; the public API is\n\
          //! re-exported from this crate root.\n\n\
          #![allow(clippy::needless_lifetimes)]\n\
-         #![allow(clippy::new_without_default)]\n\n\
+         #![allow(clippy::new_without_default)]\n\
+         // The generated surface is the provider's declarations rendered in Rust, so\n\
+         // a provider that declares `Result<T, ()>`, an inherent `new`/`from_str`,\n\
+         // or a `len` without an `is_empty` gets exactly that. Re-shaping those\n\
+         // would change the API this backend offers for no ABI reason; names are\n\
+         // different and *are* restyled (see `method_name`).\n\
+         #![allow(clippy::result_unit_err)]\n\
+         #![allow(clippy::should_implement_trait)]\n\
+         #![allow(clippy::len_without_is_empty)]\n\n\
          mod ffi;\n\
          mod opaques;\n\
          mod private;\n\

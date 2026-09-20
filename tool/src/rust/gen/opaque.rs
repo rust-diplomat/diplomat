@@ -10,7 +10,8 @@ use diplomat_core::hir::{
 use super::method::emit_method;
 use crate::r#rust::formatter::{emit_docs, opaque_name, type_def_name};
 use crate::r#rust::lifetimes::{
-    lifetime_generics, opaque_lifetime_names, opaque_lifetime_phantom, render_generics,
+    bounded_lifetime_name, lifetime_generics, opaque_lifetime_names, opaque_lifetime_phantom,
+    render_generics,
 };
 
 pub(super) fn opaque_generics(opaque: &hir::OpaqueDef, wrapper: Wrapper) -> (String, String) {
@@ -126,6 +127,47 @@ impl Wrapper {
     }
 }
 
+/// The lifetime parameters of the *method* impl block.
+///
+/// This is deliberately not [`opaque_generics`]. A provider spells a type's
+/// lifetime in the struct declaration and again in each `impl` block, and HIR
+/// keeps both: `feature_tests/src/selftype.rs` declares `struct RefList<'a>` and
+/// then `impl<'b> RefList<'b>`, and `lifetimes.rs` declares `struct One<'a>` and
+/// `impl<'o> One<'o>` with methods that themselves declare `<'a, ...>`.
+///
+/// Method signatures are rendered from `method.lifetime_env`, so the impl has to
+/// be too — using the declaration's spelling here is what produced `impl<'a>
+/// One<'a>` containing a method that redeclares `'a` (E0496), and `impl<'a>
+/// RefList<'a>` containing a method that names an undeclared `'b` (E0261).
+fn impl_generics(opaque: &hir::OpaqueDef, wrapper: Wrapper) -> (String, String) {
+    let type_lifetimes = opaque.lifetimes.num_lifetimes();
+    let env = opaque
+        .methods
+        .iter()
+        .filter(|method| !method.attrs.disable)
+        .map(|method| &method.lifetime_env)
+        .find(|env| env.num_lifetimes() >= type_lifetimes);
+
+    let (mut params, mut args) = match env {
+        Some(env) => (
+            env.all_lifetimes()
+                .take(type_lifetimes)
+                .map(|lifetime| bounded_lifetime_name(env, lifetime))
+                .collect::<Vec<_>>(),
+            env.all_lifetimes()
+                .take(type_lifetimes)
+                .map(|lifetime| format!("'{}", env.fmt_lifetime(lifetime)))
+                .collect::<Vec<_>>(),
+        ),
+        None => lifetime_generics(&opaque.lifetimes),
+    };
+    if wrapper.borrows() {
+        params.insert(0, "'view".to_string());
+        args.insert(0, "'view".to_string());
+    }
+    (render_generics(&params), render_generics(&args))
+}
+
 pub(super) fn emit_impl(
     out: &mut String,
     opaque: &hir::OpaqueDef,
@@ -134,7 +176,7 @@ pub(super) fn emit_impl(
     wrapper: Wrapper,
 ) {
     let name = type_def_name(TypeDef::Opaque(opaque));
-    let (params, args) = opaque_generics(opaque, wrapper);
+    let (params, args) = impl_generics(opaque, wrapper);
     let type_name = wrapper.type_name(&name);
     writeln!(out, "impl{params} {type_name}{args} {{").unwrap();
     for method in opaque.methods.iter().filter(|method| !method.attrs.disable) {
