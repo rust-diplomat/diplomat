@@ -1,5 +1,0 @@
-lib-name = "diplomat_rust_backend_provider"
-
-[rust]
-crate-name = "diplomat-rust-backend-generated"
-dylib-name = "diplomat_rust_backend_provider"

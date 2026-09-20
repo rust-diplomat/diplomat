@@ -162,12 +162,18 @@ pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tc
     }
 
     for (_, method) in tcx.all_free_functions() {
+        if method.attrs.disable {
+            continue;
+        }
         let _guard = reporter.set_context_method((&method.name).into());
         reporter.reject(
             "[Rust backend] free functions are unsupported; place the function on an opaque type",
         );
     }
     for (_, trt) in tcx.all_traits() {
+        if trt.attrs.disable {
+            continue;
+        }
         let _guard = reporter.set_context_ty((&trt.name).into());
         reporter.reject("[Rust backend] traits and callbacks are unsupported");
     }
