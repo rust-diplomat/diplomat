@@ -58,6 +58,60 @@ case "$(uname -s)" in
 esac
 [ -f "$provider_lib" ] || fail "provider cdylib not found: $provider_lib"
 
+echo "== prove every claimed capability flag is load-bearing =="
+# `attr_support()` is a promise, so each `support.<flag> = true` has to gate something
+# the corpus actually asks for, and that something has to be generated. Four flags were
+# once claimed with no effect at all: two were read by nothing, and two asserted a
+# "special constructor method" Rust does not have. Each was nominally covered by a prose
+# table in `tool/src/rust` whose rows cited a provider that no longer exists, so nothing
+# caught them. Check the claim against the corpus it is about instead.
+python3 - "$repo_dir" "$corpus_dir" <<'AUDIT' || fail "capability claims are not load-bearing"
+import re, sys, pathlib
+
+repo, corpus = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
+body = pathlib.Path(repo, "tool/src/rust/mod.rs").read_text() \
+    .split("pub(crate) fn attr_support")[1].split("\n}\n")[0]
+claimed = sorted(set(re.findall(r"support\.(\w+)\s*=\s*true", body)))
+
+items = []
+for path in sorted(corpus.rglob("*.rs")):
+    lines = path.read_text().split("\n")
+    for i, line in enumerate(lines):
+        m = re.match(r"^\s*(?:pub(?:\([^)]*\))?\s+)?(fn|struct|enum)\s+(\w+)", line)
+        if not m:
+            continue
+        top = i
+        while top > 0 and re.match(r"^\s*(#\[|///|//!|//)", lines[top - 1]):
+            top -= 1
+        items.append((m.group(2), m.group(1), "\n".join(lines[top:i])))
+
+worse = 0
+for flag in claimed:
+    gated = [it for it in items if re.search(r"supports\s*=\s*" + flag + r"\b", it[2])]
+    if not gated:
+        print(f"  {flag}: claimed, but gates no corpus item", file=sys.stderr)
+        worse += 1
+        continue
+    off = [
+        it for it in gated
+        if re.search(r"#\[diplomat::attr\([^)]*\brust\b[^)]*, disable\)\]", it[2])
+    ]
+    live = len(gated) - len(off)
+    if live == 0:
+        listed = ", ".join(f"{kind} {name}" for name, kind, _ in off)
+        print(f"  {flag}: claimed, but gates no live corpus item: {listed}", file=sys.stderr)
+        worse += 1
+    elif off:
+        # The flag carries real items, but some of what it gates is blocked by a
+        # *different* missing feature. Surface it rather than fail: it is a standing
+        # reminder that the claim is currently wider than what is delivered.
+        listed = ", ".join(f"{kind} {name}" for name, kind, _ in off)
+        print(f"  {flag}: {live} live, {len(off)} blocked elsewhere ({listed})")
+    else:
+        print(f"  {flag}: {live} corpus item(s)")
+sys.exit(1 if worse else 0)
+AUDIT
+
 echo "== prove dependency graphs exclude the provider implementation and codegen =="
 consumer_tree=$(cargo tree --manifest-path "$fixture_dir/consumer/Cargo.toml")
 generated_tree=$(cargo tree --manifest-path "$generated_dir/Cargo.toml")

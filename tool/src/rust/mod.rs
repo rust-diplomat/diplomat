@@ -57,10 +57,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // this flag, and floats are rejected, so pointing this backend at the shared
     // corpus fails on those methods until floats land (issue #10 on the fork).
     support.memory_sharing = true;
-    support.constructors = true;
-    // `named_constructor` maps to an associated function named after the declared
-    // constructor name; see `method_name`.
-    support.named_constructors = true;
     support.option = true;
     support.mutable_slices = true;
     support.static_slices = true;
@@ -70,10 +66,6 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     // Marking is what makes the flag load-bearing: without it a `Result`'s error payload is
     // refused, which is the rule the other backends apply to a custom error type too.
     support.custom_errors = true;
-    // The generated API surface is Rust, so it is UTF-8 by construction, and
-    // `&DiplomatStr16` maps to `&[u16]`.
-    support.utf8_strings = true;
-    support.utf16_strings = true;
     // A plain `repr(C)` value struct has the same layout on both sides of this ABI,
     // so `&[S]` is a native `DiplomatSlice<S>` rather than an intermediate buffer.
     // Claiming the flag is what makes `#[diplomat::attr(auto, abi_compatible)]` stick;
@@ -1057,9 +1049,11 @@ mod tests {
     }
 
     /// A `#[diplomat::cfg(supports = ...)]` method is generated only when the backend
-    /// declares that flag. This ties each declaration in `attr_support` to an
-    /// observable effect, so a flag cannot be dropped or added without changing what
-    /// comes out.
+    /// declares that flag.
+    ///
+    /// This covers the *mechanism*, not any particular claim: the same assertion holds
+    /// for any flag name, so it is not evidence that a flag means what its name says.
+    /// `scripts/check.sh` carries that check, against the corpus.
     #[test]
     fn capability_flags_gate_generated_apis() {
         let (files, errors) = generate(quote! {
@@ -1068,17 +1062,17 @@ mod tests {
                 #[diplomat::opaque]
                 pub struct Thing(Vec<u16>);
                 impl Thing {
-                    #[diplomat::cfg(supports = utf16_strings)]
-                    pub fn utf16_len(&self) -> u32 { unimplemented!() }
+                    #[diplomat::cfg(supports = option)]
+                    pub fn gated_on_a_claimed_flag(&self) -> u32 { unimplemented!() }
                     #[diplomat::cfg(supports = callbacks)]
-                    pub fn needs_callbacks(&self) { unimplemented!() }
+                    pub fn gated_on_an_unclaimed_flag(&self) { unimplemented!() }
                 }
             }
         });
         assert!(errors.is_empty(), "{errors:#?}");
         let safe = &all_rust_sources(&files);
-        assert!(safe.contains("pub fn utf16_len("), "{safe}");
-        assert!(!safe.contains("needs_callbacks"), "{safe}");
+        assert!(safe.contains("pub fn gated_on_a_claimed_flag("), "{safe}");
+        assert!(!safe.contains("gated_on_an_unclaimed_flag"), "{safe}");
     }
 
     /// Generated module names follow the repo-wide `heck` snake_case convention, the
@@ -1201,48 +1195,36 @@ mod tests {
     /// fixture method that exercises the shape at runtime.
     const FLAG_COVERAGE: &[(&str, &str)] = &[
         (
-            "constructors",
-            "plain_constructors_are_accepted; gated: Counter::from_value; Counter::new at runtime",
-        ),
-        (
             "memory_sharing",
-            "gated: Numbers::from_slice, Float64Vec::new",
+            "gated: Float64Vec::new, Float64Vec::new_from_owned",
         ),
         (
             "mutable_slices",
-            "borrowed_slices_and_strings_are_lowered; gated: Numbers::values_mut, Numbers::fill, Points::scale",
-        ),
-        (
-            "named_constructors",
-            "named_constructor_names_are_honoured; gated: Counter::with_value",
+            "gated: Float64Vec::fill_slice, PrimitiveStructVec::mutable_slice",
         ),
         (
             "option",
-            "value_types_and_options_are_lowered; gated: Counter::add, Counter::maybe_snapshot",
+            "gated: OptionOpaque::accepts_option_u8, OptionOpaque::accepts_option_enum, OptionInputStruct",
         ),
+        ("static_slices", "gated: Foo::new_static"),
         (
             "owned_byte_slice_returns",
-            "owned_slice_returns_are_boxed; gated: Bytes::make, Bytes::join",
+            "gated: OwnedSliceReturn::make_bytes, OwnedSliceReturn::try_make_bytes",
         ),
-        (
-            "custom_errors",
-            "fallible_primitive_errors_lower_to_a_result; fallible_owned_opaque_errors_are_owned_by_the_wrapper; gated: Counter::try_from_value, Counter::take",
-        ),
-        ("static_slices", "gated: Numbers::from_static"),
-        (
-            "utf16_strings",
-            "gated: WideMessage; capability_flags_gate_generated_apis",
-        ),
-        ("utf8_strings", "gated: Message::utf8_len"),
+        ("custom_errors", "gated: ResultOpaque::new_failing_int"),
         (
             "abi_compatibles",
-            "slices_of_value_structs_are_lowered_as_parameters; slices_of_value_structs_are_returned; mutable_slices_of_value_structs_are_lowered; gated: Points::total, Points::new, Points::as_slice, Points::scale",
+            "gated: PrimitiveStructVec, CyclicStructA::assert_slice, CyclicStructA::nested_slice",
         ),
     ];
 
     /// Every `support.<flag> = true` in `attr_support` needs a [`FLAG_COVERAGE`] row, so
-    /// a capability cannot be claimed without covering it — the mechanical half of the
-    /// rule whose human half is the table itself.
+    /// a capability cannot be claimed without at least naming what covers it.
+    ///
+    /// This checks only that the *names* match. It cannot tell whether a row's prose is
+    /// true — which is how four rows came to cite a deleted provider while four claims
+    /// came to have no effect at all. Rows cite types from `feature_tests/src`; the
+    /// load-bearing check lives in `feature_tests/rust/scripts/check.sh`.
     #[test]
     fn every_claimed_flag_is_covered() {
         let source = include_str!("mod.rs");
