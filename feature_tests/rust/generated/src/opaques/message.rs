@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -63,6 +64,30 @@ impl Drop for Message {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::Message_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for Message {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Message")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for MessageRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("MessageRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for MessageRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("MessageRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -63,6 +64,28 @@ impl Drop for Bytes {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::Bytes_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for Bytes {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Bytes").field(&self.inner.as_ptr()).finish()
+    }
+}
+
+impl<'view> fmt::Debug for BytesRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("BytesRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for BytesRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("BytesRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

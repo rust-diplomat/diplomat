@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -67,6 +68,30 @@ impl<'a> Drop for SliceView<'a> {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::SliceView_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl<'a> fmt::Debug for SliceView<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("SliceView")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view, 'a> fmt::Debug for SliceViewRef<'view, 'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("SliceViewRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view, 'a> fmt::Debug for SliceViewRefMut<'view, 'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("SliceViewRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

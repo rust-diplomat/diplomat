@@ -78,9 +78,24 @@ pub(super) fn emit_opaque(
 
     writeln!(out, "impl{owned_params} Drop for {name}{owned_args} {{\n    fn drop(&mut self) {{\n        // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.\n        unsafe {{ ffi::{}(self.inner.as_ptr()) }};\n    }}\n}}\n", opaque.dtor_abi_name).unwrap();
 
+    emit_debug(out, &name, Wrapper::Owned, &owned_params, &owned_args);
+    emit_debug(out, &name, Wrapper::Ref, &ref_params, &ref_args);
+    emit_debug(out, &name, Wrapper::RefMut, &ref_params, &ref_args);
+
     emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Owned);
     emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::Ref);
     emit_impl(out, opaque, tcx, docs_url_gen, Wrapper::RefMut);
+}
+
+/// Hand-written so `Debug` does not name `pub(crate)` fields. A derive would
+/// print `inner` and `_not_send_sync` and lock those names into the public format.
+fn emit_debug(out: &mut String, name: &str, wrapper: Wrapper, params: &str, args: &str) {
+    let type_name = wrapper.type_name(name);
+    writeln!(
+        out,
+        "impl{params} fmt::Debug for {type_name}{args} {{\n    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {{\n        f.debug_tuple(\"{type_name}\").field(&self.inner.as_ptr()).finish()\n    }}\n}}\n"
+    )
+    .unwrap();
 }
 
 /// Which generated wrapper an impl block belongs to, named after the suffix each
@@ -100,6 +115,15 @@ impl Wrapper {
     fn borrows(self) -> bool {
         !matches!(self, Self::Owned)
     }
+
+    /// The generated type name: `T`, `TRef`, or `TRefMut`.
+    fn type_name(self, name: &str) -> String {
+        match self {
+            Self::Owned => name.to_string(),
+            Self::Ref => format!("{name}Ref"),
+            Self::RefMut => format!("{name}RefMut"),
+        }
+    }
 }
 
 pub(super) fn emit_impl(
@@ -111,11 +135,8 @@ pub(super) fn emit_impl(
 ) {
     let name = type_def_name(TypeDef::Opaque(opaque));
     let (params, args) = opaque_generics(opaque, wrapper);
-    match wrapper {
-        Wrapper::Owned => writeln!(out, "impl{params} {name}{args} {{").unwrap(),
-        Wrapper::Ref => writeln!(out, "impl{params} {name}Ref{args} {{").unwrap(),
-        Wrapper::RefMut => writeln!(out, "impl{params} {name}RefMut{args} {{").unwrap(),
-    }
+    let type_name = wrapper.type_name(&name);
+    writeln!(out, "impl{params} {type_name}{args} {{").unwrap();
     for method in opaque.methods.iter().filter(|method| !method.attrs.disable) {
         let include = match (&method.param_self, wrapper) {
             (None, Wrapper::Owned) => true,

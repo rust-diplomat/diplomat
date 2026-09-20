@@ -21,7 +21,9 @@ Coverage is ordinary `#[test]` code run by `cargo test` — there is no bespoke
   exclusive views reaching the same native object, optional owned opaques,
   borrowed slices/strings, an opaque carrying a type-level lifetime, a
   lifetime-bearing value struct round-tripped by value, owned slice returns,
-  and slices of plain `repr(C)` value structs (`&[Point]`, `&mut [Point]`).
+  slices of plain `repr(C)` value structs (`&[Point]`, `&mut [Point]`), and
+  opaque `Debug` (`TypeName(<addr>)`, which is what lets `.expect` / `.unwrap_err`
+  compile).
 - `consumer/tests/compile_fail.rs` — one `#[test]` per case under
   `compile_fail/src/bin/`, each driving `cargo check` and asserting that the case
   is rejected for a specific reason (borrow escapes, mutability violations,

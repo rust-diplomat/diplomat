@@ -241,6 +241,62 @@ mod tests {
         assert!(raw.contains("Counter_destroy"));
     }
 
+    /// Opaque wrappers need `Debug` so `Result` helpers (`.expect`, `.unwrap_err`)
+    /// compile. A derive would print `pub(crate)` field names and lock the internal
+    /// representation into the public format, so the impl has to be written by hand.
+    #[test]
+    fn opaque_wrappers_implement_debug_without_naming_private_fields() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+                #[diplomat::opaque]
+                pub struct Counter(u32);
+                impl Counter {
+                    pub fn new() -> Box<Self> { unimplemented!() }
+                }
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a DiplomatStr);
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a DiplomatStr) -> Box<Self> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+
+        let counter = &files["src/opaques/counter.rs"];
+        assert!(
+            counter.contains("impl fmt::Debug for Counter {"),
+            "owned wrapper must implement Debug by hand: {counter}"
+        );
+        assert!(
+            counter.contains("impl<'view> fmt::Debug for CounterRef<'view> {"),
+            "shared view must implement Debug: {counter}"
+        );
+        assert!(
+            counter.contains("impl<'view> fmt::Debug for CounterRefMut<'view> {"),
+            "exclusive view must implement Debug: {counter}"
+        );
+        assert!(
+            !counter.contains("#[derive"),
+            "a derive would publish private field names in Debug: {counter}"
+        );
+
+        let foo = &files["src/opaques/foo.rs"];
+        assert!(
+            foo.contains("impl<'a> fmt::Debug for Foo<'a> {"),
+            "lifetime-parameterized owned wrapper must implement Debug: {foo}"
+        );
+        assert!(
+            foo.contains("impl<'view, 'a> fmt::Debug for FooRef<'view, 'a> {"),
+            "lifetime-parameterized shared view must implement Debug: {foo}"
+        );
+        assert!(
+            !foo.contains("#[derive"),
+            "a derive would publish private field names in Debug: {foo}"
+        );
+    }
+
     #[test]
     fn borrowed_return_preserves_hir_lifetime() {
         let (files, errors) = generate(quote! {

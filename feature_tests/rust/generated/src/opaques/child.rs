@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -63,6 +64,28 @@ impl Drop for Child {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::Child_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for Child {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Child").field(&self.inner.as_ptr()).finish()
+    }
+}
+
+impl<'view> fmt::Debug for ChildRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ChildRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for ChildRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ChildRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

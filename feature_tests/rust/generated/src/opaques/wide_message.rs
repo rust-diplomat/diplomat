@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -63,6 +64,30 @@ impl Drop for WideMessage {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::WideMessage_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for WideMessage {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("WideMessage")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for WideMessageRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("WideMessageRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for WideMessageRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("WideMessageRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

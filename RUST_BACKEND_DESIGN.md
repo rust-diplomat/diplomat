@@ -159,7 +159,13 @@ For each opaque `T`, the safe file generates:
 - `TRef<'a>`: shared, non-owning, method set limited to shared methods;
 - `TRefMut<'a>`: exclusive, non-owning, shared and mutable methods;
 - public, methodless `TSharedArg` and `TMutArg` marker traits whose pointer
-  operations live in a private sealing module.
+  operations live in a private sealing module;
+- a hand-written `Debug` impl on all three wrappers that prints
+  `TypeName(<addr>)`. A derive is not used: it would name the `pub(crate)`
+  fields and lock the internal representation into the public format.
+  `PartialEq` is not generated — identity comparison is already an explicit
+  method (`Counter::same_identity`), and `==` would be easy to confuse with
+  value equality.
 
 Every wrapper carries `PhantomData<Rc<()>>`. Diplomat HIR currently has no
 per-opaque thread-safety metadata, so the safe conservative answer is
@@ -210,6 +216,9 @@ Supported:
   borrowed slices (e.g. `BorrowedFields<'a>`), with per-field lifetime mapping;
 - value `Option<T>` for supported value-type payloads (the old local mirror's `Copy` bound is gone);
 - docs and applicable HIR renames;
+- `Debug` on every opaque wrapper (`T`, `TRef`, `TRefMut`), printing
+  `TypeName(<addr>)` without naming private fields, so `.expect` / `.unwrap_err`
+  compile on a `Result` that names an opaque;
 - invalid-name and generated-name collision diagnostics.
 
 Explicitly rejected with contextual backend errors:
@@ -348,7 +357,9 @@ also exercises the newer surface: `Numbers` (borrowed `&[u32]` read/write and a
 value), `Bytes` (owned `Box<[u8]>` returns, including an empty buffer and a
 return built from two borrowed slice parameters), and `Points` (a slice of
 plain `repr(C)` `Point` values: one call to sum, a consumer-side loop over
-`as_slice()`, and an in-place `&mut [Point]` scale).
+`as_slice()`, and an in-place `&mut [Point]` scale). Opaque wrappers print as
+`TypeName(<addr>)`, which is what lets `.expect` / `.unwrap_err` compile on a
+`Result` that names an opaque.
 
 Observed on macOS after a clean nested target:
 

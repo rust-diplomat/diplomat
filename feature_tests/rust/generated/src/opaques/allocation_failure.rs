@@ -1,3 +1,4 @@
+use core::fmt;
 use core::marker::PhantomData;
 use core::ptr::NonNull;
 use std::rc::Rc;
@@ -67,6 +68,30 @@ impl Drop for AllocationFailure {
     fn drop(&mut self) {
         // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
         unsafe { ffi::AllocationFailure_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for AllocationFailure {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("AllocationFailure")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for AllocationFailureRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("AllocationFailureRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for AllocationFailureRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("AllocationFailureRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
     }
 }
 

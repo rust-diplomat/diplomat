@@ -226,36 +226,30 @@ fn capability_gated_apis_are_generated() {
 /// A `Result` whose error owns a native allocation.
 ///
 /// The generated wrapper is the error's only owner, so `?` discarding it has to run the
-/// provider destructor. The error is not `Debug`, so the helpers that need it (`.expect`,
-/// `.unwrap_err`) are not available; `.map_err(|_| ())` and `matches!` are.
+/// provider destructor. Opaque wrappers implement `Debug`, so `.expect` and `.unwrap_err`
+/// compile rather than needing `.map_err(|_| ())`.
 #[test]
 fn fallible_calls_return_result_and_free_owned_errors() {
     let _serial = counter_probe();
     Counter::reset_drop_count();
     AllocationFailure::reset_drop_count();
 
-    let mut counter = match Counter::try_from_value(10) {
-        Ok(counter) => counter,
-        Err(error) => panic!("10 is within the limit, got {error:?}"),
-    };
+    let mut counter = Counter::try_from_value(10).expect("10 is within the limit");
     assert_eq!(counter.get(), 10);
 
     // A custom error enum, compared by value.
-    assert!(matches!(
-        Counter::try_from_value(200),
-        Err(ValueError::TooLarge)
-    ));
+    assert_eq!(
+        Counter::try_from_value(200).unwrap_err(),
+        ValueError::TooLarge
+    );
 
     // A non-trivial success payload comes back through the same conversion.
-    assert_eq!(counter.take(4).map_err(|_| ()), Ok(4));
+    assert_eq!(counter.take(4).expect("4 is available"), 4);
     assert_eq!(counter.get(), 6);
 
     // Holding the error keeps its allocation alive.
     {
-        let failure = match counter.take(50) {
-            Ok(_) => panic!("50 exceeds the remaining 6"),
-            Err(failure) => failure,
-        };
+        let failure = counter.take(50).unwrap_err();
         assert_eq!(failure.code(), 50);
         assert_eq!(AllocationFailure::drop_count(), 0);
     }
@@ -273,6 +267,34 @@ fn fallible_calls_return_result_and_free_owned_errors() {
 fn take_twice_or_propagate(counter: &mut Counter, n: u32) -> Result<u32, AllocationFailure> {
     let taken = counter.take(n)?;
     Ok(taken * 2)
+}
+
+/// Opaque `Debug` identifies the handle by address and does not name private fields.
+/// A `#[derive(Debug)]` would print `inner` and `_not_send_sync`; the hand-written
+/// impl is what keeps those names out of the public format.
+#[test]
+fn opaque_debug_identifies_the_handle_without_leaking_private_fields() {
+    let _serial = counter_probe();
+    let mut counter = Counter::try_from_value(10).expect("10 is accepted");
+
+    assert_handle_debug(&format!("{counter:?}"), "Counter");
+    assert_handle_debug(&format!("{:?}", counter.child()), "ChildRef");
+    assert_handle_debug(&format!("{:?}", counter.child_mut()), "ChildRefMut");
+    assert_handle_debug(
+        &format!("{:?}", counter.take(50).unwrap_err()),
+        "AllocationFailure",
+    );
+}
+
+fn assert_handle_debug(debug: &str, type_name: &str) {
+    assert!(
+        debug.starts_with(&format!("{type_name}(0x")) && debug.ends_with(')'),
+        "{type_name} Debug should be {type_name}(<addr>), got {debug}"
+    );
+    assert!(
+        !debug.contains("inner") && !debug.contains("_not_send_sync") && !debug.contains("_borrow"),
+        "Debug must not name private fields: {debug}"
+    );
 }
 
 /// A slice of value structs crosses the ABI once. The consumer does not loop with

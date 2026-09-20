@@ -188,7 +188,8 @@ pub(super) fn generate_opaque_file(
     docs_url_gen: &DocsUrlGenerator,
 ) -> String {
     let mut out = String::from(
-        "use core::marker::PhantomData;\n\
+        "use core::fmt;\n\
+         use core::marker::PhantomData;\n\
          use core::ptr::NonNull;\n\
          use std::rc::Rc;\n\n\
          use crate::ffi;\n",
