@@ -59,19 +59,72 @@ esac
 [ -f "$provider_lib" ] || fail "provider cdylib not found: $provider_lib"
 
 echo "== prove every claimed capability flag is load-bearing =="
-# `attr_support()` is a promise, so each `support.<flag> = true` has to gate something
-# the corpus actually asks for, and that something has to be generated. Four flags were
-# once claimed with no effect at all: two were read by nothing, and two asserted a
-# "special constructor method" Rust does not have. Each was nominally covered by a prose
-# table in `tool/src/rust` whose rows cited a provider that no longer exists, so nothing
-# caught them. Check the claim against the corpus it is about instead.
+# `attr_support()` is a promise. Four flags were once claimed with no effect at all:
+# `constructors` and `named_constructors` assert a "special constructor method" Rust
+# does not have, and `utf8_strings`/`utf16_strings` were read by nothing. All four were
+# nominally "covered" by a prose table whose rows cited a provider that no longer
+# exists, so nothing caught them.
+#
+# The test of a claim is a toggle: turn the flag off and see whether the set of corpus
+# items that survive changes. If it does not, the flag buys nothing and is a lie about
+# the backend. Evaluate the corpus conditions directly rather than pattern-matching —
+# a regex cannot tell `cfg(supports = X)` (include this) from `attr(..., disable)`
+# (exclude this), nor notice an item that a second condition already excludes. An
+# earlier version of this check made exactly those two mistakes and reported three
+# live items for a flag that carries one.
+#
+# Known blind spot: conditions on an enclosing type or impl block are not inherited by
+# the items inside it, so an item excluded only via its container still counts as
+# carried. That over-counts, so this check can miss a dead claim, but it will not fail a
+# live one.
 python3 - "$repo_dir" "$corpus_dir" <<'AUDIT' || fail "capability claims are not load-bearing"
 import re, sys, pathlib
 
 repo, corpus = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
 body = pathlib.Path(repo, "tool/src/rust/mod.rs").read_text() \
     .split("pub(crate) fn attr_support")[1].split("\n}\n")[0]
-claimed = sorted(set(re.findall(r"support\.(\w+)\s*=\s*true", body)))
+CLAIMED = sorted(set(re.findall(r"support\.(\w+)\s*=\s*true", body)))
+
+def split_args(text):
+    out, depth, cur = [], 0, ""
+    for ch in text:
+        if ch == "(":
+            depth += 1
+        if ch == ")":
+            depth -= 1
+        if ch == "," and depth == 0:
+            out.append(cur)
+            cur = ""
+            continue
+        cur += ch
+    if cur.strip():
+        out.append(cur)
+    return out
+
+def evaluate(cond, flags):
+    cond = cond.strip()
+    for fn in ("any", "all", "not"):
+        if cond.startswith(fn + "(") and cond.endswith(")"):
+            args = [evaluate(a, flags) for a in split_args(cond[len(fn) + 1:-1])]
+            return any(args) if fn == "any" else (all(args) if fn == "all" else not args[0])
+    if cond == "rust":
+        return True
+    if cond.startswith("supports"):
+        return cond.split("=", 1)[1].strip() in flags
+    return False  # a `feature = ...` or another backend's name
+
+CFG = re.compile(r"#\[diplomat::cfg\((?P<c>.*?)\)\]", re.S)
+DIS = re.compile(r"#\[diplomat::attr\((?P<c>.*?),\s*disable\)\]", re.S)
+BOUNDARY = re.compile(r"^\s*$|^\s*[})]|^\s*(pub\b|fn\b|struct\b|enum\b|impl\b|mod\b|use\b|#!|macro_rules)|^\s*#\[diplomat::bridge\]")
+
+def included(block, flags):
+    for m in DIS.finditer(block):
+        if evaluate(m.group("c"), flags):
+            return False
+    for m in CFG.finditer(block):
+        if not evaluate(m.group("c"), flags):
+            return False
+    return True
 
 items = []
 for path in sorted(corpus.rglob("*.rs")):
@@ -81,34 +134,26 @@ for path in sorted(corpus.rglob("*.rs")):
         if not m:
             continue
         top = i
-        while top > 0 and re.match(r"^\s*(#\[|///|//!|//)", lines[top - 1]):
+        while top > 0 and not BOUNDARY.match(lines[top - 1]):
             top -= 1
-        items.append((m.group(2), m.group(1), "\n".join(lines[top:i])))
+        block = "\n".join(lines[top:i])
+        # Key by source location, not by bare name: `new` occurs on most types, so a
+        # name-keyed set difference reported "changes nothing" for a flag that carries
+        # one of them, because another type's `new` survived without it.
+        items.append((f"{path.relative_to(corpus)}:{i + 1} {m.group(1)} {m.group(2)}", block))
 
+full = {k for k, b in items if included(b, set(CLAIMED))}
 worse = 0
-for flag in claimed:
-    gated = [it for it in items if re.search(r"supports\s*=\s*" + flag + r"\b", it[2])]
-    if not gated:
-        print(f"  {flag}: claimed, but gates no corpus item", file=sys.stderr)
+for flag in CLAIMED:
+    without = {k for k, b in items if included(b, set(CLAIMED) - {flag})}
+    carried = sorted(full - without)
+    if not carried:
+        print(f"  {flag}: claimed, but turning it off changes nothing", file=sys.stderr)
         worse += 1
-        continue
-    off = [
-        it for it in gated
-        if re.search(r"#\[diplomat::attr\([^)]*\brust\b[^)]*, disable\)\]", it[2])
-    ]
-    live = len(gated) - len(off)
-    if live == 0:
-        listed = ", ".join(f"{kind} {name}" for name, kind, _ in off)
-        print(f"  {flag}: claimed, but gates no live corpus item: {listed}", file=sys.stderr)
-        worse += 1
-    elif off:
-        # The flag carries real items, but some of what it gates is blocked by a
-        # *different* missing feature. Surface it rather than fail: it is a standing
-        # reminder that the claim is currently wider than what is delivered.
-        listed = ", ".join(f"{kind} {name}" for name, kind, _ in off)
-        print(f"  {flag}: {live} live, {len(off)} blocked elsewhere ({listed})")
     else:
-        print(f"  {flag}: {live} corpus item(s)")
+        print(f"  {flag}: carries {len(carried)} corpus item(s)")
+        for c in carried[:4]:
+            print(f"      {c}")
 sys.exit(1 if worse else 0)
 AUDIT
 

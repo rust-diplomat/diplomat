@@ -50,12 +50,14 @@ impl RustConfig {
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
     let mut support = BackendAttrSupport::default();
-    // Generated code borrows directly out of provider-owned memory
-    // (`from_raw_parts` over the provider's pointer), so memory_sharing-gated
-    // shapes are ones this backend represents natively. Note the interaction with
-    // the rejected primitive set: the shared corpus gates `&[f64]` constructors on
-    // this flag, and floats are rejected, so pointing this backend at the shared
-    // corpus fails on those methods until floats land (issue #10 on the fork).
+    // The ABI is Rust-to-Rust, so "can this language's memory be read directly?"
+    // is definitional rather than a capability: a `&[f64]` parameter is the caller's
+    // own slice, and the generated wrapper hands the provider a `DiplomatSlice`
+    // pointing at it without copying. The flag is worth claiming because the corpus
+    // uses it to say which backends get a zero-copy constructor at all — dotnet
+    // cannot alias and has to pin instead — so it means "yes, trivially" here rather
+    // than "no". It gates one corpus item, `Float64Vec::new`; nothing in HIR reads it,
+    // so it changes nothing about what this backend accepts.
     support.memory_sharing = true;
     support.option = true;
     support.mutable_slices = true;
@@ -1196,7 +1198,7 @@ mod tests {
     const FLAG_COVERAGE: &[(&str, &str)] = &[
         (
             "memory_sharing",
-            "gated: Float64Vec::new, Float64Vec::new_from_owned",
+            "gated: Float64Vec::new",
         ),
         (
             "mutable_slices",
