@@ -1,5 +1,6 @@
 //! Generated opaque wrappers, one module per type.
 
+mod allocation_failure;
 mod bytes;
 mod child;
 mod counter;
@@ -9,6 +10,7 @@ mod numbers;
 mod slice_view;
 mod wide_message;
 
+pub use allocation_failure::*;
 pub use bytes::*;
 pub use child::*;
 pub use counter::*;

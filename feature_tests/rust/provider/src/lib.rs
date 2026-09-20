@@ -9,6 +9,7 @@ use std::sync::atomic::AtomicUsize;
 
 static COUNTER_DROPS: AtomicUsize = AtomicUsize::new(0);
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
+static FAILURE_DROPS: AtomicUsize = AtomicUsize::new(0);
 
 /// The bridge module lives in its own file rather than inline in this one, which is
 /// the layout every other backend's provider uses: `feature_tests/src/lib.rs`

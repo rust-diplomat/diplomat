@@ -222,14 +222,30 @@ pub(super) fn validate_methods<'tcx>(
         let disabled_output = match &method.output {
             ReturnType::Infallible(SuccessType::OutType(ty))
             | ReturnType::Nullable(SuccessType::OutType(ty)) => disabled_type_name(ty, tcx),
+            ReturnType::Fallible(success, err) => {
+                let success_disabled = match success {
+                    SuccessType::OutType(ty) => disabled_type_name(ty, tcx),
+                    _ => None,
+                };
+                success_disabled.or_else(|| err.as_ref().and_then(|ty| disabled_type_name(ty, tcx)))
+            }
+            _ => None,
+        };
+        // A `Result`'s error payload has a more specific diagnostic than the blanket one,
+        // so it is reported in its place rather than alongside it.
+        let output_problem = match &method.output {
+            ReturnType::Fallible(success, err) if is_success_type(success, tcx) => {
+                check_fallible_error(err, tcx).err()
+            }
+            _ if !is_return_type(&method.output, tcx) => Some("unsupported return type".into()),
             _ => None,
         };
         if let Some(disabled) = disabled_output {
             reporter.reject(format!(
                 "[Rust backend] found usage of disabled type `{disabled}` in the return type"
             ));
-        } else if !is_return_type(&method.output, tcx) {
-            reporter.reject("[Rust backend] unsupported return type");
+        } else if let Some(problem) = output_problem {
+            reporter.reject(format!("[Rust backend] {problem}"));
         }
 
         let used = method.output.used_method_lifetimes();
@@ -361,12 +377,81 @@ pub(super) fn is_output_type(ty: &OutType, tcx: &TypeContext) -> bool {
 
 pub(super) fn is_return_type(ret: &ReturnType, tcx: &TypeContext) -> bool {
     match ret {
-        ReturnType::Infallible(SuccessType::Unit) => true,
-        ReturnType::Infallible(SuccessType::OutType(ty)) => is_output_type(ty, tcx),
+        ReturnType::Infallible(success) => is_success_type(success, tcx),
         ReturnType::Nullable(SuccessType::OutType(ty)) => {
             !matches!(ty, Type::Opaque(_)) && is_value_type(ty, tcx)
         }
-        ReturnType::Fallible(..) | ReturnType::Nullable(_) | ReturnType::Infallible(_) => false,
+        // A `Result`'s error payload has its own rules, and its own diagnostics when it
+        // is rejected; see [`check_fallible_error`].
+        ReturnType::Fallible(success, _) => is_success_type(success, tcx),
+        ReturnType::Nullable(_) => false,
+    }
+}
+
+/// The success payload of an infallible return or of a `Result`.
+///
+/// `Write` is the writer-callback shape, which needs a callback trampoline this backend
+/// does not generate.
+pub(super) fn is_success_type(success: &SuccessType, tcx: &TypeContext) -> bool {
+    match success {
+        SuccessType::Unit => true,
+        SuccessType::OutType(ty) => is_output_type(ty, tcx),
+        SuccessType::Write => false,
+        // `SuccessType` is `#[non_exhaustive]`: a variant this backend has never seen is
+        // not something it can claim to support, so it is rejected rather than panicked on.
+        _ => false,
+    }
+}
+
+/// Whether this backend can carry a `Result`'s error payload, and if not, why.
+///
+/// `None` is `Result<T, ()>`, the error the ABI carries as a zero-sized value.
+pub(super) fn check_fallible_error(err: &Option<OutType>, tcx: &TypeContext) -> Result<(), String> {
+    let Some(ty) = err else {
+        return Ok(());
+    };
+    match ty {
+        // An owned opaque error crosses as a pointer and is destroyed by the generated
+        // wrapper's `Drop`, so a `?` that discards the error still frees the provider's
+        // allocation. A borrowed or optional error has no owner to destroy it.
+        Type::Opaque(path) => {
+            let def = path.resolve(tcx);
+            if def.attrs.disable || (path.owner.is_owned() && !path.is_optional()) {
+                Ok(())
+            } else {
+                Err("unsupported error type: an opaque error must be owned, e.g. `Box<T>`".into())
+            }
+        }
+        Type::Primitive(primitive) if primitive_name(*primitive).is_some() => Ok(()),
+        // A custom error payload only means something when the type is declared as one.
+        // Every other backend applies the same rule to a `Result`'s error type.
+        Type::Enum(path) => {
+            let def = path.resolve(tcx);
+            if def.attrs.disable || def.attrs.custom_errors {
+                Ok(())
+            } else {
+                Err(format!(
+                    "`{}` must carry #[diplomat::attr(auto, error)] to be used as an error payload",
+                    type_def_name(TypeDef::Enum(def))
+                ))
+            }
+        }
+        Type::Struct(ReturnableStructPath::Struct(path)) => {
+            let def = path.resolve(tcx);
+            if def.attrs.disable {
+                Ok(())
+            } else if !def.attrs.custom_errors {
+                Err(format!(
+                    "`{}` must carry #[diplomat::attr(auto, error)] to be used as an error payload",
+                    type_def_name(TypeDef::Struct(def))
+                ))
+            } else if is_value_type(ty, tcx) {
+                Ok(())
+            } else {
+                Err("unsupported error type: an error struct must be a plain value struct".into())
+            }
+        }
+        _ => Err("unsupported error type".into()),
     }
 }
 

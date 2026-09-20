@@ -5,8 +5,13 @@
 // here: a hand-maintained mirror with no layout check is a silent-UB hazard.
 // Re-exported so the sibling modules can name them as `ffi::DiplomatSlice`.
 pub(super) use diplomat_runtime::{
-    DiplomatOption, DiplomatOwnedSlice, DiplomatSlice, DiplomatSliceMut,
+    DiplomatOption, DiplomatOwnedSlice, DiplomatResult, DiplomatSlice, DiplomatSliceMut,
 };
+
+#[repr(C)]
+pub struct AllocationFailure {
+    _private: [u8; 0],
+}
 
 #[repr(C)]
 pub struct Bytes {
@@ -56,6 +61,10 @@ pub struct FieldView<'a> {
 
 #[link(name = "diplomat_rust_backend_provider")]
 extern "C" {
+    pub(super) fn AllocationFailure_destroy(this: *mut AllocationFailure);
+    pub(super) fn AllocationFailure_code(this: *const AllocationFailure) -> u32;
+    pub(super) fn AllocationFailure_reset_drop_count();
+    pub(super) fn AllocationFailure_drop_count() -> usize;
     pub(super) fn Bytes_destroy(this: *mut Bytes);
     pub(super) fn Bytes_make(len: u32) -> DiplomatOwnedSlice<u8>;
     pub(super) fn Bytes_join(a: DiplomatSlice<u8>, b: DiplomatSlice<u8>) -> DiplomatOwnedSlice<u8>;
@@ -91,6 +100,13 @@ extern "C" {
     pub(super) fn Counter_drop_count() -> usize;
     pub(super) fn Counter_new_named(value: u32) -> *mut Counter;
     pub(super) fn Counter_from_value(value: u32) -> *mut Counter;
+    pub(super) fn Counter_try_from_value(
+        value: u32,
+    ) -> DiplomatResult<*mut Counter, super::ValueError>;
+    pub(super) fn Counter_take(
+        this: *mut Counter,
+        n: u32,
+    ) -> DiplomatResult<u32, *mut AllocationFailure>;
     pub(super) fn Float64Vec_destroy(this: *mut Float64Vec);
     pub(super) fn Float64Vec_new(values: DiplomatSlice<f64>) -> *mut Float64Vec;
     pub(super) fn Float64Vec_sum(this: *const Float64Vec) -> f64;

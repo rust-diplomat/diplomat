@@ -4,7 +4,8 @@
 use std::sync::Mutex;
 
 use diplomat_rust_backend_generated::{
-    Bytes, Counter, Float64Vec, Message, Mode, Numbers, SliceView, WideMessage,
+    AllocationFailure, Bytes, Counter, Float64Vec, Message, Mode, Numbers, SliceView, ValueError,
+    WideMessage,
 };
 
 /// `Counter` reports destruction through a process-wide probe, so the tests that
@@ -220,6 +221,58 @@ fn capability_gated_apis_are_generated() {
     assert_eq!(&bytes[..], &[0u8, 1, 2]);
     let joined = Bytes::join(&[1], &[2, 3]);
     assert_eq!(&joined[..], &[1, 2, 3]);
+}
+
+/// A `Result` whose error owns a native allocation.
+///
+/// The generated wrapper is the error's only owner, so `?` discarding it has to run the
+/// provider destructor. The error is not `Debug`, so the helpers that need it (`.expect`,
+/// `.unwrap_err`) are not available; `.map_err(|_| ())` and `matches!` are.
+#[test]
+fn fallible_calls_return_result_and_free_owned_errors() {
+    let _serial = counter_probe();
+    Counter::reset_drop_count();
+    AllocationFailure::reset_drop_count();
+
+    let mut counter = match Counter::try_from_value(10) {
+        Ok(counter) => counter,
+        Err(error) => panic!("10 is within the limit, got {error:?}"),
+    };
+    assert_eq!(counter.get(), 10);
+
+    // A custom error enum, compared by value.
+    assert!(matches!(
+        Counter::try_from_value(200),
+        Err(ValueError::TooLarge)
+    ));
+
+    // A non-trivial success payload comes back through the same conversion.
+    assert_eq!(counter.take(4).map_err(|_| ()), Ok(4));
+    assert_eq!(counter.get(), 6);
+
+    // Holding the error keeps its allocation alive.
+    {
+        let failure = match counter.take(50) {
+            Ok(_) => panic!("50 exceeds the remaining 6"),
+            Err(failure) => failure,
+        };
+        assert_eq!(failure.code(), 50);
+        assert_eq!(AllocationFailure::drop_count(), 0);
+    }
+    assert_eq!(AllocationFailure::drop_count(), 1);
+
+    // `?` discards the error without binding it; the destructor still runs.
+    assert!(take_twice_or_propagate(&mut counter, 50).is_err());
+    assert_eq!(AllocationFailure::drop_count(), 2);
+
+    drop(counter);
+    assert_eq!(Counter::drop_count(), 1);
+}
+
+/// `?` on a generated `Result`, which must free the error on the way out.
+fn take_twice_or_propagate(counter: &mut Counter, n: u32) -> Result<u32, AllocationFailure> {
+    let taken = counter.take(n)?;
+    Ok(taken * 2)
 }
 
 /// Floats are the same type on both sides of this ABI, so they need no conversion.

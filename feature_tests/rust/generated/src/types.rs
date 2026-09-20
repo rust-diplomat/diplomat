@@ -9,6 +9,17 @@ pub enum Mode {
     Active = 1,
 }
 
+/// A custom error payload.
+///
+/// `#[diplomat::attr(auto, error)]` is what declares a type usable as a `Result`
+/// error, and the generated backend enforces it: an unmarked enum is refused with a
+/// diagnostic rather than quietly accepted.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ValueError {
+    TooLarge = 0,
+}
+
 /// Value struct with borrowed slice fields, returned by `SliceView::fields`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct FieldView<'a> {

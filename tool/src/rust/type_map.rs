@@ -2,8 +2,9 @@
 //! public rendering, and the expressions that convert between them.
 
 use diplomat_core::hir::{
-    self, MaybeOwn, MaybeStatic, Mutability, PrimitiveType, ReturnType, ReturnableStructPath,
-    SelfType, Slice, StringEncoding, StructPathLike, SuccessType, Type, TypeContext, TypeDef,
+    self, MaybeOwn, MaybeStatic, Mutability, OutType, PrimitiveType, ReturnType,
+    ReturnableStructPath, SelfType, Slice, StringEncoding, StructPathLike, SuccessType, Type,
+    TypeContext, TypeDef,
 };
 
 use super::formatter::{enum_name, field_name, opaque_name, type_def_name};
@@ -301,8 +302,26 @@ pub(super) fn ffi_input_type(ty: &Type<hir::InputOnly>, tcx: &TypeContext) -> St
 
 pub(super) fn ffi_return_type(ret: &ReturnType, tcx: &TypeContext) -> String {
     match ret {
-        ReturnType::Infallible(SuccessType::Unit) => "()".into(),
-        ReturnType::Infallible(SuccessType::OutType(Type::Opaque(path))) => {
+        ReturnType::Infallible(success) => ffi_success_type(success, tcx),
+        ReturnType::Nullable(SuccessType::OutType(inner)) => {
+            format!("DiplomatOption<{}>", ffi_value_type(inner, tcx))
+        }
+        // The ABI carries both payloads in the runtime's tagged union — the same container
+        // `DiplomatOption<T>` aliases with a `()` error.
+        ReturnType::Fallible(success, err) => format!(
+            "DiplomatResult<{}, {}>",
+            ffi_success_type(success, tcx),
+            ffi_error_type(err, tcx)
+        ),
+        ReturnType::Nullable(_) => unreachable!("validated return shape"),
+    }
+}
+
+/// The native ABI type of a return's success payload.
+pub(super) fn ffi_success_type(success: &SuccessType, tcx: &TypeContext) -> String {
+    match success {
+        SuccessType::Unit => "()".into(),
+        SuccessType::OutType(Type::Opaque(path)) => {
             let name = opaque_name(path.tcx_id, tcx);
             if path.owner.is_owned() || path.owner.mutability() == Mutability::Mutable {
                 format!("*mut {name}")
@@ -310,15 +329,10 @@ pub(super) fn ffi_return_type(ret: &ReturnType, tcx: &TypeContext) -> String {
                 format!("*const {name}")
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::DiplomatOption(inner))) => {
+        SuccessType::OutType(Type::DiplomatOption(inner)) => {
             format!("DiplomatOption<{}>", ffi_value_type(inner.as_ref(), tcx))
         }
-        ReturnType::Nullable(SuccessType::OutType(inner)) => {
-            format!("DiplomatOption<{}>", ffi_value_type(inner, tcx))
-        }
-        ReturnType::Infallible(SuccessType::OutType(Type::Struct(
-            ReturnableStructPath::Struct(path),
-        ))) => {
+        SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
             if is_lifetime_struct(strct) {
                 let (_, args) = struct_generics(strct);
@@ -327,11 +341,22 @@ pub(super) fn ffi_return_type(ret: &ReturnType, tcx: &TypeContext) -> String {
                 ffi_value_name(TypeDef::Struct(strct))
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice))) => {
-            ffi_slice_type(slice, RETURN_LIFETIME)
-        }
-        ReturnType::Infallible(SuccessType::OutType(ty)) => ffi_value_type(ty, tcx),
-        _ => unreachable!("validated return shape"),
+        SuccessType::OutType(Type::Slice(slice)) => ffi_slice_type(slice, RETURN_LIFETIME),
+        SuccessType::OutType(ty) => ffi_value_type(ty, tcx),
+        // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
+        // anything reaching here is a shape codegen has never been taught.
+        _ => unreachable!("validated success shape"),
+    }
+}
+
+/// The native ABI type of a `Result`'s error payload; `None` is `Result<T, ()>`.
+pub(super) fn ffi_error_type(err: &Option<OutType>, tcx: &TypeContext) -> String {
+    match err {
+        None => "()".into(),
+        // Validation admits only owned opaque errors, so this is always a pointer the
+        // generated wrapper is responsible for destructing.
+        Some(Type::Opaque(path)) => format!("*mut {}", opaque_name(path.tcx_id, tcx)),
+        Some(ty) => ffi_value_type(ty, tcx),
     }
 }
 
@@ -345,15 +370,17 @@ const RETURN_LIFETIME: &str = "'a";
 /// slice return gets one fresh parameter, and a lifetime-bearing struct return
 /// names its own HIR lifetimes (the same ones its `repr(C)` mirror declares).
 pub(super) fn ffi_return_generics(ret: &ReturnType, tcx: &TypeContext) -> String {
-    match ret {
-        ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice)))
-            if !is_owned_slice(slice) =>
-        {
+    // Only the success payload can carry a lifetime: an error payload is restricted to
+    // value types and owned opaques, neither of which borrows.
+    let success = match ret {
+        ReturnType::Infallible(success) | ReturnType::Fallible(success, _) => success,
+        ReturnType::Nullable(_) => return String::new(),
+    };
+    match success {
+        SuccessType::OutType(Type::Slice(slice)) if !is_owned_slice(slice) => {
             format!("<{RETURN_LIFETIME}>")
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Struct(
-            ReturnableStructPath::Struct(path),
-        ))) => {
+        SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
             if is_lifetime_struct(strct) {
                 struct_generics(strct).0
@@ -411,8 +438,30 @@ pub(super) fn safe_return_type(
     tcx: &TypeContext,
 ) -> String {
     match ret {
-        ReturnType::Infallible(SuccessType::Unit) => "()".into(),
-        ReturnType::Infallible(SuccessType::OutType(Type::Opaque(path))) => {
+        ReturnType::Infallible(success) => safe_success_type(success, method, tcx),
+        ReturnType::Nullable(SuccessType::OutType(inner)) => {
+            format!("Option<{}>", safe_value_type(inner, tcx))
+        }
+        // Both sides are converted independently: an owned opaque payload is a raw
+        // pointer in the ABI and the owning wrapper in the public API.
+        ReturnType::Fallible(success, err) => format!(
+            "Result<{}, {}>",
+            safe_success_type(success, method, tcx),
+            safe_error_type(err, method, tcx)
+        ),
+        ReturnType::Nullable(_) => unreachable!("validated return shape"),
+    }
+}
+
+/// The safe public Rust type of a return's success payload.
+pub(super) fn safe_success_type(
+    success: &SuccessType,
+    method: &hir::Method,
+    tcx: &TypeContext,
+) -> String {
+    match success {
+        SuccessType::Unit => "()".into(),
+        SuccessType::OutType(Type::Opaque(path)) => {
             let base = opaque_safe_type(path, method, tcx);
             if path.is_optional() {
                 format!("Option<{base}>")
@@ -420,15 +469,13 @@ pub(super) fn safe_return_type(
                 base
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice))) => {
+        SuccessType::OutType(Type::Slice(slice)) => {
             let lifetime = slice_lifetime(slice)
                 .map(|lifetime| format!("{} ", lifetime_name(lifetime, method)))
                 .unwrap_or_default();
             safe_slice_type(slice, &lifetime)
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Struct(
-            ReturnableStructPath::Struct(path),
-        ))) => {
+        SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let name = type_def_name(TypeDef::Struct(path.resolve(tcx)));
             let args: Vec<String> = path
                 .lifetimes()
@@ -441,14 +488,28 @@ pub(super) fn safe_return_type(
                 format!("{name}<{}>", args.join(", "))
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::DiplomatOption(inner))) => {
+        SuccessType::OutType(Type::DiplomatOption(inner)) => {
             format!("Option<{}>", safe_value_type(inner.as_ref(), tcx))
         }
-        ReturnType::Nullable(SuccessType::OutType(inner)) => {
-            format!("Option<{}>", safe_value_type(inner, tcx))
-        }
-        ReturnType::Infallible(SuccessType::OutType(ty)) => safe_value_type(ty, tcx),
-        _ => unreachable!("validated return shape"),
+        SuccessType::OutType(ty) => safe_value_type(ty, tcx),
+        // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
+        // anything reaching here is a shape codegen has never been taught.
+        _ => unreachable!("validated success shape"),
+    }
+}
+
+/// The safe public Rust type of a `Result`'s error payload.
+pub(super) fn safe_error_type(
+    err: &Option<OutType>,
+    method: &hir::Method,
+    tcx: &TypeContext,
+) -> String {
+    match err {
+        None => "()".into(),
+        // An owned opaque error becomes the owning wrapper, so its `Drop` is what frees
+        // the provider's allocation when a caller discards the error.
+        Some(Type::Opaque(path)) => opaque_safe_type(path, method, tcx),
+        Some(ty) => safe_value_type(ty, tcx),
     }
 }
 

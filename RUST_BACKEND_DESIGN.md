@@ -142,7 +142,8 @@ API safe.
 | Simple enum | C-compatible enum value | Native target enum | `#[repr(C)]` Rust enum | `EnumDef`, variant discriminants, docs/renames; C layout informed mapping | Extern call passes by value. HIR guarantees provider-produced variants; the backend emits every variant and exact discriminant. |
 | Simple struct | `repr(C)` value fields | Target value struct/class | `#[repr(C)]`, `Copy` struct with public primitive/enum fields | `StructDef`, field types/docs/renames | Passed/read by value. The backend rejects lifetimes, output-only structs, nested/owning fields, and anything outside the proven primitive/enum set. |
 | Value `Option<T>` | `DiplomatResult<T, ()>`: `repr(C)` union plus bool tag | Target option/nullable abstraction over raw tagged union | Public `Option<T>`; `diplomat_runtime::DiplomatOption<T>` | `Type::DiplomatOption` and `ReturnType::Nullable`; reuse `diplomat-runtime`'s `DiplomatOption`/`DiplomatResult` | The runtime's `From<Option<T>>`/`From<DiplomatOption<T>>` conversions replace the earlier tag-checked read. Supported payloads are still value types, so no cross-library drop is introduced; the old mirror's `T: Copy` bound is gone. |
-| Result/write | Tagged result or writer callback | Backend-specific result/exception/writer | Rejected | `ReturnType::Fallible`, `SuccessType::Write` identify it | No unsafe code is emitted. A diagnostic prevents all output until payload ownership and callback semantics are designed. |
+| Fallible return (`Result<T, E>`) | `DiplomatResult<T, E>`: `repr(C)` union plus bool tag | Backend-specific result or exception | `Result<SafeT, SafeE>` | `ReturnType::Fallible`; reuse `diplomat-runtime`'s `DiplomatResult<T, E>` | The runtime's `From<DiplomatResult<T, E>> for Result<T, E>` owns the tag check, so the generated code only converts each payload in its own arm. An owned opaque on either side becomes the owning wrapper, so its `Drop` frees the provider's allocation even when `?` discards the error. The success side is any shape a plain return accepts; `E` is `()`, a supported primitive, an owned opaque, or an enum/struct the provider marked with `#[diplomat::attr(auto, error)]`. |
+| Writer (`SuccessType::Write`) | Writer callback | Backend-specific writer | Rejected | `SuccessType::Write` identifies it | No unsafe code is emitted. A diagnostic prevents all output until callback semantics are designed. |
 | Borrowed slices/strings (`&[T]`, `&mut [T]`, `&str`, `&DiplomatStr`, `&DiplomatStr16`) | `repr(C)` `{ptr, len}` pair (`DiplomatSlice`/`DiplomatSliceMut`) | Pins/leases in .NET; spans/views in C++ | `&'a [T]` / `&'a mut [T]` / `&'a str` / `&'a [u8]` / `&'a [u16]` | `Type::Slice(Slice::Primitive|Str)`, `Slice::lifetime`, `LifetimeEdgeKind::SliceParam`; C layout informed mapping | The runtime's `From<DiplomatSlice<T>>`/`From<DiplomatSliceMut<T>>` impls reconstruct the borrow after null/empty normalization (`nullptr` with `len == 0` maps to `&[]`). The return lifetime is taken from the HIR edge (receiver or slice parameter), never `'static`. |
 | Lifetime-bearing value struct (`BorrowedFields<'a>`, `BorrowedFieldsWithBounds<'a,'b:'a,'c:'b>`) | `repr(C)` struct of `{ptr,len}` fields | Pinned managed fields; C++ reference members | `pub struct Name<'a>` with `pub` reference fields (plus a private invariant `PhantomData`) | `StructDef::lifetimes`, per-field `Lifetime`, `LifetimeEdgeKind::StructLifetime`, `MaybeStatic`/`LifetimeEnv` bound graph | Converted field-by-field through the runtime slice conversions: `DiplomatSlice::from(slice)` on input, `.into()` on output. The `repr(C)` mirror struct carries the struct's lifetimes, so its field types name them explicitly. Each field's HIR lifetime index is mapped to the declaring struct's lifetime name; bounds are reproduced. Declaring and using such a struct is supported; **returning** one from a method is limited to a single output lifetime, because the return path accepts exactly one method lifetime. A method that borrows the struct it returns from two inputs (e.g. `fn both<'a, 'b>(&'a self, other: &'b Bar) -> Both<'a, 'b>`) is rejected — see the rejected list below. |
 | Owned slice return (`Box<[u8]>`) | `DiplomatOwnedSlice<u8>` (ownership transferred) | Zero-copy `RustVec` in .NET | `Box<[u8]>` | `Slice::Primitive(MaybeOwn::Own, _)`, `owned_byte_slice_returns` capability gate | `Box::from(result)` over the runtime's `DiplomatOwnedSlice<u8>`, whose `From` impl reclaims the provider's allocation under Diplomat's owned-slice contract that provider and consumer share an allocator. Null+zero maps to an empty `Box`. |
@@ -193,6 +194,12 @@ Supported:
   re-materialized as a Rust lifetime;
 - owned `Box<[u8]>` returns (`owned_byte_slice_returns`), taking ownership of
   provider-allocated memory;
+- `Result<T, E>` returns (`custom_errors`), where the success payload is any of the
+  shapes above and `E` is one of `()`, a supported primitive, an **owned** opaque
+  (`Box<T>`), or an enum/struct the provider marked with
+  `#[diplomat::attr(auto, error)]`. Both payloads convert independently, so an owned
+  opaque on either side becomes the owning wrapper — which is what frees the provider's
+  allocation when a caller discards the error with `?`;
 - simple enums;
 - `repr(C)` value structs whose fields are supported primitives/enums;
 - lifetime-bearing value structs whose fields are supported primitives/enums or
@@ -210,7 +217,12 @@ Explicitly rejected with contextual backend errors:
 - owned slice *inputs* and owned slices of non-byte elements;
 - slices of structs/strings/opaques and `Option`/`Result` composition of owned
   slices;
-- fallible results and writers;
+- writers (`SuccessType::Write`), and every `Result` shape outside the subset above:
+  a nullable owned opaque error (`Result<T, Option<Box<E>>>`, which has no single owner
+  to destruct), a `#[diplomat::attr(auto, error)]`-marked struct that is not a plain
+  value struct, and a custom enum or struct error that is not marked at all — the last
+  gets a diagnostic naming the attribute, which is the same rule the other backends
+  apply to a custom error type;
 - complex lifetime graphs (multi-lifetime outputs, struct/slice element edges);
 - callbacks, traits, async shapes, free functions, custom bindings, and
   cross-crate composition.
@@ -220,7 +232,7 @@ expressed by its flags are checked during Rust generation. Any error makes
 the backend return an empty `FileMap`; the top-level driver also refuses all
 writes when diagnostics exist.
 
-The declared flags are not the whole story — what backs each one matters. All nine are
+The declared flags are not the whole story — what backs each one matters. All ten are
 gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping a flag removes
 the API and the consumer's test targets stop compiling:
 
@@ -232,6 +244,7 @@ the API and the consumer's test targets stop compiling:
 | `named_constructors` | `Counter::with_value` (from `new_named`) |
 | `option` | `Counter::add`, `Counter::maybe_snapshot` |
 | `owned_byte_slice_returns` | `Bytes::make`, `Bytes::join` |
+| `custom_errors` | `Counter::try_from_value`, `Counter::take` |
 | `static_slices` | `Numbers::from_static` |
 | `utf8_strings` | `Message::utf8_len` |
 | `utf16_strings` | `WideMessage::new`, `WideMessage::units` |
@@ -395,8 +408,8 @@ a lifetime-graph emitter that maps HIR's `LifetimeEnv`/edge data onto Rust
 generic parameters and bounds (and a `repr(C)`-to-reference bridge for struct
 fields). Still remaining are owned slice returns of non-byte
 elements, slices of structs/strings/opaques, multiple/transitive output lifetime
-graphs, callbacks,
-results, writers, and arbitrary tagged-union payload ownership. HIR has enough
+graphs, callbacks, writers, and arbitrary tagged-union payload ownership (`Result`
+payloads are no longer on this list). HIR has enough
 information for the implemented lifetime subset. The material missing datum is
 a per-opaque `Send`/`Sync` contract; therefore conservative negative auto traits
 are required.

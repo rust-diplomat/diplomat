@@ -4,7 +4,7 @@
 use std::fmt::Write as _;
 
 use diplomat_core::hir::{
-    self, DocsUrlGenerator, Mutability, ReturnType, ReturnableStructPath, SelfType, Slice,
+    self, DocsUrlGenerator, Mutability, OutType, ReturnType, ReturnableStructPath, SelfType, Slice,
     StringEncoding, StructPathLike, SuccessType, Type, TypeContext, TypeDef,
 };
 
@@ -132,10 +132,36 @@ pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
 
 pub(super) fn return_expr(ret: &ReturnType, method: &hir::Method, tcx: &TypeContext) -> String {
     match ret {
-        ReturnType::Infallible(SuccessType::OutType(Type::Opaque(path))) => {
-            opaque_return_expr(path, method, tcx)
+        ReturnType::Infallible(success) => success_expr(success, method, tcx),
+        // `DiplomatOption<T>` maps straight onto `Option<T>`.
+        ReturnType::Nullable(SuccessType::OutType(_)) => "result.into()".into(),
+        // The ABI returns one `DiplomatResult`; the runtime owns the tag check, so the
+        // generated code only has to convert each payload in its own arm. Both arms bind
+        // the payload as `result`, which is the name the conversions below expect.
+        ReturnType::Fallible(success, err) => {
+            let ok = success_expr(success, method, tcx);
+            let err = error_expr(err, method, tcx);
+            if ok == "result" && err == "result" {
+                // Both payloads are already the safe types, so the runtime's own
+                // conversion does the whole job and no hand-written match is needed.
+                "result.into()".into()
+            } else {
+                format!(
+                    "match Result::from(result) {{ Ok(result) => Ok({ok}), Err(result) => Err({err}) }}"
+                )
+            }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Slice(slice))) => {
+        ReturnType::Nullable(_) => unreachable!("validated return shape"),
+    }
+}
+
+/// The expression that turns an ABI success payload (bound to `result`) into its safe
+/// public type.
+fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) -> String {
+    match success {
+        SuccessType::Unit => "result".into(),
+        SuccessType::OutType(Type::Opaque(path)) => opaque_return_expr(path, method, tcx),
+        SuccessType::OutType(Type::Slice(slice)) => {
             if is_owned_slice(slice) {
                 "Box::from(result)".into()
             } else if matches!(slice, Slice::Str(_, StringEncoding::Utf8)) {
@@ -146,9 +172,7 @@ pub(super) fn return_expr(ret: &ReturnType, method: &hir::Method, tcx: &TypeCont
                 "result.into()".into()
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::Struct(
-            ReturnableStructPath::Struct(path),
-        ))) => {
+        SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
             if is_lifetime_struct(strct) {
                 struct_output_expr("result", strct)
@@ -156,9 +180,22 @@ pub(super) fn return_expr(ret: &ReturnType, method: &hir::Method, tcx: &TypeCont
                 "result".into()
             }
         }
-        ReturnType::Infallible(SuccessType::OutType(Type::DiplomatOption(_)))
-        | ReturnType::Nullable(SuccessType::OutType(_)) => "result.into()".into(),
-        ReturnType::Infallible(SuccessType::OutType(_)) => "result".into(),
-        _ => unreachable!("validated return shape"),
+        SuccessType::OutType(Type::DiplomatOption(_)) => "result.into()".into(),
+        SuccessType::OutType(_) => "result".into(),
+        // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
+        // anything reaching here is a shape codegen has never been taught.
+        _ => unreachable!("validated success shape"),
+    }
+}
+
+/// The expression that turns an ABI error payload (bound to `result`) into its safe public
+/// type. `None` is `Result<T, ()>`, whose payload is the zero-sized value itself.
+fn error_expr(err: &Option<OutType>, method: &hir::Method, tcx: &TypeContext) -> String {
+    match err {
+        None => "result".into(),
+        // An owned opaque error becomes the owning wrapper, so its `Drop` frees the
+        // provider's allocation even when the caller discards the error with `?`.
+        Some(Type::Opaque(path)) => opaque_return_expr(path, method, tcx),
+        Some(_) => "result".into(),
     }
 }

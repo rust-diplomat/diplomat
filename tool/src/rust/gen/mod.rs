@@ -28,7 +28,7 @@ pub(super) fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
          // here: a hand-maintained mirror with no layout check is a silent-UB hazard.
          // Re-exported so the sibling modules can name them as `ffi::DiplomatSlice`.
          pub(super) use diplomat_runtime::{
-             DiplomatOption, DiplomatOwnedSlice, DiplomatSlice, DiplomatSliceMut,\n\
+             DiplomatOption, DiplomatOwnedSlice, DiplomatResult, DiplomatSlice, DiplomatSliceMut,\n\
          };\n\n",
     );
 

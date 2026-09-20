@@ -5,6 +5,12 @@
 //! may be unused for a given provider, hence the `dead_code` allow.
 #![allow(dead_code)]
 
+pub trait AllocationFailureSharedSealed {
+    fn __as_const_ptr(&self) -> *const crate::ffi::AllocationFailure;
+}
+pub trait AllocationFailureMutSealed: AllocationFailureSharedSealed {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::AllocationFailure;
+}
 pub trait BytesSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::Bytes;
 }

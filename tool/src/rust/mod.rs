@@ -65,6 +65,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     support.mutable_slices = true;
     support.static_slices = true;
     support.owned_byte_slice_returns = true;
+    // A `Result<T, E>` becomes `Result<SafeT, SafeE>`; `E` may be `()`, a primitive, an
+    // owned opaque, or a type the provider marked with `#[diplomat::attr(auto, error)]`.
+    // Marking is what makes the flag load-bearing: without it a `Result`'s error payload is
+    // refused, which is the rule the other backends apply to a custom error type too.
+    support.custom_errors = true;
     // The generated API surface is Rust, so it is UTF-8 by construction, and
     // `&DiplomatStr16` maps to `&[u16]`.
     support.utf8_strings = true;
@@ -378,7 +383,7 @@ mod tests {
     }
 
     #[test]
-    fn fallible_results_are_rejected_without_partial_output() {
+    fn fallible_primitive_errors_lower_to_a_result() {
         let (files, errors) = generate(quote! {
             #[diplomat::bridge]
             mod ffi {
@@ -389,10 +394,144 @@ mod tests {
                 }
             }
         });
-        assert!(files.is_empty());
-        assert!(errors
-            .iter()
-            .any(|error| error.contains("unsupported return type")));
+        assert!(errors.is_empty(), "{errors:#?}");
+        let all = all_rust_sources(&files);
+        // The ABI is the runtime's tagged union; both sides are already the safe types,
+        // so the wrapper is the runtime's own conversion and nothing is hand-rolled.
+        assert!(
+            all.contains("-> DiplomatResult<u32, u32>;"),
+            "the extern declaration must use DiplomatResult: {all}"
+        );
+        assert!(
+            all.contains("pub fn get(&self) -> Result<u32, u32> {"),
+            "the safe signature must be a std Result: {all}"
+        );
+        assert!(all.contains("result.into()"), "{all}");
+    }
+
+    #[test]
+    fn fallible_owned_opaque_success_is_constructed_from_the_abi_pointer() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Counter(u32);
+                impl Counter {
+                    pub fn checked(i: u32) -> Result<Box<Self>, ()> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let all = all_rust_sources(&files);
+        assert!(
+            all.contains("-> DiplomatResult<*mut Counter, ()>;"),
+            "{all}"
+        );
+        assert!(
+            all.contains("pub fn checked(i: u32) -> Result<super::Counter, ()> {"),
+            "{all}"
+        );
+        // The Ok arm constructs the owning wrapper from the raw pointer; the null check
+        // lives there, so a null cannot reach the wrapper.
+        assert!(
+            all.contains("Ok(result) => Ok({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Counter\"); super::Counter { inner, _not_send_sync: PhantomData } })"),
+            "{all}"
+        );
+        assert!(all.contains("Err(result) => Err(result)"), "{all}");
+    }
+
+    #[test]
+    fn fallible_owned_opaque_errors_are_owned_by_the_wrapper() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Failure(u32);
+                #[diplomat::opaque]
+                pub struct Counter(u32);
+                impl Counter {
+                    pub fn checked() -> Result<(), Box<Failure>> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let all = all_rust_sources(&files);
+        assert!(
+            all.contains("-> DiplomatResult<(), *mut Failure>;"),
+            "{all}"
+        );
+        assert!(
+            all.contains("pub fn checked() -> Result<(), super::Failure> {"),
+            "{all}"
+        );
+        // The owning wrapper in the Err arm is the only thing that destroys the provider's
+        // allocation, so a `?` that discards the error still frees it.
+        assert!(
+            all.contains("Err(result) => Err({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Failure\"); super::Failure { inner, _not_send_sync: PhantomData } })"),
+            "{all}"
+        );
+    }
+
+    #[test]
+    fn fallible_custom_error_types_must_be_marked_as_errors() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub enum Unmarked { A = 0 }
+                #[diplomat::opaque]
+                pub struct Counter(u32);
+                impl Counter {
+                    pub fn get(&self) -> Result<u32, Unmarked> { unimplemented!() }
+                }
+            }
+        });
+        assert!(files.is_empty(), "no partial output");
+        assert!(
+            errors.iter().any(|error| error.contains("Unmarked")
+                && error.contains("#[diplomat::attr(auto, error)]")),
+            "the diagnostic must name the type and the attribute it needs: {errors:#?}"
+        );
+    }
+
+    #[test]
+    fn fallible_error_shapes_outside_the_subset_are_rejected() {
+        // Both of these lower fine and then hit this backend's own limits. A nullable
+        // owned opaque error has no single owner for the wrapper to destruct, and a
+        // lifetime-bearing struct cannot be an error payload because the ABI carries the
+        // error by value.
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStrSlice;
+
+                #[diplomat::opaque]
+                pub struct Failure(u32);
+                #[diplomat::attr(auto, error)]
+                pub struct Trailing<'a> { pub msg: DiplomatStrSlice<'a> }
+                #[diplomat::opaque]
+                pub struct Counter(u32);
+
+                impl Counter {
+                    pub fn nullable(&self) -> Result<u32, Option<Box<Failure>>> { unimplemented!() }
+                    pub fn borrowing<'a>(&self, s: &'a [u8]) -> Result<u32, Trailing<'a>> {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(files.is_empty(), "no partial output");
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("an opaque error must be owned")),
+            "{errors:#?}"
+        );
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("an error struct must be a plain value struct")),
+            "{errors:#?}"
+        );
     }
 
     #[test]
@@ -841,6 +980,10 @@ mod tests {
         (
             "owned_byte_slice_returns",
             "owned_slice_returns_are_boxed; gated: Bytes::make, Bytes::join",
+        ),
+        (
+            "custom_errors",
+            "fallible_primitive_errors_lower_to_a_result; fallible_owned_opaque_errors_are_owned_by_the_wrapper; gated: Counter::try_from_value, Counter::take",
         ),
         ("static_slices", "gated: Numbers::from_static"),
         (

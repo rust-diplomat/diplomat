@@ -72,7 +72,8 @@ grep -F 'diplomat-runtime' "$generated_dir/Cargo.toml" >/dev/null \
     || fail "generated Cargo.toml does not declare a diplomat-runtime dependency"
 if grep -rF -e 'struct DiplomatSlice' -e 'struct DiplomatSliceMut' \
     -e 'struct DiplomatOwnedSlice' -e 'struct DiplomatOption' \
-    -e 'union DiplomatOptionValue' "$generated_dir/src" >/dev/null; then
+    -e 'struct DiplomatResult' -e 'union DiplomatOptionValue' \
+    -e 'union DiplomatResultValue' "$generated_dir/src" >/dev/null; then
     fail "generated crate defines a local ABI type instead of using diplomat-runtime"
 fi
 

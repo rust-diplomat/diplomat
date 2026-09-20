@@ -2,7 +2,7 @@
 pub mod ffi {
     use std::sync::atomic::Ordering;
 
-    use crate::{COUNTER_DROPS, NEXT_ID};
+    use crate::{COUNTER_DROPS, FAILURE_DROPS, NEXT_ID};
     use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatStrSlice};
 
     pub enum Mode {
@@ -383,6 +383,71 @@ pub mod ffi {
             for value in &mut self.0 {
                 *value *= factor;
             }
+        }
+    }
+
+    /// A custom error payload.
+    ///
+    /// `#[diplomat::attr(auto, error)]` is what declares a type usable as a `Result`
+    /// error, and the generated backend enforces it: an unmarked enum is refused with a
+    /// diagnostic rather than quietly accepted.
+    #[diplomat::attr(auto, error)]
+    pub enum ValueError {
+        TooLarge = 0,
+    }
+
+    /// An error that owns a native allocation.
+    ///
+    /// A `Result`'s error payload crosses the ABI as a raw pointer, so the generated
+    /// wrapper is its only owner: a `?` that discards the error still has to run this
+    /// destructor.
+    #[diplomat::opaque]
+    pub struct AllocationFailure {
+        code: u32,
+    }
+
+    impl AllocationFailure {
+        pub fn code(&self) -> u32 {
+            self.code
+        }
+
+        pub fn reset_drop_count() {
+            FAILURE_DROPS.store(0, Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> usize {
+            FAILURE_DROPS.load(Ordering::SeqCst)
+        }
+    }
+
+    impl Drop for AllocationFailure {
+        fn drop(&mut self) {
+            FAILURE_DROPS.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    impl Counter {
+        /// A fallible call whose error is a custom enum, gated on `custom_errors`.
+        #[diplomat::cfg(supports = custom_errors)]
+        pub fn try_from_value(value: u32) -> Result<Box<Self>, ValueError> {
+            if value > 100 {
+                return Err(ValueError::TooLarge);
+            }
+            let mut counter = Self::new();
+            counter.value = value;
+            counter.child.value = value;
+            Ok(counter)
+        }
+
+        /// A fallible call whose error owns a native allocation, gated on the same flag.
+        #[diplomat::cfg(supports = custom_errors)]
+        pub fn take(&mut self, n: u32) -> Result<u32, Box<AllocationFailure>> {
+            if n > self.value {
+                return Err(Box::new(AllocationFailure { code: n }));
+            }
+            self.value -= n;
+            self.child.value = self.value;
+            Ok(n)
         }
     }
 

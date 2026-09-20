@@ -266,6 +266,38 @@ impl Counter {
             }
         }
     }
+    /// A fallible call whose error is a custom enum, gated on `custom_errors`.
+    pub fn try_from_value(value: u32) -> Result<super::Counter, ValueError> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Counter_try_from_value(value) };
+        match Result::from(result) {
+            Ok(result) => Ok({
+                let inner = NonNull::new(result as *mut _)
+                    .expect("Diplomat ABI returned null for non-null Counter");
+                super::Counter {
+                    inner,
+                    _not_send_sync: PhantomData,
+                }
+            }),
+            Err(result) => Err(result),
+        }
+    }
+    /// A fallible call whose error owns a native allocation, gated on the same flag.
+    pub fn take(&mut self, n: u32) -> Result<u32, super::AllocationFailure> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Counter_take(self.inner.as_ptr(), n) };
+        match Result::from(result) {
+            Ok(result) => Ok(result),
+            Err(result) => Err({
+                let inner = NonNull::new(result as *mut _)
+                    .expect("Diplomat ABI returned null for non-null AllocationFailure");
+                super::AllocationFailure {
+                    inner,
+                    _not_send_sync: PhantomData,
+                }
+            }),
+        }
+    }
 }
 
 impl<'view> CounterRef<'view> {
@@ -481,5 +513,21 @@ impl<'view> CounterRefMut<'view> {
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
         })
+    }
+    /// A fallible call whose error owns a native allocation, gated on the same flag.
+    pub fn take(&mut self, n: u32) -> Result<u32, super::AllocationFailure> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Counter_take(self.inner.as_ptr(), n) };
+        match Result::from(result) {
+            Ok(result) => Ok(result),
+            Err(result) => Err({
+                let inner = NonNull::new(result as *mut _)
+                    .expect("Diplomat ABI returned null for non-null AllocationFailure");
+                super::AllocationFailure {
+                    inner,
+                    _not_send_sync: PhantomData,
+                }
+            }),
+        }
     }
 }
