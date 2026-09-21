@@ -28,7 +28,8 @@ pub(super) fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
          // here: a hand-maintained mirror with no layout check is a silent-UB hazard.
          // Re-exported so the sibling modules can name them as `ffi::DiplomatSlice`.
          pub(super) use diplomat_runtime::{
-             DiplomatOption, DiplomatOwnedSlice, DiplomatResult, DiplomatSlice, DiplomatSliceMut,\n\
+             DiplomatOption, DiplomatOwnedSlice, DiplomatResult, DiplomatSlice, DiplomatSliceMut,
+             DiplomatWrite,\n\
          };\n\n",
     );
 
@@ -95,6 +96,9 @@ fn emit_extern_methods(out: &mut String, methods: &[hir::Method], tcx: &TypeCont
                 .iter()
                 .map(|param| format!("{}: {}", param.name, ffi_input_type(&param.ty, tcx))),
         );
+        if method.output.is_write() {
+            params.push("write: *mut DiplomatWrite".into());
+        }
         write!(out, "{}", params.join(", ")).unwrap();
         let ret = ffi_return_type(&method.output, tcx);
         if ret == "()" {
@@ -120,6 +124,8 @@ pub(super) fn generate_lib() -> String {
          // different and *are* restyled (see `method_name`).\n\
          #![allow(clippy::result_unit_err)]\n\
          #![allow(clippy::should_implement_trait)]\n\
+         #![allow(clippy::inherent_to_string)]\n\
+         #![allow(clippy::disallowed_names)]\n\
          #![allow(clippy::len_without_is_empty)]\n\n\
          mod ffi;\n\
          mod opaques;\n\
@@ -184,6 +190,24 @@ pub(super) fn generate_private(tcx: &TypeContext) -> String {
         slice: diplomat_runtime::DiplomatSlice<'a, u8>,
     ) -> &'a str {
         core::str::from_utf8_unchecked(<&[u8]>::from(slice))
+    }
+
+    /// Drive a `DiplomatWrite` out-parameter and return the written UTF-8.
+    ///
+    /// The writer is constructed here, handed to the provider as a raw pointer, and
+    /// never exposed on the public API. The copy out of `as_bytes` is what keeps the
+    /// generated crate compatible with published `diplomat-runtime` 0.16, which has
+    /// `RustWriteVec` but not a consuming `into_string`.
+    pub(crate) fn with_write<R>(
+        f: impl FnOnce(*mut diplomat_runtime::DiplomatWrite) -> R,
+    ) -> (R, String) {
+        let mut write = diplomat_runtime::rust_interop::RustWriteVec::with_capacity(0);
+        // SAFETY: this is the only DiplomatWrite in scope; it was created by
+        // diplomat_buffer_write_create and is not swapped with another instance.
+        let result = f(unsafe { write.borrow_mut() });
+        let text = String::from_utf8(write.borrow().as_bytes().to_vec())
+            .expect("DiplomatWrite contains non-UTF-8 bytes");
+        (result, text)
     }
 
 "#,

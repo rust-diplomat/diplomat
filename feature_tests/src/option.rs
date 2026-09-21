@@ -21,7 +21,6 @@ pub mod ffi {
             Some(Box::new(OptionString(string)))
         }
 
-        #[diplomat::attr(rust, disable)]
         pub fn write<'a>(&'a self, write: &'a mut DiplomatWrite) -> Result<(), ()> {
             use std::fmt::Write;
             write!(write, "{}", self.0).map_err(|_| ())?;

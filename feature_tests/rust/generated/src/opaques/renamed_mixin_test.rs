@@ -90,7 +90,15 @@ impl<'view> fmt::Debug for RenamedMixinTestRefMut<'view> {
     }
 }
 
-impl RenamedMixinTest {}
+impl RenamedMixinTest {
+    pub fn hello() -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::namespace_MixinTest_hello(write) };
+        })
+        .1
+    }
+}
 
 impl<'view> RenamedMixinTestRef<'view> {}
 

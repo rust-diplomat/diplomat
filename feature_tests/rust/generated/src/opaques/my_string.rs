@@ -119,10 +119,26 @@ impl MyString {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::MyString_set_str(self.inner.as_ptr(), ffi::DiplomatSlice::from(new_str)) };
     }
+    pub fn get_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyString_get_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn get_static_str() -> &'static str {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::MyString_get_static_str() };
         unsafe { crate::private::utf8_str_from_slice(result) }
+    }
+    pub fn string_transform(foo: &str) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe {
+                ffi::MyString_string_transform(ffi::DiplomatSlice::from(foo.as_bytes()), write)
+            };
+        })
+        .1
     }
     pub fn borrow<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -132,6 +148,13 @@ impl MyString {
 }
 
 impl<'view> MyStringRef<'view> {
+    pub fn get_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyString_get_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn borrow<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::MyString_borrow(self.inner.as_ptr() as *const _) };
@@ -143,6 +166,13 @@ impl<'view> MyStringRefMut<'view> {
     pub fn set_str(&mut self, new_str: &[u8]) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::MyString_set_str(self.inner.as_ptr(), ffi::DiplomatSlice::from(new_str)) };
+    }
+    pub fn get_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyString_get_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
     }
     pub fn borrow<'a>(&'a self) -> &'a [u8] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.

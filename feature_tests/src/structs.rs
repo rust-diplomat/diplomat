@@ -96,7 +96,6 @@ pub mod ffi {
             Box::new(Self(input.into()))
         }
 
-        #[diplomat::attr(rust, disable)]
         pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{:?}", self.0);
         }
@@ -193,7 +192,6 @@ pub mod ffi {
             Box::new(Self(input.into()))
         }
 
-        #[diplomat::attr(rust, disable)]
         pub fn get_debug_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{:?}", self.0);
         }
@@ -219,7 +217,6 @@ pub mod ffi {
             Box::new(MyOpaqueEnum::A("a".into()))
         }
 
-        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(*, stringifier)]
         pub fn to_string(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(

@@ -103,6 +103,13 @@ impl Utf16Wrap {
             }
         }
     }
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Utf16Wrap_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn borrow_cont<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Utf16Wrap_borrow_cont(self.inner.as_ptr() as *const _) };
@@ -111,6 +118,13 @@ impl Utf16Wrap {
 }
 
 impl<'view> Utf16WrapRef<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Utf16Wrap_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn borrow_cont<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Utf16Wrap_borrow_cont(self.inner.as_ptr() as *const _) };
@@ -119,6 +133,13 @@ impl<'view> Utf16WrapRef<'view> {
 }
 
 impl<'view> Utf16WrapRefMut<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Utf16Wrap_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn borrow_cont<'a>(&'a self) -> &'a [u16] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Utf16Wrap_borrow_cont(self.inner.as_ptr() as *const _) };

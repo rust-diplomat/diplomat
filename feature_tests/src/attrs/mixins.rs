@@ -6,9 +6,6 @@ macro_rules! mixin_macro {
         pub struct MixinTest(super::mixins::NonMacroMixin);
 
         impl MixinTest {
-            // A `DiplomatWrite` out-parameter; the Rust backend has no writer
-            // lowering yet.
-            #[diplomat::attr(rust, disable)]
             pub fn hello(w: &mut DiplomatWrite) {
                 write!(w, "Hello!").unwrap();
             }

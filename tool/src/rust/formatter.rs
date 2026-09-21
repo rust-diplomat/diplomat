@@ -80,13 +80,12 @@ const NON_RAW_KEYWORDS: &[&str] = &["self", "Self", "super", "crate", "_"];
 /// this backend's job.
 const KEYWORDS: &[&str] = &[
     // Strict keywords.
-    "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn",
-    "for", "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref",
-    "return", "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe",
-    "use", "where", "while", "async", "await", "dyn",
-    // Reserved for future use.
-    "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof",
-    "unsized", "virtual", "yield", "try", "_",
+    "as", "break", "const", "continue", "crate", "else", "enum", "extern", "false", "fn", "for",
+    "if", "impl", "in", "let", "loop", "match", "mod", "move", "mut", "pub", "ref", "return",
+    "self", "Self", "static", "struct", "super", "trait", "true", "type", "unsafe", "use", "where",
+    "while", "async", "await", "dyn", // Reserved for future use.
+    "abstract", "become", "box", "do", "final", "macro", "override", "priv", "typeof", "unsized",
+    "virtual", "yield", "try", "_",
 ];
 
 /// Escape a name that collides with a Rust keyword.

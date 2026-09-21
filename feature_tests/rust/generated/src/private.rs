@@ -225,3 +225,21 @@ pub(crate) unsafe fn utf8_str_from_slice<'a>(
 ) -> &'a str {
     core::str::from_utf8_unchecked(<&[u8]>::from(slice))
 }
+
+/// Drive a `DiplomatWrite` out-parameter and return the written UTF-8.
+///
+/// The writer is constructed here, handed to the provider as a raw pointer, and
+/// never exposed on the public API. The copy out of `as_bytes` is what keeps the
+/// generated crate compatible with published `diplomat-runtime` 0.16, which has
+/// `RustWriteVec` but not a consuming `into_string`.
+pub(crate) fn with_write<R>(
+    f: impl FnOnce(*mut diplomat_runtime::DiplomatWrite) -> R,
+) -> (R, String) {
+    let mut write = diplomat_runtime::rust_interop::RustWriteVec::with_capacity(0);
+    // SAFETY: this is the only DiplomatWrite in scope; it was created by
+    // diplomat_buffer_write_create and is not swapped with another instance.
+    let result = f(unsafe { write.borrow_mut() });
+    let text = String::from_utf8(write.borrow().as_bytes().to_vec())
+        .expect("DiplomatWrite contains non-UTF-8 bytes");
+    (result, text)
+}

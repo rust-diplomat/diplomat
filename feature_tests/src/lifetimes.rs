@@ -357,7 +357,6 @@ pub mod ffi {
             self.0.b
         }
 
-        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter)]
         pub fn c(&self, w: &mut DiplomatWrite) {
             w.write_str(&self.0.c).unwrap();

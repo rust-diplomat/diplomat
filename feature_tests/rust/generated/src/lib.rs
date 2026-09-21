@@ -12,6 +12,8 @@
 // different and *are* restyled (see `method_name`).
 #![allow(clippy::result_unit_err)]
 #![allow(clippy::should_implement_trait)]
+#![allow(clippy::inherent_to_string)]
+#![allow(clippy::disallowed_names)]
 #![allow(clippy::len_without_is_empty)]
 
 mod ffi;

@@ -99,6 +99,13 @@ impl OpaqueThin {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueThin_b(self.inner.as_ptr() as *const _) }
     }
+    pub fn c(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::OpaqueThin_c(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
 }
 
 impl<'view> OpaqueThinRef<'view> {
@@ -110,6 +117,13 @@ impl<'view> OpaqueThinRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueThin_b(self.inner.as_ptr() as *const _) }
     }
+    pub fn c(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::OpaqueThin_c(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
 }
 
 impl<'view> OpaqueThinRefMut<'view> {
@@ -120,5 +134,12 @@ impl<'view> OpaqueThinRefMut<'view> {
     pub fn b(&self) -> f32 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueThin_b(self.inner.as_ptr() as *const _) }
+    }
+    pub fn c(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::OpaqueThin_c(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
     }
 }

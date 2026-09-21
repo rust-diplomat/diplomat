@@ -371,6 +371,7 @@ pub(super) fn is_return_type(ret: &ReturnType, tcx: &TypeContext) -> bool {
         ReturnType::Nullable(SuccessType::OutType(ty)) => {
             !matches!(ty, Type::Opaque(_)) && is_value_type(ty, tcx)
         }
+        ReturnType::Nullable(SuccessType::Write) => true,
         // A `Result`'s error payload has its own rules, and its own diagnostics when it
         // is rejected; see [`check_fallible_error`].
         ReturnType::Fallible(success, _) => is_success_type(success, tcx),
@@ -380,13 +381,13 @@ pub(super) fn is_return_type(ret: &ReturnType, tcx: &TypeContext) -> bool {
 
 /// The success payload of an infallible return or of a `Result`.
 ///
-/// `Write` is the writer-callback shape, which needs a callback trampoline this backend
-/// does not generate.
+/// `Write` is the `DiplomatWrite` out-parameter. The public API reshapes it to an
+/// owned `String`; the writer itself never leaves the private FFI layer.
 pub(super) fn is_success_type(success: &SuccessType, tcx: &TypeContext) -> bool {
     match success {
         SuccessType::Unit => true,
         SuccessType::OutType(ty) => is_output_type(ty, tcx),
-        SuccessType::Write => false,
+        SuccessType::Write => true,
         // `SuccessType` is `#[non_exhaustive]`: a variant this backend has never seen is
         // not something it can claim to support, so it is rejected rather than panicked on.
         _ => false,

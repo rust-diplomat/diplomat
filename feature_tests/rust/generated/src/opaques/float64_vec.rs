@@ -195,6 +195,13 @@ impl Float64Vec {
             ffi::Float64Vec_set_value(self.inner.as_ptr(), ffi::DiplomatSlice::from(new_slice))
         };
     }
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Float64Vec_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn borrow<'a>(&'a self) -> &'a [f64] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_borrow(self.inner.as_ptr() as *const _) };
@@ -221,6 +228,13 @@ impl<'view> Float64VecRef<'view> {
                 ffi::DiplomatSliceMut::from(v),
             )
         };
+    }
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Float64Vec_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
     }
     pub fn borrow<'a>(&'a self) -> &'a [f64] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
@@ -254,6 +268,13 @@ impl<'view> Float64VecRefMut<'view> {
         unsafe {
             ffi::Float64Vec_set_value(self.inner.as_ptr(), ffi::DiplomatSlice::from(new_slice))
         };
+    }
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Float64Vec_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
     }
     pub fn borrow<'a>(&'a self) -> &'a [f64] {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.

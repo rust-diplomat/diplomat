@@ -380,6 +380,7 @@ pub(super) fn ffi_return_type(ret: &ReturnType, tcx: &TypeContext) -> String {
         ReturnType::Nullable(SuccessType::OutType(inner)) => {
             format!("DiplomatOption<{}>", ffi_value_type(inner, tcx))
         }
+        ReturnType::Nullable(SuccessType::Write) => "DiplomatOption<()>".into(),
         // The ABI carries both payloads in the runtime's tagged union — the same container
         // `DiplomatOption<T>` aliases with a `()` error.
         ReturnType::Fallible(success, err) => format!(
@@ -417,8 +418,8 @@ pub(super) fn ffi_success_type(success: &SuccessType, tcx: &TypeContext) -> Stri
         }
         SuccessType::OutType(Type::Slice(slice)) => ffi_slice_type(slice, RETURN_LIFETIME, tcx),
         SuccessType::OutType(ty) => ffi_value_type(ty, tcx),
-        // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
-        // anything reaching here is a shape codegen has never been taught.
+        // On the wire a writer is an out-parameter, so the ABI success payload is unit.
+        SuccessType::Write => "()".into(),
         _ => unreachable!("validated success shape"),
     }
 }
@@ -516,6 +517,7 @@ pub(super) fn safe_return_type(
         ReturnType::Nullable(SuccessType::OutType(inner)) => {
             format!("Option<{}>", safe_value_type(inner, tcx))
         }
+        ReturnType::Nullable(SuccessType::Write) => "Option<String>".into(),
         // Both sides are converted independently: an owned opaque payload is a raw
         // pointer in the ABI and the owning wrapper in the public API.
         ReturnType::Fallible(success, err) => format!(
@@ -566,8 +568,10 @@ pub(super) fn safe_success_type(
             format!("Option<{}>", safe_value_type(inner.as_ref(), tcx))
         }
         SuccessType::OutType(ty) => safe_value_type(ty, tcx),
-        // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
-        // anything reaching here is a shape codegen has never been taught.
+        // The public API hides `DiplomatWrite` and returns the written UTF-8.
+        SuccessType::Write => "String".into(),
+        // `SuccessType` is `#[non_exhaustive]`; a variant this backend has never seen
+        // is not something it can claim to support.
         _ => unreachable!("validated success shape"),
     }
 }

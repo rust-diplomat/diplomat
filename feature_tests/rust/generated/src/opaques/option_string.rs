@@ -99,8 +99,31 @@ impl OptionString {
             _not_send_sync: PhantomData,
         })
     }
+    pub fn write(&self) -> Result<String, ()> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let (result, text) = crate::private::with_write(|write| unsafe {
+            ffi::OptionString_write(self.inner.as_ptr() as *const _, write)
+        });
+        Result::from(result).map(|()| text)
+    }
 }
 
-impl<'view> OptionStringRef<'view> {}
+impl<'view> OptionStringRef<'view> {
+    pub fn write(&self) -> Result<String, ()> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let (result, text) = crate::private::with_write(|write| unsafe {
+            ffi::OptionString_write(self.inner.as_ptr() as *const _, write)
+        });
+        Result::from(result).map(|()| text)
+    }
+}
 
-impl<'view> OptionStringRefMut<'view> {}
+impl<'view> OptionStringRefMut<'view> {
+    pub fn write(&self) -> Result<String, ()> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let (result, text) = crate::private::with_write(|write| unsafe {
+            ffi::OptionString_write(self.inner.as_ptr() as *const _, write)
+        });
+        Result::from(result).map(|()| text)
+    }
+}

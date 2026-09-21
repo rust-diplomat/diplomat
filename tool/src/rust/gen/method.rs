@@ -4,10 +4,9 @@
 use std::fmt::Write as _;
 
 use diplomat_core::hir::{
-    MaybeOwn,
-    self, DocsUrlGenerator, Mutability, OutType, PrimitiveType, ReturnType, ReturnableStructPath,
-    SelfType, Slice,
-    StringEncoding, StructPathLike, SuccessType, Type, TypeContext, TypeDef,
+    self, DocsUrlGenerator, MaybeOwn, Mutability, OutType, PrimitiveType, ReturnType,
+    ReturnableStructPath, SelfType, Slice, StringEncoding, StructPathLike, SuccessType, Type,
+    TypeContext, TypeDef,
 };
 
 use super::opaque::opaque_return_expr;
@@ -94,7 +93,9 @@ pub(super) fn emit_method(
     }
     args.extend(method.params.iter().map(|param| input_expr(param, tcx)));
     writeln!(out, "        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.").unwrap();
-    if return_ty == "()" {
+    if method.output.is_write() {
+        emit_write_body(out, method, tcx, &args);
+    } else if return_ty == "()" {
         writeln!(
             out,
             "        unsafe {{ ffi::{}({}) }};",
@@ -125,6 +126,50 @@ pub(super) fn emit_method(
         }
     }
     out.push_str("    }\n");
+}
+
+/// Build a `DiplomatWrite`, pass it as the trailing ABI argument, and return the
+/// written UTF-8. The public signature never names the writer.
+fn emit_write_body(out: &mut String, method: &hir::Method, tcx: &TypeContext, args: &[String]) {
+    let mut abi_args = args.to_vec();
+    abi_args.push("write".into());
+    let abi_args = abi_args.join(", ");
+    match &method.output {
+        ReturnType::Infallible(_) => {
+            writeln!(
+                out,
+                "        crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }};\n        }}).1",
+                method.abi_name
+            )
+            .unwrap();
+        }
+        ReturnType::Fallible(_, err) => {
+            writeln!(
+                out,
+                "        let (result, text) = crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }}\n        }});",
+                method.abi_name
+            )
+            .unwrap();
+            let err = error_expr(err, method, tcx);
+            if err == "result" {
+                writeln!(out, "        Result::from(result).map(|()| text)").unwrap();
+            } else {
+                writeln!(
+                    out,
+                    "        match Result::from(result) {{ Ok(()) => Ok(text), Err(result) => Err({err}) }}"
+                )
+                .unwrap();
+            }
+        }
+        ReturnType::Nullable(_) => {
+            writeln!(
+                out,
+                "        let (result, text) = crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }}\n        }});\n        Option::from(result).map(|()| text)",
+                method.abi_name
+            )
+            .unwrap();
+        }
+    }
 }
 
 pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {

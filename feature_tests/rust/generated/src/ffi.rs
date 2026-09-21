@@ -6,6 +6,7 @@
 // Re-exported so the sibling modules can name them as `ffi::DiplomatSlice`.
 pub(super) use diplomat_runtime::{
     DiplomatOption, DiplomatOwnedSlice, DiplomatResult, DiplomatSlice, DiplomatSliceMut,
+    DiplomatWrite,
 };
 
 #[repr(C)]
@@ -192,6 +193,7 @@ extern "C" {
     pub(super) fn namespace_AttrOpaque2_destroy(this: *mut RenamedAttrOpaque2);
     pub(super) fn namespace_DeprecatedOpaque_destroy(this: *mut RenamedDeprecatedOpaque);
     pub(super) fn namespace_MixinTest_destroy(this: *mut RenamedMixinTest);
+    pub(super) fn namespace_MixinTest_hello(write: *mut DiplomatWrite);
     pub(super) fn namespace_Nested_destroy(this: *mut RenamedNested);
     pub(super) fn namespace_Nested2_destroy(this: *mut RenamedNested2);
     pub(super) fn namespace_OpaqueZSTIndexer_destroy(this: *mut RenamedOpaqueZSTIndexer);
@@ -278,6 +280,7 @@ extern "C" {
     pub(super) fn OpaqueThin_destroy(this: *mut OpaqueThin);
     pub(super) fn OpaqueThin_a(this: *const OpaqueThin) -> i32;
     pub(super) fn OpaqueThin_b(this: *const OpaqueThin) -> f32;
+    pub(super) fn OpaqueThin_c(this: *const OpaqueThin, write: *mut DiplomatWrite);
     pub(super) fn OpaqueThinIter_destroy(this: *mut OpaqueThinIter);
     pub(super) fn OpaqueThinIter_next(this: *mut OpaqueThinIter) -> *const OpaqueThin;
     pub(super) fn OpaqueThinVec_destroy(this: *mut OpaqueThinVec);
@@ -320,6 +323,10 @@ extern "C" {
     pub(super) fn OptionOpaqueChar_assert_char(this: *const OptionOpaqueChar, ch: u32);
     pub(super) fn OptionString_destroy(this: *mut OptionString);
     pub(super) fn OptionString_new(diplomat_str: DiplomatSlice<u8>) -> *mut OptionString;
+    pub(super) fn OptionString_write(
+        this: *const OptionString,
+        write: *mut DiplomatWrite,
+    ) -> DiplomatResult<(), ()>;
     pub(super) fn ResultOpaque_destroy(this: *mut ResultOpaque);
     pub(super) fn ResultOpaque_new(i: i32) -> DiplomatResult<*mut ResultOpaque, super::ErrorEnum>;
     pub(super) fn ResultOpaque_new_failing_foo(
@@ -352,13 +359,16 @@ extern "C" {
     pub(super) fn Float64Vec_as_slice<'a>(this: *const Float64Vec) -> DiplomatSlice<'a, f64>;
     pub(super) fn Float64Vec_fill_slice(this: *const Float64Vec, v: DiplomatSliceMut<f64>);
     pub(super) fn Float64Vec_set_value(this: *mut Float64Vec, new_slice: DiplomatSlice<f64>);
+    pub(super) fn Float64Vec_to_string(this: *const Float64Vec, write: *mut DiplomatWrite);
     pub(super) fn Float64Vec_borrow<'a>(this: *const Float64Vec) -> DiplomatSlice<'a, f64>;
     pub(super) fn Float64Vec_get(this: *const Float64Vec, i: usize) -> DiplomatOption<f64>;
     pub(super) fn MyString_destroy(this: *mut MyString);
     pub(super) fn MyString_new(v: DiplomatSlice<u8>) -> *mut MyString;
     pub(super) fn MyString_new_unsafe(v: DiplomatSlice<u8>) -> *mut MyString;
     pub(super) fn MyString_set_str(this: *mut MyString, new_str: DiplomatSlice<u8>);
+    pub(super) fn MyString_get_str(this: *const MyString, write: *mut DiplomatWrite);
     pub(super) fn MyString_get_static_str<'a>() -> DiplomatSlice<'a, u8>;
+    pub(super) fn MyString_string_transform(foo: DiplomatSlice<u8>, write: *mut DiplomatWrite);
     pub(super) fn MyString_borrow<'a>(this: *const MyString) -> DiplomatSlice<'a, u8>;
     pub(super) fn OwnedSliceReturn_destroy(this: *mut OwnedSliceReturn);
     pub(super) fn OwnedSliceReturn_make_bytes(len: u32) -> DiplomatOwnedSlice<u8>;
@@ -367,10 +377,12 @@ extern "C" {
     ) -> DiplomatResult<DiplomatOwnedSlice<u8>, super::ErrorEnum>;
     pub(super) fn MyOpaqueEnum_destroy(this: *mut MyOpaqueEnum);
     pub(super) fn MyOpaqueEnum_new() -> *mut MyOpaqueEnum;
+    pub(super) fn MyOpaqueEnum_to_string(this: *const MyOpaqueEnum, write: *mut DiplomatWrite);
     pub(super) fn Opaque_destroy(this: *mut Opaque);
     pub(super) fn Opaque_new() -> *mut Opaque;
     pub(super) fn Opaque_try_from_utf8(input: DiplomatSlice<u8>) -> *mut Opaque;
     pub(super) fn Opaque_from_str(input: DiplomatSlice<u8>) -> *mut Opaque;
+    pub(super) fn Opaque_get_debug_str(this: *const Opaque, write: *mut DiplomatWrite);
     pub(super) fn Opaque_returns_usize() -> usize;
     pub(super) fn Opaque_returns_imported() -> super::ImportedStruct;
     pub(super) fn OpaqueMut_destroy(this: *mut OpaqueMut);
@@ -405,6 +417,7 @@ extern "C" {
     pub(super) fn PrimitiveStructVec_len(this: *const PrimitiveStructVec) -> usize;
     pub(super) fn Utf16Wrap_destroy(this: *mut Utf16Wrap);
     pub(super) fn Utf16Wrap_from_utf16(input: DiplomatSlice<u16>) -> *mut Utf16Wrap;
+    pub(super) fn Utf16Wrap_get_debug_str(this: *const Utf16Wrap, write: *mut DiplomatWrite);
     pub(super) fn Utf16Wrap_borrow_cont<'a>(this: *const Utf16Wrap) -> DiplomatSlice<'a, u16>;
     pub(super) fn namespace_StructWithAttrs_new_fallible(
         a: bool,

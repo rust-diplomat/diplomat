@@ -8,8 +8,9 @@
 #![forbid(unsafe_code)]
 
 use diplomat_rust_backend_generated::{
-    ContiguousEnum, ErrorEnum, Float64Vec, MyString, Opaque, OpaqueMutexedString, OpaqueThinVec,
-    OptionEnum, OptionOpaque, OwnedSliceReturn, ResultOpaque, Utf16Wrap,
+    ContiguousEnum, ErrorEnum, Float64Vec, MyOpaqueEnum, MyString, Opaque, OpaqueMutexedString,
+    OpaqueThinVec, OptionEnum, OptionOpaque, OptionString, OwnedSliceReturn, RenamedMixinTest,
+    ResultOpaque, Utf16Wrap,
 };
 
 /// An owned opaque is constructed by the provider and dropped by the generated
@@ -94,6 +95,35 @@ fn float_slices_round_trip() {
     values.set_value(&[9.0]);
     assert_eq!(values.as_slice(), [9.0].as_slice());
     assert!(Float64Vec::new(&[]).as_slice().is_empty());
+}
+
+/// A `DiplomatWrite` out-parameter becomes an owned `String`. The writer itself
+/// is not part of the public API; the consumer reads the text the provider wrote.
+#[test]
+fn writer_methods_return_the_text_the_provider_wrote() {
+    let message = MyString::new(b"hello \xe9\xa4\x90");
+    assert_eq!(message.get_str(), "hello \u{9910}");
+    assert_eq!(MyString::string_transform("ignored"), "");
+
+    let values = Float64Vec::new(&[1.5, 2.5, 3.0]);
+    assert_eq!(values.to_string(), "[1.5, 2.5, 3.0]");
+
+    assert_eq!(Opaque::new().get_debug_str(), "\"\"");
+    assert_eq!(Opaque::from_str("hello").get_debug_str(), "\"hello\"");
+
+    let wrap = Utf16Wrap::from_utf16(&[65, 66]);
+    assert_eq!(wrap.get_debug_str(), "[65, 66]");
+
+    assert_eq!(MyOpaqueEnum::new().to_string(), "MyOpaqueEnum::A");
+
+    let option = OptionString::new(b"hi").expect("valid utf-8");
+    assert_eq!(option.write().expect("write succeeds"), "hi");
+
+    let vector = OpaqueThinVec::create(&[1], &[1.5], b"payload");
+    let first = vector.first().expect("one element");
+    assert_eq!(first.c(), "payload");
+
+    assert_eq!(RenamedMixinTest::hello(), "Hello!");
 }
 
 /// Borrowed strings: the provider's bytes are borrowed, not copied.

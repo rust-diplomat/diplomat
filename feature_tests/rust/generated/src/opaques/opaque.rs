@@ -122,6 +122,13 @@ impl Opaque {
             }
         }
     }
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
     pub fn returns_usize() -> usize {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Opaque_returns_usize() }
@@ -132,6 +139,22 @@ impl Opaque {
     }
 }
 
-impl<'view> OpaqueRef<'view> {}
+impl<'view> OpaqueRef<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+}
 
-impl<'view> OpaqueRefMut<'view> {}
+impl<'view> OpaqueRefMut<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+}

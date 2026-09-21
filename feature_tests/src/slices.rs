@@ -40,7 +40,6 @@ pub mod ffi {
             self.0 = String::from_utf8(new_str.to_owned()).unwrap();
         }
 
-        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "str")]
         pub fn get_str(&self, write: &mut DiplomatWrite) {
             let _infallible = write!(write, "{}", self.0);
@@ -51,7 +50,6 @@ pub mod ffi {
             "hello"
         }
 
-        #[diplomat::attr(rust, disable)]
         pub fn string_transform(foo: &str, write: &mut DiplomatWrite) {
             let _ = foo;
             let _ = write;
@@ -155,7 +153,6 @@ pub mod ffi {
             self.0 = new_slice.to_vec();
         }
 
-        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, stringifier)]
         pub fn to_string(&self, w: &mut DiplomatWrite) {
             let _infallible = write!(w, "{:?}", self.0);

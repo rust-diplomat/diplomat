@@ -94,6 +94,8 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, stringifier)]
+        // Writer lowering is in; the remaining blocker is the borrowed opaque error
+        // (`Result<(), &'a Self>`), which is ticket 07.
         #[diplomat::attr(any(kotlin, rust), disable)]
         #[diplomat::attr(dotnet, disable)]
         pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {

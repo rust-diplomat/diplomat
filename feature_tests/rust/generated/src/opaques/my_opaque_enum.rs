@@ -103,8 +103,31 @@ impl MyOpaqueEnum {
             }
         }
     }
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyOpaqueEnum_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
 }
 
-impl<'view> MyOpaqueEnumRef<'view> {}
+impl<'view> MyOpaqueEnumRef<'view> {
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyOpaqueEnum_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+}
 
-impl<'view> MyOpaqueEnumRefMut<'view> {}
+impl<'view> MyOpaqueEnumRefMut<'view> {
+    pub fn to_string(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::MyOpaqueEnum_to_string(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+}

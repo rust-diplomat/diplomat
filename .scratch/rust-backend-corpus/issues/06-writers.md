@@ -6,31 +6,27 @@ parameter is callable from the Rust consumer and yields the written text.
 This is the single largest gate group — ten items, more than any other workstream:
 `Float64Vec::to_string`, `MyOpaqueEnum::to_string`, `MyString::get_str`,
 `MyString::string_transform`, `Opaque::get_debug_str`,
-`OpaqueMutexedString::dummy_str`'s sibling `Utf16Wrap::get_debug_str`,
-`ResultOpaque::stringify_error`, `OptionString::write`, `OpaqueThin::c`,
-`MixinTest::hello`.
+`Utf16Wrap::get_debug_str`, `ResultOpaque::stringify_error`,
+`OptionString::write`, `OpaqueThin::c`, `MixinTest::hello`.
 
-**Blocked by:** None technically, but **do not start before the decision below.**
+**Blocked by:** None technically.
 
-**Status:** needs-decision
+**Status:** DONE
 
-**Decision needed before starting:** what is the Rust-side shape of a writer method?
+**Decision:** hide `DiplomatWrite`. The public signature is `fn get_str(&self) -> String`
+(and `Result<String, E>` / `Option<String>` when the provider method is fallible or
+nullable). The writer is constructed in the generated crate, passed as the trailing
+ABI argument, and never named on the public API. `DiplomatWrite` is UTF-8
+(`fmt::Write`), so there is no `Vec<u16>` shape — `Utf16Wrap::get_debug_str` still
+returns `String` (it writes the `Debug` form of the `Vec<u16>`).
 
-The corpus declares these as `fn get_str(&self, write: &mut DiplomatWrite)`. Every
-other backend constructs a callback-backed writer and reads the buffer out. Rust has
-no reason to: the natural generated signature is `fn get_str(&self) -> String`, with
-the wrapper building the writer internally. That is a *reshaping* of the declared API,
-not a translation of it — the same call the naming rules already make. The alternative
-is to expose the writer object itself and make every caller drive it, which is strictly
-worse ergonomics for no ABI reason.
+`ResultOpaque::stringify_error` stays gated: it is a writer *and* a borrowed opaque
+error (`Result<(), &'a Self>`), which is ticket 07.
 
-Confirm the `-> String` shape (and `-> Vec<u16>` for the UTF-16 writer) before
-implementing. This also decides whether the generated method can be fallible: a writer
-call can fail mid-write, and `stringify_error` returns `Result`.
+**Acceptance criteria:**
 
-**Acceptance criteria** (once the shape is settled):
-
-- [ ] All ten writer methods are generated and their `rust` gates removed
-- [ ] A consumer test reads the written text back and compares it to the provider's
-      expected output, for both a UTF-8 writer and a UTF-16 one
-- [ ] `check.sh` passes
+- [x] Decision: `-> String` (not an exposed writer)
+- [x] Writer methods above (except `stringify_error`) are generated and their `rust` gates removed
+- [x] A consumer test reads the written text back and compares it to the provider's
+      expected output (`writer_methods_return_the_text_the_provider_wrote`)
+- [x] `check.sh` passes

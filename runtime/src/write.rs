@@ -105,6 +105,23 @@ impl DiplomatWrite {
         (self.flush)(self);
     }
 
+    /// Take ownership of the written bytes. The buffer pointer is nulled so a
+    /// later destructor will not free it twice.
+    ///
+    /// # Safety
+    /// This instance must have been created by [`diplomat_buffer_write_create`].
+    pub(crate) unsafe fn take_vec(&mut self) -> Vec<u8> {
+        if self.buf.is_null() {
+            Vec::new()
+        } else {
+            let vec = Vec::from_raw_parts(self.buf, self.len, self.cap);
+            self.buf = ptr::null_mut();
+            self.len = 0;
+            self.cap = 0;
+            vec
+        }
+    }
+
     /// Returns a pointer to the buffer's bytes.
     ///
     /// If growth has failed, this returns what has been written so far.

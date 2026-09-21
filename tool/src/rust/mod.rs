@@ -1167,6 +1167,60 @@ mod tests {
         }
     }
 
+    /// A `DiplomatWrite` out-parameter is not part of the public API. The generated
+    /// method returns an owned `String` (or wraps it in `Result`/`Option`), and the
+    /// writer lives only in the private FFI layer.
+    #[test]
+    fn writer_methods_return_owned_strings_and_hide_the_writer() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatWrite;
+                #[diplomat::opaque]
+                pub struct Message(u32);
+                impl Message {
+                    pub fn new() -> Box<Self> { unimplemented!() }
+                    pub fn get_str(&self, write: &mut DiplomatWrite) { unimplemented!() }
+                    pub fn try_write(&self, write: &mut DiplomatWrite) -> Result<(), ()> { unimplemented!() }
+                    pub fn maybe_write(&self, write: &mut DiplomatWrite) -> Option<()> { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+
+        let message = &files["src/opaques/message.rs"];
+        assert!(
+            message.contains("pub fn get_str(&self) -> String"),
+            "infallible writer must return String, not take DiplomatWrite: {message}"
+        );
+        assert!(
+            message.contains("pub fn try_write(&self) -> Result<String, ()>"),
+            "fallible writer must wrap the String in Result: {message}"
+        );
+        assert!(
+            message.contains("pub fn maybe_write(&self) -> Option<String>"),
+            "nullable writer must wrap the String in Option: {message}"
+        );
+        assert!(
+            !message.contains("DiplomatWrite"),
+            "DiplomatWrite must not appear in the public method surface: {message}"
+        );
+
+        let raw = &files["src/ffi.rs"];
+        assert!(
+            raw.contains("write: *mut DiplomatWrite"),
+            "the ABI still takes a DiplomatWrite out-parameter: {raw}"
+        );
+        assert!(
+            raw.contains("fn Message_get_str(this: *const Message, write: *mut DiplomatWrite);"),
+            "infallible writer is void on the wire: {raw}"
+        );
+        assert!(
+            raw.contains("fn Message_try_write(this: *const Message, write: *mut DiplomatWrite) -> DiplomatResult<(), ()>"),
+            "fallible writer keeps the Result on the wire: {raw}"
+        );
+    }
+
     /// A plain `#[diplomat::attr(auto, constructor)]` is accepted and emitted. For Rust
     /// that is an ordinary associated function, so its generated name is just the
     /// method's own name — the flag is a promise that such methods are lowered at all.
