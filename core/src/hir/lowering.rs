@@ -17,14 +17,6 @@ use core::fmt;
 use std::collections::HashMap;
 use strck::IntoCk;
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
-#[non_exhaustive]
-/// For errors. Which part of the signature is invalid?
-pub enum SignatureLocation {
-    Return,
-    Param(usize),
-}
-
 /// An error from lowering the AST to the HIR.
 /// This provides location information.
 #[derive(Debug)]
@@ -37,16 +29,6 @@ pub enum LoweringError {
         /// An explainer about the definition of the type.
         type_def_explainer : Option<String>,
         /// Why evaluating the type failed.
-        reason : String,
-    },
-    /// Trying to evaluate something at the provided [`TypeLoweringContext`] resulted in an error.
-    /// Note that the type may be evaluated correctly elsewhere.
-    /// This most frequently occurs in [`LoweringContext::lower_type`] and [`LoweringContext::lower_out_type`]
-    InvalidLocation {
-        /// Where specifically the error occured.
-        /// Errors already insert the type/method name into context, so this just adds more specific info:
-        context : TypeLoweringContext,
-        /// Why the signature is invalid.
         reason : String,
     },
     /// The purpose of having this is that translating to the HIR has enormous
@@ -65,26 +47,6 @@ impl fmt::Display for LoweringError {
         match *self {
             Self::InvalidType { ref type_name, ref reason, type_def_explainer: _ } => {
                 write!(f, "Could not evaluate {}: {reason}", type_name.ty.to_string())
-            }
-            Self::InvalidLocation { ref context, ref reason } => {
-                match context {
-                    ctx @ (TypeLoweringContext::Method(location) | TypeLoweringContext::Callback(location)) => {
-                        write!(f, "Invalid {} signature at {}: {reason}", 
-                            match ctx {
-                                TypeLoweringContext::Method(..) => "function",
-                                TypeLoweringContext::Callback(..) => "callback",
-                                _ => unreachable!(),
-                            },
-                            match location {
-                                SignatureLocation::Param(idx) => format!("param {idx}"),
-                                SignatureLocation::Return => "return type".to_string(),
-                            }
-                        )
-                    }
-                    TypeLoweringContext::Struct(field) => {
-                        write!(f, "Invalid struct field {field}: {reason}")
-                    }
-                }
             }
             Self::Other(ref s) => s.fmt(f),
         }
@@ -139,14 +101,6 @@ impl LoweringReport {
             self.context.location.clone(),
             format!("{}", self.error),
             match &self.error {
-                LoweringError::InvalidLocation { context, .. } => {
-                    match context {
-                        TypeLoweringContext::Struct(field) if let Some(sp) = field.span() => {
-                            vec![ContextLocation::new(sp, "".into())]
-                        }
-                        _ => vec![],
-                    }
-                }
                 LoweringError::InvalidType { type_name, reason, type_def_explainer } if let Some(sp) = &type_name.location => {
                     vec![ContextLocation::new(sp.clone(), type_def_explainer.clone().unwrap_or_default())]
                 }
@@ -176,9 +130,9 @@ pub type ErrorAndContext = LoweringReport;
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TypeLoweringContext {
     /// Stores the name of the field currently being evaluated.
-    Struct(ast::Ident),
-    Callback(SignatureLocation),
-    Method(SignatureLocation),
+    Struct,
+    Callback,
+    Method,
 }
 
 pub(crate) trait ReportContext {
@@ -492,7 +446,7 @@ impl<'ast> LoweringContext<'ast> {
                 let ty = self.lower_type::<Everywhere>(
                     &SpannedTypeName { ty: ty.clone(), location: field_name.span() },
                     &mut &ast_struct.lifetimes,
-                    TypeLoweringContext::Struct(field_name.clone()),
+                    TypeLoweringContext::Struct,
                     item.in_path,
                 );
 
@@ -770,7 +724,7 @@ impl<'ast> LoweringContext<'ast> {
                         ty,
                         &mut &ast_out_struct.lifetimes,
                         item.in_path,
-                        TypeLoweringContext::Struct(field_name.clone()),
+                        TypeLoweringContext::Struct,
                         false,
                     );
 
@@ -909,8 +863,9 @@ impl<'ast> LoweringContext<'ast> {
             };
 
             if !(method.return_type.as_ref().map(|t| &t.ty) == Some(&ast::TypeName::Ordering) || is_optional_ord) {
-                self.errors.push(LoweringError::InvalidLocation{
-                    context: TypeLoweringContext::Method(SignatureLocation::Return),
+                self.errors.push(LoweringError::InvalidType {
+                    type_name: method.return_type.as_ref().unwrap().clone(),
+                    type_def_explainer: Some("Suggestion: change this to cmp::Ordering".to_string()),
                     reason: "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>".into(),
                 });
                 return Err(());
@@ -1016,9 +971,10 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Type<P>, ()> {
         let mut disallow_in_callbacks = |msg: &str| {
-            if matches!(context, TypeLoweringContext::Callback(..)) {
-                self.errors.push(LoweringError::InvalidLocation {
-                    context: context.clone(),
+            if context == TypeLoweringContext::Callback {
+                self.errors.push(LoweringError::InvalidType {
+                    type_name: ty.clone(),
+                    type_def_explainer: None,
                     reason: msg.into()
                 });
                 Err(())
@@ -1029,8 +985,9 @@ impl<'ast> LoweringContext<'ast> {
         match &ty.ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
-                self.errors.push(LoweringError::InvalidLocation {
-                    context: context.clone(),
+                self.errors.push(LoweringError::InvalidType {
+                    type_name: ty.clone(),
+                    type_def_explainer: None,
                     reason: "Found cmp::Ordering in input, it is only allowed in return types".to_string()
                 });
                 Err(())
@@ -1040,8 +997,9 @@ impl<'ast> LoweringContext<'ast> {
             {
                 ast::CustomType::Struct(strct) => {
                     if strct.fields.is_empty() {
-                        self.errors.push(LoweringError::InvalidLocation {
-                            context: context.clone(),
+                        self.errors.push(LoweringError::InvalidType {
+                            type_name: ty.clone(),
+                            type_def_explainer: None,
                             reason: "zero-size types are not allowed as method arguments".to_string(),
                         });
                         return Err(());
@@ -1056,8 +1014,9 @@ impl<'ast> LoweringContext<'ast> {
                             MaybeOwn::Own,
                         )))
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
-                        self.errors.push(LoweringError::InvalidLocation {
-                            context: context.clone(),
+                        self.errors.push(LoweringError::InvalidType {
+                            type_name: ty.clone(),
+                            type_def_explainer: None,
                             reason: format!("{} is marked with #[diplomat::out], but found in input", ty.ty)
                         });
                         Err(())
@@ -1185,12 +1144,14 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(_) => LoweringError::InvalidLocation {
-                            context: context.clone(),
+                        ast::CustomType::Opaque(_) => LoweringError::InvalidType {
+                            type_name: ty.clone(),
+                            type_def_explainer: None,
                             reason: "found Box<T> in input, where T is an opaque; owned opaques aren't allowed in inputs. Try referencing the opaque (&T) instead".to_string(),
                         },
-                        _ => LoweringError::InvalidLocation {
-                            context: context.clone(),
+                        _ => LoweringError::InvalidType {
+                            type_name: ty.clone(),
+                            type_def_explainer: None,
                             reason: "found Box<T> in input, where T is non-opaque; non-opaques can't be behind pointers".into()
                         }
                     }
@@ -1267,7 +1228,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Err(())
                             }
                             _ => {
-                                if matches!(context, TypeLoweringContext::Struct(..))
+                                if context == TypeLoweringContext::Struct
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
                                     self.errors.push(LoweringError::InvalidType {
@@ -1292,7 +1253,7 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                     ast::TypeName::Primitive(prim) => {
-                        if matches!(context, TypeLoweringContext::Struct(..))
+                        if context == TypeLoweringContext::Struct
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
                             self.errors.push(LoweringError::InvalidType {
@@ -1323,8 +1284,9 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     ast::TypeName::Box(..) => {
                         // we could see whats in the box here too
-                        self.errors.push(LoweringError::InvalidLocation {
-                            context: context.clone(),
+                        self.errors.push(LoweringError::InvalidType {
+                            type_name: ty.clone(),
+                            type_def_explainer: None,
                             reason: "found Option<Box<T>>, Box<T> is not allowed in inputs".to_string()
                         });
                         Err(())
@@ -1482,16 +1444,16 @@ impl<'ast> LoweringContext<'ast> {
                         "Callback arguments are not supported by this backend".into(),
                     ));
                 }
-                if matches!(context, TypeLoweringContext::Struct(..)) {
+                if context == TypeLoweringContext::Struct {
                     self.errors.push(LoweringError::Other(
                         "Callbacks currently unsupported in structs".into(),
                     ));
                     return Err(());
                 }
                 let mut params: Vec<CallbackParam> = Vec::new();
-                for (idx, in_ty) in input_types.iter().enumerate() {
+                for in_ty in input_types.iter() {
                     let param =
-                        self.lower_callback_param(/* anonymous */ None, in_ty, SignatureLocation::Param(idx), ltl, in_path)?;
+                        self.lower_callback_param(/* anonymous */ None, in_ty, ltl, in_path)?;
 
                     params.push(param)
                 }
@@ -1532,7 +1494,7 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(OutType::Primitive(PrimitiveType::from_ast(*prim)))
             }
             ast::TypeName::Ordering => {
-                if matches!(context, TypeLoweringContext::Struct(..)) {
+                if context == TypeLoweringContext::Struct {
                     self.errors.push(LoweringError::Other(
                         "Found cmp::Ordering in struct field, it is only allowed in return types"
                             .to_string(),
@@ -1725,7 +1687,7 @@ impl<'ast> LoweringContext<'ast> {
                             Err(())
                         }
                         _ => {
-                            if matches!(context, TypeLoweringContext::Struct(..))
+                            if context == TypeLoweringContext::Struct
                                 && *stdlib == ast::StdlibOrDiplomat::Stdlib
                             {
                                 self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
@@ -1743,7 +1705,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                 }
                 ast::TypeName::Primitive(prim) => {
-                    if matches!(context, TypeLoweringContext::Struct(..))
+                    if context == TypeLoweringContext::Struct
                         && *stdlib == ast::StdlibOrDiplomat::Stdlib
                     {
                         self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
@@ -1781,7 +1743,7 @@ impl<'ast> LoweringContext<'ast> {
             // when the call site passes `in_result_option = false` — the macro
             // converts those payloads to repr(C) `DiplomatOwnedSlice<u8>`.
             ast::TypeName::PrimitiveSlice(None, prim, _stdlib)
-                if matches!(context, TypeLoweringContext::Method(..))
+                if context == TypeLoweringContext::Method
                     && !in_result_option
                     && ty.is_owned_byte_slice() =>
             {
@@ -2089,12 +2051,11 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_param(
         &mut self,
         param: &ast::Param,
-        context : SignatureLocation,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method(context), in_path);
+        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method, in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -2122,8 +2083,8 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<(Vec<Param>, ReturnLifetimeLowerer<'ast>), ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for (idx, param) in ast_params.iter().enumerate() {
-            let param = self.lower_param(param, SignatureLocation::Param(idx), &mut param_ltl, in_path);
+        for param in ast_params.iter() {
+            let param = self.lower_param(param, &mut param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2140,7 +2101,6 @@ impl<'ast> LoweringContext<'ast> {
         &mut self,
         name: Option<IdentBuf>,
         ty: &ast::TypeName,
-        context : SignatureLocation,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<CallbackParam, ()> {
@@ -2148,7 +2108,7 @@ impl<'ast> LoweringContext<'ast> {
             ty,
             ltl,
             in_path,
-            TypeLoweringContext::Callback(context),
+            TypeLoweringContext::Callback,
             false, /* in_result_option */
         )?;
 
@@ -2174,9 +2134,9 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Vec<CallbackParam>, ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for (idx, param) in ast_params.iter().enumerate() {
+        for param in ast_params.iter() {
             let name = self.lower_ident(&param.name, "param name")?;
-            let param = self.lower_callback_param(Some(name), &param.ty.ty, SignatureLocation::Param(idx), param_ltl, in_path);
+            let param = self.lower_callback_param(Some(name), &param.ty.ty, param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2263,7 +2223,7 @@ impl<'ast> LoweringContext<'ast> {
                             ty,
                             &mut return_ltl,
                             in_path,
-                            TypeLoweringContext::Method(SignatureLocation::Return),
+                            TypeLoweringContext::Method,
                             // `Box<[u8]>` Ok payloads take the plain method-return
                             // path — the macro converts them to `DiplomatOwnedSlice<u8>`.
                             !ty.is_owned_byte_slice(),
@@ -2277,7 +2237,7 @@ impl<'ast> LoweringContext<'ast> {
                             ty,
                             &mut return_ltl,
                             in_path,
-                            TypeLoweringContext::Method(SignatureLocation::Return),
+                            TypeLoweringContext::Method,
                             true,
                         )
                         .map(Some),
@@ -2315,7 +2275,7 @@ impl<'ast> LoweringContext<'ast> {
                         ty,
                         &mut return_ltl,
                         in_path,
-                        TypeLoweringContext::Method(SignatureLocation::Return),
+                        TypeLoweringContext::Method,
                         true,
                     )
                     .map(SuccessType::OutType)
@@ -2329,7 +2289,7 @@ impl<'ast> LoweringContext<'ast> {
                         value_ty,
                         &mut return_ltl,
                         in_path,
-                        TypeLoweringContext::Method(SignatureLocation::Return),
+                        TypeLoweringContext::Method,
                         in_result_option,
                     );
                     if let Ok(t) = &t {
@@ -2347,7 +2307,7 @@ impl<'ast> LoweringContext<'ast> {
                     ty,
                     &mut return_ltl,
                     in_path,
-                    TypeLoweringContext::Method(SignatureLocation::Return),
+                    TypeLoweringContext::Method,
                     false,
                 )
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
@@ -2368,13 +2328,13 @@ impl<'ast> LoweringContext<'ast> {
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(Some),
                 };
 
@@ -2418,13 +2378,13 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                    self.lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(SuccessType::OutType)
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(&SpannedTypeName { ty: *value_ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path);
+                    let t = self.lower_type(&SpannedTypeName { ty: *value_ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path);
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2435,7 +2395,7 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }
