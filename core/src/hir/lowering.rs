@@ -8,12 +8,13 @@ use super::{
     StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
     TypeDef, TypeId, WriteType,
 };
-use crate::ast::SpannedTypeName;
+use crate::ast::{OwnedSpannedTypeName, SpannedTypeName};
 use crate::ast::attrs::AttrInheritContext;
 use crate::ast::logging::{ContextLocation, write_report};
 use crate::hir::{Docs, LocIdent, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use strck::IntoCk;
 
@@ -25,7 +26,7 @@ pub enum LoweringError {
     /// The provided type is incorrect.
     InvalidType {
         /// The name of the type, plus its definition location.
-        type_name : SpannedTypeName,
+        type_name : OwnedSpannedTypeName,
         /// An explainer about the definition of the type.
         type_def_explainer : Option<String>,
         /// Why evaluating the type failed.
@@ -444,7 +445,7 @@ impl<'ast> LoweringContext<'ast> {
                     )));
                 }
                 let ty = self.lower_type::<Everywhere>(
-                    &SpannedTypeName { ty: ty.clone(), location: field_name.span() },
+                    &SpannedTypeName { ty: Cow::Borrowed(ty), location: field_name.span() },
                     &mut &ast_struct.lifetimes,
                     TypeLoweringContext::Struct,
                     item.in_path,
@@ -599,7 +600,7 @@ impl<'ast> LoweringContext<'ast> {
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
         let return_type = self.lower_callback_return_type(
-            ast_trait_method.output_type.as_ref(),
+            ast_trait_method.output_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(),
             &mut param_ltl,
             in_path,
         )?;
@@ -662,7 +663,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
 
             let (return_type, lifetime_env) = self.lower_return_type(
-                ast_function.item.output_type.as_ref(),
+                ast_function.item.output_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(),
                 write_type,
                 return_ltl,
                 ast_function.in_path,
@@ -815,7 +816,7 @@ impl<'ast> LoweringContext<'ast> {
         let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
         let (output, lifetime_env) =
-            self.lower_return_type(method.return_type.as_ref(), write_type, return_ltl, in_path)?;
+            self.lower_return_type(method.return_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(), write_type, return_ltl, in_path)?;
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
@@ -844,12 +845,8 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if is_comparison {
-            let is_optional_ord = if let Some(
-                SpannedTypeName {
-                ty: ast::TypeName::Option(t, _),
-                ..
-            }) = &method.return_type {
-                if matches!(**t, ast::TypeName::Ordering) {
+            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) = &method.return_type.as_ref().map(|t| &t.ty) {
+                if matches!(t.as_ref(), &ast::TypeName::Ordering) {
                     if !self.attr_validator.attrs_supported().partial_comparators {
                         self.errors.push(LoweringError::Other("Comparators that return `Option` are not supported by this backend (Filter with #[diplomat::cfg(supports=partial_comparators)]).".into()));
                     }
@@ -973,7 +970,7 @@ impl<'ast> LoweringContext<'ast> {
         let mut disallow_in_callbacks = |msg: &str| {
             if context == TypeLoweringContext::Callback {
                 self.errors.push(LoweringError::InvalidType {
-                    type_name: ty.clone(),
+                    type_name: ty.into(),
                     type_def_explainer: None,
                     reason: msg.into()
                 });
@@ -982,11 +979,11 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(())
             }
         };
-        match &ty.ty {
+        match &ty.ty.as_ref() {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
                 self.errors.push(LoweringError::InvalidType {
-                    type_name: ty.clone(),
+                    type_name: ty.into(),
                     type_def_explainer: None,
                     reason: "Found cmp::Ordering in input, it is only allowed in return types".to_string()
                 });
@@ -998,7 +995,7 @@ impl<'ast> LoweringContext<'ast> {
                 ast::CustomType::Struct(strct) => {
                     if strct.fields.is_empty() {
                         self.errors.push(LoweringError::InvalidType {
-                            type_name: ty.clone(),
+                            type_name: ty.into(),
                             type_def_explainer: None,
                             reason: "zero-size types are not allowed as method arguments".to_string(),
                         });
@@ -1015,7 +1012,7 @@ impl<'ast> LoweringContext<'ast> {
                         )))
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::InvalidType {
-                            type_name: ty.clone(),
+                            type_name: ty.into(),
                             type_def_explainer: None,
                             reason: format!("{} is marked with #[diplomat::out], but found in input", ty.ty)
                         });
@@ -1026,7 +1023,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
                 ast::CustomType::Opaque(op) => {
                     self.errors.push(LoweringError::InvalidType {
-                        type_name: ty.clone(),
+                        type_name: ty.into(),
                         reason: "Opaque passed by value".to_string(),
                         type_def_explainer: Some("#[diplomat::opaque] types can only be passed by reference in input".to_string()),
                     });
@@ -1067,7 +1064,7 @@ impl<'ast> LoweringContext<'ast> {
                                 && opaque.mutability != Mutability::Mutable
                             {
                                 self.errors.push(LoweringError::InvalidType{
-                                    type_name: ty.clone(),
+                                    type_name: ty.into(),
                                     type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
                                     reason: format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
                                 });
@@ -1123,7 +1120,7 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         custom_type => {
                             self.errors.push(LoweringError::InvalidType{
-                                type_name: ty.clone(),
+                                type_name: ty.into(),
                                 type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
                                 reason: format!("found &T in input where T is a custom type, but not opaque")
                             });
@@ -1133,7 +1130,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
                 _ => {
                     self.errors.push(LoweringError::InvalidType{
-                        type_name: ty.clone(),
+                        type_name: ty.into(),
                         type_def_explainer: None,
                         reason: "found &T in input where T isn't a custom type and therefore not opaque".to_string()
                     });
@@ -1145,19 +1142,19 @@ impl<'ast> LoweringContext<'ast> {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(_) => LoweringError::InvalidType {
-                            type_name: ty.clone(),
+                            type_name: ty.into(),
                             type_def_explainer: None,
                             reason: "found Box<T> in input, where T is an opaque; owned opaques aren't allowed in inputs. Try referencing the opaque (&T) instead".to_string(),
                         },
                         _ => LoweringError::InvalidType {
-                            type_name: ty.clone(),
+                            type_name: ty.into(),
                             type_def_explainer: None,
                             reason: "found Box<T> in input, where T is non-opaque; non-opaques can't be behind pointers".into()
                         }
                     }
                 }
                 _ => LoweringError::InvalidType {
-                    type_name: ty.clone(),
+                    type_name: ty.into(),
                     type_def_explainer: None,
                     reason: "found Box<T> in input, were T isn't a custom type".into()
                 }
@@ -1174,7 +1171,7 @@ impl<'ast> LoweringContext<'ast> {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
                                     self.errors.push(LoweringError::InvalidType {
-                                        type_name: ty.clone(),
+                                        type_name: ty.into(),
                                         type_def_explainer: Some("Opaques cannot be referenced behind DiplomatOption<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()),
                                         reason: "found DiplomatOption<&T>, please use Option<&T>".to_string(),
                                     });
@@ -1201,7 +1198,7 @@ impl<'ast> LoweringContext<'ast> {
                             }
                             _ => {
                                 self.errors.push(LoweringError::InvalidType{
-                                    type_name: ty.clone(),
+                                    type_name: ty.into(),
                                     type_def_explainer: Some("Type must be marked #[diplomat::opaque] to be passed as Option<&T>".to_string()),
                                     reason: "found Option<&T> in input, where T is not opaque".into()
                                 });
@@ -1210,7 +1207,7 @@ impl<'ast> LoweringContext<'ast> {
                         },
                         _ => {
                             self.errors.push(LoweringError::InvalidType {
-                                type_name: ty.clone(),
+                                type_name: ty.into(),
                                 type_def_explainer: None,
                                 reason: "found Option<&T> in input, but T is not an opaque type".into()
                             });
@@ -1221,7 +1218,7 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(op) => {
                                 self.errors.push(LoweringError::InvalidType {
-                                    type_name: ty.clone(),
+                                    type_name: ty.into(),
                                     type_def_explainer: Some("opaque types are passed through FFI as pointers".to_string()),
                                     reason: "found Option<T> where T is opaque, opaque types must be behind a reference".to_string(),
                                 });
@@ -1232,7 +1229,7 @@ impl<'ast> LoweringContext<'ast> {
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
                                     self.errors.push(LoweringError::InvalidType {
-                                        type_name: ty.clone(),
+                                        type_name: ty.into(),
                                         type_def_explainer: Some("Struct and enum options must be stored in the C-ABI friendly DiplomatOption type".to_string()),
                                         reason: "found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()
                                     });
@@ -1242,7 +1239,7 @@ impl<'ast> LoweringContext<'ast> {
                                     self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
                                 let inner = self.lower_type(&ast::SpannedTypeName {
-                                    ty: *opt_ty.clone(),
+                                    ty: Cow::Borrowed(opt_ty),
                                     location: ty.location.clone(),
                                 }, ltl, context, in_path)?;
                                 if let Some(i) = inner.id() {
@@ -1257,7 +1254,7 @@ impl<'ast> LoweringContext<'ast> {
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
                             self.errors.push(LoweringError::InvalidType {
-                                type_name: ty.clone(),
+                                type_name: ty.into(),
                                 type_def_explainer: None,
                                 reason: "found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()
                             });
@@ -1278,14 +1275,14 @@ impl<'ast> LoweringContext<'ast> {
                     )),
                     ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
                         // Currently we just use locations for debug, so the span for options can remain the same:
-                        let opt_ty = SpannedTypeName { ty: *opt_ty.clone(), location: ty.location.clone() };
+                        let opt_ty = SpannedTypeName { ty: Cow::Borrowed(opt_ty), location: ty.location.clone() };
                         let inner = self.lower_type(&opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
                     ast::TypeName::Box(..) => {
                         // we could see whats in the box here too
                         self.errors.push(LoweringError::InvalidType {
-                            type_name: ty.clone(),
+                            type_name: ty.into(),
                             type_def_explainer: None,
                             reason: "found Option<Box<T>>, Box<T> is not allowed in inputs".to_string()
                         });
@@ -1388,7 +1385,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
 
                 let slice_ty = SpannedTypeName {
-                    ty: *type_name.clone(),
+                    ty: Cow::Borrowed(type_name),
                     location: ty.location.clone(),
                 };
                 let inner = self.lower_type::<P>(&slice_ty, ltl, context, in_path)?;
@@ -1462,7 +1459,7 @@ impl<'ast> LoweringContext<'ast> {
                     param_self: None,
                     params,
                     output: Box::new(self.lower_callback_return_type(
-                        Some(&SpannedTypeName { ty: *out_type.clone(), location: ty.location.clone() }),
+                        Some(&SpannedTypeName { ty: Cow::Borrowed(out_type), location: ty.location.clone() }),
                         ltl,
                         in_path,
                     )?),
@@ -2055,7 +2052,7 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method, in_path);
+        let ty = self.lower_type::<InputOnly>(&((&param.ty).into()), ltl, TypeLoweringContext::Method, in_path);
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -2212,7 +2209,7 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             SuccessType::Unit
         };
-        let return_type_name = return_type.map(|t| &t.ty).unwrap_or(&ast::TypeName::Unit);
+        let return_type_name = return_type.map(|t| t.ty.as_ref()).unwrap_or(&ast::TypeName::Unit);
         match return_type_name {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 self.maybe_error_on_option_result(return_type_name)?;
@@ -2321,20 +2318,20 @@ impl<'ast> LoweringContext<'ast> {
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<ReturnType<InputOnly>, ()> {
-        let return_type = return_type.unwrap_or(&SpannedTypeName { ty: ast::TypeName::Unit, location: None });
-        match &return_type.ty {
+        let return_type = return_type.unwrap_or(&SpannedTypeName { ty: Cow::Owned(ast::TypeName::Unit), location: None });
+        match &return_type.ty.as_ref() {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 self.maybe_error_on_option_result(&return_type.ty)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(Some),
                 };
 
@@ -2378,13 +2375,13 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                    self.lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                         .map(SuccessType::OutType)
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(&SpannedTypeName { ty: *value_ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path);
+                    let t = self.lower_type(&SpannedTypeName { ty: Cow::Borrowed(value_ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path);
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2395,7 +2392,7 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }

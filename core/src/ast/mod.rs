@@ -27,7 +27,7 @@ pub use enums::Enum;
 mod types;
 pub use types::{
     CustomType, LifetimeOrigin, ModSymbol, Mutability, PathType, PrimitiveType, StdlibOrDiplomat,
-    StringEncoding, TypeName, WriteType, SpannedTypeName,
+    StringEncoding, TypeName, WriteType, SpannedTypeName, OwnedSpannedTypeName,
 };
 
 mod functions;
