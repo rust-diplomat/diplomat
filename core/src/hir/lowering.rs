@@ -33,7 +33,7 @@ pub enum LoweringError {
     /// The provided type is incorrect.
     InvalidType {
         /// The name of the type, plus its definition location.
-        type_name : ast::Ident,
+        type_name : SpannedTypeName,
         /// An explainer about the definition of the type.
         type_def_explainer : Option<String>,
         /// Why evaluating the type failed.
@@ -64,7 +64,7 @@ impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             Self::InvalidType { ref type_name, ref reason, type_def_explainer: _ } => {
-                write!(f, "Could not evaluate {type_name}: {reason}")
+                write!(f, "Could not evaluate {}: {reason}", type_name.ty.to_string())
             }
             Self::InvalidLocation { ref context, ref reason } => {
                 match context {
@@ -147,8 +147,8 @@ impl LoweringReport {
                         _ => vec![],
                     }
                 }
-                LoweringError::InvalidType { type_name, reason, type_def_explainer } if let Some(sp) = type_name.span() => {
-                    vec![ContextLocation::new(sp, type_def_explainer.clone().unwrap_or_default())]
+                LoweringError::InvalidType { type_name, reason, type_def_explainer } if let Some(sp) = &type_name.location => {
+                    vec![ContextLocation::new(sp.clone(), type_def_explainer.clone().unwrap_or_default())]
                 }
                 _ => vec![]
             },
@@ -488,7 +488,7 @@ impl<'ast> LoweringContext<'ast> {
                     )));
                 }
                 let ty = self.lower_type::<Everywhere>(
-                    ty,
+                    &SpannedTypeName { ty: ty.clone(), location: field_name.span() },
                     &mut &ast_struct.lifetimes,
                     TypeLoweringContext::Struct(field_name.clone()),
                     item.in_path,
@@ -1012,7 +1012,7 @@ impl<'ast> LoweringContext<'ast> {
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     fn lower_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
         &mut self,
-        ty: &ast::TypeName,
+        ty: &ast::SpannedTypeName,
         ltl: &mut impl LifetimeLowerer,
         context: TypeLoweringContext,
         in_path: &ast::Path,
@@ -1028,7 +1028,7 @@ impl<'ast> LoweringContext<'ast> {
                 Ok(())
             }
         };
-        match ty {
+        match &ty.ty {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
                 self.errors.push(LoweringError::InvalidLocation {
@@ -1050,7 +1050,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
                         let lifetimes =
-                            ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
+                            ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.ty.is_self());
 
                         Ok(Type::Struct(StructPath::new(
                             lifetimes,
@@ -1060,7 +1060,7 @@ impl<'ast> LoweringContext<'ast> {
                     } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                         self.errors.push(LoweringError::InvalidLocation {
                             context: context.clone(),
-                            reason: format!("{ty} is marked with #[diplomat::out], but found in input")
+                            reason: format!("{} is marked with #[diplomat::out], but found in input", ty.ty)
                         });
                         Err(())
                     } else {
@@ -1069,7 +1069,7 @@ impl<'ast> LoweringContext<'ast> {
                 }
                 ast::CustomType::Opaque(op) => {
                     self.errors.push(LoweringError::InvalidType {
-                        type_name: op.name.clone(),
+                        type_name: ty.clone(),
                         reason: "Opaque passed by value".to_string(),
                         type_def_explainer: Some("#[diplomat::opaque] types can only be passed by reference in input".to_string()),
                     });
@@ -1096,7 +1096,7 @@ impl<'ast> LoweringContext<'ast> {
                     .resolve_trait(&trt)
                     .expect("can't find trait in lookup map, which contains all traits from env");
                 let lifetimes =
-                    ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.is_self());
+                    ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.ty.is_self());
 
                 Ok(Type::ImplTrait(P::build_trait_path(TraitPath::new(
                     lifetimes, tcx_id,
@@ -1110,7 +1110,7 @@ impl<'ast> LoweringContext<'ast> {
                                 && opaque.mutability != Mutability::Mutable
                             {
                                 self.errors.push(LoweringError::InvalidType{
-                                    type_name: opaque.name.clone(),
+                                    type_name: ty.clone(),
                                     type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
                                     reason: format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
                                 });
@@ -1166,7 +1166,7 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         custom_type => {
                             self.errors.push(LoweringError::InvalidType{
-                                type_name: custom_type.name().clone(),
+                                type_name: ty.clone(),
                                 type_def_explainer: Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
                                 reason: format!("found &T in input where T is a custom type, but not opaque")
                             });
@@ -1174,11 +1174,9 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                 }
-                ty => {
-                    // `ast::TypeName` currently does not store where the TypeName was found, so this is a quick way to get the type name:
-                    let name = ast::Ident::new_locationless(ty.to_string().into());
+                _ => {
                     self.errors.push(LoweringError::InvalidType{
-                        type_name: name,
+                        type_name: ty.clone(),
                         type_def_explainer: None,
                         reason: "found &T in input where T isn't a custom type and therefore not opaque".to_string()
                     });
@@ -1199,8 +1197,8 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                 }
-                ty => LoweringError::InvalidType {
-                    type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                _ => LoweringError::InvalidType {
+                    type_name: ty.clone(),
                     type_def_explainer: None,
                     reason: "found Box<T> in input, were T isn't a custom type".into()
                 }
@@ -1217,7 +1215,7 @@ impl<'ast> LoweringContext<'ast> {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
                                     self.errors.push(LoweringError::InvalidType {
-                                        type_name: opaque.name.clone(),
+                                        type_name: ty.clone(),
                                         type_def_explainer: Some("Opaques cannot be referenced behind DiplomatOption<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()),
                                         reason: "found DiplomatOption<&T>, please use Option<&T>".to_string(),
                                     });
@@ -1242,18 +1240,18 @@ impl<'ast> LoweringContext<'ast> {
                                     tcx_id,
                                 )))
                             }
-                            ty => {
+                            _ => {
                                 self.errors.push(LoweringError::InvalidType{
-                                    type_name: ty.name().clone(),
+                                    type_name: ty.clone(),
                                     type_def_explainer: Some("Type must be marked #[diplomat::opaque] to be passed as Option<&T>".to_string()),
                                     reason: "found Option<&T> in input, where T is not opaque".into()
                                 });
                                 Err(())
                             }
                         },
-                        ty => {
+                        _ => {
                             self.errors.push(LoweringError::InvalidType {
-                                type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                                type_name: ty.clone(),
                                 type_def_explainer: None,
                                 reason: "found Option<&T> in input, but T is not an opaque type".into()
                             });
@@ -1264,18 +1262,18 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(op) => {
                                 self.errors.push(LoweringError::InvalidType {
-                                    type_name: op.name.clone(),
+                                    type_name: ty.clone(),
                                     type_def_explainer: Some("opaque types are passed through FFI as pointers".to_string()),
                                     reason: "found Option<T> where T is opaque, opaque types must be behind a reference".to_string(),
                                 });
                                 Err(())
                             }
-                            ty => {
+                            _ => {
                                 if matches!(context, TypeLoweringContext::Struct(..))
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
                                     self.errors.push(LoweringError::InvalidType {
-                                        type_name: ty.name().clone(),
+                                        type_name: ty.clone(),
                                         type_def_explainer: Some("Struct and enum options must be stored in the C-ABI friendly DiplomatOption type".to_string()),
                                         reason: "found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()
                                     });
@@ -1284,7 +1282,10 @@ impl<'ast> LoweringContext<'ast> {
                                 if !self.attr_validator.attrs_supported().option {
                                     self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
-                                let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                                let inner = self.lower_type(&ast::SpannedTypeName {
+                                    ty: *opt_ty.clone(),
+                                    location: ty.location.clone(),
+                                }, ltl, context, in_path)?;
                                 if let Some(i) = inner.id() {
                                     self.usage_get_or_insert(i.into()).optioned = true;
                                 }
@@ -1297,7 +1298,7 @@ impl<'ast> LoweringContext<'ast> {
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
                             self.errors.push(LoweringError::InvalidType {
-                                type_name: ast::Ident::new_locationless(ty.to_string().into()),
+                                type_name: ty.clone(),
                                 type_def_explainer: None,
                                 reason: "found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()
                             });
@@ -1317,7 +1318,9 @@ impl<'ast> LoweringContext<'ast> {
                         Box::new(Type::Slice(Slice::Strs(*encoding))),
                     )),
                     ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
-                        let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                        // Currently we just use locations for debug, so the span for options can remain the same:
+                        let opt_ty = SpannedTypeName { ty: *opt_ty.clone(), location: ty.location.clone() };
+                        let inner = self.lower_type(&opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
                     ast::TypeName::Box(..) => {
@@ -1424,7 +1427,11 @@ impl<'ast> LoweringContext<'ast> {
                     self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
-                let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
+                let slice_ty = SpannedTypeName {
+                    ty: *type_name.clone(),
+                    location: ty.location.clone(),
+                };
+                let inner = self.lower_type::<P>(&slice_ty, ltl, context, in_path)?;
                 match inner {
                     Type::Struct(st) => {
                         self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
@@ -1491,7 +1498,7 @@ impl<'ast> LoweringContext<'ast> {
                     param_self: None,
                     params,
                     output: Box::new(self.lower_callback_return_type(
-                        Some(out_type),
+                        Some(&SpannedTypeName { ty: *out_type.clone(), location: ty.location.clone() }),
                         ltl,
                         in_path,
                     )?),
@@ -2168,7 +2175,7 @@ impl<'ast> LoweringContext<'ast> {
 
         for (idx, param) in ast_params.iter().enumerate() {
             let name = self.lower_ident(&param.name, "param name")?;
-            let param = self.lower_callback_param(Some(name), &param.ty, SignatureLocation::Param(idx), param_ltl, in_path);
+            let param = self.lower_callback_param(Some(name), &param.ty.ty, SignatureLocation::Param(idx), param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2330,23 +2337,24 @@ impl<'ast> LoweringContext<'ast> {
 
     fn lower_callback_return_type(
         &mut self,
-        return_type: Option<&ast::TypeName>,
+        return_type: Option<&ast::SpannedTypeName>,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<ReturnType<InputOnly>, ()> {
-        match return_type.unwrap_or(&ast::TypeName::Unit) {
+        let return_type = return_type.unwrap_or(&SpannedTypeName { ty: ast::TypeName::Unit, location: None });
+        match &return_type.ty {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
+                self.maybe_error_on_option_result(&return_type.ty)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                        .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(Some),
                 };
 
@@ -2390,13 +2398,13 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                    self.lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                         .map(SuccessType::OutType)
                         .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path);
+                    let t = self.lower_type(&SpannedTypeName { ty: *value_ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path);
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2407,7 +2415,7 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(ty, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
+                .lower_type(&SpannedTypeName { ty: ty.clone(), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback(SignatureLocation::Return), in_path)
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }
