@@ -8,9 +8,9 @@
 #![forbid(unsafe_code)]
 
 use diplomat_rust_backend_generated::{
-    ContiguousEnum, ErrorEnum, Float64Vec, MyOpaqueEnum, MyString, Opaque, OpaqueMutexedString,
-    OpaqueThinVec, OptionEnum, OptionOpaque, OptionString, OwnedSliceReturn, RenamedMixinTest,
-    ResultOpaque, Utf16Wrap,
+    ContiguousEnum, ErrorEnum, Float64Vec, MyEnum, MyOpaqueEnum, MyString, MyStruct, Opaque,
+    OpaqueMutexedString, OpaqueThinVec, OptionEnum, OptionOpaque, OptionString, OwnedSliceReturn,
+    RenamedMixinTest, ResultOpaque, Utf16Wrap,
 };
 
 /// An owned opaque is constructed by the provider and dropped by the generated
@@ -220,6 +220,23 @@ fn mutexed_string_is_borrowed_not_copied() {
         owned.dummy_str(),
         b"A const str with non byte char: \xe9\xa4\x90 which is a DiplomatChar,".as_slice()
     );
+}
+
+/// A value struct's `char` field is a `char` to the consumer, not the wire `u32`.
+#[test]
+fn char_struct_field_is_a_char() {
+    let st = MyStruct::new();
+    assert_eq!(st.a, 17);
+    assert!(st.b);
+    assert_eq!(st.c, 209);
+    assert_eq!(st.d, 1234);
+    assert_eq!(st.e, 5991);
+    assert_eq!(st.f, '餐');
+    assert_eq!(st.g, MyEnum::B);
+    assert_eq!(st.into_a(), 17);
+
+    let again = MyStruct::new();
+    Opaque::new().assert_struct(again);
 }
 
 /// Simple enums keep their provider-declared discriminants.

@@ -13,8 +13,8 @@ use super::opaque::opaque_return_expr;
 use crate::r#rust::formatter::{emit_docs, method_name, opaque_name};
 use crate::r#rust::lifetimes::{lifetime_prefix, method_generics};
 use crate::r#rust::type_map::{
-    ffi_borrowed_slice_expr, is_lifetime_struct, is_owned_slice, safe_input_type, safe_return_type,
-    struct_input_expr, struct_output_expr,
+    ffi_borrowed_slice_expr, is_owned_slice, safe_input_type, safe_return_type, struct_input_expr,
+    struct_needs_abi_mirror, struct_output_expr,
 };
 
 pub(super) fn emit_method(
@@ -80,21 +80,56 @@ pub(super) fn emit_method(
     )
     .unwrap();
     let mut args = Vec::new();
+    let mut pre = Vec::new();
+    let mut post = Vec::new();
     if let Some(param_self) = &method.param_self {
         match &param_self.ty {
             SelfType::Opaque(_) => args.push(match param_self.get_mutability() {
                 Mutability::Immutable => "self.inner.as_ptr() as *const _".into(),
                 Mutability::Mutable => "self.inner.as_ptr()".into(),
             }),
-            // A value receiver is already the value, or a borrow that coerces to the
-            // raw pointer the ABI takes.
+            SelfType::Struct(path) => {
+                let strct = path.resolve(tcx);
+                if struct_needs_abi_mirror(strct) {
+                    match path.owner {
+                        MaybeOwn::Own => args.push(struct_input_expr("self", strct)),
+                        MaybeOwn::Borrow(borrow) if borrow.mutability == Mutability::Mutable => {
+                            pre.push(format!(
+                                "        let mut __abi = {};",
+                                struct_input_expr("self", strct)
+                            ));
+                            args.push("&mut __abi as *mut _".into());
+                            post.push(format!(
+                                "        *self = {};",
+                                struct_output_expr("__abi", strct)
+                            ));
+                        }
+                        MaybeOwn::Borrow(_) => {
+                            pre.push(format!(
+                                "        let __abi = {};",
+                                struct_input_expr("self", strct)
+                            ));
+                            args.push("&__abi as *const _".into());
+                        }
+                    }
+                } else {
+                    args.push("self".to_string());
+                }
+            }
+            // An enum receiver is the value itself.
             _ => args.push("self".to_string()),
         }
     }
     args.extend(method.params.iter().map(|param| input_expr(param, tcx)));
     writeln!(out, "        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.").unwrap();
+    for line in &pre {
+        writeln!(out, "{line}").unwrap();
+    }
     if method.output.is_write() {
         emit_write_body(out, method, tcx, &args);
+        for line in &post {
+            writeln!(out, "{line}").unwrap();
+        }
     } else if return_ty == "()" {
         writeln!(
             out,
@@ -103,9 +138,12 @@ pub(super) fn emit_method(
             args.join(", ")
         )
         .unwrap();
+        for line in &post {
+            writeln!(out, "{line}").unwrap();
+        }
     } else {
         let expression = return_expr(&method.output, method, tcx);
-        if expression == "result" {
+        if expression == "result" && post.is_empty() {
             // Avoid a clippy `let_and_return` in the common pass-through case.
             writeln!(
                 out,
@@ -122,6 +160,9 @@ pub(super) fn emit_method(
                 args.join(", ")
             )
             .unwrap();
+            for line in &post {
+                writeln!(out, "{line}").unwrap();
+            }
             writeln!(out, "        {expression}").unwrap();
         }
     }
@@ -195,7 +236,7 @@ pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
         Type::Struct(path) => {
             let def = tcx.resolve_type(path.id());
             match def {
-                TypeDef::Struct(strct) if is_lifetime_struct(strct) => {
+                TypeDef::Struct(strct) if struct_needs_abi_mirror(strct) => {
                     struct_input_expr(param.name.as_str(), strct)
                 }
                 _ => param.name.to_string(),
@@ -249,7 +290,7 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
         }
         SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
-            if is_lifetime_struct(strct) {
+            if struct_needs_abi_mirror(strct) {
                 struct_output_expr("result", strct)
             } else {
                 "result".into()

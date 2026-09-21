@@ -129,6 +129,28 @@ impl Opaque {
         })
         .1
     }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
+    }
     pub fn returns_usize() -> usize {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::Opaque_returns_usize() }
@@ -147,6 +169,28 @@ impl<'view> OpaqueRef<'view> {
         })
         .1
     }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
+    }
 }
 
 impl<'view> OpaqueRefMut<'view> {
@@ -156,5 +200,27 @@ impl<'view> OpaqueRefMut<'view> {
             unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
         })
         .1
+    }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
     }
 }

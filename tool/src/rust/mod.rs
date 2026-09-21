@@ -360,6 +360,73 @@ mod tests {
         assert!(files["src/ffi.rs"].contains("DiplomatOption<u32>"));
     }
 
+    /// A value struct with a `char` field is not itself the ABI type: the public
+    /// field is `char`, the `extern` struct's field is `u32`, and generated methods
+    /// convert both ways.
+    #[test]
+    fn char_struct_fields_are_char_in_the_public_api() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatChar;
+                pub enum Kind { A = 0, B = 1 }
+                pub struct Point {
+                    pub x: u32,
+                    pub ch: DiplomatChar,
+                    pub kind: Kind,
+                }
+                impl Point {
+                    pub fn origin() -> Point { unimplemented!() }
+                    pub fn into_ch(self) -> DiplomatChar { unimplemented!() }
+                }
+                #[diplomat::opaque]
+                pub struct Holder(u32);
+                impl Holder {
+                    pub fn take(&self, point: Point) { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+
+        let types = &files["src/types.rs"];
+        assert!(
+            types.contains("pub ch: char"),
+            "consumer field must be char: {types}"
+        );
+        assert!(
+            !types.contains("pub ch: u32"),
+            "consumer field must not be the wire u32: {types}"
+        );
+        assert!(
+            types.contains("pub fn origin() -> Point"),
+            "constructor returns the safe struct: {types}"
+        );
+        assert!(
+            types.contains("char_from_u32"),
+            "return conversion rebuilds char: {types}"
+        );
+        assert!(
+            types.contains("self.ch as u32"),
+            "by-value receiver converts char to the wire: {types}"
+        );
+
+        let raw = &files["src/ffi.rs"];
+        assert!(
+            raw.contains("pub(super) ch: u32"),
+            "ABI field is DiplomatChar/u32: {raw}"
+        );
+        assert!(
+            raw.contains("fn Point_origin() -> Point"),
+            "extern returns the ffi struct, not super::Point: {raw}"
+        );
+
+        let holder = &files["src/opaques/holder.rs"];
+        assert!(
+            holder.contains("ch as u32"),
+            "a Point parameter is converted at the call: {holder}"
+        );
+    }
+
     #[test]
     fn unsupported_slice_produces_no_files() {
         let (files, errors) = generate(quote! {

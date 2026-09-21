@@ -45,7 +45,15 @@ pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>, tcx: &Typ
         // `&[S]` is a native `DiplomatSlice<S>`. `is_value_type` is the whitelist:
         // a lifetime-bearing struct carries a `PhantomData` the provider does not have.
         Slice::Struct(MaybeOwn::Borrow(_), path) => {
-            is_value_type(&Type::<P>::Struct(path.clone()), tcx)
+            // A converting struct (char fields, lifetimes) is not layout-identical
+            // to the provider's type, so it cannot be the element of a borrowed slice.
+            match tcx.resolve_type(path.id()) {
+                TypeDef::Struct(strct) => {
+                    is_value_type(&Type::<P>::Struct(path.clone()), tcx)
+                        && !struct_needs_abi_mirror(strct)
+                }
+                _ => false,
+            }
         }
         _ => false,
     }
@@ -195,6 +203,21 @@ pub(super) fn is_lifetime_struct(strct: &hir::StructDef) -> bool {
     strct.lifetimes.num_lifetimes() != 0
 }
 
+/// Whether the generated public struct is not the ABI type.
+///
+/// Lifetime-bearing structs already had a mirror (slice fields / `PhantomData`).
+/// A `char` field needs one too: the public field is `char`, the wire field is
+/// `u32`, and `char` is not FFI-safe so the public type cannot appear in `extern`.
+pub(super) fn struct_needs_abi_mirror(strct: &hir::StructDef) -> bool {
+    is_lifetime_struct(strct)
+        || strct.fields.iter().any(|field| {
+            matches!(
+                &field.ty,
+                Type::Primitive(PrimitiveType::Char) | Type::Slice(_)
+            )
+        })
+}
+
 /// The native ABI type of a struct field.
 ///
 /// A struct field declaration cannot elide a lifetime parameter (unlike a
@@ -335,12 +358,10 @@ pub(super) fn ffi_self_type(ty: &SelfType, tcx: &TypeContext) -> String {
                 Mutability::Mutable => format!("*mut {name}"),
             }
         }
-        // A value struct has no ABI mirror — `ffi::` names the same type the safe API
-        // uses — so a receiver is the value itself, or a pointer to it.
         SelfType::Struct(path) => {
             let strct = path.resolve(tcx);
-            // A lifetime-bearing struct's ABI mirror is generic, so the pointer names
-            // its arguments; a plain struct has none to name.
+            // A mirrored struct's ABI type lives in `ffi` and may be generic; a
+            // layout-identical struct is the public type in `super`.
             let (_, args) = struct_generics(strct);
             let name = format!("{}{args}", ffi_value_name(TypeDef::Struct(strct)));
             match path.owner {
@@ -409,7 +430,7 @@ pub(super) fn ffi_success_type(success: &SuccessType, tcx: &TypeContext) -> Stri
         }
         SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
-            if is_lifetime_struct(strct) {
+            if struct_needs_abi_mirror(strct) {
                 let (_, args) = struct_generics(strct);
                 format!("{}{args}", type_def_name(TypeDef::Struct(strct)))
             } else {
@@ -625,7 +646,7 @@ pub(super) fn opaque_safe_type(
 pub(super) fn ffi_value_name(def: TypeDef<'_>) -> String {
     let name = type_def_name(def);
     match def {
-        TypeDef::Struct(strct) if is_lifetime_struct(strct) => name,
+        TypeDef::Struct(strct) if struct_needs_abi_mirror(strct) => name,
         _ => format!("super::{name}"),
     }
 }

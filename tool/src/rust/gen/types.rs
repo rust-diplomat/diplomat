@@ -7,7 +7,9 @@ use diplomat_core::hir::{DocsUrlGenerator, TypeContext, TypeDef};
 use crate::r#rust::formatter::{emit_docs, enum_variant_name, field_name, type_def_name};
 use crate::r#rust::gen::method::emit_method;
 use crate::r#rust::lifetimes::{struct_generics, struct_lifetime_phantom};
-use crate::r#rust::type_map::{is_lifetime_struct, safe_struct_field_type, safe_value_type};
+use crate::r#rust::type_map::{
+    is_lifetime_struct, safe_struct_field_type, safe_value_type, struct_needs_abi_mirror,
+};
 
 /// A struct can only derive `Eq` when every field is `Eq`, and a float is not. The
 /// corpus's `PrimitiveStruct` has an `f32` field, so an unconditional `Eq` derive does
@@ -81,7 +83,7 @@ pub(in crate::r#rust) fn generate_types(
     for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
         emit_docs(&mut out, &strct.docs, docs_url_gen, "");
         let name = type_def_name(TypeDef::Struct(strct));
-        if is_lifetime_struct(strct) {
+        if struct_needs_abi_mirror(strct) {
             let (params, _) = struct_generics(strct);
             writeln!(
                 out,
@@ -91,13 +93,12 @@ pub(in crate::r#rust) fn generate_types(
             .unwrap();
             for field in &strct.fields {
                 emit_docs(&mut out, &field.docs, docs_url_gen, "    ");
-                writeln!(
-                    out,
-                    "    pub {}: {},",
-                    field_name(field),
+                let ty = if is_lifetime_struct(strct) {
                     safe_struct_field_type(&field.ty, strct, tcx)
-                )
-                .unwrap();
+                } else {
+                    safe_value_type(&field.ty, tcx)
+                };
+                writeln!(out, "    pub {}: {},", field_name(field), ty).unwrap();
             }
             out.push_str(&struct_lifetime_phantom(strct));
             out.push_str("}\n\n");
