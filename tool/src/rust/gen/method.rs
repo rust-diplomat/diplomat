@@ -5,7 +5,8 @@ use std::fmt::Write as _;
 
 use diplomat_core::hir::{
     MaybeOwn,
-    self, DocsUrlGenerator, Mutability, OutType, ReturnType, ReturnableStructPath, SelfType, Slice,
+    self, DocsUrlGenerator, Mutability, OutType, PrimitiveType, ReturnType, ReturnableStructPath,
+    SelfType, Slice,
     StringEncoding, StructPathLike, SuccessType, Type, TypeContext, TypeDef,
 };
 
@@ -143,6 +144,7 @@ pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
                 }
             }
         }
+        Type::Primitive(PrimitiveType::Char) => format!("{} as u32", param.name),
         Type::DiplomatOption(_) => format!("ffi::DiplomatOption::from({})", param.name),
         Type::Slice(slice) => ffi_borrowed_slice_expr(slice, param.name.as_str()),
         Type::Struct(path) => {
@@ -207,6 +209,9 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
             } else {
                 "result".into()
             }
+        }
+        SuccessType::OutType(Type::Primitive(PrimitiveType::Char)) => {
+            "crate::private::char_from_u32(result)".into()
         }
         SuccessType::OutType(Type::DiplomatOption(_)) => "result.into()".into(),
         SuccessType::OutType(_) => "result".into(),

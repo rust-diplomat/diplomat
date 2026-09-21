@@ -90,8 +90,23 @@ impl<'view> fmt::Debug for OptionOpaqueCharRefMut<'view> {
     }
 }
 
-impl OptionOpaqueChar {}
+impl OptionOpaqueChar {
+    pub fn assert_char(&self, ch: char) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::OptionOpaqueChar_assert_char(self.inner.as_ptr() as *const _, ch as u32) };
+    }
+}
 
-impl<'view> OptionOpaqueCharRef<'view> {}
+impl<'view> OptionOpaqueCharRef<'view> {
+    pub fn assert_char(&self, ch: char) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::OptionOpaqueChar_assert_char(self.inner.as_ptr() as *const _, ch as u32) };
+    }
+}
 
-impl<'view> OptionOpaqueCharRefMut<'view> {}
+impl<'view> OptionOpaqueCharRefMut<'view> {
+    pub fn assert_char(&self, ch: char) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::OptionOpaqueChar_assert_char(self.inner.as_ptr() as *const _, ch as u32) };
+    }
+}

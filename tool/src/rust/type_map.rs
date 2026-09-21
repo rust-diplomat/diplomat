@@ -35,7 +35,11 @@ pub(super) fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext)
 
 pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>, tcx: &TypeContext) -> bool {
     match slice {
-        Slice::Primitive(MaybeOwn::Borrow(_), primitive) => primitive_name(*primitive).is_some(),
+        // A `char` slice is left out: `slice_element_ty` serves both the ABI and the
+        // safe spelling, and the corpus exercises no `char` slice to prove a split on.
+        Slice::Primitive(MaybeOwn::Borrow(_), primitive) => {
+            !matches!(primitive, PrimitiveType::Char) && primitive_name(*primitive).is_some()
+        }
         Slice::Str(Some(_), _) => true,
         // A plain `repr(C)` value struct is already the same layout on both sides, so
         // `&[S]` is a native `DiplomatSlice<S>`. `is_value_type` is the whitelist:
@@ -49,7 +53,8 @@ pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>, tcx: &Typ
 
 /// An owned primitive slice (`Box<[T]>`) returned by the provider.
 pub(super) fn is_owned_slice<P: hir::TyPosition>(slice: &Slice<P>) -> bool {
-    matches!(slice, Slice::Primitive(MaybeOwn::Own, primitive) if primitive_name(*primitive).is_some())
+    matches!(slice, Slice::Primitive(MaybeOwn::Own, primitive)
+        if !matches!(primitive, PrimitiveType::Char) && primitive_name(*primitive).is_some())
 }
 
 /// The lifetime carried by a borrowed slice, if any.
@@ -235,7 +240,7 @@ pub(super) fn safe_struct_field_type(
     tcx: &TypeContext,
 ) -> String {
     match ty {
-        Type::Primitive(primitive) => primitive_name(*primitive).unwrap().into(),
+        Type::Primitive(primitive) => safe_primitive_name(*primitive).unwrap().into(),
         Type::Enum(path) => enum_name(path.tcx_id, tcx),
         Type::Slice(slice) => {
             let lifetime = slice_lifetime(slice)
@@ -276,6 +281,7 @@ pub(super) fn struct_input_expr(name: &str, strct: &hir::StructDef) -> String {
 pub(super) fn safe_field_to_ffi(ty: &Type<hir::Everywhere>, expr: &str) -> String {
     match ty {
         Type::Slice(slice) => ffi_borrowed_slice_expr(slice, expr),
+        Type::Primitive(PrimitiveType::Char) => format!("{expr} as u32"),
         _ => expr.to_string(),
     }
 }
@@ -315,6 +321,7 @@ pub(super) fn ffi_field_to_safe(ty: &Type<hir::Everywhere>, expr: &str) -> Strin
                 format!("{expr}.into()")
             }
         }
+        Type::Primitive(PrimitiveType::Char) => format!("crate::private::char_from_u32({expr})"),
         _ => expr.to_string(),
     }
 }
@@ -638,10 +645,21 @@ pub(super) fn ffi_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext
 /// structs before generation runs.
 pub(super) fn safe_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> String {
     match ty {
-        Type::Primitive(p) => primitive_name(*p).unwrap().into(),
+        Type::Primitive(p) => safe_primitive_name(*p).unwrap().into(),
         Type::Enum(path) => type_def_name(TypeDef::Enum(path.resolve(tcx))),
         Type::Struct(path) => type_def_name(tcx.resolve_type(path.id())),
         _ => unreachable!("validated safe value type"),
+    }
+}
+
+/// The safe spelling of a primitive. Only `char` differs from the ABI spelling: the
+/// wire carries a `u32` code point, the public API a `char`. The conversion on the way
+/// back in validates the code point, which is the whole reason `char` is not simply
+/// spelled `u32` on both sides.
+pub(super) fn safe_primitive_name(primitive: PrimitiveType) -> Option<&'static str> {
+    match primitive {
+        PrimitiveType::Char => Some("char"),
+        other => primitive_name(other),
     }
 }
 
@@ -655,9 +673,10 @@ pub(super) fn primitive_name(primitive: PrimitiveType) -> Option<&'static str> {
         // are the ABI type and the safe type at once; no conversion in either
         // direction.
         PrimitiveType::Float(value) => Some(value.as_str()),
-        // `char` arrives as a `DiplomatChar` (a `u32` scalar), so accepting it needs a
-        // decision about validating the code point on the way in. 128-bit integers are
-        // not FFI-safe on every target, and `Ordering` has no agreed ABI shape.
-        PrimitiveType::Char | PrimitiveType::Ordering | PrimitiveType::Int128(_) => None,
+        // `char` crosses the ABI as a `DiplomatChar`, a `u32` scalar.
+        PrimitiveType::Char => Some("u32"),
+        // 128-bit integers are not FFI-safe on every target, and `Ordering` has no
+        // agreed ABI shape.
+        PrimitiveType::Ordering | PrimitiveType::Int128(_) => None,
     }
 }

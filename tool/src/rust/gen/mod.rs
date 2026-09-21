@@ -138,7 +138,17 @@ pub(super) fn generate_private(tcx: &TypeContext) -> String {
          //! This module is private, so downstream crates cannot name the sealed traits and\n\
          //! therefore cannot implement the public capability traits themselves. The helpers\n\
          //! may be unused for a given provider, hence the `dead_code` allow.\n\
-         #![allow(dead_code)]\n\n",
+         #![allow(dead_code)]\n\n\
+         /// Rebuild a `char` from the `DiplomatChar` a provider returned.\n\
+         ///\n\
+         /// The ABI carries a `u32` code point; a `char` is only the code points that\n\
+         /// are Unicode scalar values. A provider written in Rust cannot produce an\n\
+         /// invalid one — its field is a `char` — so this is unreachable in contract\n\
+         /// and is a hard error rather than a lossy fallback.\n\
+         pub(crate) fn char_from_u32(value: u32) -> char {\n\
+             char::from_u32(value)\n\
+                 .expect(\"provider returned a DiplomatChar outside the Unicode scalar range\")\n\
+         }\n\n",
     );
     for opaque in tcx.opaques().iter().filter(|ty| !ty.attrs.disable) {
         let name = type_def_name(TypeDef::Opaque(opaque));

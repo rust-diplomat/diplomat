@@ -156,7 +156,7 @@ mod tests {
     use diplomat_core::hir::{BasicAttributeValidator, DocsUrlGenerator, TypeContext};
     use quote::quote;
 
-    use super::type_map::primitive_name;
+    use super::type_map::{primitive_name, safe_primitive_name};
     use crate::Config;
 
     /// Concatenates every generated Rust source, for assertions about *what* is
@@ -403,11 +403,14 @@ mod tests {
         ] {
             assert!(primitive_name(primitive).is_some());
         }
-        // Deliberately still out of the subset: `char` awaits a code-point validity
-        // decision, `Ordering` has no agreed ABI shape, and 128-bit integers are not
-        // FFI-safe on every target. A `Some` here would be a promise we cannot keep.
+        // `char` has an ABI spelling: the wire carries a `DiplomatChar` (`u32`) and the
+        // safe API a `char`, converted in both directions.
+        assert_eq!(primitive_name(PrimitiveType::Char), Some("u32"));
+        assert_eq!(safe_primitive_name(PrimitiveType::Char), Some("char"));
+        // Deliberately still out of the subset: `Ordering` has no agreed ABI shape, and
+        // 128-bit integers are not FFI-safe on every target. A `Some` here would be a
+        // promise we cannot keep.
         for primitive in [
-            PrimitiveType::Char,
             PrimitiveType::Ordering,
             PrimitiveType::Int128(Int128Type::I128),
             PrimitiveType::Int128(Int128Type::U128),
@@ -1150,12 +1153,10 @@ mod tests {
             quote! {
                 #[diplomat::bridge]
                 mod ffi {
-                    use diplomat_runtime::DiplomatChar;
-
                     #[diplomat::opaque]
                     pub struct Letter(u32);
                     impl Letter {
-                        pub fn get(&self) -> DiplomatChar { unimplemented!() }
+                        pub fn get(&self) -> i128 { unimplemented!() }
                     }
                 }
             },

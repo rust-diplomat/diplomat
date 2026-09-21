@@ -54,8 +54,12 @@ pub mod ffi {
         B,
     }
 
-    #[diplomat::attr(rust, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
+    // The `char` field is the blocker: a value struct has no ABI mirror here, so the
+    // generated struct *is* the extern signature's type, and `char` is not FFI-safe.
+    // A scalar `char` crosses fine (`ch as u32`); one inside a by-value struct needs a
+    // mirror this backend does not build yet.
+    #[diplomat::attr(rust, disable)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -513,10 +517,12 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(rust, disable)]
     #[diplomat::attr(auto, abi_compatible)]
     #[diplomat::attr(auto, mut_struct_ref)]
     #[derive(Clone)]
+    // Same blocker as `MyStruct`: the `char` field. A slice element has no mirror
+    // either, so `DiplomatSliceMut<PrimitiveStruct>` carries a `char` across the ABI.
+    #[diplomat::attr(rust, disable)]
     pub struct PrimitiveStruct {
         x: f32,
         a: bool,

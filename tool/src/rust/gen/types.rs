@@ -9,6 +9,18 @@ use crate::r#rust::gen::method::emit_method;
 use crate::r#rust::lifetimes::{struct_generics, struct_lifetime_phantom};
 use crate::r#rust::type_map::{is_lifetime_struct, safe_struct_field_type, safe_value_type};
 
+/// A struct can only derive `Eq` when every field is `Eq`, and a float is not. The
+/// corpus's `PrimitiveStruct` has an `f32` field, so an unconditional `Eq` derive does
+/// not compile.
+fn derives_eq(strct: &diplomat_core::hir::StructDef) -> bool {
+    strct.fields.iter().all(|field| {
+        !matches!(
+            &field.ty,
+            diplomat_core::hir::Type::Primitive(diplomat_core::hir::PrimitiveType::Float(_))
+        )
+    })
+}
+
 /// Whether a type has at least one method that will be emitted.
 fn has_methods(methods: &[diplomat_core::hir::Method]) -> bool {
     methods.iter().any(|method| !method.attrs.disable)
@@ -73,7 +85,8 @@ pub(in crate::r#rust) fn generate_types(
             let (params, _) = struct_generics(strct);
             writeln!(
                 out,
-                "#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub struct {name}{params} {{"
+                "#[derive(Clone, Copy, Debug, PartialEq{})]\npub struct {name}{params} {{",
+                if derives_eq(strct) { ", Eq" } else { "" }
             )
             .unwrap();
             for field in &strct.fields {
@@ -91,7 +104,8 @@ pub(in crate::r#rust) fn generate_types(
         } else {
             writeln!(
                 out,
-                "#[repr(C)]\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub struct {name} {{"
+                "#[repr(C)]\n#[derive(Clone, Copy, Debug, PartialEq{})]\npub struct {name} {{",
+                if derives_eq(strct) { ", Eq" } else { "" }
             )
             .unwrap();
             for field in &strct.fields {

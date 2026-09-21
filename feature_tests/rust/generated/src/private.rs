@@ -5,6 +5,17 @@
 //! may be unused for a given provider, hence the `dead_code` allow.
 #![allow(dead_code)]
 
+/// Rebuild a `char` from the `DiplomatChar` a provider returned.
+///
+/// The ABI carries a `u32` code point; a `char` is only the code points that
+/// are Unicode scalar values. A provider written in Rust cannot produce an
+/// invalid one — its field is a `char` — so this is unreachable in contract
+/// and is a hard error rather than a lossy fallback.
+pub(crate) fn char_from_u32(value: u32) -> char {
+    char::from_u32(value)
+        .expect("provider returned a DiplomatChar outside the Unicode scalar range")
+}
+
 pub trait AttrOpaque1RenamedSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::AttrOpaque1Renamed;
 }

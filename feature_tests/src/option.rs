@@ -243,7 +243,6 @@ pub mod ffi {
     }
 
     impl OptionOpaqueChar {
-        #[diplomat::attr(rust, disable)]
         pub fn assert_char(&self, ch: DiplomatChar) {
             assert_eq!(ch, self.0 as u32)
         }

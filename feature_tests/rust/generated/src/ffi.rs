@@ -317,6 +317,7 @@ extern "C" {
         sentinel2: u8,
     ) -> DiplomatOption<super::OptionEnum>;
     pub(super) fn OptionOpaqueChar_destroy(this: *mut OptionOpaqueChar);
+    pub(super) fn OptionOpaqueChar_assert_char(this: *const OptionOpaqueChar, ch: u32);
     pub(super) fn OptionString_destroy(this: *mut OptionString);
     pub(super) fn OptionString_new(diplomat_str: DiplomatSlice<u8>) -> *mut OptionString;
     pub(super) fn ResultOpaque_destroy(this: *mut ResultOpaque);
