@@ -1,8 +1,8 @@
 use serde::Serialize;
 use syn::spanned::Spanned;
 
-use crate::ast::SpannedTypeName;
 use crate::ast::idents::{FromWithSpan, IntoWithSpan, SpanLocation};
+use crate::ast::types::OwnedSpannedTypeName;
 
 use super::docs::Docs;
 use super::{Attrs, Ident, LifetimeEnv, Param, PathType, TraitSelfParam, TypeName};
@@ -29,7 +29,7 @@ pub struct TraitMethod {
     // corresponds to the types in Function(Vec<Box<TypeName>>, Box<TypeName>)
     // the callback type; except here the params aren't anonymous
     pub params: Vec<Param>,
-    pub output_type: Option<SpannedTypeName>,
+    pub output_type: Option<OwnedSpannedTypeName>,
     pub lifetimes: LifetimeEnv,
     pub attrs: Attrs,
     pub docs: Docs,
@@ -109,7 +109,7 @@ impl Trait {
                     self_param,
                     params: all_params,
                     output_type: output_type.map(|ty| {
-                        SpannedTypeName {
+                        OwnedSpannedTypeName {
                             ty,
                             location: Some(fct.sig.output.span().spanned_into(module_location)),
                         }

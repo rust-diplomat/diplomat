@@ -3,7 +3,7 @@ use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
 use syn::{spanned::Spanned, Token};
 
-use std::fmt;
+use std::{borrow::Cow, fmt};
 use std::ops::ControlFlow;
 use std::str::FromStr;
 
@@ -577,9 +577,34 @@ pub enum TypeName {
 
 /// [`TypeName`] that was evaluated at a paritcular location.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
-pub struct SpannedTypeName {
+pub struct SpannedTypeName<'a> {
+    pub(crate) ty : Cow<'a, TypeName>,
+    pub(crate) location : Option<super::Span>,
+}
+
+/// A clear distinction of ownership from [`SpannedTypeName`], so we don't have to worry about lifetimes.
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct OwnedSpannedTypeName {
     pub(crate) ty : TypeName,
     pub(crate) location : Option<super::Span>,
+}
+
+impl From<&SpannedTypeName<'_>> for OwnedSpannedTypeName {
+    fn from(value: &SpannedTypeName) -> Self {
+        Self {
+            ty: value.ty.as_ref().clone(),
+            location: value.location.clone(),
+        }
+    }
+}
+
+impl<'a> From<&'a OwnedSpannedTypeName> for SpannedTypeName<'a> {
+    fn from(value: &'a OwnedSpannedTypeName) -> Self {
+        SpannedTypeName {
+            ty: Cow::Borrowed(&value.ty),
+            location: value.location.clone(),
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]

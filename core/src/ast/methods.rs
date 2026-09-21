@@ -5,7 +5,7 @@ use syn::spanned::Spanned;
 use crate::ast::idents::IntoWithSpan;
 use crate::ast::logging::{create_report, AstReport};
 use crate::ast::types::SpannedTypeName;
-use crate::ast::{Span, SpanLocation};
+use crate::ast::{OwnedSpannedTypeName, Span, SpanLocation};
 
 use super::docs::Docs;
 use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
@@ -35,7 +35,7 @@ pub struct Method {
     pub params: Vec<Param>,
 
     /// The return type of the method, if any.
-    pub return_type: Option<SpannedTypeName>,
+    pub return_type: Option<OwnedSpannedTypeName>,
 
     /// The lifetimes introduced in this method and surrounding impl block.
     pub lifetime_env: LifetimeEnv,
@@ -114,7 +114,7 @@ impl Method {
             self_type: Some(self_path_type),
             params: all_params,
             return_type: return_ty.map(|ty| {
-                SpannedTypeName {
+                OwnedSpannedTypeName {
                     ty,
                     location: Some(m.sig.output.span().spanned_into(module_location)),
                 }
@@ -335,7 +335,7 @@ pub struct Param {
     pub name: Ident,
 
     /// The type of the parameter.
-    pub ty: SpannedTypeName,
+    pub ty: OwnedSpannedTypeName,
 
     /// Parameter attributes (like #[diplomat::demo(label = "Out")])
     pub attrs: Attrs,
@@ -371,7 +371,7 @@ impl Param {
 
         Param {
             name: (&ident.ident).spanned_into(module_location),
-            ty: SpannedTypeName {
+            ty: OwnedSpannedTypeName {
                 ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
                 location: Some(t.span().spanned_into(module_location)),
             },

@@ -2,7 +2,7 @@ use serde::Serialize;
 use syn::{ItemFn, spanned::Spanned};
 
 use crate::ast::{
-    Attrs, Docs, Ident, LifetimeEnv, Param, PathType, SpanLocation, SpannedTypeName, TypeName, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report},
+    Attrs, Docs, Ident, LifetimeEnv, OwnedSpannedTypeName, Param, PathType, SpanLocation, SpannedTypeName, TypeName, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report},
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -14,7 +14,7 @@ pub struct Function {
     // corresponds to the types in Function(Vec<Box<TypeName>>, Box<TypeName>)
     // the callback type; except here the params aren't anonymous
     pub params: Vec<Param>,
-    pub output_type: Option<SpannedTypeName>,
+    pub output_type: Option<OwnedSpannedTypeName>,
     pub lifetimes: LifetimeEnv,
     pub attrs: Attrs,
     pub docs: Docs,
@@ -85,7 +85,7 @@ impl Function {
             abi_name: (&extern_ident).spanned_into(module_location),
             params: all_params,
             output_type: output_type.map(|t| {
-                SpannedTypeName { ty: t, location: Some(f.sig.output.span().spanned_into(module_location)) }
+                OwnedSpannedTypeName { ty: t, location: Some(f.sig.output.span().spanned_into(module_location)) }
             }),
             lifetimes,
             attrs,
