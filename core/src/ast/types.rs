@@ -12,12 +12,9 @@ use super::{
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    ast::{
-        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
-        logging::{create_report, create_simple_report, AstReport, ContextLocation},
-        Function,
-    },
-    Env,
+    Env, ast::{
+        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, ContextLocation, create_report, create_simple_report},
+    }
 };
 
 /// A type declared inside a Diplomat-annotated module.

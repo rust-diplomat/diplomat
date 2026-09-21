@@ -175,7 +175,7 @@ impl Method {
                 .filter_map(|param| {
                     let mut lt_kind = LifetimeKind::ReturnValue;
                     param
-                        .ty
+                        .ty.ty
                         .visit_lifetimes(&mut |lt, _| {
                             // Thanks to `TypeName::visit_lifetimes`, we can
                             // traverse the lifetimes without allocations and
@@ -335,7 +335,7 @@ pub struct Param {
     pub name: Ident,
 
     /// The type of the parameter.
-    pub ty: TypeName,
+    pub ty: SpannedTypeName,
 
     /// Parameter attributes (like #[diplomat::demo(label = "Out")])
     pub attrs: Attrs,
@@ -350,7 +350,7 @@ impl Param {
     /// If this parameter is a Write, returns `Some(WriteType::Str)` for `DiplomatWrite` (strings)
     /// or `Some(WriteType::Primitive(prim))` for `DiplomatWriteGeneric<T>`.
     pub fn write_type(&self) -> Option<super::WriteType> {
-        match self.ty {
+        match self.ty.ty {
             TypeName::Reference(_, Mutability::Mutable, ref w) => match **w {
                 TypeName::Write(write_ty) => Some(write_ty),
                 _ => None,
@@ -380,7 +380,10 @@ impl Param {
 
         Param {
             name: (&ident.ident).spanned_into(module_location),
-            ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
+            ty: SpannedTypeName {
+                ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
+                location: Some(t.span().spanned_into(module_location)),
+            },
             attrs,
         }
     }
