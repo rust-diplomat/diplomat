@@ -18,7 +18,6 @@ pub mod ffi {
     #[diplomat::opaque]
     pub struct Utf16Wrap(Vec<u16>);
 
-    #[diplomat::attr(rust, disable)]
     #[derive(Debug, PartialEq, Eq)]
     pub enum MyEnum {
         A = -2,
@@ -50,7 +49,6 @@ pub mod ffi {
         D(i32, ImportedStruct),
     }
 
-    #[diplomat::attr(rust, disable)]
     pub enum DefaultEnum {
         A,
         B,
@@ -332,7 +330,6 @@ pub mod ffi {
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
-    #[diplomat::attr(rust, disable)]
     #[derive(Default)]
     #[diplomat::attr(auto, abi_compatible)]
     pub struct CyclicStructB {
@@ -378,11 +375,13 @@ pub mod ffi {
 
     impl CyclicStructB {
         #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(rust, disable)]
         pub fn get_a() -> CyclicStructA {
             Default::default()
         }
 
         #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(rust, disable)]
         pub fn get_a_option() -> Option<CyclicStructA> {
             Some(Default::default())
         }
@@ -398,7 +397,6 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(rust, disable)]
     /// Testing JS-specific layout/padding behavior
     #[diplomat::cfg(any(js, supports=abi_compatibles))]
     #[diplomat::attr(auto, abi_compatible)]

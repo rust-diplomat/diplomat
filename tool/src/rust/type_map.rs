@@ -328,6 +328,24 @@ pub(super) fn ffi_self_type(ty: &SelfType, tcx: &TypeContext) -> String {
                 Mutability::Mutable => format!("*mut {name}"),
             }
         }
+        // A value struct has no ABI mirror — `ffi::` names the same type the safe API
+        // uses — so a receiver is the value itself, or a pointer to it.
+        SelfType::Struct(path) => {
+            let strct = path.resolve(tcx);
+            // A lifetime-bearing struct's ABI mirror is generic, so the pointer names
+            // its arguments; a plain struct has none to name.
+            let (_, args) = struct_generics(strct);
+            let name = format!("{}{args}", ffi_value_name(TypeDef::Struct(strct)));
+            match path.owner {
+                MaybeOwn::Own => name,
+                MaybeOwn::Borrow(borrow) if borrow.mutability == Mutability::Mutable => {
+                    format!("*mut {name}")
+                }
+                MaybeOwn::Borrow(_) => format!("*const {name}"),
+            }
+        }
+        SelfType::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx))),
+        // `SelfType` is `#[non_exhaustive]`; validation rejects any other owner.
         _ => unreachable!("validated method receiver"),
     }
 }

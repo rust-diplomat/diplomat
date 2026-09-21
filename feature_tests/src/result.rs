@@ -18,7 +18,6 @@ pub mod ffi {
         Bar,
     }
 
-    #[diplomat::attr(rust, disable)]
     #[derive(Debug)]
     #[diplomat::attr(auto, error)]
     pub struct ErrorStruct {

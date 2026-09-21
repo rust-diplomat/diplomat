@@ -4,6 +4,7 @@
 use std::fmt::Write as _;
 
 use diplomat_core::hir::{
+    MaybeOwn,
     self, DocsUrlGenerator, Mutability, OutType, ReturnType, ReturnableStructPath, SelfType, Slice,
     StringEncoding, StructPathLike, SuccessType, Type, TypeContext, TypeDef,
 };
@@ -18,24 +19,46 @@ use crate::r#rust::type_map::{
 
 pub(super) fn emit_method(
     out: &mut String,
-    opaque: &hir::OpaqueDef,
+    type_lifetimes: usize,
     method: &hir::Method,
     tcx: &TypeContext,
     docs_url_gen: &DocsUrlGenerator,
 ) {
     emit_docs(out, &method.docs, docs_url_gen, "    ");
     let name = method_name(method);
-    let generics = method_generics(method, opaque.lifetimes.num_lifetimes(), tcx);
+    let generics = method_generics(method, type_lifetimes, tcx);
     let mut params = Vec::new();
     if let Some(param_self) = &method.param_self {
-        let borrow = match &param_self.ty {
-            SelfType::Opaque(path) => path.borrowed(),
-            _ => unreachable!("only opaque impl methods reach Safe Rust codegen"),
+        // An opaque receiver is always a borrow of the handle. A value-struct receiver
+        // is the value itself, or a borrow of it, and an enum receiver is always by
+        // value — a value type has no indirection to describe.
+        let self_param = match &param_self.ty {
+            SelfType::Opaque(path) => {
+                let borrow = path.borrowed();
+                match borrow.mutability {
+                    Mutability::Immutable => {
+                        format!("&{}self", lifetime_prefix(borrow.lifetime, method))
+                    }
+                    Mutability::Mutable => {
+                        format!("&{}mut self", lifetime_prefix(borrow.lifetime, method))
+                    }
+                }
+            }
+            SelfType::Struct(path) => match path.owner {
+                MaybeOwn::Own => "self".to_string(),
+                MaybeOwn::Borrow(borrow) => match borrow.mutability {
+                    Mutability::Immutable => {
+                        format!("&{}self", lifetime_prefix(borrow.lifetime, method))
+                    }
+                    Mutability::Mutable => {
+                        format!("&{}mut self", lifetime_prefix(borrow.lifetime, method))
+                    }
+                },
+            },
+            SelfType::Enum(_) => "self".to_string(),
+            _ => unreachable!("validated method receiver"),
         };
-        params.push(match borrow.mutability {
-            Mutability::Immutable => format!("&{}self", lifetime_prefix(borrow.lifetime, method)),
-            Mutability::Mutable => format!("&{}mut self", lifetime_prefix(borrow.lifetime, method)),
-        });
+        params.push(self_param);
     }
     params.extend(method.params.iter().map(|param| {
         format!(
@@ -58,10 +81,15 @@ pub(super) fn emit_method(
     .unwrap();
     let mut args = Vec::new();
     if let Some(param_self) = &method.param_self {
-        args.push(match param_self.get_mutability() {
-            Mutability::Immutable => "self.inner.as_ptr() as *const _".into(),
-            Mutability::Mutable => "self.inner.as_ptr()".into(),
-        });
+        match &param_self.ty {
+            SelfType::Opaque(_) => args.push(match param_self.get_mutability() {
+                Mutability::Immutable => "self.inner.as_ptr() as *const _".into(),
+                Mutability::Mutable => "self.inner.as_ptr()".into(),
+            }),
+            // A value receiver is already the value, or a borrow that coerces to the
+            // raw pointer the ABI takes.
+            _ => args.push("self".to_string()),
+        }
     }
     args.extend(method.params.iter().map(|param| input_expr(param, tcx)));
     writeln!(out, "        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.").unwrap();

@@ -67,30 +67,42 @@ pub(super) fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
             opaque.dtor_abi_name
         )
         .unwrap();
-        for method in opaque.methods.iter().filter(|m| !m.attrs.disable) {
-            let ret_generics = ffi_return_generics(&method.output, tcx);
-            write!(out, "    pub(super) fn {}{ret_generics}(", method.abi_name).unwrap();
-            let mut params = Vec::new();
-            if let Some(param_self) = &method.param_self {
-                params.push(format!("this: {}", ffi_self_type(&param_self.ty, tcx)));
-            }
-            params.extend(
-                method
-                    .params
-                    .iter()
-                    .map(|param| format!("{}: {}", param.name, ffi_input_type(&param.ty, tcx))),
-            );
-            write!(out, "{}", params.join(", ")).unwrap();
-            let ret = ffi_return_type(&method.output, tcx);
-            if ret == "()" {
-                writeln!(out, ");").unwrap();
-            } else {
-                writeln!(out, ") -> {ret};").unwrap();
-            }
-        }
+        emit_extern_methods(&mut out, &opaque.methods, tcx);
+    }
+    // An inherent method on a value type crosses the same ABI as an opaque's; the
+    // receiver is the value or a pointer to it rather than a handle.
+    for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
+        emit_extern_methods(&mut out, &strct.methods, tcx);
+    }
+    for enm in tcx.enums().iter().filter(|ty| !ty.attrs.disable) {
+        emit_extern_methods(&mut out, &enm.methods, tcx);
     }
     out.push_str("}\n");
     out
+}
+
+fn emit_extern_methods(out: &mut String, methods: &[hir::Method], tcx: &TypeContext) {
+    for method in methods.iter().filter(|method| !method.attrs.disable) {
+        let ret_generics = ffi_return_generics(&method.output, tcx);
+        write!(out, "    pub(super) fn {}{ret_generics}(", method.abi_name).unwrap();
+        let mut params = Vec::new();
+        if let Some(param_self) = &method.param_self {
+            params.push(format!("this: {}", ffi_self_type(&param_self.ty, tcx)));
+        }
+        params.extend(
+            method
+                .params
+                .iter()
+                .map(|param| format!("{}: {}", param.name, ffi_input_type(&param.ty, tcx))),
+        );
+        write!(out, "{}", params.join(", ")).unwrap();
+        let ret = ffi_return_type(&method.output, tcx);
+        if ret == "()" {
+            writeln!(out, ");").unwrap();
+        } else {
+            writeln!(out, ") -> {ret};").unwrap();
+        }
+    }
 }
 
 pub(super) fn generate_lib() -> String {

@@ -130,8 +130,11 @@ pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tc
                     }
                 }
                 if !strct.methods.is_empty() {
-                    reporter.reject(
-                        "[Rust backend] methods on value structs are not supported in this experiment",
+                    validate_methods(
+                        tcx,
+                        &strct.methods,
+                        strct.lifetimes.num_lifetimes(),
+                        reporter,
                     );
                 }
             }
@@ -152,9 +155,7 @@ pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tc
                     }
                 }
                 if !enm.methods.is_empty() {
-                    reporter.reject(
-                        "[Rust backend] methods on enums are not supported in this experiment",
-                    );
+                    validate_methods(tcx, &enm.methods, 0, reporter);
                 }
             }
             _ => reporter.reject("[Rust backend] unsupported type definition"),

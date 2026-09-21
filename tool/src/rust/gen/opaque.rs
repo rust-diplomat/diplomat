@@ -193,7 +193,7 @@ pub(super) fn emit_impl(
                 (Some(param), Wrapper::Ref) if param.ty.is_mutably_borrowed()
             );
         if include {
-            emit_method(out, opaque, method, tcx, docs_url_gen);
+            emit_method(out, opaque.lifetimes.num_lifetimes(), method, tcx, docs_url_gen);
         }
     }
     out.push_str("}\n\n");

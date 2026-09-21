@@ -420,7 +420,6 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(rust, disable)]
     #[diplomat::attr(auto, abi_compatible)]
     pub struct StructWithAttrs {
         a: bool,

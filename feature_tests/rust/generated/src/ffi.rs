@@ -405,4 +405,17 @@ extern "C" {
     pub(super) fn Utf16Wrap_destroy(this: *mut Utf16Wrap);
     pub(super) fn Utf16Wrap_from_utf16(input: DiplomatSlice<u16>) -> *mut Utf16Wrap;
     pub(super) fn Utf16Wrap_borrow_cont<'a>(this: *const Utf16Wrap) -> DiplomatSlice<'a, u16>;
+    pub(super) fn namespace_StructWithAttrs_new_fallible(
+        a: bool,
+        b: u32,
+    ) -> DiplomatResult<super::RenamedStructWithAttrs, ()>;
+    pub(super) fn namespace_StructWithAttrs_c(this: super::RenamedStructWithAttrs) -> u32;
+    pub(super) fn namespace_StructWithAttrs_deprecated(this: super::RenamedStructWithAttrs);
+    pub(super) fn ErrorStruct_returns_result_option(
+        is_some: bool,
+    ) -> DiplomatResult<DiplomatOption<super::ErrorStruct>, ()>;
+    pub(super) fn ScalarPairWithPadding_assert_value(this: super::ScalarPairWithPadding);
+    pub(super) fn DefaultEnum_new() -> super::DefaultEnum;
+    pub(super) fn MyEnum_into_value(this: super::MyEnum) -> i8;
+    pub(super) fn MyEnum_get_a() -> super::MyEnum;
 }
