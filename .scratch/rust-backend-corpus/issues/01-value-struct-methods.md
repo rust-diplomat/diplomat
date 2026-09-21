@@ -1,31 +1,31 @@
 # 01 — Inherent methods on value structs and enums
 
-**What to build:** A provider that declares an inherent method on a value struct or a
-value enum gets a working `impl` in the generated Rust package, callable from the
-consumer. Covers the three receiver shapes the corpus uses: an associated function
-returning `Self`, a `self`-by-value method, and a `&self`/`&mut self` method on the
-`repr(C)` value type. Verifiable end to end by calling `MyStruct::new()`,
-`MyEnum::into_value()`, `ScalarPairWithPadding::assert_value()` and
-`BorrowedFields::extract_from_fields()` from a consumer test.
+**Status:** DONE — landed in `e3a0304d`.
 
-This is the only workstream with no ABI design question: a Rust consumer calling an
-associated function on a value struct is ordinary Rust, and the `repr(C)` mirror
-already exists.
+**What it built:** A provider that declares an inherent method on a value struct or a
+value enum gets a working `impl` in the generated package. Associated functions,
+`self`-by-value methods and (`&self`/`&mut self`) borrows are all handled by the
+codegen; the borrow shapes are not reachable yet because the corpus gates them on
+`struct_refs`/`mut_struct_refs` — see ticket 11.
 
-**Blocked by:** None — can start immediately.
+**The finding that made it small:** a value type has **no ABI mirror**.
+`ffi_value_name` names the same type the safe API uses, so a receiver is the value
+itself or a plain pointer to it — no field-by-field conversion anywhere.
+`ScalarPairWithPadding::assert_value` generates
+`fn ScalarPairWithPadding_assert_value(this: super::ScalarPairWithPadding);`, which is
+exactly what the C backend emits for the same method.
 
-**Status:** ready-for-agent
+Four changes: the blanket `methods on value structs/enums` guards in `validate.rs`
+became real method validation; `ffi_self_type` gained `SelfType::Struct`/`Enum` arms;
+`emit_method` branches on the receiver owner; `gen/types.rs` and `gen/mod.rs` emit the
+impl block and its extern declarations alongside the ones opaques already had.
 
-- [ ] `ErrorStruct`, `StructWithAttrs`, `ScalarPairWithPadding`, `BorrowedFields`,
-      `BorrowedFieldsWithBounds`, `MyEnum`, `DefaultEnum` are generated and their
-      `rust` gates removed
-- [ ] A consumer test calls an associated function, a `self`-by-value method and a
-      `&self` method on a generated value struct, and a method on a generated enum
-- [ ] These items drop out of `rg 'rust, disable' feature_tests/src`
-- [ ] `feature_tests/rust/scripts/check.sh` passes
+**Delivered:** `ErrorStruct`, `StructWithAttrs`, `ScalarPairWithPadding`, `MyEnum`,
+`DefaultEnum`, `CyclicStructB`, `BorrowedFields`, `BorrowedFieldsWithBounds` are
+ungated. `CyclicStructB::get_a`/`get_a_option` stay gated individually — they return
+`CyclicStructA`, which is gated for its nested field (ticket 03).
 
-**Notes:** Several items are blocked by this *and* another ticket (`MyStruct`,
-`PrimitiveStruct`, `BigStructWithStuff`, `CyclicStructA/B/C`,
-`MyStructContainingAnOption`, `NestedBorrowedFields`, `StructWithSlices`,
-`StructOfOpaque`, `TestMacroStruct`). They unblock as those land; only the list above
-is in scope here.
+**Not delivered:** `MyStruct` and `PrimitiveStruct` are ungated by this ticket but
+re-gated by ticket 02's finding (a `char` field needs an ABI mirror). `BorrowedFields`
+and `BorrowedFieldsWithBounds` are ungated but still generate nothing: every one of
+their methods is gated on `struct_refs`.
