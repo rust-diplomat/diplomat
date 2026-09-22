@@ -43,7 +43,7 @@ pub mod ffi {
     }
 
     #[diplomat::cfg(supports = option)]
-    #[diplomat::attr(any(dotnet, rust), disable)]
+    #[diplomat::attr(dotnet, disable)]
     #[derive(Debug)]
     pub struct OptionInputStruct {
         a: DiplomatOption<u8>,
@@ -52,7 +52,7 @@ pub mod ffi {
     }
 
     #[diplomat::cfg(supports = option)]
-    #[diplomat::attr(any(dotnet, rust), disable)]
+    #[diplomat::attr(dotnet, disable)]
     #[derive(Debug)]
     pub struct BorrowingOptionStruct<'a> {
         a: DiplomatOption<&'a DiplomatStr>,
@@ -178,7 +178,7 @@ pub mod ffi {
         }
 
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(any(dotnet, rust), disable)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn accepts_borrowing_option_struct(arg: BorrowingOptionStruct) {
             assert_eq!(arg.a.into_option(), Some("test string".as_bytes()));
         }
@@ -200,7 +200,7 @@ pub mod ffi {
         }
 
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(any(dotnet, rust), disable)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn accepts_option_input_struct(
             arg: Option<OptionInputStruct>,
             sentinel: u8,
@@ -209,7 +209,7 @@ pub mod ffi {
             arg
         }
         #[diplomat::cfg(supports = option)]
-        #[diplomat::attr(any(dotnet, rust), disable)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn returns_option_input_struct() -> OptionInputStruct {
             OptionInputStruct {
                 a: Some(6).into(),

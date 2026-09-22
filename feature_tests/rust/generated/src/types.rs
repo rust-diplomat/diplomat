@@ -138,6 +138,19 @@ pub struct BorrowedFieldsReturning<'a> {
     pub(crate) _lifetimes: PhantomData<*mut &'a ()>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BorrowingOptionStruct<'a> {
+    pub a: Option<&'a [u8]>,
+    pub(crate) _lifetimes: PhantomData<*mut &'a ()>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct OptionInputStruct {
+    pub a: Option<u8>,
+    pub b: Option<char>,
+    pub c: Option<OptionEnum>,
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CachedIncludeZST {}
@@ -154,9 +167,77 @@ impl ErrorStruct {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ErrorStruct_returns_result_option(is_some) };
         match Result::from(result) {
-            Ok(result) => Ok(result.into()),
+            Ok(result) => Ok(result.into_option()),
             Err(result) => Err(result),
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ErrorWithChar {
+    pub c: char,
+}
+
+/// Testing JS-specific layout/padding behavior
+/// Also being used to test CPP backends taking structs with primitive values.
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct BigStructWithStuff {
+    pub first: u8,
+    pub second: u16,
+    pub third: u16,
+    pub fourth: ScalarPairWithPadding,
+    pub fifth: u8,
+}
+
+impl BigStructWithStuff {
+    pub fn assert_value(self, extra_val: u16) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::BigStructWithStuff_assert_value(self, extra_val) };
+    }
+    pub fn assert_slice(slice: &[BigStructWithStuff], second_value: u16) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::BigStructWithStuff_assert_slice(ffi::DiplomatSlice::from(slice), second_value)
+        };
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CyclicStructA {
+    pub a: CyclicStructB,
+}
+
+impl CyclicStructA {
+    pub fn get_b() -> CyclicStructB {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::CyclicStructA_get_b() }
+    }
+    pub fn cyclic_out(self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::CyclicStructA_cyclic_out(self, write) };
+        })
+        .1
+    }
+    pub fn nested_slice(sl: &[CyclicStructA]) -> u8 {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::CyclicStructA_nested_slice(ffi::DiplomatSlice::from(sl)) }
+    }
+    pub fn double_cyclic_out(self, cyclic_struct_a: CyclicStructA) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::CyclicStructA_double_cyclic_out(self, cyclic_struct_a, write) };
+        })
+        .1
+    }
+    pub fn getter_out(self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::CyclicStructA_getter_out(self, write) };
+        })
+        .1
     }
 }
 
@@ -164,6 +245,38 @@ impl ErrorStruct {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CyclicStructB {
     pub field: u8,
+}
+
+impl CyclicStructB {
+    pub fn get_a() -> CyclicStructA {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::CyclicStructB_get_a() }
+    }
+    pub fn get_a_option() -> Option<CyclicStructA> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::CyclicStructB_get_a_option() };
+        result.into()
+    }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CyclicStructC {
+    pub a: CyclicStructA,
+}
+
+impl CyclicStructC {
+    pub fn takes_nested_parameters(c: CyclicStructC) -> CyclicStructC {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::CyclicStructC_takes_nested_parameters(c) }
+    }
+    pub fn cyclic_out(self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::CyclicStructC_cyclic_out(self, write) };
+        })
+        .1
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -217,9 +330,102 @@ impl MyStruct {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct MyStructContainingAnOption {
+    pub a: Option<MyStruct>,
+    pub b: Option<DefaultEnum>,
+}
+
+impl MyStructContainingAnOption {
+    pub fn new() -> MyStructContainingAnOption {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::MyStructContainingAnOption_new() };
+        MyStructContainingAnOption {
+            a: result.a.into_option().map(|__v| MyStruct {
+                a: __v.a,
+                b: __v.b,
+                c: __v.c,
+                d: __v.d,
+                e: __v.e,
+                f: crate::private::char_from_u32(__v.f),
+                g: __v.g,
+            }),
+            b: result.b.into_option(),
+        }
+    }
+    pub fn filled() -> MyStructContainingAnOption {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::MyStructContainingAnOption_filled() };
+        MyStructContainingAnOption {
+            a: result.a.into_option().map(|__v| MyStruct {
+                a: __v.a,
+                b: __v.b,
+                c: __v.c,
+                d: __v.d,
+                e: __v.e,
+                f: crate::private::char_from_u32(__v.f),
+                g: __v.g,
+            }),
+            b: result.b.into_option(),
+        }
+    }
+}
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MyZst {}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NestedCharField {
+    pub ch: char,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NestedConvertingFields {
+    pub char_inner: NestedCharField,
+    pub option_inner: NestedOptionField,
+}
+
+impl NestedConvertingFields {
+    pub fn new() -> NestedConvertingFields {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::NestedConvertingFields_new() };
+        NestedConvertingFields {
+            char_inner: NestedCharField {
+                ch: crate::private::char_from_u32(result.char_inner.ch),
+            },
+            option_inner: NestedOptionField {
+                value: result.option_inner.value.into_option(),
+            },
+        }
+    }
+    pub fn round_trip(value: NestedConvertingFields) -> NestedConvertingFields {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe {
+            ffi::NestedConvertingFields_round_trip(ffi::NestedConvertingFields {
+                char_inner: ffi::NestedCharField {
+                    ch: value.char_inner.ch as u32,
+                },
+                option_inner: ffi::NestedOptionField {
+                    value: ffi::DiplomatOption::from(value.option_inner.value),
+                },
+            })
+        };
+        NestedConvertingFields {
+            char_inner: NestedCharField {
+                ch: crate::private::char_from_u32(result.char_inner.ch),
+            },
+            option_inner: NestedOptionField {
+                value: result.option_inner.value.into_option(),
+            },
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct NestedOptionField {
+    pub value: Option<u8>,
+}
 
 /// Testing JS-specific layout/padding behavior
 #[repr(C)]

@@ -166,6 +166,14 @@ impl OptionOpaque {
         };
         result.into()
     }
+    pub fn accepts_borrowing_option_struct<'anon_0>(arg: BorrowingOptionStruct<'anon_0>) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::OptionOpaque_accepts_borrowing_option_struct(ffi::BorrowingOptionStruct {
+                a: ffi::DiplomatOption::from(arg.a.map(ffi::DiplomatSlice::from)),
+            })
+        };
+    }
     pub fn accepts_multiple_option_enum(
         sentinel1: u8,
         arg1: Option<OptionEnum>,
@@ -184,6 +192,36 @@ impl OptionOpaque {
             )
         };
         result.into()
+    }
+    pub fn accepts_option_input_struct(
+        arg: Option<OptionInputStruct>,
+        sentinel: u8,
+    ) -> Option<OptionInputStruct> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe {
+            ffi::OptionOpaque_accepts_option_input_struct(
+                ffi::DiplomatOption::from(arg.map(|__v| ffi::OptionInputStruct {
+                    a: ffi::DiplomatOption::from(__v.a),
+                    b: ffi::DiplomatOption::from(__v.b.map(|__v| __v as u32)),
+                    c: ffi::DiplomatOption::from(__v.c),
+                })),
+                sentinel,
+            )
+        };
+        result.into_option().map(|__v| OptionInputStruct {
+            a: __v.a.into_option(),
+            b: __v.b.into_option().map(crate::private::char_from_u32),
+            c: __v.c.into_option(),
+        })
+    }
+    pub fn returns_option_input_struct() -> OptionInputStruct {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::OptionOpaque_returns_option_input_struct() };
+        OptionInputStruct {
+            a: result.a.into_option(),
+            b: result.b.into_option().map(crate::private::char_from_u32),
+            c: result.c.into_option(),
+        }
     }
 }
 

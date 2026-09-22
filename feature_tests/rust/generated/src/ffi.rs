@@ -178,6 +178,23 @@ pub struct BorrowedFieldsReturning<'a> {
 }
 
 #[repr(C)]
+pub struct BorrowingOptionStruct<'a> {
+    pub(super) a: DiplomatOption<DiplomatSlice<'a, u8>>,
+}
+
+#[repr(C)]
+pub struct OptionInputStruct {
+    pub(super) a: DiplomatOption<u8>,
+    pub(super) b: DiplomatOption<u32>,
+    pub(super) c: DiplomatOption<super::OptionEnum>,
+}
+
+#[repr(C)]
+pub struct ErrorWithChar {
+    pub(super) c: u32,
+}
+
+#[repr(C)]
 pub struct MyStruct {
     pub(super) a: u8,
     pub(super) b: bool,
@@ -186,6 +203,28 @@ pub struct MyStruct {
     pub(super) e: i32,
     pub(super) f: u32,
     pub(super) g: super::MyEnum,
+}
+
+#[repr(C)]
+pub struct MyStructContainingAnOption {
+    pub(super) a: DiplomatOption<MyStruct>,
+    pub(super) b: DiplomatOption<super::DefaultEnum>,
+}
+
+#[repr(C)]
+pub struct NestedCharField {
+    pub(super) ch: u32,
+}
+
+#[repr(C)]
+pub struct NestedConvertingFields {
+    pub(super) char_inner: NestedCharField,
+    pub(super) option_inner: NestedOptionField,
+}
+
+#[repr(C)]
+pub struct NestedOptionField {
+    pub(super) value: DiplomatOption<u8>,
 }
 
 #[link(name = "diplomat_feature_tests")]
@@ -326,6 +365,7 @@ extern "C" {
         arg: DiplomatOption<super::OptionEnum>,
         sentinel: u8,
     ) -> DiplomatOption<super::OptionEnum>;
+    pub(super) fn OptionOpaque_accepts_borrowing_option_struct(arg: BorrowingOptionStruct);
     pub(super) fn OptionOpaque_accepts_multiple_option_enum(
         sentinel1: u8,
         arg1: DiplomatOption<super::OptionEnum>,
@@ -333,6 +373,11 @@ extern "C" {
         arg3: DiplomatOption<super::OptionEnum>,
         sentinel2: u8,
     ) -> DiplomatOption<super::OptionEnum>;
+    pub(super) fn OptionOpaque_accepts_option_input_struct(
+        arg: DiplomatOption<OptionInputStruct>,
+        sentinel: u8,
+    ) -> DiplomatOption<OptionInputStruct>;
+    pub(super) fn OptionOpaque_returns_option_input_struct() -> OptionInputStruct;
     pub(super) fn OptionOpaqueChar_destroy(this: *mut OptionOpaqueChar);
     pub(super) fn OptionOpaqueChar_assert_char(this: *const OptionOpaqueChar, ch: u32);
     pub(super) fn OptionString_destroy(this: *mut OptionString);
@@ -351,6 +396,8 @@ extern "C" {
     pub(super) fn ResultOpaque_new_in_err(i: i32) -> DiplomatResult<(), *mut ResultOpaque>;
     pub(super) fn ResultOpaque_new_int(i: i32) -> DiplomatResult<i32, ()>;
     pub(super) fn ResultOpaque_new_failing_int(i: i32) -> DiplomatResult<(), i32>;
+    pub(super) fn ResultOpaque_new_failing_char(c: u32) -> DiplomatResult<(), ErrorWithChar>;
+    pub(super) fn ResultOpaque_new_failing_char_scalar(c: u32) -> DiplomatResult<(), u32>;
     pub(super) fn ResultOpaque_new_in_enum_err(
         i: i32,
     ) -> DiplomatResult<super::ErrorEnum, *mut ResultOpaque>;
@@ -443,10 +490,36 @@ extern "C" {
     pub(super) fn ErrorStruct_returns_result_option(
         is_some: bool,
     ) -> DiplomatResult<DiplomatOption<super::ErrorStruct>, ()>;
+    pub(super) fn BigStructWithStuff_assert_value(this: super::BigStructWithStuff, extra_val: u16);
+    pub(super) fn BigStructWithStuff_assert_slice(
+        slice: DiplomatSlice<super::BigStructWithStuff>,
+        second_value: u16,
+    );
+    pub(super) fn CyclicStructA_get_b() -> super::CyclicStructB;
+    pub(super) fn CyclicStructA_cyclic_out(this: super::CyclicStructA, write: *mut DiplomatWrite);
+    pub(super) fn CyclicStructA_nested_slice(sl: DiplomatSlice<super::CyclicStructA>) -> u8;
+    pub(super) fn CyclicStructA_double_cyclic_out(
+        this: super::CyclicStructA,
+        cyclic_struct_a: super::CyclicStructA,
+        write: *mut DiplomatWrite,
+    );
+    pub(super) fn CyclicStructA_getter_out(this: super::CyclicStructA, write: *mut DiplomatWrite);
+    pub(super) fn CyclicStructB_get_a() -> super::CyclicStructA;
+    pub(super) fn CyclicStructB_get_a_option() -> DiplomatOption<super::CyclicStructA>;
+    pub(super) fn CyclicStructC_takes_nested_parameters(
+        c: super::CyclicStructC,
+    ) -> super::CyclicStructC;
+    pub(super) fn CyclicStructC_cyclic_out(this: super::CyclicStructC, write: *mut DiplomatWrite);
     pub(super) fn MyStruct_new() -> MyStruct;
     pub(super) fn MyStruct_into_a(this: MyStruct) -> u8;
     pub(super) fn MyStruct_returns_zst_result() -> DiplomatResult<(), super::MyZst>;
     pub(super) fn MyStruct_fails_zst_result() -> DiplomatResult<(), super::MyZst>;
+    pub(super) fn MyStructContainingAnOption_new() -> MyStructContainingAnOption;
+    pub(super) fn MyStructContainingAnOption_filled() -> MyStructContainingAnOption;
+    pub(super) fn NestedConvertingFields_new() -> NestedConvertingFields;
+    pub(super) fn NestedConvertingFields_round_trip(
+        value: NestedConvertingFields,
+    ) -> NestedConvertingFields;
     pub(super) fn ScalarPairWithPadding_assert_value(this: super::ScalarPairWithPadding);
     pub(super) fn DefaultEnum_new() -> super::DefaultEnum;
     pub(super) fn MyEnum_into_value(this: super::MyEnum) -> i8;

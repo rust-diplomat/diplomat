@@ -18,6 +18,7 @@ pub(super) fn is_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext)
     match ty {
         Type::Primitive(p) => primitive_name(*p).is_some(),
         Type::Enum(path) => !path.resolve(tcx).attrs.disable,
+        Type::DiplomatOption(inner) => is_value_type(inner.as_ref(), tcx),
         Type::Struct(path) => {
             let def = tcx.resolve_type(path.id());
             match def {
@@ -50,7 +51,7 @@ pub(super) fn is_supported_slice<P: hir::TyPosition>(slice: &Slice<P>, tcx: &Typ
             match tcx.resolve_type(path.id()) {
                 TypeDef::Struct(strct) => {
                     is_value_type(&Type::<P>::Struct(path.clone()), tcx)
-                        && !struct_needs_abi_mirror(strct)
+                        && !struct_needs_abi_mirror(strct, tcx)
                 }
                 _ => false,
             }
@@ -208,13 +209,17 @@ pub(super) fn is_lifetime_struct(strct: &hir::StructDef) -> bool {
 /// Lifetime-bearing structs already had a mirror (slice fields / `PhantomData`).
 /// A `char` field needs one too: the public field is `char`, the wire field is
 /// `u32`, and `char` is not FFI-safe so the public type cannot appear in `extern`.
-pub(super) fn struct_needs_abi_mirror(strct: &hir::StructDef) -> bool {
+pub(super) fn struct_needs_abi_mirror(strct: &hir::StructDef, tcx: &TypeContext) -> bool {
     is_lifetime_struct(strct)
-        || strct.fields.iter().any(|field| {
-            matches!(
-                &field.ty,
-                Type::Primitive(PrimitiveType::Char) | Type::Slice(_)
-            )
+        || strct.fields.iter().any(|field| match &field.ty {
+            Type::Primitive(PrimitiveType::Char) | Type::Slice(_) | Type::DiplomatOption(_) => true,
+            Type::Struct(path) => match tcx.resolve_type(path.id()) {
+                TypeDef::Struct(inner) => struct_needs_abi_mirror(inner, tcx),
+                // Validation rejects this shape, but a non-value nested definition
+                // must never silently be treated as layout-identical.
+                _ => true,
+            },
+            _ => false,
         })
 }
 
@@ -231,6 +236,13 @@ pub(super) fn ffi_struct_field_type(
         Type::Primitive(primitive) => primitive_name(*primitive).unwrap().into(),
         Type::Enum(path) => format!("super::{}", enum_name(path.tcx_id, tcx)),
         Type::Slice(slice) => ffi_struct_slice_type(slice, strct, tcx),
+        Type::DiplomatOption(inner) => {
+            format!(
+                "DiplomatOption<{}>",
+                ffi_struct_field_type(inner.as_ref(), strct, tcx)
+            )
+        }
+        Type::Struct(path) => ffi_value_name(tcx.resolve_type(path.id()), tcx),
         _ => unreachable!("validated struct field"),
     }
 }
@@ -265,6 +277,13 @@ pub(super) fn safe_struct_field_type(
     match ty {
         Type::Primitive(primitive) => safe_primitive_name(*primitive).unwrap().into(),
         Type::Enum(path) => enum_name(path.tcx_id, tcx),
+        Type::DiplomatOption(inner) => {
+            format!(
+                "Option<{}>",
+                safe_struct_field_type(inner.as_ref(), strct, tcx)
+            )
+        }
+        Type::Struct(path) => type_def_name(tcx.resolve_type(path.id())),
         Type::Slice(slice) => {
             let lifetime = slice_lifetime(slice)
                 .map(|lifetime| match lifetime {
@@ -281,7 +300,7 @@ pub(super) fn safe_struct_field_type(
 }
 
 /// Convert a safe struct value into its native ABI mirror.
-pub(super) fn struct_input_expr(name: &str, strct: &hir::StructDef) -> String {
+pub(super) fn struct_input_expr(name: &str, strct: &hir::StructDef, tcx: &TypeContext) -> String {
     let fields: Vec<String> = strct
         .fields
         .iter()
@@ -290,7 +309,7 @@ pub(super) fn struct_input_expr(name: &str, strct: &hir::StructDef) -> String {
             format!(
                 "{f}: {value}",
                 f = field_name(field),
-                value = safe_field_to_ffi(&field.ty, &access)
+                value = convert_to_ffi(&field.ty, &access, tcx)
             )
         })
         .collect();
@@ -301,16 +320,8 @@ pub(super) fn struct_input_expr(name: &str, strct: &hir::StructDef) -> String {
     )
 }
 
-pub(super) fn safe_field_to_ffi(ty: &Type<hir::Everywhere>, expr: &str) -> String {
-    match ty {
-        Type::Slice(slice) => ffi_borrowed_slice_expr(slice, expr),
-        Type::Primitive(PrimitiveType::Char) => format!("{expr} as u32"),
-        _ => expr.to_string(),
-    }
-}
-
 /// Convert a native ABI struct mirror into the safe struct value.
-pub(super) fn struct_output_expr(raw: &str, strct: &hir::StructDef) -> String {
+pub(super) fn struct_output_expr(raw: &str, strct: &hir::StructDef, tcx: &TypeContext) -> String {
     let mut fields: Vec<String> = strct
         .fields
         .iter()
@@ -319,7 +330,7 @@ pub(super) fn struct_output_expr(raw: &str, strct: &hir::StructDef) -> String {
             format!(
                 "{f}: {value}",
                 f = field_name(field),
-                value = ffi_field_to_safe(&field.ty, &access)
+                value = convert_from_ffi(&field.ty, &access, tcx)
             )
         })
         .collect();
@@ -333,18 +344,68 @@ pub(super) fn struct_output_expr(raw: &str, strct: &hir::StructDef) -> String {
     )
 }
 
-pub(super) fn ffi_field_to_safe(ty: &Type<hir::Everywhere>, expr: &str) -> String {
+/// `{base}` if `inner_on_v` is identity, `{base}.map(func)` when the conversion is a
+/// function of `__v`, otherwise `{base}.map(|__v| {inner_on_v})`.
+fn option_map(base: &str, inner_on_v: &str) -> String {
+    if inner_on_v == "__v" {
+        base.to_string()
+    } else if let Some(func) = inner_on_v.strip_suffix("(__v)") {
+        format!("{base}.map({func})")
+    } else {
+        format!("{base}.map(|__v| {inner_on_v})")
+    }
+}
+
+/// Turn a safe public value into the ABI value the `extern` signature expects.
+pub(super) fn convert_to_ffi<P: hir::TyPosition>(
+    ty: &Type<P>,
+    expr: &str,
+    tcx: &TypeContext,
+) -> String {
     match ty {
-        Type::Slice(slice) => {
-            if matches!(slice, Slice::Str(_, StringEncoding::Utf8)) {
-                format!("unsafe {{ crate::private::utf8_str_from_slice({expr}) }}")
-            } else {
-                // The safe struct field declaration fixes the target type, so the
-                // runtime's `From` conversion resolves by inference.
-                format!("{expr}.into()")
-            }
+        Type::Primitive(PrimitiveType::Char) => format!("{expr} as u32"),
+        Type::Slice(slice) => ffi_borrowed_slice_expr(slice, expr),
+        Type::DiplomatOption(inner) => {
+            let inner_expr = convert_to_ffi(inner.as_ref(), "__v", tcx);
+            format!(
+                "ffi::DiplomatOption::from({})",
+                option_map(expr, &inner_expr)
+            )
         }
-        Type::Primitive(PrimitiveType::Char) => format!("crate::private::char_from_u32({expr})"),
+        Type::Struct(path) => match tcx.resolve_type(path.id()) {
+            TypeDef::Struct(strct) if struct_needs_abi_mirror(strct, tcx) => {
+                struct_input_expr(expr, strct, tcx)
+            }
+            _ => expr.to_string(),
+        },
+        _ => expr.to_string(),
+    }
+}
+
+/// Turn an ABI value into the safe public type.
+pub(super) fn convert_from_ffi<P: hir::TyPosition>(
+    ty: &Type<P>,
+    expr: &str,
+    tcx: &TypeContext,
+) -> String {
+    match ty {
+        Type::Primitive(PrimitiveType::Char) => {
+            format!("crate::private::char_from_u32({expr})")
+        }
+        Type::Slice(Slice::Str(_, StringEncoding::Utf8)) => {
+            format!("unsafe {{ crate::private::utf8_str_from_slice({expr}) }}")
+        }
+        Type::Slice(_) => format!("{expr}.into()"),
+        Type::DiplomatOption(inner) => {
+            let inner_expr = convert_from_ffi(inner.as_ref(), "__v", tcx);
+            option_map(&format!("{expr}.into_option()"), &inner_expr)
+        }
+        Type::Struct(path) => match tcx.resolve_type(path.id()) {
+            TypeDef::Struct(strct) if struct_needs_abi_mirror(strct, tcx) => {
+                struct_output_expr(expr, strct, tcx)
+            }
+            _ => expr.to_string(),
+        },
         _ => expr.to_string(),
     }
 }
@@ -363,7 +424,7 @@ pub(super) fn ffi_self_type(ty: &SelfType, tcx: &TypeContext) -> String {
             // A mirrored struct's ABI type lives in `ffi` and may be generic; a
             // layout-identical struct is the public type in `super`.
             let (_, args) = struct_generics(strct);
-            let name = format!("{}{args}", ffi_value_name(TypeDef::Struct(strct)));
+            let name = format!("{}{args}", ffi_value_name(TypeDef::Struct(strct), tcx));
             match path.owner {
                 MaybeOwn::Own => name,
                 MaybeOwn::Borrow(borrow) if borrow.mutability == Mutability::Mutable => {
@@ -372,7 +433,7 @@ pub(super) fn ffi_self_type(ty: &SelfType, tcx: &TypeContext) -> String {
                 MaybeOwn::Borrow(_) => format!("*const {name}"),
             }
         }
-        SelfType::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx))),
+        SelfType::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx)), tcx),
         // `SelfType` is `#[non_exhaustive]`; validation rejects any other owner.
         _ => unreachable!("validated method receiver"),
     }
@@ -430,11 +491,11 @@ pub(super) fn ffi_success_type(success: &SuccessType, tcx: &TypeContext) -> Stri
         }
         SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
-            if struct_needs_abi_mirror(strct) {
+            if struct_needs_abi_mirror(strct, tcx) {
                 let (_, args) = struct_generics(strct);
                 format!("{}{args}", type_def_name(TypeDef::Struct(strct)))
             } else {
-                ffi_value_name(TypeDef::Struct(strct))
+                ffi_value_name(TypeDef::Struct(strct), tcx)
             }
         }
         SuccessType::OutType(Type::Slice(slice)) => ffi_slice_type(slice, RETURN_LIFETIME, tcx),
@@ -643,10 +704,10 @@ pub(super) fn opaque_safe_type(
     }
 }
 
-pub(super) fn ffi_value_name(def: TypeDef<'_>) -> String {
+pub(super) fn ffi_value_name(def: TypeDef<'_>, tcx: &TypeContext) -> String {
     let name = type_def_name(def);
     match def {
-        TypeDef::Struct(strct) if struct_needs_abi_mirror(strct) => name,
+        TypeDef::Struct(strct) if struct_needs_abi_mirror(strct, tcx) => name,
         _ => format!("super::{name}"),
     }
 }
@@ -658,8 +719,8 @@ pub(super) fn ffi_value_name(def: TypeDef<'_>) -> String {
 pub(super) fn ffi_value_type<P: hir::TyPosition>(ty: &Type<P>, tcx: &TypeContext) -> String {
     match ty {
         Type::Primitive(p) => primitive_name(*p).unwrap().into(),
-        Type::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx))),
-        Type::Struct(path) => ffi_value_name(tcx.resolve_type(path.id())),
+        Type::Enum(path) => ffi_value_name(TypeDef::Enum(path.resolve(tcx)), tcx),
+        Type::Struct(path) => ffi_value_name(tcx.resolve_type(path.id()), tcx),
         _ => unreachable!("validated value type"),
     }
 }

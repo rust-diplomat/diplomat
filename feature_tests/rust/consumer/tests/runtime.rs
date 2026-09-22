@@ -8,9 +8,11 @@
 #![forbid(unsafe_code)]
 
 use diplomat_rust_backend_generated::{
-    ContiguousEnum, ErrorEnum, Float64Vec, MyEnum, MyOpaqueEnum, MyString, MyStruct, Opaque,
-    OpaqueMutexedString, OpaqueThinVec, OptionEnum, OptionOpaque, OptionString, OwnedSliceReturn,
-    RenamedMixinTest, ResultOpaque, Utf16Wrap,
+    BigStructWithStuff, ContiguousEnum, CyclicStructA, CyclicStructB, DefaultEnum, ErrorEnum,
+    Float64Vec, MyEnum, MyOpaqueEnum, MyString, MyStruct, MyStructContainingAnOption,
+    NestedCharField, NestedConvertingFields, NestedOptionField, Opaque, OpaqueMutexedString,
+    OpaqueThinVec, OptionEnum, OptionInputStruct, OptionOpaque, OptionString, OwnedSliceReturn,
+    RenamedMixinTest, ResultOpaque, ScalarPairWithPadding, Utf16Wrap,
 };
 
 /// An owned opaque is constructed by the provider and dropped by the generated
@@ -67,6 +69,11 @@ fn result_arms_and_owned_errors() {
     assert_eq!(ResultOpaque::new_failing_bar().unwrap_err(), ErrorEnum::Bar);
     assert_eq!(ResultOpaque::new_int(7).expect("7 is returned"), 7);
     assert_eq!(ResultOpaque::new_failing_int(9).unwrap_err(), 9);
+    assert_eq!(ResultOpaque::new_failing_char('餐').unwrap_err().c, '餐');
+    assert_eq!(
+        ResultOpaque::new_failing_char_scalar('字').unwrap_err(),
+        '字'
+    );
 
     // An owned opaque error: the generated wrapper is its only owner, so
     // discarding it still has to run the provider destructor.
@@ -220,6 +227,75 @@ fn mutexed_string_is_borrowed_not_copied() {
         owned.dummy_str(),
         b"A const str with non byte char: \xe9\xa4\x90 which is a DiplomatChar,".as_slice()
     );
+}
+
+/// Nested layout-identical structs copy as values; `DiplomatOption` fields are `Option`.
+#[test]
+fn nested_and_optional_struct_fields_round_trip() {
+    let converting = NestedConvertingFields::new();
+    assert_eq!(converting.char_inner.ch, '餐');
+    assert_eq!(converting.option_inner.value, Some(37));
+    let converting = NestedConvertingFields::round_trip(converting);
+    assert_eq!(converting.char_inner.ch, '餐');
+    assert_eq!(converting.option_inner.value, Some(37));
+
+    // These constructors make the public nested field types explicit in the
+    // consumer, rather than only exercising provider-created values.
+    let hand_built = NestedConvertingFields {
+        char_inner: NestedCharField { ch: '字' },
+        option_inner: NestedOptionField { value: None },
+    };
+    let hand_built = NestedConvertingFields::round_trip(hand_built);
+    assert_eq!(hand_built.char_inner.ch, '字');
+    assert_eq!(hand_built.option_inner.value, None);
+
+    let nested = CyclicStructA {
+        a: CyclicStructB { field: 17 },
+    };
+    assert_eq!(nested.a.field, 17);
+    assert_eq!(nested.cyclic_out(), "17");
+    assert_eq!(
+        CyclicStructA::nested_slice(&[
+            nested,
+            CyclicStructA {
+                a: CyclicStructB { field: 3 },
+            }
+        ]),
+        20
+    );
+
+    let big = BigStructWithStuff {
+        first: 101,
+        second: 505,
+        third: 9345,
+        fourth: ScalarPairWithPadding {
+            first: 122,
+            second: 414,
+        },
+        fifth: 99,
+    };
+    big.assert_value(853);
+
+    let optional = OptionOpaque::returns_option_input_struct();
+    assert_eq!(optional.a, Some(6));
+    assert_eq!(optional.b, None);
+    assert_eq!(optional.c, Some(OptionEnum::Bar));
+    let back = OptionOpaque::accepts_option_input_struct(
+        Some(OptionInputStruct {
+            a: Some(7),
+            b: Some('x'),
+            c: Some(OptionEnum::Foo),
+        }),
+        123,
+    );
+    assert_eq!(back.unwrap().a, Some(7));
+
+    let empty = MyStructContainingAnOption::new();
+    assert!(empty.a.is_none());
+    assert!(empty.b.is_none());
+    let filled = MyStructContainingAnOption::filled();
+    assert_eq!(filled.a.unwrap().f, '餐');
+    assert_eq!(filled.b, Some(DefaultEnum::A));
 }
 
 /// A value struct's `char` field is a `char` to the consumer, not the wire `u32`.

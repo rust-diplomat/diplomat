@@ -83,7 +83,7 @@ pub(in crate::r#rust) fn generate_types(
     for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
         emit_docs(&mut out, &strct.docs, docs_url_gen, "");
         let name = type_def_name(TypeDef::Struct(strct));
-        if struct_needs_abi_mirror(strct) {
+        if struct_needs_abi_mirror(strct, tcx) {
             let (params, _) = struct_generics(strct);
             writeln!(
                 out,
@@ -93,11 +93,7 @@ pub(in crate::r#rust) fn generate_types(
             .unwrap();
             for field in &strct.fields {
                 emit_docs(&mut out, &field.docs, docs_url_gen, "    ");
-                let ty = if is_lifetime_struct(strct) {
-                    safe_struct_field_type(&field.ty, strct, tcx)
-                } else {
-                    safe_value_type(&field.ty, tcx)
-                };
+                let ty = safe_struct_field_type(&field.ty, strct, tcx);
                 writeln!(out, "    pub {}: {},", field_name(field), ty).unwrap();
             }
             out.push_str(&struct_lifetime_phantom(strct));

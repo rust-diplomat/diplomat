@@ -45,7 +45,7 @@ pub(super) fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
         .unwrap();
     }
     for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
-        if !struct_needs_abi_mirror(strct) {
+        if !struct_needs_abi_mirror(strct, tcx) {
             continue;
         }
         let name = type_def_name(TypeDef::Struct(strct));

@@ -24,6 +24,16 @@ pub mod ffi {
         i: i32,
         j: i32,
     }
+
+    // Rust-only regression fixture: the public error carries char while the
+    // ABI payload carries DiplomatChar/u32.
+    #[diplomat::attr(not(rust), disable)]
+    #[derive(Debug)]
+    #[diplomat::attr(auto, error)]
+    pub struct ErrorWithChar {
+        pub c: DiplomatChar,
+    }
+
     impl ErrorStruct {
         #[diplomat::attr(kotlin, disable)]
         #[diplomat::attr(dotnet, disable)]
@@ -75,6 +85,16 @@ pub mod ffi {
         #[diplomat::cfg(supports = custom_errors)]
         pub fn new_failing_int(i: i32) -> Result<(), i32> {
             Err(i)
+        }
+
+        #[diplomat::attr(not(rust), disable)]
+        pub fn new_failing_char(c: DiplomatChar) -> Result<(), ErrorWithChar> {
+            Err(ErrorWithChar { c })
+        }
+
+        #[diplomat::attr(not(rust), disable)]
+        pub fn new_failing_char_scalar(c: DiplomatChar) -> Result<(), DiplomatChar> {
+            Err(c)
         }
 
         pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, Box<ResultOpaque>> {

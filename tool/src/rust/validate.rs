@@ -125,7 +125,7 @@ pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tc
                     }
                     if !supported_struct_field(&field.ty, tcx) {
                         reporter.reject(
-                            "[Rust backend] structs may contain only supported primitives, enums, and borrowed slices",
+                            "[Rust backend] structs may contain only supported primitives, enums, nested value structs, DiplomatOption of those, and borrowed slices",
                         );
                     }
                 }
@@ -451,6 +451,16 @@ pub(super) fn supported_struct_field<P: hir::TyPosition>(ty: &Type<P>, tcx: &Typ
     match ty {
         Type::Primitive(primitive) => primitive_name(*primitive).is_some(),
         Type::Enum(path) => !path.resolve(tcx).attrs.disable,
+        Type::DiplomatOption(inner) => supported_struct_field(inner.as_ref(), tcx),
+        Type::Struct(path) => match tcx.resolve_type(path.id()) {
+            // Nested lifetime-bearing structs need lifetime arguments remapped
+            // through the enclosing field; reject them until that mapping exists.
+            TypeDef::Struct(strct) if !strct.attrs.disable && !is_lifetime_struct(strct) => strct
+                .fields
+                .iter()
+                .all(|field| supported_struct_field(&field.ty, tcx)),
+            _ => false,
+        },
         // A slice-of-structs field is a nested pointer shape this backend has not
         // promised; borrowed primitive/string slices remain the only field slices.
         Type::Slice(slice) => {

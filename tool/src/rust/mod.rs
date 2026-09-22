@@ -427,6 +427,129 @@ mod tests {
         );
     }
 
+    /// Struct fields that are `DiplomatOption<T>` become `Option<T>` on the public
+    /// type; the ABI field stays `DiplomatOption`. Nested layout-identical structs
+    /// are fields of the public type with no extra wrapper.
+    #[test]
+    fn option_and_nested_struct_fields_are_lowered() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::{DiplomatChar, DiplomatOption};
+                pub enum Kind { A = 0, B = 1 }
+                pub struct Inner { pub n: u8 }
+                pub struct Nested { pub inner: Inner }
+                pub struct InnerChar { pub ch: DiplomatChar }
+                pub struct InnerOptional { pub value: DiplomatOption<u8> }
+                pub struct ConvertingNested {
+                    pub char_inner: InnerChar,
+                    pub option_inner: InnerOptional,
+                }
+                pub struct Optional {
+                    pub a: DiplomatOption<u8>,
+                    pub b: DiplomatOption<DiplomatChar>,
+                    pub c: DiplomatOption<Kind>,
+                }
+                #[diplomat::opaque]
+                pub struct Holder(u32);
+                impl Holder {
+                    pub fn take_nested(&self, nested: Nested) -> Nested { unimplemented!() }
+                    pub fn take_converting(&self, nested: ConvertingNested) -> ConvertingNested { unimplemented!() }
+                    pub fn take_optional(&self, optional: Optional) -> Optional { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+
+        let types = &files["src/types.rs"];
+        assert!(
+            types.contains("pub inner: Inner"),
+            "nested layout-identical struct is a plain field: {types}"
+        );
+        assert!(
+            types.contains("pub char_inner: InnerChar")
+                && types.contains("pub option_inner: InnerOptional"),
+            "nested converting structs keep their safe field types: {types}"
+        );
+        assert!(
+            types.contains("pub a: Option<u8>"),
+            "DiplomatOption<u8> is Option<u8> to the consumer: {types}"
+        );
+        assert!(
+            types.contains("pub b: Option<char>"),
+            "DiplomatOption<DiplomatChar> is Option<char>: {types}"
+        );
+        assert!(
+            types.contains("pub c: Option<Kind>"),
+            "DiplomatOption<enum> is Option<enum>: {types}"
+        );
+        assert!(
+            !types.contains("DiplomatOption"),
+            "DiplomatOption must not appear on the public struct: {types}"
+        );
+
+        let raw = &files["src/ffi.rs"];
+        assert!(
+            raw.contains("pub struct ConvertingNested")
+                && raw.contains("pub(super) char_inner: InnerChar")
+                && raw.contains("pub(super) option_inner: InnerOptional"),
+            "ABI mirrors the outer converting struct recursively: {raw}"
+        );
+        assert!(
+            raw.contains("fn Holder_take_converting(this: *const Holder, nested: ConvertingNested) -> ConvertingNested;"),
+            "extern uses the private ABI mirror rather than super::ConvertingNested: {raw}"
+        );
+        assert!(
+            raw.contains("pub(super) a: DiplomatOption<u8>"),
+            "ABI keeps DiplomatOption<u8>: {raw}"
+        );
+        assert!(
+            raw.contains("pub(super) b: DiplomatOption<u32>"),
+            "ABI option of char is DiplomatOption<u32>: {raw}"
+        );
+
+        let holder = &files["src/opaques/holder.rs"];
+        assert!(
+            holder.contains("ffi::ConvertingNested")
+                && holder.contains("ffi::InnerChar")
+                && holder.contains("ffi::InnerOptional"),
+            "nested converting values are recursively converted at the call: {holder}"
+        );
+        assert!(
+            holder.contains("DiplomatOption::from"),
+            "optional struct is converted at the call: {holder}"
+        );
+        assert!(
+            holder.contains("char_from_u32") || holder.contains(".map("),
+            "optional char field is converted back: {holder}"
+        );
+    }
+
+    #[test]
+    fn nested_lifetime_struct_fields_are_rejected() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStrSlice;
+
+                pub struct Inner<'a> {
+                    pub bytes: DiplomatStrSlice<'a>,
+                }
+                pub struct Outer<'a> {
+                    pub inner: Inner<'a>,
+                }
+            }
+        });
+        assert!(files.is_empty(), "no partial output: {:#?}", files.keys());
+        assert!(
+            errors
+                .iter()
+                .any(|error| error.contains("nested value structs")
+                    || error.contains("supported primitives")),
+            "missing nested lifetime diagnostic: {errors:#?}"
+        );
+    }
+
     #[test]
     fn unsupported_slice_produces_no_files() {
         let (files, errors) = generate(quote! {
@@ -542,6 +665,53 @@ mod tests {
             "the safe signature must be a std Result: {all}"
         );
         assert!(all.contains("result.into()"), "{all}");
+    }
+
+    #[test]
+    fn fallible_error_payloads_are_converted_to_safe_types() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::{DiplomatChar, DiplomatOption, DiplomatWrite};
+
+                #[diplomat::attr(auto, error)]
+                pub struct ErrorWithChar { pub c: DiplomatChar }
+                #[diplomat::attr(auto, error)]
+                pub struct ErrorWithOption { pub value: DiplomatOption<u8> }
+
+                #[diplomat::opaque]
+                pub struct Counter;
+                impl Counter {
+                    pub fn char_error() -> Result<(), DiplomatChar> { unimplemented!() }
+                    pub fn struct_error() -> Result<(), ErrorWithChar> { unimplemented!() }
+                    pub fn option_error() -> Result<(), ErrorWithOption> { unimplemented!() }
+                    pub fn write_error(w: &mut DiplomatWrite) -> Result<(), DiplomatChar> {
+                        let _ = w;
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let message = &files["src/opaques/counter.rs"];
+        assert!(
+            message.contains("Err(result) => Err(crate::private::char_from_u32(result))"),
+            "char errors must convert their ABI u32 payload: {message}"
+        );
+        assert!(
+            message.contains("Err(result) => Err(ErrorWithChar")
+                && message.contains("c: crate::private::char_from_u32(result.c)"),
+            "mirrored error structs must convert their fields: {message}"
+        );
+        assert!(
+            message.contains("Err(result) => Err(ErrorWithOption")
+                && message.contains("value: result.value.into_option()"),
+            "nested option error fields must convert their ABI container: {message}"
+        );
+        assert!(
+            message.contains("Ok(()) => Ok(text)") && message.contains("char_from_u32(result)"),
+            "writer Result errors use the same conversion path: {message}"
+        );
     }
 
     #[test]
@@ -1081,7 +1251,7 @@ mod tests {
             "disabled type `HiddenOpaque` as parameter `hidden`",
             "disabled type `HiddenStruct` as parameter `hidden_opt`",
             "disabled type `HiddenOpaque` in the return type",
-            "structs may contain only supported primitives, enums, and borrowed slices",
+            "structs may contain only supported primitives, enums, nested value structs, DiplomatOption of those, and borrowed slices",
         ] {
             assert!(
                 errors.iter().any(|error| error.contains(expected)),

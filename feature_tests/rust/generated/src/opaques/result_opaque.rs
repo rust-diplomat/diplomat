@@ -177,6 +177,24 @@ impl ResultOpaque {
         let result = unsafe { ffi::ResultOpaque_new_failing_int(i) };
         result.into()
     }
+    pub fn new_failing_char(c: char) -> Result<(), ErrorWithChar> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::ResultOpaque_new_failing_char(c as u32) };
+        match Result::from(result) {
+            Ok(result) => Ok(result),
+            Err(result) => Err(ErrorWithChar {
+                c: crate::private::char_from_u32(result.c),
+            }),
+        }
+    }
+    pub fn new_failing_char_scalar(c: char) -> Result<(), char> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::ResultOpaque_new_failing_char_scalar(c as u32) };
+        match Result::from(result) {
+            Ok(result) => Ok(result),
+            Err(result) => Err(crate::private::char_from_u32(result)),
+        }
+    }
     pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, super::ResultOpaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_in_enum_err(i) };

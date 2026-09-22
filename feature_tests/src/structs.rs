@@ -67,10 +67,29 @@ pub mod ffi {
 
     // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
     // `diplomat-tool js` was crashing when trying to process options-in-structs
-    #[diplomat::attr(any(dotnet, rust), disable)]
+    #[diplomat::attr(dotnet, disable)]
     pub struct MyStructContainingAnOption {
         pub(crate) a: DiplomatOption<MyStruct>,
         pub(crate) b: DiplomatOption<DefaultEnum>,
+    }
+
+    // Rust-only regression fixture for recursive ABI mirrors: the outer struct
+    // must mirror its inner char/option structs instead of crossing the ABI as
+    // the public `Outer` type.
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedConvertingFields {
+        pub char_inner: NestedCharField,
+        pub option_inner: NestedOptionField,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedCharField {
+        pub ch: DiplomatChar,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedOptionField {
+        pub value: DiplomatOption<u8>,
     }
 
     #[diplomat::attr(auto, error)]
@@ -317,11 +336,28 @@ pub mod ffi {
         }
     }
 
+    impl NestedConvertingFields {
+        pub fn new() -> Self {
+            Self {
+                char_inner: NestedCharField {
+                    ch: '餐' as DiplomatChar,
+                },
+                option_inner: NestedOptionField {
+                    value: Some(37).into(),
+                },
+            }
+        }
+
+        pub fn round_trip(value: Self) -> Self {
+            value
+        }
+    }
+
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
     #[diplomat::attr(auto, abi_compatible)]
-    #[diplomat::attr(any(dotnet, rust), disable)]
+    #[diplomat::attr(dotnet, disable)]
     pub struct CyclicStructA {
         pub a: CyclicStructB,
     }
@@ -333,7 +369,7 @@ pub mod ffi {
 
     // For demo_gen testing. How many layers in are we going?
     #[derive(Default)]
-    #[diplomat::attr(any(dotnet, rust), disable)]
+    #[diplomat::attr(dotnet, disable)]
     pub struct CyclicStructC {
         pub a: CyclicStructA,
     }
@@ -370,13 +406,11 @@ pub mod ffi {
 
     impl CyclicStructB {
         #[diplomat::attr(dotnet, disable)]
-        #[diplomat::attr(rust, disable)]
         pub fn get_a() -> CyclicStructA {
             Default::default()
         }
 
         #[diplomat::attr(dotnet, disable)]
-        #[diplomat::attr(rust, disable)]
         pub fn get_a_option() -> Option<CyclicStructA> {
             Some(Default::default())
         }
@@ -408,7 +442,6 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(rust, disable)]
     /// Testing JS-specific layout/padding behavior
     /// Also being used to test CPP backends taking structs with primitive values.
     #[diplomat::cfg(any(js, supports=abi_compatibles))]

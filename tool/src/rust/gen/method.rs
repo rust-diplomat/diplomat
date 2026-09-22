@@ -13,8 +13,8 @@ use super::opaque::opaque_return_expr;
 use crate::r#rust::formatter::{emit_docs, method_name, opaque_name};
 use crate::r#rust::lifetimes::{lifetime_prefix, method_generics};
 use crate::r#rust::type_map::{
-    ffi_borrowed_slice_expr, is_owned_slice, safe_input_type, safe_return_type, struct_input_expr,
-    struct_needs_abi_mirror, struct_output_expr,
+    convert_from_ffi, convert_to_ffi, ffi_borrowed_slice_expr, is_owned_slice, safe_input_type,
+    safe_return_type, struct_input_expr, struct_needs_abi_mirror, struct_output_expr,
 };
 
 pub(super) fn emit_method(
@@ -90,24 +90,24 @@ pub(super) fn emit_method(
             }),
             SelfType::Struct(path) => {
                 let strct = path.resolve(tcx);
-                if struct_needs_abi_mirror(strct) {
+                if struct_needs_abi_mirror(strct, tcx) {
                     match path.owner {
-                        MaybeOwn::Own => args.push(struct_input_expr("self", strct)),
+                        MaybeOwn::Own => args.push(struct_input_expr("self", strct, tcx)),
                         MaybeOwn::Borrow(borrow) if borrow.mutability == Mutability::Mutable => {
                             pre.push(format!(
                                 "        let mut __abi = {};",
-                                struct_input_expr("self", strct)
+                                struct_input_expr("self", strct, tcx)
                             ));
                             args.push("&mut __abi as *mut _".into());
                             post.push(format!(
                                 "        *self = {};",
-                                struct_output_expr("__abi", strct)
+                                struct_output_expr("__abi", strct, tcx)
                             ));
                         }
                         MaybeOwn::Borrow(_) => {
                             pre.push(format!(
                                 "        let __abi = {};",
-                                struct_input_expr("self", strct)
+                                struct_input_expr("self", strct, tcx)
                             ));
                             args.push("&__abi as *const _".into());
                         }
@@ -231,13 +231,13 @@ pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
             }
         }
         Type::Primitive(PrimitiveType::Char) => format!("{} as u32", param.name),
-        Type::DiplomatOption(_) => format!("ffi::DiplomatOption::from({})", param.name),
+        Type::DiplomatOption(_) => convert_to_ffi(&param.ty, param.name.as_str(), tcx),
         Type::Slice(slice) => ffi_borrowed_slice_expr(slice, param.name.as_str()),
         Type::Struct(path) => {
             let def = tcx.resolve_type(path.id());
             match def {
-                TypeDef::Struct(strct) if struct_needs_abi_mirror(strct) => {
-                    struct_input_expr(param.name.as_str(), strct)
+                TypeDef::Struct(strct) if struct_needs_abi_mirror(strct, tcx) => {
+                    struct_input_expr(param.name.as_str(), strct, tcx)
                 }
                 _ => param.name.to_string(),
             }
@@ -249,8 +249,16 @@ pub(super) fn input_expr(param: &hir::Param, tcx: &TypeContext) -> String {
 pub(super) fn return_expr(ret: &ReturnType, method: &hir::Method, tcx: &TypeContext) -> String {
     match ret {
         ReturnType::Infallible(success) => success_expr(success, method, tcx),
-        // `DiplomatOption<T>` maps straight onto `Option<T>`.
-        ReturnType::Nullable(SuccessType::OutType(_)) => "result.into()".into(),
+        ReturnType::Nullable(SuccessType::OutType(ty)) => {
+            let inner = convert_from_ffi(ty, "__v", tcx);
+            if inner == "__v" {
+                "result.into()".into()
+            } else if let Some(func) = inner.strip_suffix("(__v)") {
+                format!("result.into_option().map({func})")
+            } else {
+                format!("result.into_option().map(|__v| {inner})")
+            }
+        }
         // The ABI returns one `DiplomatResult`; the runtime owns the tag check, so the
         // generated code only has to convert each payload in its own arm. Both arms bind
         // the payload as `result`, which is the name the conversions below expect.
@@ -290,8 +298,8 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
         }
         SuccessType::OutType(Type::Struct(ReturnableStructPath::Struct(path))) => {
             let strct = path.resolve(tcx);
-            if struct_needs_abi_mirror(strct) {
-                struct_output_expr("result", strct)
+            if struct_needs_abi_mirror(strct, tcx) {
+                struct_output_expr("result", strct, tcx)
             } else {
                 "result".into()
             }
@@ -299,7 +307,7 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
         SuccessType::OutType(Type::Primitive(PrimitiveType::Char)) => {
             "crate::private::char_from_u32(result)".into()
         }
-        SuccessType::OutType(Type::DiplomatOption(_)) => "result.into()".into(),
+        SuccessType::OutType(ty @ Type::DiplomatOption(_)) => convert_from_ffi(ty, "result", tcx),
         SuccessType::OutType(_) => "result".into(),
         // `Write` is rejected by validation, and `SuccessType` is `#[non_exhaustive]`, so
         // anything reaching here is a shape codegen has never been taught.
@@ -315,6 +323,9 @@ fn error_expr(err: &Option<OutType>, method: &hir::Method, tcx: &TypeContext) ->
         // An owned opaque error becomes the owning wrapper, so its `Drop` frees the
         // provider's allocation even when the caller discards the error with `?`.
         Some(Type::Opaque(path)) => opaque_return_expr(path, method, tcx),
-        Some(_) => "result".into(),
+        // Primitive `char` and any value struct that needs an ABI mirror have
+        // different raw/public payload types. Convert the error arm just like
+        // the success arm; ordinary primitives and enums remain identity.
+        Some(ty) => convert_from_ffi(ty, "result", tcx),
     }
 }
