@@ -33,29 +33,36 @@ impl crate::private::Utf16WrapSharedSealed for Utf16Wrap {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::Utf16WrapMutSealed for Utf16Wrap {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Utf16Wrap {
         self.inner.as_ptr()
     }
 }
+
 impl Utf16WrapSharedArg for Utf16Wrap {}
 impl Utf16WrapMutArg for Utf16Wrap {}
+
 impl<'view> crate::private::Utf16WrapSharedSealed for Utf16WrapRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Utf16Wrap {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> Utf16WrapSharedArg for Utf16WrapRef<'view> {}
+
 impl<'view> crate::private::Utf16WrapSharedSealed for Utf16WrapRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Utf16Wrap {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::Utf16WrapMutSealed for Utf16WrapRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Utf16Wrap {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> Utf16WrapSharedArg for Utf16WrapRefMut<'view> {}
 impl<'view> Utf16WrapMutArg for Utf16WrapRefMut<'view> {}
 
@@ -91,13 +98,13 @@ impl<'view> fmt::Debug for Utf16WrapRefMut<'view> {
 }
 
 impl Utf16Wrap {
-    pub fn from_utf16(input: &[u16]) -> super::Utf16Wrap {
+    pub fn from_utf16(input: &[u16]) -> crate::Utf16Wrap {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Utf16Wrap_from_utf16(ffi::DiplomatSlice::from(input)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Utf16Wrap");
-            super::Utf16Wrap {
+            crate::Utf16Wrap {
                 inner,
                 _not_send_sync: PhantomData,
             }

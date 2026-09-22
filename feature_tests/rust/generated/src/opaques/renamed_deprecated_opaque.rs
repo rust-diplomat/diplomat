@@ -36,13 +36,16 @@ impl crate::private::RenamedDeprecatedOpaqueSharedSealed for RenamedDeprecatedOp
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedDeprecatedOpaqueMutSealed for RenamedDeprecatedOpaque {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedDeprecatedOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedDeprecatedOpaqueSharedArg for RenamedDeprecatedOpaque {}
 impl RenamedDeprecatedOpaqueMutArg for RenamedDeprecatedOpaque {}
+
 impl<'view> crate::private::RenamedDeprecatedOpaqueSharedSealed
     for RenamedDeprecatedOpaqueRef<'view>
 {
@@ -50,7 +53,9 @@ impl<'view> crate::private::RenamedDeprecatedOpaqueSharedSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedDeprecatedOpaqueSharedArg for RenamedDeprecatedOpaqueRef<'view> {}
+
 impl<'view> crate::private::RenamedDeprecatedOpaqueSharedSealed
     for RenamedDeprecatedOpaqueRefMut<'view>
 {
@@ -58,6 +63,7 @@ impl<'view> crate::private::RenamedDeprecatedOpaqueSharedSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedDeprecatedOpaqueMutSealed
     for RenamedDeprecatedOpaqueRefMut<'view>
 {
@@ -65,6 +71,7 @@ impl<'view> crate::private::RenamedDeprecatedOpaqueMutSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedDeprecatedOpaqueSharedArg for RenamedDeprecatedOpaqueRefMut<'view> {}
 impl<'view> RenamedDeprecatedOpaqueMutArg for RenamedDeprecatedOpaqueRefMut<'view> {}
 
@@ -98,9 +105,3 @@ impl<'view> fmt::Debug for RenamedDeprecatedOpaqueRefMut<'view> {
             .finish()
     }
 }
-
-impl RenamedDeprecatedOpaque {}
-
-impl<'view> RenamedDeprecatedOpaqueRef<'view> {}
-
-impl<'view> RenamedDeprecatedOpaqueRefMut<'view> {}

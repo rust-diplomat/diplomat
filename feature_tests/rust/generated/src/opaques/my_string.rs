@@ -33,29 +33,36 @@ impl crate::private::MyStringSharedSealed for MyString {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::MyStringMutSealed for MyString {
     fn __as_mut_ptr(&mut self) -> *mut ffi::MyString {
         self.inner.as_ptr()
     }
 }
+
 impl MyStringSharedArg for MyString {}
 impl MyStringMutArg for MyString {}
+
 impl<'view> crate::private::MyStringSharedSealed for MyStringRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::MyString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> MyStringSharedArg for MyStringRef<'view> {}
+
 impl<'view> crate::private::MyStringSharedSealed for MyStringRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::MyString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::MyStringMutSealed for MyStringRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::MyString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> MyStringSharedArg for MyStringRefMut<'view> {}
 impl<'view> MyStringMutArg for MyStringRefMut<'view> {}
 
@@ -91,25 +98,25 @@ impl<'view> fmt::Debug for MyStringRefMut<'view> {
 }
 
 impl MyString {
-    pub fn new(v: &[u8]) -> super::MyString {
+    pub fn new(v: &[u8]) -> crate::MyString {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::MyString_new(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null MyString");
-            super::MyString {
+            crate::MyString {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn r#unsafe(v: &str) -> super::MyString {
+    pub fn r#unsafe(v: &str) -> crate::MyString {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::MyString_new_unsafe(ffi::DiplomatSlice::from(v.as_bytes())) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null MyString");
-            super::MyString {
+            crate::MyString {
                 inner,
                 _not_send_sync: PhantomData,
             }

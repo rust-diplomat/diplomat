@@ -1,8 +1,10 @@
-//! Rendering of a single method: the safe signature, the ABI call, and the
-//! conversion of its result back into the safe public type.
+//! Rendering of one safe Rust method through an Askama template.
+//!
+//! HIR lowering and ABI conversion remain in Rust. This module builds the small
+//! render model consumed by `templates/rust/method.rs.jinja`; it never writes
+//! generated source directly.
 
-use std::fmt::Write as _;
-
+use askama::Template;
 use diplomat_core::hir::{
     self, DocsUrlGenerator, MaybeOwn, Mutability, OutType, PrimitiveType, ReturnType,
     ReturnableStructPath, SelfType, Slice, StringEncoding, StructPathLike, SuccessType, Type,
@@ -10,21 +12,55 @@ use diplomat_core::hir::{
 };
 
 use super::opaque::opaque_return_expr;
-use crate::r#rust::formatter::{emit_docs, method_name, opaque_name};
+use crate::r#rust::formatter::{method_name, opaque_name, render_docs};
 use crate::r#rust::lifetimes::{lifetime_prefix, method_generics};
 use crate::r#rust::type_map::{
     convert_from_ffi, convert_to_ffi, ffi_borrowed_slice_expr, is_owned_slice, safe_input_type,
     safe_return_type, struct_input_expr, struct_needs_abi_mirror, struct_output_expr,
 };
 
-pub(super) fn emit_method(
-    out: &mut String,
+#[derive(Template)]
+#[template(path = "rust/method.rs.jinja", escape = "none")]
+struct MethodTemplate<'a> {
+    method: &'a MethodView,
+}
+
+/// All syntax needed to render one public method.
+///
+/// The strings in this view are already validated/lowered Rust fragments. The
+/// template only controls their placement and indentation.
+pub(super) struct MethodView {
+    docs: String,
+    name: String,
+    generics: String,
+    params: String,
+    return_suffix: String,
+    body: Vec<String>,
+}
+
+impl MethodView {
+    pub(super) fn render(&self) -> String {
+        MethodTemplate { method: self }
+            .render()
+            .expect("Rust method template rendering cannot fail")
+    }
+}
+
+pub(super) fn render_method(
     type_lifetimes: usize,
     method: &hir::Method,
     tcx: &TypeContext,
     docs_url_gen: &DocsUrlGenerator,
-) {
-    emit_docs(out, &method.docs, docs_url_gen, "    ");
+) -> String {
+    build_method_view(type_lifetimes, method, tcx, docs_url_gen).render()
+}
+
+fn build_method_view(
+    type_lifetimes: usize,
+    method: &hir::Method,
+    tcx: &TypeContext,
+    docs_url_gen: &DocsUrlGenerator,
+) -> MethodView {
     let name = method_name(method);
     let generics = method_generics(method, type_lifetimes, tcx);
     let mut params = Vec::new();
@@ -68,17 +104,12 @@ pub(super) fn emit_method(
         )
     }));
     let return_ty = safe_return_type(&method.output, method, tcx);
-    writeln!(
-        out,
-        "    pub fn {name}{generics}({}){} {{",
-        params.join(", "),
-        if return_ty == "()" {
-            String::new()
-        } else {
-            format!(" -> {return_ty}")
-        }
-    )
-    .unwrap();
+    let return_suffix = if return_ty == "()" {
+        String::new()
+    } else {
+        format!(" -> {return_ty}")
+    };
+
     let mut args = Vec::new();
     let mut pre = Vec::new();
     let mut post = Vec::new();
@@ -121,95 +152,94 @@ pub(super) fn emit_method(
         }
     }
     args.extend(method.params.iter().map(|param| input_expr(param, tcx)));
-    writeln!(out, "        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.").unwrap();
-    for line in &pre {
-        writeln!(out, "{line}").unwrap();
-    }
+
+    let mut body = vec![
+        "        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.".into(),
+    ];
+    body.extend(pre);
     if method.output.is_write() {
-        emit_write_body(out, method, tcx, &args);
-        for line in &post {
-            writeln!(out, "{line}").unwrap();
-        }
+        body.extend(write_body(method, tcx, &args));
+        body.extend(post);
     } else if return_ty == "()" {
-        writeln!(
-            out,
+        body.push(format!(
             "        unsafe {{ ffi::{}({}) }};",
             method.abi_name,
             args.join(", ")
-        )
-        .unwrap();
-        for line in &post {
-            writeln!(out, "{line}").unwrap();
-        }
+        ));
+        body.extend(post);
     } else {
         let expression = return_expr(&method.output, method, tcx);
         if expression == "result" && post.is_empty() {
             // Avoid a clippy `let_and_return` in the common pass-through case.
-            writeln!(
-                out,
+            body.push(format!(
                 "        unsafe {{ ffi::{}({}) }}",
                 method.abi_name,
                 args.join(", ")
-            )
-            .unwrap();
+            ));
         } else {
-            writeln!(
-                out,
+            body.push(format!(
                 "        let result = unsafe {{ ffi::{}({}) }};",
                 method.abi_name,
                 args.join(", ")
-            )
-            .unwrap();
-            for line in &post {
-                writeln!(out, "{line}").unwrap();
-            }
-            writeln!(out, "        {expression}").unwrap();
+            ));
+            body.extend(post);
+            body.push(format!("        {expression}"));
         }
     }
-    out.push_str("    }\n");
+
+    MethodView {
+        docs: render_docs(&method.docs, docs_url_gen, "    "),
+        name,
+        generics,
+        params: params.join(", "),
+        return_suffix,
+        body,
+    }
 }
 
 /// Build a `DiplomatWrite`, pass it as the trailing ABI argument, and return the
 /// written UTF-8. The public signature never names the writer.
-fn emit_write_body(out: &mut String, method: &hir::Method, tcx: &TypeContext, args: &[String]) {
+fn write_body(method: &hir::Method, tcx: &TypeContext, args: &[String]) -> Vec<String> {
     let mut abi_args = args.to_vec();
     abi_args.push("write".into());
     let abi_args = abi_args.join(", ");
     match &method.output {
-        ReturnType::Infallible(_) => {
-            writeln!(
-                out,
-                "        crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }};\n        }}).1",
+        ReturnType::Infallible(_) => vec![
+            "        crate::private::with_write(|write| {".into(),
+            format!(
+                "            unsafe {{ ffi::{}({abi_args}) }};",
                 method.abi_name
-            )
-            .unwrap();
-        }
+            ),
+            "        }).1".into(),
+        ],
         ReturnType::Fallible(_, err) => {
-            writeln!(
-                out,
-                "        let (result, text) = crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }}\n        }});",
-                method.abi_name
-            )
-            .unwrap();
+            let mut lines = vec![
+                "        let (result, text) = crate::private::with_write(|write| {".into(),
+                format!(
+                    "            unsafe {{ ffi::{}({abi_args}) }}",
+                    method.abi_name
+                ),
+                "        });".into(),
+            ];
             let err = error_expr(err, method, tcx);
             if err == "result" {
-                writeln!(out, "        Result::from(result).map(|()| text)").unwrap();
+                lines.push("        Result::from(result).map(|()| text)".into());
             } else {
-                writeln!(
-                    out,
+                lines.push(format!(
                     "        match Result::from(result) {{ Ok(()) => Ok(text), Err(result) => Err({err}) }}"
-                )
-                .unwrap();
+                ));
             }
+            lines
         }
-        ReturnType::Nullable(_) => {
-            writeln!(
-                out,
-                "        let (result, text) = crate::private::with_write(|write| {{\n            unsafe {{ ffi::{}({abi_args}) }}\n        }});\n        Option::from(result).map(|()| text)",
+        ReturnType::Nullable(_) => vec![
+            "        let (result, text) = crate::private::with_write(|write| {".into(),
+            format!(
+                "            unsafe {{ ffi::{}({abi_args}) }}",
                 method.abi_name
-            )
-            .unwrap();
-        }
+            ),
+            "        });".into(),
+            "        Option::from(result).map(|()| text)".into(),
+        ],
     }
 }
 
@@ -315,8 +345,8 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
     }
 }
 
-/// The expression that turns an ABI error payload (bound to `result`) into its safe public
-/// type. `None` is `Result<T, ()>`, whose payload is the zero-sized value itself.
+/// The expression that turns an ABI error payload (bound to `result`) into its safe
+/// public type. `None` is `Result<T, ()>`, whose payload is the zero-sized value itself.
 fn error_expr(err: &Option<OutType>, method: &hir::Method, tcx: &TypeContext) -> String {
     match err {
         None => "result".into(),

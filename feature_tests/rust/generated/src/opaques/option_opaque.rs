@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 pub struct OptionOpaque {
@@ -34,29 +35,36 @@ impl crate::private::OptionOpaqueSharedSealed for OptionOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OptionOpaqueMutSealed for OptionOpaque {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl OptionOpaqueSharedArg for OptionOpaque {}
 impl OptionOpaqueMutArg for OptionOpaque {}
+
 impl<'view> crate::private::OptionOpaqueSharedSealed for OptionOpaqueRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionOpaqueSharedArg for OptionOpaqueRef<'view> {}
+
 impl<'view> crate::private::OptionOpaqueSharedSealed for OptionOpaqueRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OptionOpaqueMutSealed for OptionOpaqueRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionOpaqueSharedArg for OptionOpaqueRefMut<'view> {}
 impl<'view> OptionOpaqueMutArg for OptionOpaqueRefMut<'view> {}
 
@@ -92,18 +100,18 @@ impl<'view> fmt::Debug for OptionOpaqueRefMut<'view> {
 }
 
 impl OptionOpaque {
-    pub fn new(i: i32) -> Option<super::OptionOpaque> {
+    pub fn new(i: i32) -> Option<crate::OptionOpaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OptionOpaque_new(i) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaque {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaque {
             inner,
             _not_send_sync: PhantomData,
         })
     }
-    pub fn new_none() -> Option<super::OptionOpaque> {
+    pub fn new_none() -> Option<crate::OptionOpaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OptionOpaque_new_none() };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaque {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaque {
             inner,
             _not_send_sync: PhantomData,
         })
@@ -128,21 +136,21 @@ impl OptionOpaque {
         let result = unsafe { ffi::OptionOpaque_option_u32(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn returns_none_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_none_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_none_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
         })
     }
-    pub fn returns_some_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_some_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_some_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
@@ -246,21 +254,21 @@ impl<'view> OptionOpaqueRef<'view> {
         let result = unsafe { ffi::OptionOpaque_option_u32(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn returns_none_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_none_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_none_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
         })
     }
-    pub fn returns_some_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_some_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_some_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
@@ -293,21 +301,21 @@ impl<'view> OptionOpaqueRefMut<'view> {
         let result = unsafe { ffi::OptionOpaque_option_u32(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn returns_none_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_none_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_none_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
         })
     }
-    pub fn returns_some_self<'a>(&'a self) -> Option<super::OptionOpaqueRef<'a>> {
+    pub fn returns_some_self<'a>(&'a self) -> Option<crate::OptionOpaqueRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::OptionOpaque_returns_some_self(self.inner.as_ptr() as *const _) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionOpaqueRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionOpaqueRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,

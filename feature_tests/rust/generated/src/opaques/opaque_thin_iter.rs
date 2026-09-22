@@ -36,29 +36,36 @@ impl<'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIter<'a> {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> crate::private::OpaqueThinIterMutSealed for OpaqueThinIter<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> OpaqueThinIterSharedArg for OpaqueThinIter<'a> {}
 impl<'a> OpaqueThinIterMutArg for OpaqueThinIter<'a> {}
+
 impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIterRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> OpaqueThinIterSharedArg for OpaqueThinIterRef<'view, 'a> {}
+
 impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIterRefMut<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> crate::private::OpaqueThinIterMutSealed for OpaqueThinIterRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> OpaqueThinIterSharedArg for OpaqueThinIterRefMut<'view, 'a> {}
 impl<'view, 'a> OpaqueThinIterMutArg for OpaqueThinIterRefMut<'view, 'a> {}
 
@@ -94,10 +101,10 @@ impl<'view, 'a> fmt::Debug for OpaqueThinIterRefMut<'view, 'a> {
 }
 
 impl<'a> OpaqueThinIter<'a> {
-    pub fn next(&'a mut self) -> Option<super::OpaqueThinRef<'a>> {
+    pub fn next(&'a mut self) -> Option<crate::OpaqueThinRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueThinIter_next(self.inner.as_ptr()) };
-        NonNull::new(result as *mut _).map(|inner| super::OpaqueThinRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OpaqueThinRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,
@@ -105,13 +112,11 @@ impl<'a> OpaqueThinIter<'a> {
     }
 }
 
-impl<'view, 'a> OpaqueThinIterRef<'view, 'a> {}
-
 impl<'view, 'a> OpaqueThinIterRefMut<'view, 'a> {
-    pub fn next(&'a mut self) -> Option<super::OpaqueThinRef<'a>> {
+    pub fn next(&'a mut self) -> Option<crate::OpaqueThinRef<'a>> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueThinIter_next(self.inner.as_ptr()) };
-        NonNull::new(result as *mut _).map(|inner| super::OpaqueThinRef {
+        NonNull::new(result as *mut _).map(|inner| crate::OpaqueThinRef {
             inner,
             _borrow: PhantomData,
             _not_send_sync: PhantomData,

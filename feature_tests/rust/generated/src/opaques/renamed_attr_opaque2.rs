@@ -33,29 +33,36 @@ impl crate::private::RenamedAttrOpaque2SharedSealed for RenamedAttrOpaque2 {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedAttrOpaque2MutSealed for RenamedAttrOpaque2 {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedAttrOpaque2 {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedAttrOpaque2SharedArg for RenamedAttrOpaque2 {}
 impl RenamedAttrOpaque2MutArg for RenamedAttrOpaque2 {}
+
 impl<'view> crate::private::RenamedAttrOpaque2SharedSealed for RenamedAttrOpaque2Ref<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedAttrOpaque2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedAttrOpaque2SharedArg for RenamedAttrOpaque2Ref<'view> {}
+
 impl<'view> crate::private::RenamedAttrOpaque2SharedSealed for RenamedAttrOpaque2RefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedAttrOpaque2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedAttrOpaque2MutSealed for RenamedAttrOpaque2RefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedAttrOpaque2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedAttrOpaque2SharedArg for RenamedAttrOpaque2RefMut<'view> {}
 impl<'view> RenamedAttrOpaque2MutArg for RenamedAttrOpaque2RefMut<'view> {}
 
@@ -89,9 +96,3 @@ impl<'view> fmt::Debug for RenamedAttrOpaque2RefMut<'view> {
             .finish()
     }
 }
-
-impl RenamedAttrOpaque2 {}
-
-impl<'view> RenamedAttrOpaque2Ref<'view> {}
-
-impl<'view> RenamedAttrOpaque2RefMut<'view> {}

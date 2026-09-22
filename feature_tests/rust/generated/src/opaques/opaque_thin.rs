@@ -33,29 +33,36 @@ impl crate::private::OpaqueThinSharedSealed for OpaqueThin {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OpaqueThinMutSealed for OpaqueThin {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThin {
         self.inner.as_ptr()
     }
 }
+
 impl OpaqueThinSharedArg for OpaqueThin {}
 impl OpaqueThinMutArg for OpaqueThin {}
+
 impl<'view> crate::private::OpaqueThinSharedSealed for OpaqueThinRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThin {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueThinSharedArg for OpaqueThinRef<'view> {}
+
 impl<'view> crate::private::OpaqueThinSharedSealed for OpaqueThinRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThin {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OpaqueThinMutSealed for OpaqueThinRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThin {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueThinSharedArg for OpaqueThinRefMut<'view> {}
 impl<'view> OpaqueThinMutArg for OpaqueThinRefMut<'view> {}
 

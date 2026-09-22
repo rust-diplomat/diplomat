@@ -1,136 +1,244 @@
-//! Rendering of generated enums and value structs.
+//! Rendering of generated enums and value structs through Askama templates.
+//!
+//! Public value types are intentionally emitted one file per type. The module
+//! index is rendered separately and re-exports the generated items flat from
+//! the crate root.
 
-use std::fmt::Write as _;
+use std::collections::BTreeSet;
 
-use diplomat_core::hir::{DocsUrlGenerator, TypeContext, TypeDef};
-
-use crate::r#rust::formatter::{emit_docs, enum_variant_name, field_name, type_def_name};
-use crate::r#rust::gen::method::emit_method;
+use crate::r#rust::formatter::{
+    enum_variant_name, field_name, render_docs, type_def_name, type_module_name,
+};
+use crate::r#rust::gen::method::render_method;
 use crate::r#rust::lifetimes::{struct_generics, struct_lifetime_phantom};
-use crate::r#rust::type_map::{
-    is_lifetime_struct, safe_struct_field_type, safe_value_type, struct_needs_abi_mirror,
+use crate::r#rust::type_map::{safe_struct_field_type, safe_value_type, struct_needs_abi_mirror};
+use askama::Template;
+use diplomat_core::hir::{
+    self, DocsUrlGenerator, Slice, StructPathLike, Type, TypeContext, TypeDef,
 };
 
-/// A struct can only derive `Eq` when every field is `Eq`, and a float is not. The
-/// corpus's `PrimitiveStruct` has an `f32` field, so an unconditional `Eq` derive does
-/// not compile.
-fn derives_eq(strct: &diplomat_core::hir::StructDef) -> bool {
-    strct.fields.iter().all(|field| {
-        !matches!(
-            &field.ty,
-            diplomat_core::hir::Type::Primitive(diplomat_core::hir::PrimitiveType::Float(_))
-        )
-    })
+#[derive(Template)]
+#[template(path = "rust/types_mod.rs.jinja", escape = "none")]
+struct TypesModTemplate<'a> {
+    modules: &'a [String],
+    has_modules: bool,
 }
 
-/// Whether a type has at least one method that will be emitted.
-fn has_methods(methods: &[diplomat_core::hir::Method]) -> bool {
-    methods.iter().any(|method| !method.attrs.disable)
+#[derive(Template)]
+#[template(path = "rust/enum.rs.jinja", escape = "none")]
+struct EnumTemplate {
+    docs: String,
+    imports: Vec<String>,
+    has_ffi: bool,
+    name: String,
+    variants: Vec<EnumVariantView>,
+    methods: Vec<String>,
 }
 
-pub(in crate::r#rust) fn generate_types(
+#[derive(Template)]
+#[template(path = "rust/struct.rs.jinja", escape = "none")]
+struct StructTemplate {
+    docs: String,
+    imports: Vec<String>,
+    has_ffi: bool,
+    has_phantom: bool,
+    name: String,
+    generics: String,
+    args: String,
+    needs_abi_mirror: bool,
+    derives_eq: bool,
+    fields: Vec<FieldView>,
+    phantom: String,
+    methods: Vec<String>,
+}
+
+struct EnumVariantView {
+    docs: String,
+    name: String,
+    discriminant: String,
+}
+
+struct FieldView {
+    docs: String,
+    name: String,
+    ty: String,
+}
+
+/// Generate `types/mod.rs` and one source file for every enabled enum/struct.
+pub(crate) fn generate_type_files(
+    tcx: &TypeContext,
+    docs_url_gen: &DocsUrlGenerator,
+) -> Vec<(String, String)> {
+    let mut files = Vec::new();
+    let mut modules = Vec::new();
+
+    for enm in tcx.enums().iter().filter(|ty| !ty.attrs.disable) {
+        let module = type_module_name(TypeDef::Enum(enm));
+        modules.push(module.clone());
+        files.push((
+            format!("src/types/{module}.rs"),
+            render_enum(enm, tcx, docs_url_gen),
+        ));
+    }
+    for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
+        let module = type_module_name(TypeDef::Struct(strct));
+        modules.push(module.clone());
+        files.push((
+            format!("src/types/{module}.rs"),
+            render_struct(strct, tcx, docs_url_gen),
+        ));
+    }
+
+    let index = TypesModTemplate {
+        modules: &modules,
+        has_modules: !modules.is_empty(),
+    }
+    .render()
+    .expect("Rust types module template rendering cannot fail");
+    files.insert(0, ("src/types/mod.rs".into(), index));
+    files
+}
+
+fn render_enum(enm: &hir::EnumDef, tcx: &TypeContext, docs_url_gen: &DocsUrlGenerator) -> String {
+    let name = type_def_name(TypeDef::Enum(enm));
+    let methods = enm
+        .methods
+        .iter()
+        .filter(|method| !method.attrs.disable)
+        .map(|method| render_method(0, method, tcx, docs_url_gen))
+        .collect::<Vec<_>>();
+    let imports = referenced_names_for_methods(&enm.methods, tcx, Some(&name));
+    let variants = enm
+        .variants
+        .iter()
+        .map(|variant| EnumVariantView {
+            docs: render_docs(&variant.docs, docs_url_gen, "    "),
+            name: enum_variant_name(variant),
+            discriminant: variant.discriminant.to_string(),
+        })
+        .collect();
+
+    EnumTemplate {
+        docs: render_docs(&enm.docs, docs_url_gen, ""),
+        imports,
+        has_ffi: !methods.is_empty(),
+        name,
+        variants,
+        methods,
+    }
+    .render()
+    .expect("Rust enum template rendering cannot fail")
+}
+
+fn render_struct(
+    strct: &hir::StructDef,
     tcx: &TypeContext,
     docs_url_gen: &DocsUrlGenerator,
 ) -> String {
-    let mut out = String::from("//! Generated enums and value structs.\n\n");
-    if tcx
-        .structs()
+    let name = type_def_name(TypeDef::Struct(strct));
+    let methods = strct
+        .methods
         .iter()
-        .any(|strct| !strct.attrs.disable && is_lifetime_struct(strct))
-    {
-        out.push_str("use core::marker::PhantomData;\n\n");
-    }
-    // An inherent method on a value type calls straight into the ABI layer; a value
-    // type has no wrapper between the two.
-    if tcx
-        .enums()
+        .filter(|method| !method.attrs.disable)
+        .map(|method| render_method(strct.lifetimes.num_lifetimes(), method, tcx, docs_url_gen))
+        .collect::<Vec<_>>();
+    let fields = strct
+        .fields
         .iter()
-        .any(|enm| !enm.attrs.disable && has_methods(&enm.methods))
-        || tcx
-            .structs()
-            .iter()
-            .any(|strct| !strct.attrs.disable && has_methods(&strct.methods))
-    {
-        out.push_str("use crate::ffi;\n\n");
+        .map(|field| FieldView {
+            docs: render_docs(&field.docs, docs_url_gen, "    "),
+            name: field_name(field),
+            ty: if struct_needs_abi_mirror(strct, tcx) {
+                safe_struct_field_type(&field.ty, strct, tcx)
+            } else {
+                safe_value_type(&field.ty, tcx)
+            },
+        })
+        .collect();
+    let phantom = struct_lifetime_phantom(strct);
+    let (generics, args) = struct_generics(strct);
+    let imports = referenced_names_for_struct(strct, tcx, &name);
+
+    StructTemplate {
+        docs: render_docs(&strct.docs, docs_url_gen, ""),
+        imports,
+        has_ffi: !methods.is_empty(),
+        has_phantom: !phantom.is_empty(),
+        name,
+        generics,
+        args,
+        needs_abi_mirror: struct_needs_abi_mirror(strct, tcx),
+        derives_eq: derives_eq(strct),
+        fields,
+        phantom,
+        methods,
     }
-    for enm in tcx.enums().iter().filter(|ty| !ty.attrs.disable) {
-        emit_docs(&mut out, &enm.docs, docs_url_gen, "");
-        let name = type_def_name(TypeDef::Enum(enm));
-        writeln!(
-            out,
-            "#[repr(C)]\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub enum {name} {{"
-        )
-        .unwrap();
-        for variant in &enm.variants {
-            emit_docs(&mut out, &variant.docs, docs_url_gen, "    ");
-            writeln!(
-                out,
-                "    {} = {},",
-                enum_variant_name(variant),
-                variant.discriminant
-            )
-            .unwrap();
-        }
-        out.push_str("}\n\n");
-        if has_methods(&enm.methods) {
-            writeln!(out, "impl {name} {{").unwrap();
-            for method in enm.methods.iter().filter(|method| !method.attrs.disable) {
-                emit_method(&mut out, 0, method, tcx, docs_url_gen);
-            }
-            out.push_str("}\n\n");
-        }
+    .render()
+    .expect("Rust struct template rendering cannot fail")
+}
+
+/// A struct can only derive `Eq` when every field is `Eq`, and a float is not.
+fn derives_eq(strct: &hir::StructDef) -> bool {
+    strct
+        .fields
+        .iter()
+        .all(|field| !matches!(&field.ty, Type::Primitive(hir::PrimitiveType::Float(_))))
+}
+
+fn referenced_names_for_struct(
+    strct: &hir::StructDef,
+    tcx: &TypeContext,
+    own_name: &str,
+) -> Vec<String> {
+    let mut names = BTreeSet::new();
+    for field in &strct.fields {
+        collect_value_type_names(&field.ty, tcx, &mut names);
     }
-    for strct in tcx.structs().iter().filter(|ty| !ty.attrs.disable) {
-        emit_docs(&mut out, &strct.docs, docs_url_gen, "");
-        let name = type_def_name(TypeDef::Struct(strct));
-        if struct_needs_abi_mirror(strct, tcx) {
-            let (params, _) = struct_generics(strct);
-            writeln!(
-                out,
-                "#[derive(Clone, Copy, Debug, PartialEq{})]\npub struct {name}{params} {{",
-                if derives_eq(strct) { ", Eq" } else { "" }
-            )
-            .unwrap();
-            for field in &strct.fields {
-                emit_docs(&mut out, &field.docs, docs_url_gen, "    ");
-                let ty = safe_struct_field_type(&field.ty, strct, tcx);
-                writeln!(out, "    pub {}: {},", field_name(field), ty).unwrap();
-            }
-            out.push_str(&struct_lifetime_phantom(strct));
-            out.push_str("}\n\n");
-        } else {
-            writeln!(
-                out,
-                "#[repr(C)]\n#[derive(Clone, Copy, Debug, PartialEq{})]\npub struct {name} {{",
-                if derives_eq(strct) { ", Eq" } else { "" }
-            )
-            .unwrap();
-            for field in &strct.fields {
-                emit_docs(&mut out, &field.docs, docs_url_gen, "    ");
-                writeln!(
-                    out,
-                    "    pub {}: {},",
-                    field_name(field),
-                    safe_value_type(&field.ty, tcx)
-                )
-                .unwrap();
-            }
-            out.push_str("}\n\n");
-        }
-        if has_methods(&strct.methods) {
-            let (params, args) = struct_generics(strct);
-            writeln!(out, "impl{params} {name}{args} {{").unwrap();
-            for method in strct.methods.iter().filter(|method| !method.attrs.disable) {
-                emit_method(
-                    &mut out,
-                    strct.lifetimes.num_lifetimes(),
-                    method,
-                    tcx,
-                    docs_url_gen,
-                );
-            }
-            out.push_str("}\n\n");
-        }
+    collect_method_names(&strct.methods, tcx, &mut names);
+    names.remove(own_name);
+    names.into_iter().collect()
+}
+
+fn referenced_names_for_methods(
+    methods: &[hir::Method],
+    tcx: &TypeContext,
+    own_name: Option<&str>,
+) -> Vec<String> {
+    let mut names = BTreeSet::new();
+    collect_method_names(methods, tcx, &mut names);
+    if let Some(own_name) = own_name {
+        names.remove(own_name);
     }
-    out
+    names.into_iter().collect()
+}
+
+fn collect_method_names(methods: &[hir::Method], tcx: &TypeContext, names: &mut BTreeSet<String>) {
+    for method in methods.iter().filter(|method| !method.attrs.disable) {
+        for param in &method.params {
+            collect_value_type_names(&param.ty, tcx, names);
+        }
+        method.output.with_contained_types(|ty| {
+            collect_value_type_names(ty, tcx, names);
+        });
+    }
+}
+
+fn collect_value_type_names<P: hir::TyPosition>(
+    ty: &Type<P>,
+    tcx: &TypeContext,
+    names: &mut BTreeSet<String>,
+) {
+    match ty {
+        Type::Enum(path) => {
+            names.insert(type_def_name(TypeDef::Enum(path.resolve(tcx))));
+        }
+        Type::Struct(path) => {
+            names.insert(type_def_name(tcx.resolve_type(path.id())));
+        }
+        Type::DiplomatOption(inner) => collect_value_type_names(inner, tcx, names),
+        Type::Slice(Slice::Struct(_, path)) => {
+            names.insert(type_def_name(tcx.resolve_type(path.id())));
+        }
+        _ => {}
+    }
 }

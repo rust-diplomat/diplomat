@@ -33,29 +33,36 @@ impl crate::private::Float64VecSharedSealed for Float64Vec {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::Float64VecMutSealed for Float64Vec {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Float64Vec {
         self.inner.as_ptr()
     }
 }
+
 impl Float64VecSharedArg for Float64Vec {}
 impl Float64VecMutArg for Float64Vec {}
+
 impl<'view> crate::private::Float64VecSharedSealed for Float64VecRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Float64Vec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> Float64VecSharedArg for Float64VecRef<'view> {}
+
 impl<'view> crate::private::Float64VecSharedSealed for Float64VecRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Float64Vec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::Float64VecMutSealed for Float64VecRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Float64Vec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> Float64VecSharedArg for Float64VecRefMut<'view> {}
 impl<'view> Float64VecMutArg for Float64VecRefMut<'view> {}
 
@@ -91,85 +98,85 @@ impl<'view> fmt::Debug for Float64VecRefMut<'view> {
 }
 
 impl Float64Vec {
-    pub fn new(v: &[f64]) -> super::Float64Vec {
+    pub fn new(v: &[f64]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn bool(v: &[bool]) -> super::Float64Vec {
+    pub fn bool(v: &[bool]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_bool(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn i16(v: &[i16]) -> super::Float64Vec {
+    pub fn i16(v: &[i16]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_i16(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn u16(v: &[u16]) -> super::Float64Vec {
+    pub fn u16(v: &[u16]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_u16(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn isize(v: &[isize]) -> super::Float64Vec {
+    pub fn isize(v: &[isize]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_isize(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn usize(v: &[usize]) -> super::Float64Vec {
+    pub fn usize(v: &[usize]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_usize(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn f64_be_bytes(v: &[u8]) -> super::Float64Vec {
+    pub fn f64_be_bytes(v: &[u8]) -> crate::Float64Vec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Float64Vec_new_f64_be_bytes(ffi::DiplomatSlice::from(v)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Float64Vec");
-            super::Float64Vec {
+            crate::Float64Vec {
                 inner,
                 _not_send_sync: PhantomData,
             }

@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 pub struct Foo<'a> {
@@ -37,29 +38,36 @@ impl<'a> crate::private::FooSharedSealed for Foo<'a> {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> crate::private::FooMutSealed for Foo<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Foo {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> FooSharedArg for Foo<'a> {}
 impl<'a> FooMutArg for Foo<'a> {}
+
 impl<'view, 'a> crate::private::FooSharedSealed for FooRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Foo {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> FooSharedArg for FooRef<'view, 'a> {}
+
 impl<'view, 'a> crate::private::FooSharedSealed for FooRefMut<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Foo {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> crate::private::FooMutSealed for FooRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Foo {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> FooSharedArg for FooRefMut<'view, 'a> {}
 impl<'view, 'a> FooMutArg for FooRefMut<'view, 'a> {}
 
@@ -91,39 +99,39 @@ impl<'view, 'a> fmt::Debug for FooRefMut<'view, 'a> {
 }
 
 impl<'a> Foo<'a> {
-    pub fn new(x: &'a [u8]) -> super::Foo<'a> {
+    pub fn new(x: &'a [u8]) -> crate::Foo<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Foo_new(ffi::DiplomatSlice::from(x)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Foo");
-            super::Foo {
+            crate::Foo {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a> {
+    pub fn get_bar<'b>(&'b self) -> crate::Bar<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Foo_get_bar(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Bar");
-            super::Bar {
+            crate::Bar {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn r#static(x: &'static [u8]) -> super::Foo<'a> {
+    pub fn r#static(x: &'static [u8]) -> crate::Foo<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Foo_new_static(ffi::DiplomatSlice::from(x)) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Foo");
-            super::Foo {
+            crate::Foo {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -141,13 +149,13 @@ impl<'a> Foo<'a> {
 }
 
 impl<'view, 'a> FooRef<'view, 'a> {
-    pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a> {
+    pub fn get_bar<'b>(&'b self) -> crate::Bar<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Foo_get_bar(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Bar");
-            super::Bar {
+            crate::Bar {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -165,13 +173,13 @@ impl<'view, 'a> FooRef<'view, 'a> {
 }
 
 impl<'view, 'a> FooRefMut<'view, 'a> {
-    pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a> {
+    pub fn get_bar<'b>(&'b self) -> crate::Bar<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Foo_get_bar(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Bar");
-            super::Bar {
+            crate::Bar {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,

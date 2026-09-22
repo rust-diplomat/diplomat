@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 pub struct Opaque {
@@ -34,29 +35,36 @@ impl crate::private::OpaqueSharedSealed for Opaque {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OpaqueMutSealed for Opaque {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Opaque {
         self.inner.as_ptr()
     }
 }
+
 impl OpaqueSharedArg for Opaque {}
 impl OpaqueMutArg for Opaque {}
+
 impl<'view> crate::private::OpaqueSharedSealed for OpaqueRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Opaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueSharedArg for OpaqueRef<'view> {}
+
 impl<'view> crate::private::OpaqueSharedSealed for OpaqueRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::Opaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OpaqueMutSealed for OpaqueRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Opaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueSharedArg for OpaqueRefMut<'view> {}
 impl<'view> OpaqueMutArg for OpaqueRefMut<'view> {}
 
@@ -90,33 +98,33 @@ impl<'view> fmt::Debug for OpaqueRefMut<'view> {
 }
 
 impl Opaque {
-    pub fn new() -> super::Opaque {
+    pub fn new() -> crate::Opaque {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Opaque_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Opaque");
-            super::Opaque {
+            crate::Opaque {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn try_from_utf8(input: &[u8]) -> Option<super::Opaque> {
+    pub fn try_from_utf8(input: &[u8]) -> Option<crate::Opaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Opaque_try_from_utf8(ffi::DiplomatSlice::from(input)) };
-        NonNull::new(result as *mut _).map(|inner| super::Opaque {
+        NonNull::new(result as *mut _).map(|inner| crate::Opaque {
             inner,
             _not_send_sync: PhantomData,
         })
     }
-    pub fn from_str(input: &str) -> super::Opaque {
+    pub fn from_str(input: &str) -> crate::Opaque {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Opaque_from_str(ffi::DiplomatSlice::from(input.as_bytes())) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Opaque");
-            super::Opaque {
+            crate::Opaque {
                 inner,
                 _not_send_sync: PhantomData,
             }

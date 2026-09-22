@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 /// Some example docs
@@ -36,29 +37,36 @@ impl crate::private::AttrOpaque1RenamedSharedSealed for AttrOpaque1Renamed {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::AttrOpaque1RenamedMutSealed for AttrOpaque1Renamed {
     fn __as_mut_ptr(&mut self) -> *mut ffi::AttrOpaque1Renamed {
         self.inner.as_ptr()
     }
 }
+
 impl AttrOpaque1RenamedSharedArg for AttrOpaque1Renamed {}
 impl AttrOpaque1RenamedMutArg for AttrOpaque1Renamed {}
+
 impl<'view> crate::private::AttrOpaque1RenamedSharedSealed for AttrOpaque1RenamedRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::AttrOpaque1Renamed {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> AttrOpaque1RenamedSharedArg for AttrOpaque1RenamedRef<'view> {}
+
 impl<'view> crate::private::AttrOpaque1RenamedSharedSealed for AttrOpaque1RenamedRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::AttrOpaque1Renamed {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::AttrOpaque1RenamedMutSealed for AttrOpaque1RenamedRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::AttrOpaque1Renamed {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> AttrOpaque1RenamedSharedArg for AttrOpaque1RenamedRefMut<'view> {}
 impl<'view> AttrOpaque1RenamedMutArg for AttrOpaque1RenamedRefMut<'view> {}
 
@@ -95,13 +103,13 @@ impl<'view> fmt::Debug for AttrOpaque1RenamedRefMut<'view> {
 
 impl AttrOpaque1Renamed {
     /// More example docs
-    pub fn totally_not_new() -> super::AttrOpaque1Renamed {
+    pub fn totally_not_new() -> crate::AttrOpaque1Renamed {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::namespace_AttrOpaque1_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null AttrOpaque1Renamed");
-            super::AttrOpaque1Renamed {
+            crate::AttrOpaque1Renamed {
                 inner,
                 _not_send_sync: PhantomData,
             }
@@ -123,7 +131,7 @@ impl AttrOpaque1Renamed {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::renamed_on_abi_only(self.inner.as_ptr() as *const _) }
     }
-    pub fn use_unnamespaced(&self, _un: &impl super::UnnamespacedSharedArg) {
+    pub fn use_unnamespaced(&self, _un: &impl crate::UnnamespacedSharedArg) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
             ffi::namespace_AttrOpaque1_use_unnamespaced(
@@ -147,7 +155,7 @@ impl<'view> AttrOpaque1RenamedRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::renamed_on_abi_only(self.inner.as_ptr() as *const _) }
     }
-    pub fn use_unnamespaced(&self, _un: &impl super::UnnamespacedSharedArg) {
+    pub fn use_unnamespaced(&self, _un: &impl crate::UnnamespacedSharedArg) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
             ffi::namespace_AttrOpaque1_use_unnamespaced(
@@ -171,7 +179,7 @@ impl<'view> AttrOpaque1RenamedRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::renamed_on_abi_only(self.inner.as_ptr() as *const _) }
     }
-    pub fn use_unnamespaced(&self, _un: &impl super::UnnamespacedSharedArg) {
+    pub fn use_unnamespaced(&self, _un: &impl crate::UnnamespacedSharedArg) {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe {
             ffi::namespace_AttrOpaque1_use_unnamespaced(

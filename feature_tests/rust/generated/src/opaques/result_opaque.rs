@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 pub struct ResultOpaque {
@@ -34,29 +35,36 @@ impl crate::private::ResultOpaqueSharedSealed for ResultOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::ResultOpaqueMutSealed for ResultOpaque {
     fn __as_mut_ptr(&mut self) -> *mut ffi::ResultOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl ResultOpaqueSharedArg for ResultOpaque {}
 impl ResultOpaqueMutArg for ResultOpaque {}
+
 impl<'view> crate::private::ResultOpaqueSharedSealed for ResultOpaqueRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::ResultOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> ResultOpaqueSharedArg for ResultOpaqueRef<'view> {}
+
 impl<'view> crate::private::ResultOpaqueSharedSealed for ResultOpaqueRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::ResultOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::ResultOpaqueMutSealed for ResultOpaqueRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::ResultOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> ResultOpaqueSharedArg for ResultOpaqueRefMut<'view> {}
 impl<'view> ResultOpaqueMutArg for ResultOpaqueRefMut<'view> {}
 
@@ -92,14 +100,14 @@ impl<'view> fmt::Debug for ResultOpaqueRefMut<'view> {
 }
 
 impl ResultOpaque {
-    pub fn new(i: i32) -> Result<super::ResultOpaque, ErrorEnum> {
+    pub fn new(i: i32) -> Result<crate::ResultOpaque, ErrorEnum> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new(i) };
         match Result::from(result) {
             Ok(result) => Ok({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -107,14 +115,14 @@ impl ResultOpaque {
             Err(result) => Err(result),
         }
     }
-    pub fn new_failing_foo() -> Result<super::ResultOpaque, ErrorEnum> {
+    pub fn new_failing_foo() -> Result<crate::ResultOpaque, ErrorEnum> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_failing_foo() };
         match Result::from(result) {
             Ok(result) => Ok({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -122,14 +130,14 @@ impl ResultOpaque {
             Err(result) => Err(result),
         }
     }
-    pub fn new_failing_bar() -> Result<super::ResultOpaque, ErrorEnum> {
+    pub fn new_failing_bar() -> Result<crate::ResultOpaque, ErrorEnum> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_failing_bar() };
         match Result::from(result) {
             Ok(result) => Ok({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -137,14 +145,14 @@ impl ResultOpaque {
             Err(result) => Err(result),
         }
     }
-    pub fn new_failing_unit() -> Result<super::ResultOpaque, ()> {
+    pub fn new_failing_unit() -> Result<crate::ResultOpaque, ()> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_failing_unit() };
         match Result::from(result) {
             Ok(result) => Ok({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -152,7 +160,7 @@ impl ResultOpaque {
             Err(result) => Err(result),
         }
     }
-    pub fn new_in_err(i: i32) -> Result<(), super::ResultOpaque> {
+    pub fn new_in_err(i: i32) -> Result<(), crate::ResultOpaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_in_err(i) };
         match Result::from(result) {
@@ -160,7 +168,7 @@ impl ResultOpaque {
             Err(result) => Err({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -195,7 +203,7 @@ impl ResultOpaque {
             Err(result) => Err(crate::private::char_from_u32(result)),
         }
     }
-    pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, super::ResultOpaque> {
+    pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, crate::ResultOpaque> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::ResultOpaque_new_in_enum_err(i) };
         match Result::from(result) {
@@ -203,7 +211,7 @@ impl ResultOpaque {
             Err(result) => Err({
                 let inner = NonNull::new(result as *mut _)
                     .expect("Diplomat ABI returned null for non-null ResultOpaque");
-                super::ResultOpaque {
+                crate::ResultOpaque {
                     inner,
                     _not_send_sync: PhantomData,
                 }
@@ -212,7 +220,7 @@ impl ResultOpaque {
     }
     /// When we take &str, the return type becomes a Result
     /// Test that this interacts gracefully with returning a reference type
-    pub fn takes_str<'a, 'anon_0>(&'a mut self, _v: &'anon_0 str) -> super::ResultOpaqueRefMut<'a> {
+    pub fn takes_str<'a, 'anon_0>(&'a mut self, _v: &'anon_0 str) -> crate::ResultOpaqueRefMut<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::ResultOpaque_takes_str(
@@ -223,7 +231,7 @@ impl ResultOpaque {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null ResultOpaque");
-            super::ResultOpaqueRefMut {
+            crate::ResultOpaqueRefMut {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -246,7 +254,7 @@ impl<'view> ResultOpaqueRef<'view> {
 impl<'view> ResultOpaqueRefMut<'view> {
     /// When we take &str, the return type becomes a Result
     /// Test that this interacts gracefully with returning a reference type
-    pub fn takes_str<'a, 'anon_0>(&'a mut self, _v: &'anon_0 str) -> super::ResultOpaqueRefMut<'a> {
+    pub fn takes_str<'a, 'anon_0>(&'a mut self, _v: &'anon_0 str) -> crate::ResultOpaqueRefMut<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::ResultOpaque_takes_str(
@@ -257,7 +265,7 @@ impl<'view> ResultOpaqueRefMut<'view> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null ResultOpaque");
-            super::ResultOpaqueRefMut {
+            crate::ResultOpaqueRefMut {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,

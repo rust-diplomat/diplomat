@@ -1,0 +1,78 @@
+use core::fmt;
+use core::marker::PhantomData;
+use core::ptr::NonNull;
+use std::rc::Rc;
+
+use crate::ffi;
+{% if uses_value_types %}#[allow(unused_imports)]
+use crate::types::*;
+{% endif %}
+{{ docs }}pub struct {{ name }}{{ owned_params }} {
+    pub(crate) inner: NonNull<ffi::{{ name }}>,
+{{ phantom }}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+pub struct {{ name }}Ref{{ ref_params }} {
+    pub(crate) inner: NonNull<ffi::{{ name }}>,
+    pub(crate) _borrow: PhantomData<&'view ()>,
+{{ phantom }}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+pub struct {{ name }}RefMut{{ ref_params }} {
+    pub(crate) inner: NonNull<ffi::{{ name }}>,
+    pub(crate) _borrow: PhantomData<&'view mut ()>,
+{{ phantom }}    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+#[doc(hidden)]
+pub trait {{ name }}SharedArg: crate::private::{{ name }}SharedSealed {}
+
+#[doc(hidden)]
+pub trait {{ name }}MutArg: crate::private::{{ name }}MutSealed {}
+
+impl{{ owned_params }} crate::private::{{ name }}SharedSealed for {{ name }}{{ owned_args }} {
+    fn __as_const_ptr(&self) -> *const ffi::{{ name }} { self.inner.as_ptr() }
+}
+
+impl{{ owned_params }} crate::private::{{ name }}MutSealed for {{ name }}{{ owned_args }} {
+    fn __as_mut_ptr(&mut self) -> *mut ffi::{{ name }} { self.inner.as_ptr() }
+}
+
+impl{{ owned_params }} {{ name }}SharedArg for {{ name }}{{ owned_args }} {}
+impl{{ owned_params }} {{ name }}MutArg for {{ name }}{{ owned_args }} {}
+
+impl{{ ref_params }} crate::private::{{ name }}SharedSealed for {{ name }}Ref{{ ref_args }} {
+    fn __as_const_ptr(&self) -> *const ffi::{{ name }} { self.inner.as_ptr() }
+}
+
+impl{{ ref_params }} {{ name }}SharedArg for {{ name }}Ref{{ ref_args }} {}
+
+impl{{ ref_params }} crate::private::{{ name }}SharedSealed for {{ name }}RefMut{{ ref_args }} {
+    fn __as_const_ptr(&self) -> *const ffi::{{ name }} { self.inner.as_ptr() }
+}
+
+impl{{ ref_params }} crate::private::{{ name }}MutSealed for {{ name }}RefMut{{ ref_args }} {
+    fn __as_mut_ptr(&mut self) -> *mut ffi::{{ name }} { self.inner.as_ptr() }
+}
+
+impl{{ ref_params }} {{ name }}SharedArg for {{ name }}RefMut{{ ref_args }} {}
+impl{{ ref_params }} {{ name }}MutArg for {{ name }}RefMut{{ ref_args }} {}
+
+impl{{ owned_params }} Drop for {{ name }}{{ owned_args }} {
+    fn drop(&mut self) {
+        // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
+        unsafe { ffi::{{ dtor_abi_name }}(self.inner.as_ptr()) };
+    }
+}
+
+{% for wrapper in wrappers %}impl{{ wrapper.debug_params }} fmt::Debug for {{ wrapper.type_name }}{{ wrapper.debug_args }} {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("{{ wrapper.type_name }}").field(&self.inner.as_ptr()).finish()
+    }
+}
+
+{% endfor %}{% for wrapper in wrappers %}{% if wrapper.methods.len() > 0 %}impl{{ wrapper.impl_params }} {{ wrapper.type_name }}{{ wrapper.impl_args }} {
+{% for method in wrapper.methods %}{{ method }}
+{% endfor %}}
+
+{% endif %}{% endfor %}

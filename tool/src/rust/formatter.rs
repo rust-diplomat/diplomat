@@ -1,13 +1,15 @@
 //! Naming: how HIR items become identifiers in the generated crate.
 
-use std::borrow::Cow;
-use std::fmt::Write as _;
-
 use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext, TypeDef};
 use heck::ToSnakeCase;
+use std::borrow::Cow;
 
 pub(super) fn opaque_module_name(opaque: &hir::OpaqueDef) -> String {
-    type_def_name(TypeDef::Opaque(opaque)).to_snake_case()
+    type_module_name(TypeDef::Opaque(opaque))
+}
+
+pub(super) fn type_module_name(def: TypeDef<'_>) -> String {
+    type_def_name(def).to_snake_case()
 }
 
 pub(super) fn type_def_name(def: TypeDef<'_>) -> String {
@@ -105,18 +107,15 @@ pub(super) fn escape_keyword(name: &str) -> String {
     }
 }
 
-pub(super) fn emit_docs(
-    out: &mut String,
+pub(super) fn render_docs(
     docs: &hir::Docs,
     docs_url_gen: &DocsUrlGenerator,
     indent: &str,
-) {
-    for line in docs
-        .to_markdown(hir::DocsTypeReferenceSyntax::SquareBrackets, docs_url_gen)
+) -> String {
+    docs.to_markdown(hir::DocsTypeReferenceSyntax::SquareBrackets, docs_url_gen)
         .lines()
-    {
-        writeln!(out, "{indent}/// {line}").unwrap();
-    }
+        .map(|line| format!("{indent}/// {line}\n"))
+        .collect()
 }
 
 pub(super) fn valid_rust_ident(name: &str) -> bool {

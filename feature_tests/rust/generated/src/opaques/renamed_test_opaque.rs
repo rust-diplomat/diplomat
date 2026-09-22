@@ -33,29 +33,36 @@ impl crate::private::RenamedTestOpaqueSharedSealed for RenamedTestOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedTestOpaqueMutSealed for RenamedTestOpaque {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedTestOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedTestOpaqueSharedArg for RenamedTestOpaque {}
 impl RenamedTestOpaqueMutArg for RenamedTestOpaque {}
+
 impl<'view> crate::private::RenamedTestOpaqueSharedSealed for RenamedTestOpaqueRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedTestOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedTestOpaqueSharedArg for RenamedTestOpaqueRef<'view> {}
+
 impl<'view> crate::private::RenamedTestOpaqueSharedSealed for RenamedTestOpaqueRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedTestOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedTestOpaqueMutSealed for RenamedTestOpaqueRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedTestOpaque {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedTestOpaqueSharedArg for RenamedTestOpaqueRefMut<'view> {}
 impl<'view> RenamedTestOpaqueMutArg for RenamedTestOpaqueRefMut<'view> {}
 
@@ -89,9 +96,3 @@ impl<'view> fmt::Debug for RenamedTestOpaqueRefMut<'view> {
             .finish()
     }
 }
-
-impl RenamedTestOpaque {}
-
-impl<'view> RenamedTestOpaqueRef<'view> {}
-
-impl<'view> RenamedTestOpaqueRefMut<'view> {}

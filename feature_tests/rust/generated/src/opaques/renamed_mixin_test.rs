@@ -33,29 +33,36 @@ impl crate::private::RenamedMixinTestSharedSealed for RenamedMixinTest {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedMixinTestMutSealed for RenamedMixinTest {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedMixinTest {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedMixinTestSharedArg for RenamedMixinTest {}
 impl RenamedMixinTestMutArg for RenamedMixinTest {}
+
 impl<'view> crate::private::RenamedMixinTestSharedSealed for RenamedMixinTestRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedMixinTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedMixinTestSharedArg for RenamedMixinTestRef<'view> {}
+
 impl<'view> crate::private::RenamedMixinTestSharedSealed for RenamedMixinTestRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedMixinTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedMixinTestMutSealed for RenamedMixinTestRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedMixinTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedMixinTestSharedArg for RenamedMixinTestRefMut<'view> {}
 impl<'view> RenamedMixinTestMutArg for RenamedMixinTestRefMut<'view> {}
 
@@ -99,7 +106,3 @@ impl RenamedMixinTest {
         .1
     }
 }
-
-impl<'view> RenamedMixinTestRef<'view> {}
-
-impl<'view> RenamedMixinTestRefMut<'view> {}

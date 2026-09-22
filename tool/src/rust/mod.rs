@@ -14,6 +14,7 @@ mod validate;
 
 use std::cell::Cell;
 
+use askama::Template;
 use diplomat_core::hir::{BackendAttrSupport, DocsUrlGenerator, TypeContext};
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +23,7 @@ use crate::{Config, ErrorStore, FileMap};
 use formatter::{opaque_module_name, sanitize_package_component, valid_package_name};
 use gen::{
     generate_ffi, generate_lib, generate_opaque_file, generate_opaques_index, generate_private,
-    generate_types,
+    generate_type_files,
 };
 use validate::{validate, Reporter};
 
@@ -75,6 +76,16 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     support.abi_compatibles = true;
     support
 }
+
+#[derive(Template)]
+#[template(path = "rust/Cargo.toml.jinja", escape = "none")]
+struct CargoTemplate<'a> {
+    crate_name: &'a str,
+}
+
+#[derive(Template)]
+#[template(path = "rust/build.rs.jinja", escape = "none")]
+struct BuildTemplate;
 
 pub(crate) fn run<'tcx>(
     tcx: &'tcx TypeContext,
@@ -130,16 +141,23 @@ pub(crate) fn run<'tcx>(
         return (files, errors);
     }
 
-    let package = include_str!("../../templates/rust/Cargo.toml.template")
-        .replace("{{crate_name}}", &crate_name);
-    let build = include_str!("../../templates/rust/build.rs.template");
+    let package = CargoTemplate {
+        crate_name: &crate_name,
+    }
+    .render()
+    .expect("Rust Cargo.toml template rendering cannot fail");
+    let build = BuildTemplate
+        .render()
+        .expect("Rust build.rs template rendering cannot fail");
     files.add_file("Cargo.toml".into(), package);
-    files.add_file("build.rs".into(), build.into());
+    files.add_file("build.rs".into(), build);
     files.add_file("src/lib.rs".into(), generate_lib());
     files.add_file("src/ffi.rs".into(), generate_ffi(tcx, &dylib_name));
     files.add_file("src/private.rs".into(), generate_private(tcx));
-    files.add_file("src/types.rs".into(), generate_types(tcx, docs_url_gen));
-    files.add_file("src/opaques.rs".into(), generate_opaques_index(tcx));
+    for (path, source) in generate_type_files(tcx, docs_url_gen) {
+        files.add_file(path, source);
+    }
+    files.add_file("src/opaques/mod.rs".into(), generate_opaques_index(tcx));
     for opaque in tcx.opaques().iter().filter(|ty| !ty.attrs.disable) {
         files.add_file(
             format!("src/opaques/{}.rs", opaque_module_name(opaque)),
@@ -162,7 +180,20 @@ mod tests {
     /// Concatenates every generated Rust source, for assertions about *what* is
     /// generated rather than *which file* it lands in.
     fn all_rust_sources(files: &HashMap<String, String>) -> String {
-        let mut paths: Vec<&String> = files.keys().filter(|path| path.ends_with(".rs")).collect();
+        sources_matching(files, |path| path.ends_with(".rs"))
+    }
+
+    fn type_rust_sources(files: &HashMap<String, String>) -> String {
+        sources_matching(files, |path| {
+            path.starts_with("src/types/") && path.ends_with(".rs")
+        })
+    }
+
+    fn sources_matching(
+        files: &HashMap<String, String>,
+        predicate: impl Fn(&str) -> bool,
+    ) -> String {
+        let mut paths: Vec<&String> = files.keys().filter(|path| predicate(path)).collect();
         paths.sort();
         paths
             .into_iter()
@@ -229,7 +260,7 @@ mod tests {
         assert!(safe.contains("pub struct Counter"));
         assert!(safe.contains("impl Drop for Counter"));
         assert!(safe.contains("pub fn increment(&mut self)"));
-        assert!(safe.contains("other: &impl super::CounterSharedArg"));
+        assert!(safe.contains("other: &impl crate::CounterSharedArg"));
         assert!(!safe.contains("pub mod ffi"));
         assert!(raw.contains("extern \"C\""));
         assert!(raw.contains("Counter_destroy"));
@@ -307,7 +338,7 @@ mod tests {
         });
         assert!(errors.is_empty(), "{errors:#?}");
         assert!(
-            all_rust_sources(&files).contains("pub fn child<'a>(&'a self) -> super::ChildRef<'a>")
+            all_rust_sources(&files).contains("pub fn child<'a>(&'a self) -> crate::ChildRef<'a>")
         );
     }
 
@@ -331,7 +362,7 @@ mod tests {
         let safe = &all_rust_sources(&files);
         assert!(safe.contains("'long: 'short"), "{safe}");
         assert!(
-            safe.contains("&'long self) -> super::ChildRef<'short>"),
+            safe.contains("&'long self) -> crate::ChildRef<'short>"),
             "{safe}"
         );
         assert!(!safe.contains("'long, 'long:"), "{safe}");
@@ -388,7 +419,7 @@ mod tests {
         });
         assert!(errors.is_empty(), "{errors:#?}");
 
-        let types = &files["src/types.rs"];
+        let types = &type_rust_sources(&files);
         assert!(
             types.contains("pub ch: char"),
             "consumer field must be char: {types}"
@@ -461,7 +492,7 @@ mod tests {
         });
         assert!(errors.is_empty(), "{errors:#?}");
 
-        let types = &files["src/types.rs"];
+        let types = &type_rust_sources(&files);
         assert!(
             types.contains("pub inner: Inner"),
             "nested layout-identical struct is a plain field: {types}"
@@ -635,8 +666,8 @@ mod tests {
         });
         assert!(errors.is_empty(), "{errors:#?}");
         let safe = &all_rust_sources(&files);
-        assert!(safe.contains("-> Option<super::Parent>"));
-        assert!(safe.contains("-> Option<super::ChildRef<'a>>"));
+        assert!(safe.contains("-> Option<crate::Parent>"));
+        assert!(safe.contains("-> Option<crate::ChildRef<'a>>"));
         assert!(safe.contains("NonNull::new(result as *mut _).map"));
     }
 
@@ -733,13 +764,13 @@ mod tests {
             "{all}"
         );
         assert!(
-            all.contains("pub fn checked(i: u32) -> Result<super::Counter, ()> {"),
+            all.contains("pub fn checked(i: u32) -> Result<crate::Counter, ()> {"),
             "{all}"
         );
         // The Ok arm constructs the owning wrapper from the raw pointer; the null check
         // lives there, so a null cannot reach the wrapper.
         assert!(
-            all.contains("Ok(result) => Ok({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Counter\"); super::Counter { inner, _not_send_sync: PhantomData } })"),
+            all.contains("Ok(result) => Ok({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Counter\"); crate::Counter { inner, _not_send_sync: PhantomData } })"),
             "{all}"
         );
         assert!(all.contains("Err(result) => Err(result)"), "{all}");
@@ -766,13 +797,13 @@ mod tests {
             "{all}"
         );
         assert!(
-            all.contains("pub fn checked() -> Result<(), super::Failure> {"),
+            all.contains("pub fn checked() -> Result<(), crate::Failure> {"),
             "{all}"
         );
         // The owning wrapper in the Err arm is the only thing that destroys the provider's
         // allocation, so a `?` that discards the error still frees it.
         assert!(
-            all.contains("Err(result) => Err({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Failure\"); super::Failure { inner, _not_send_sync: PhantomData } })"),
+            all.contains("Err(result) => Err({ let inner = NonNull::new(result as *mut _).expect(\"Diplomat ABI returned null for non-null Failure\"); crate::Failure { inner, _not_send_sync: PhantomData } })"),
             "{all}"
         );
     }
@@ -1200,11 +1231,11 @@ mod tests {
         assert!(safe.contains("pub struct Bar<'b, 'a: 'b>"), "{safe}");
         assert!(safe.contains("impl<'a> Foo<'a> {"), "{safe}");
         assert!(
-            safe.contains("pub fn new(x: &'a [u8]) -> super::Foo<'a>"),
+            safe.contains("pub fn new(x: &'a [u8]) -> crate::Foo<'a>"),
             "{safe}"
         );
         assert!(
-            safe.contains("pub fn get_bar<'b>(&'b self) -> super::Bar<'b, 'a>"),
+            safe.contains("pub fn get_bar<'b>(&'b self) -> crate::Bar<'b, 'a>"),
             "{safe}"
         );
     }

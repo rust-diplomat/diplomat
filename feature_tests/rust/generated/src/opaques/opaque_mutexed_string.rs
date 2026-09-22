@@ -33,29 +33,36 @@ impl crate::private::OpaqueMutexedStringSharedSealed for OpaqueMutexedString {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OpaqueMutexedStringMutSealed for OpaqueMutexedString {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueMutexedString {
         self.inner.as_ptr()
     }
 }
+
 impl OpaqueMutexedStringSharedArg for OpaqueMutexedString {}
 impl OpaqueMutexedStringMutArg for OpaqueMutexedString {}
+
 impl<'view> crate::private::OpaqueMutexedStringSharedSealed for OpaqueMutexedStringRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueMutexedString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueMutexedStringSharedArg for OpaqueMutexedStringRef<'view> {}
+
 impl<'view> crate::private::OpaqueMutexedStringSharedSealed for OpaqueMutexedStringRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueMutexedString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OpaqueMutexedStringMutSealed for OpaqueMutexedStringRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueMutexedString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueMutexedStringSharedArg for OpaqueMutexedStringRefMut<'view> {}
 impl<'view> OpaqueMutexedStringMutArg for OpaqueMutexedStringRefMut<'view> {}
 
@@ -91,13 +98,13 @@ impl<'view> fmt::Debug for OpaqueMutexedStringRefMut<'view> {
 }
 
 impl OpaqueMutexedString {
-    pub fn from_usize(number: usize) -> super::OpaqueMutexedString {
+    pub fn from_usize(number: usize) -> crate::OpaqueMutexedString {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_from_usize(number) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedString {
+            crate::OpaqueMutexedString {
                 inner,
                 _not_send_sync: PhantomData,
             }
@@ -107,13 +114,13 @@ impl OpaqueMutexedString {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueMutexedString_change(self.inner.as_ptr() as *const _, number) };
     }
-    pub fn borrow<'a>(&'a self) -> super::OpaqueMutexedStringRef<'a> {
+    pub fn borrow<'a>(&'a self) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_borrow(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -121,8 +128,8 @@ impl OpaqueMutexedString {
         }
     }
     pub fn borrow_other<'a>(
-        other: &'a impl super::OpaqueMutexedStringSharedArg,
-    ) -> super::OpaqueMutexedStringRef<'a> {
+        other: &'a impl crate::OpaqueMutexedStringSharedArg,
+    ) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::OpaqueMutexedString_borrow_other(
@@ -132,7 +139,7 @@ impl OpaqueMutexedString {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -141,8 +148,8 @@ impl OpaqueMutexedString {
     }
     pub fn borrow_self_or_other<'a>(
         &'a self,
-        other: &'a impl super::OpaqueMutexedStringSharedArg,
-    ) -> super::OpaqueMutexedStringRef<'a> {
+        other: &'a impl crate::OpaqueMutexedStringSharedArg,
+    ) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::OpaqueMutexedString_borrow_self_or_other(
@@ -153,7 +160,7 @@ impl OpaqueMutexedString {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -169,13 +176,13 @@ impl OpaqueMutexedString {
         let result = unsafe { ffi::OpaqueMutexedString_dummy_str(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn wrapper(&self) -> super::Utf16Wrap {
+    pub fn wrapper(&self) -> crate::Utf16Wrap {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_wrapper(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Utf16Wrap");
-            super::Utf16Wrap {
+            crate::Utf16Wrap {
                 inner,
                 _not_send_sync: PhantomData,
             }
@@ -197,13 +204,13 @@ impl<'view> OpaqueMutexedStringRef<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueMutexedString_change(self.inner.as_ptr() as *const _, number) };
     }
-    pub fn borrow<'a>(&'a self) -> super::OpaqueMutexedStringRef<'a> {
+    pub fn borrow<'a>(&'a self) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_borrow(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -212,8 +219,8 @@ impl<'view> OpaqueMutexedStringRef<'view> {
     }
     pub fn borrow_self_or_other<'a>(
         &'a self,
-        other: &'a impl super::OpaqueMutexedStringSharedArg,
-    ) -> super::OpaqueMutexedStringRef<'a> {
+        other: &'a impl crate::OpaqueMutexedStringSharedArg,
+    ) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::OpaqueMutexedString_borrow_self_or_other(
@@ -224,7 +231,7 @@ impl<'view> OpaqueMutexedStringRef<'view> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -240,13 +247,13 @@ impl<'view> OpaqueMutexedStringRef<'view> {
         let result = unsafe { ffi::OpaqueMutexedString_dummy_str(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn wrapper(&self) -> super::Utf16Wrap {
+    pub fn wrapper(&self) -> crate::Utf16Wrap {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_wrapper(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Utf16Wrap");
-            super::Utf16Wrap {
+            crate::Utf16Wrap {
                 inner,
                 _not_send_sync: PhantomData,
             }
@@ -268,13 +275,13 @@ impl<'view> OpaqueMutexedStringRefMut<'view> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         unsafe { ffi::OpaqueMutexedString_change(self.inner.as_ptr() as *const _, number) };
     }
-    pub fn borrow<'a>(&'a self) -> super::OpaqueMutexedStringRef<'a> {
+    pub fn borrow<'a>(&'a self) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_borrow(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -283,8 +290,8 @@ impl<'view> OpaqueMutexedStringRefMut<'view> {
     }
     pub fn borrow_self_or_other<'a>(
         &'a self,
-        other: &'a impl super::OpaqueMutexedStringSharedArg,
-    ) -> super::OpaqueMutexedStringRef<'a> {
+        other: &'a impl crate::OpaqueMutexedStringSharedArg,
+    ) -> crate::OpaqueMutexedStringRef<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::OpaqueMutexedString_borrow_self_or_other(
@@ -295,7 +302,7 @@ impl<'view> OpaqueMutexedStringRefMut<'view> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMutexedString");
-            super::OpaqueMutexedStringRef {
+            crate::OpaqueMutexedStringRef {
                 inner,
                 _borrow: PhantomData,
                 _not_send_sync: PhantomData,
@@ -311,13 +318,13 @@ impl<'view> OpaqueMutexedStringRefMut<'view> {
         let result = unsafe { ffi::OpaqueMutexedString_dummy_str(self.inner.as_ptr() as *const _) };
         result.into()
     }
-    pub fn wrapper(&self) -> super::Utf16Wrap {
+    pub fn wrapper(&self) -> crate::Utf16Wrap {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMutexedString_wrapper(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Utf16Wrap");
-            super::Utf16Wrap {
+            crate::Utf16Wrap {
                 inner,
                 _not_send_sync: PhantomData,
             }

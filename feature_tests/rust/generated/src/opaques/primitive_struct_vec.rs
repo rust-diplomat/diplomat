@@ -33,29 +33,36 @@ impl crate::private::PrimitiveStructVecSharedSealed for PrimitiveStructVec {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::PrimitiveStructVecMutSealed for PrimitiveStructVec {
     fn __as_mut_ptr(&mut self) -> *mut ffi::PrimitiveStructVec {
         self.inner.as_ptr()
     }
 }
+
 impl PrimitiveStructVecSharedArg for PrimitiveStructVec {}
 impl PrimitiveStructVecMutArg for PrimitiveStructVec {}
+
 impl<'view> crate::private::PrimitiveStructVecSharedSealed for PrimitiveStructVecRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::PrimitiveStructVec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> PrimitiveStructVecSharedArg for PrimitiveStructVecRef<'view> {}
+
 impl<'view> crate::private::PrimitiveStructVecSharedSealed for PrimitiveStructVecRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::PrimitiveStructVec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::PrimitiveStructVecMutSealed for PrimitiveStructVecRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::PrimitiveStructVec {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> PrimitiveStructVecSharedArg for PrimitiveStructVecRefMut<'view> {}
 impl<'view> PrimitiveStructVecMutArg for PrimitiveStructVecRefMut<'view> {}
 
@@ -91,13 +98,13 @@ impl<'view> fmt::Debug for PrimitiveStructVecRefMut<'view> {
 }
 
 impl PrimitiveStructVec {
-    pub fn new() -> super::PrimitiveStructVec {
+    pub fn new() -> crate::PrimitiveStructVec {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::PrimitiveStructVec_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null PrimitiveStructVec");
-            super::PrimitiveStructVec {
+            crate::PrimitiveStructVec {
                 inner,
                 _not_send_sync: PhantomData,
             }

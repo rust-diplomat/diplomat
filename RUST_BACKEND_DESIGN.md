@@ -41,18 +41,28 @@ The provider and consumer sides are generated independently:
    lifetime-edge semantics.
 
 The new target follows that architecture in `tool/src/rust/` and
-`tool/templates/rust/`. `diplomat-tool rust` emits a complete Cargo package:
+`tool/templates/rust/`. The Rust backend uses Askama's Jinja-compatible
+`.jinja` templates end to end: Rust computes validated render views, while
+all generated source layout is owned by templates. `diplomat-tool rust` emits
+a complete Cargo package:
 
 ```text
 Cargo.toml
 build.rs
 src/lib.rs                  # crate facade: module declarations and flat re-exports
 src/ffi.rs                  # private raw layer: runtime ABI types and extern declarations
-src/private.rs              # private: sealed capability traits + one unsafe UTF-8 rebuild helper
-src/types.rs                # enums and value structs
-src/opaques.rs              # `mod <type>;` + `pub use <type>::*;` for each opaque
-src/opaques/<type>.rs       # one module per opaque: wrappers, sealed impls, Drop, methods
+src/private.rs              # private: sealed capability traits + unsafe helpers
+src/types/mod.rs            # type module index and flat re-exports
+src/types/<type>.rs         # one enum/value struct per file
+src/opaques/mod.rs          # opaque module index and flat re-exports
+src/opaques/<type>.rs       # one opaque per file: wrappers, sealed impls, Drop, methods
 ```
+
+`ffi.rs` remains one private ABI seam deliberately: it keeps mirror field
+visibility and cross-type extern declarations simple. The public safe types
+and opaque wrappers are one module/file per type. `type_map.rs`,
+`lifetimes.rs`, and `validate.rs` remain semantic Rust modules; templates do
+not make ABI or ownership decisions.
 
 `[rust] crate-name` selects the generated package name. `[rust] dylib-name`
 selects the `#[link]` name. `build.rs` has no dependencies and only turns

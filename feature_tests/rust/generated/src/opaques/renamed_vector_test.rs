@@ -33,29 +33,36 @@ impl crate::private::RenamedVectorTestSharedSealed for RenamedVectorTest {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedVectorTestMutSealed for RenamedVectorTest {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedVectorTest {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedVectorTestSharedArg for RenamedVectorTest {}
 impl RenamedVectorTestMutArg for RenamedVectorTest {}
+
 impl<'view> crate::private::RenamedVectorTestSharedSealed for RenamedVectorTestRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedVectorTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedVectorTestSharedArg for RenamedVectorTestRef<'view> {}
+
 impl<'view> crate::private::RenamedVectorTestSharedSealed for RenamedVectorTestRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedVectorTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedVectorTestMutSealed for RenamedVectorTestRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedVectorTest {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedVectorTestSharedArg for RenamedVectorTestRefMut<'view> {}
 impl<'view> RenamedVectorTestMutArg for RenamedVectorTestRefMut<'view> {}
 
@@ -91,13 +98,13 @@ impl<'view> fmt::Debug for RenamedVectorTestRefMut<'view> {
 }
 
 impl RenamedVectorTest {
-    pub fn new() -> super::RenamedVectorTest {
+    pub fn new() -> crate::RenamedVectorTest {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::namespace_VectorTest_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null RenamedVectorTest");
-            super::RenamedVectorTest {
+            crate::RenamedVectorTest {
                 inner,
                 _not_send_sync: PhantomData,
             }

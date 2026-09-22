@@ -10,7 +10,8 @@ use diplomat_core::hir::{
 };
 
 use super::formatter::{
-    enum_variant_name, field_name, method_name, opaque_module_name, type_def_name, valid_rust_ident,
+    enum_variant_name, field_name, method_name, opaque_module_name, type_def_name,
+    type_module_name, valid_rust_ident,
 };
 use super::type_map::{
     is_lifetime_struct, is_owned_slice, is_supported_slice, is_value_type, primitive_name,
@@ -56,6 +57,7 @@ impl<'a, 'tcx> Reporter<'a, 'tcx> {
 pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tcx>) {
     let mut generated_names = HashSet::new();
     let mut module_names = HashSet::new();
+    let mut value_module_names = HashSet::new();
 
     for (_, def) in tcx.all_types() {
         if def.attrs().disable {
@@ -64,17 +66,32 @@ pub(super) fn validate<'tcx>(tcx: &'tcx TypeContext, reporter: &Reporter<'_, 'tc
         let _type_guard = reporter.set_context_ty(def.name_with_span().into());
         let name = type_def_name(def);
         let mut names = vec![name.clone()];
-        if let TypeDef::Opaque(opaque) = def {
-            let module = opaque_module_name(opaque);
-            if !valid_rust_ident(&module) {
-                reporter.reject(format!(
-                    "[Rust backend] `{module}` is not a valid generated Rust module name"
-                ));
-            } else if !module_names.insert(module.clone()) {
-                reporter.reject(format!(
-                    "[Rust backend] generated module name collision for `{module}` (from `{name}`)"
-                ));
+        match def {
+            TypeDef::Opaque(opaque) => {
+                let module = opaque_module_name(opaque);
+                if !valid_rust_ident(&module) {
+                    reporter.reject(format!(
+                        "[Rust backend] `{module}` is not a valid generated Rust module name"
+                    ));
+                } else if !module_names.insert(module.clone()) {
+                    reporter.reject(format!(
+                        "[Rust backend] generated module name collision for `{module}` (from `{name}`)"
+                    ));
+                }
             }
+            TypeDef::Enum(_) | TypeDef::Struct(_) => {
+                let module = type_module_name(def);
+                if !valid_rust_ident(&module) {
+                    reporter.reject(format!(
+                        "[Rust backend] `{module}` is not a valid generated Rust module name"
+                    ));
+                } else if !value_module_names.insert(module.clone()) {
+                    reporter.reject(format!(
+                        "[Rust backend] generated value-type module name collision for `{module}` (from `{name}`)"
+                    ));
+                }
+            }
+            _ => {}
         }
         if matches!(def, TypeDef::Opaque(_)) {
             names.extend([

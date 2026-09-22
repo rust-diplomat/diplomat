@@ -1,0 +1,13 @@
+{% for import in imports %}#[allow(unused_imports)]
+use super::{{ import }};
+{% endfor %}{% if has_ffi %}use crate::ffi;
+{% endif %}
+{{ docs }}#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum {{ name }} {
+{% for variant in variants %}{{ variant.docs }}    {{ variant.name }} = {{ variant.discriminant }},
+{% endfor %}}
+{% if methods.len() > 0 %}impl {{ name }} {
+{% for method in methods %}{{ method }}
+{% endfor %}}
+{% endif %}

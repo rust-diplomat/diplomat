@@ -4,6 +4,7 @@ use core::ptr::NonNull;
 use std::rc::Rc;
 
 use crate::ffi;
+#[allow(unused_imports)]
 use crate::types::*;
 
 pub struct OwnedSliceReturn {
@@ -34,29 +35,36 @@ impl crate::private::OwnedSliceReturnSharedSealed for OwnedSliceReturn {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OwnedSliceReturnMutSealed for OwnedSliceReturn {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OwnedSliceReturn {
         self.inner.as_ptr()
     }
 }
+
 impl OwnedSliceReturnSharedArg for OwnedSliceReturn {}
 impl OwnedSliceReturnMutArg for OwnedSliceReturn {}
+
 impl<'view> crate::private::OwnedSliceReturnSharedSealed for OwnedSliceReturnRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OwnedSliceReturn {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OwnedSliceReturnSharedArg for OwnedSliceReturnRef<'view> {}
+
 impl<'view> crate::private::OwnedSliceReturnSharedSealed for OwnedSliceReturnRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OwnedSliceReturn {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OwnedSliceReturnMutSealed for OwnedSliceReturnRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OwnedSliceReturn {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OwnedSliceReturnSharedArg for OwnedSliceReturnRefMut<'view> {}
 impl<'view> OwnedSliceReturnMutArg for OwnedSliceReturnRefMut<'view> {}
 
@@ -111,7 +119,3 @@ impl OwnedSliceReturn {
         }
     }
 }
-
-impl<'view> OwnedSliceReturnRef<'view> {}
-
-impl<'view> OwnedSliceReturnRefMut<'view> {}

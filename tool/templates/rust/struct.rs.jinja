@@ -1,0 +1,15 @@
+{% for import in imports %}#[allow(unused_imports)]
+use super::{{ import }};
+{% endfor %}{% if has_ffi %}use crate::ffi;
+{% endif %}{% if has_phantom %}use core::marker::PhantomData;
+{% endif %}
+{{ docs }}{% if needs_abi_mirror %}#[derive(Clone, Copy, Debug, PartialEq{% if derives_eq %}, Eq{% endif %})]
+{% else %}#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq{% if derives_eq %}, Eq{% endif %})]
+{% endif %}pub struct {{ name }}{{ generics }} {
+{% for field in fields %}{{ field.docs }}    pub {{ field.name }}: {{ field.ty }},
+{% endfor %}{{ phantom }}}
+{% if methods.len() > 0 %}impl{{ generics }} {{ name }}{{ args }} {
+{% for method in methods %}{{ method }}
+{% endfor %}}
+{% endif %}

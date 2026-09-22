@@ -559,8 +559,8 @@ pub(super) fn safe_input_type(
             let name = opaque_name(path.tcx_id, tcx);
             let lifetime = lifetime_prefix(path.owner.lifetime, method);
             match path.owner.mutability {
-                Mutability::Immutable => format!("&{lifetime}impl super::{name}SharedArg"),
-                Mutability::Mutable => format!("&{lifetime}mut impl super::{name}MutArg"),
+                Mutability::Immutable => format!("&{lifetime}impl crate::{name}SharedArg"),
+                Mutability::Mutable => format!("&{lifetime}mut impl crate::{name}MutArg"),
             }
         }
         Type::DiplomatOption(inner) => {
@@ -685,13 +685,13 @@ pub(super) fn opaque_safe_type(
 ) -> String {
     let name = opaque_name(path.tcx_id, tcx);
     let mut args = Vec::new();
-    let mut head = format!("super::{name}");
+    let mut head = format!("crate::{name}");
     if let MaybeOwn::Borrow(borrow) = path.owner {
         args.push(lifetime_name(borrow.lifetime, method));
         head = if borrow.mutability == Mutability::Mutable {
-            format!("super::{name}RefMut")
+            format!("crate::{name}RefMut")
         } else {
-            format!("super::{name}Ref")
+            format!("crate::{name}Ref")
         };
     }
     for lifetime in path.lifetimes.lifetimes() {

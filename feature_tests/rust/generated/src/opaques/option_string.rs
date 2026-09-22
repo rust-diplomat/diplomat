@@ -33,29 +33,36 @@ impl crate::private::OptionStringSharedSealed for OptionString {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OptionStringMutSealed for OptionString {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionString {
         self.inner.as_ptr()
     }
 }
+
 impl OptionStringSharedArg for OptionString {}
 impl OptionStringMutArg for OptionString {}
+
 impl<'view> crate::private::OptionStringSharedSealed for OptionStringRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionStringSharedArg for OptionStringRef<'view> {}
+
 impl<'view> crate::private::OptionStringSharedSealed for OptionStringRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OptionStringMutSealed for OptionStringRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionString {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionStringSharedArg for OptionStringRefMut<'view> {}
 impl<'view> OptionStringMutArg for OptionStringRefMut<'view> {}
 
@@ -91,10 +98,10 @@ impl<'view> fmt::Debug for OptionStringRefMut<'view> {
 }
 
 impl OptionString {
-    pub fn new(diplomat_str: &[u8]) -> Option<super::OptionString> {
+    pub fn new(diplomat_str: &[u8]) -> Option<crate::OptionString> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OptionString_new(ffi::DiplomatSlice::from(diplomat_str)) };
-        NonNull::new(result as *mut _).map(|inner| super::OptionString {
+        NonNull::new(result as *mut _).map(|inner| crate::OptionString {
             inner,
             _not_send_sync: PhantomData,
         })

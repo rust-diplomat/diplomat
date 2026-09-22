@@ -33,29 +33,36 @@ impl crate::private::RefListParameterSharedSealed for RefListParameter {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RefListParameterMutSealed for RefListParameter {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefListParameter {
         self.inner.as_ptr()
     }
 }
+
 impl RefListParameterSharedArg for RefListParameter {}
 impl RefListParameterMutArg for RefListParameter {}
+
 impl<'view> crate::private::RefListParameterSharedSealed for RefListParameterRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RefListParameter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RefListParameterSharedArg for RefListParameterRef<'view> {}
+
 impl<'view> crate::private::RefListParameterSharedSealed for RefListParameterRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RefListParameter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RefListParameterMutSealed for RefListParameterRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefListParameter {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RefListParameterSharedArg for RefListParameterRefMut<'view> {}
 impl<'view> RefListParameterMutArg for RefListParameterRefMut<'view> {}
 
@@ -89,9 +96,3 @@ impl<'view> fmt::Debug for RefListParameterRefMut<'view> {
             .finish()
     }
 }
-
-impl RefListParameter {}
-
-impl<'view> RefListParameterRef<'view> {}
-
-impl<'view> RefListParameterRefMut<'view> {}

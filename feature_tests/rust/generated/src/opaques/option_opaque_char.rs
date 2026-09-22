@@ -33,29 +33,36 @@ impl crate::private::OptionOpaqueCharSharedSealed for OptionOpaqueChar {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OptionOpaqueCharMutSealed for OptionOpaqueChar {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionOpaqueChar {
         self.inner.as_ptr()
     }
 }
+
 impl OptionOpaqueCharSharedArg for OptionOpaqueChar {}
 impl OptionOpaqueCharMutArg for OptionOpaqueChar {}
+
 impl<'view> crate::private::OptionOpaqueCharSharedSealed for OptionOpaqueCharRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionOpaqueChar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionOpaqueCharSharedArg for OptionOpaqueCharRef<'view> {}
+
 impl<'view> crate::private::OptionOpaqueCharSharedSealed for OptionOpaqueCharRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OptionOpaqueChar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OptionOpaqueCharMutSealed for OptionOpaqueCharRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OptionOpaqueChar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OptionOpaqueCharSharedArg for OptionOpaqueCharRefMut<'view> {}
 impl<'view> OptionOpaqueCharMutArg for OptionOpaqueCharRefMut<'view> {}
 

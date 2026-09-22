@@ -33,29 +33,36 @@ impl crate::private::RenamedNested2SharedSealed for RenamedNested2 {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedNested2MutSealed for RenamedNested2 {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedNested2 {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedNested2SharedArg for RenamedNested2 {}
 impl RenamedNested2MutArg for RenamedNested2 {}
+
 impl<'view> crate::private::RenamedNested2SharedSealed for RenamedNested2Ref<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedNested2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedNested2SharedArg for RenamedNested2Ref<'view> {}
+
 impl<'view> crate::private::RenamedNested2SharedSealed for RenamedNested2RefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::RenamedNested2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedNested2MutSealed for RenamedNested2RefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedNested2 {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedNested2SharedArg for RenamedNested2RefMut<'view> {}
 impl<'view> RenamedNested2MutArg for RenamedNested2RefMut<'view> {}
 
@@ -89,9 +96,3 @@ impl<'view> fmt::Debug for RenamedNested2RefMut<'view> {
             .finish()
     }
 }
-
-impl RenamedNested2 {}
-
-impl<'view> RenamedNested2Ref<'view> {}
-
-impl<'view> RenamedNested2RefMut<'view> {}

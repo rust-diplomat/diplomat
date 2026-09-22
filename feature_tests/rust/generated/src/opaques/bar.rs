@@ -36,29 +36,36 @@ impl<'b, 'a: 'b> crate::private::BarSharedSealed for Bar<'b, 'a> {
         self.inner.as_ptr()
     }
 }
+
 impl<'b, 'a: 'b> crate::private::BarMutSealed for Bar<'b, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Bar {
         self.inner.as_ptr()
     }
 }
+
 impl<'b, 'a: 'b> BarSharedArg for Bar<'b, 'a> {}
 impl<'b, 'a: 'b> BarMutArg for Bar<'b, 'a> {}
+
 impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed for BarRef<'view, 'b, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Bar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'b, 'a: 'b> BarSharedArg for BarRef<'view, 'b, 'a> {}
+
 impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed for BarRefMut<'view, 'b, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Bar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'b, 'a: 'b> crate::private::BarMutSealed for BarRefMut<'view, 'b, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Bar {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'b, 'a: 'b> BarSharedArg for BarRefMut<'view, 'b, 'a> {}
 impl<'view, 'b, 'a: 'b> BarMutArg for BarRefMut<'view, 'b, 'a> {}
 
@@ -90,13 +97,13 @@ impl<'view, 'b, 'a: 'b> fmt::Debug for BarRefMut<'view, 'b, 'a> {
 }
 
 impl<'b, 'a: 'b> Bar<'b, 'a> {
-    pub fn foo(&'b self) -> super::FooRef<'b, 'a> {
+    pub fn foo(&'b self) -> crate::FooRef<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Bar_foo(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Foo");
-            super::FooRef {
+            crate::FooRef {
                 inner,
                 _borrow: PhantomData,
                 _lifetimes: PhantomData,
@@ -107,13 +114,13 @@ impl<'b, 'a: 'b> Bar<'b, 'a> {
 }
 
 impl<'view, 'b, 'a: 'b> BarRef<'view, 'b, 'a> {
-    pub fn foo(&'b self) -> super::FooRef<'b, 'a> {
+    pub fn foo(&'b self) -> crate::FooRef<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Bar_foo(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Foo");
-            super::FooRef {
+            crate::FooRef {
                 inner,
                 _borrow: PhantomData,
                 _lifetimes: PhantomData,
@@ -124,13 +131,13 @@ impl<'view, 'b, 'a: 'b> BarRef<'view, 'b, 'a> {
 }
 
 impl<'view, 'b, 'a: 'b> BarRefMut<'view, 'b, 'a> {
-    pub fn foo(&'b self) -> super::FooRef<'b, 'a> {
+    pub fn foo(&'b self) -> crate::FooRef<'b, 'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::Bar_foo(self.inner.as_ptr() as *const _) };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null Foo");
-            super::FooRef {
+            crate::FooRef {
                 inner,
                 _borrow: PhantomData,
                 _lifetimes: PhantomData,

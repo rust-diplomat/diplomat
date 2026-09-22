@@ -33,29 +33,36 @@ impl crate::private::OpaqueMutSharedSealed for OpaqueMut {
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::OpaqueMutMutSealed for OpaqueMut {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueMut {
         self.inner.as_ptr()
     }
 }
+
 impl OpaqueMutSharedArg for OpaqueMut {}
 impl OpaqueMutMutArg for OpaqueMut {}
+
 impl<'view> crate::private::OpaqueMutSharedSealed for OpaqueMutRef<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueMut {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueMutSharedArg for OpaqueMutRef<'view> {}
+
 impl<'view> crate::private::OpaqueMutSharedSealed for OpaqueMutRefMut<'view> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueMut {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::OpaqueMutMutSealed for OpaqueMutRefMut<'view> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueMut {
         self.inner.as_ptr()
     }
 }
+
 impl<'view> OpaqueMutSharedArg for OpaqueMutRefMut<'view> {}
 impl<'view> OpaqueMutMutArg for OpaqueMutRefMut<'view> {}
 
@@ -91,20 +98,16 @@ impl<'view> fmt::Debug for OpaqueMutRefMut<'view> {
 }
 
 impl OpaqueMut {
-    pub fn new() -> super::OpaqueMut {
+    pub fn new() -> crate::OpaqueMut {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OpaqueMut_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null OpaqueMut");
-            super::OpaqueMut {
+            crate::OpaqueMut {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
 }
-
-impl<'view> OpaqueMutRef<'view> {}
-
-impl<'view> OpaqueMutRefMut<'view> {}

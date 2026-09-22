@@ -36,13 +36,16 @@ impl crate::private::RenamedOpaqueZSTIndexerSharedSealed for RenamedOpaqueZSTInd
         self.inner.as_ptr()
     }
 }
+
 impl crate::private::RenamedOpaqueZSTIndexerMutSealed for RenamedOpaqueZSTIndexer {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RenamedOpaqueZSTIndexer {
         self.inner.as_ptr()
     }
 }
+
 impl RenamedOpaqueZSTIndexerSharedArg for RenamedOpaqueZSTIndexer {}
 impl RenamedOpaqueZSTIndexerMutArg for RenamedOpaqueZSTIndexer {}
+
 impl<'view> crate::private::RenamedOpaqueZSTIndexerSharedSealed
     for RenamedOpaqueZSTIndexerRef<'view>
 {
@@ -50,7 +53,9 @@ impl<'view> crate::private::RenamedOpaqueZSTIndexerSharedSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedOpaqueZSTIndexerSharedArg for RenamedOpaqueZSTIndexerRef<'view> {}
+
 impl<'view> crate::private::RenamedOpaqueZSTIndexerSharedSealed
     for RenamedOpaqueZSTIndexerRefMut<'view>
 {
@@ -58,6 +63,7 @@ impl<'view> crate::private::RenamedOpaqueZSTIndexerSharedSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> crate::private::RenamedOpaqueZSTIndexerMutSealed
     for RenamedOpaqueZSTIndexerRefMut<'view>
 {
@@ -65,6 +71,7 @@ impl<'view> crate::private::RenamedOpaqueZSTIndexerMutSealed
         self.inner.as_ptr()
     }
 }
+
 impl<'view> RenamedOpaqueZSTIndexerSharedArg for RenamedOpaqueZSTIndexerRefMut<'view> {}
 impl<'view> RenamedOpaqueZSTIndexerMutArg for RenamedOpaqueZSTIndexerRefMut<'view> {}
 
@@ -100,23 +107,23 @@ impl<'view> fmt::Debug for RenamedOpaqueZSTIndexerRefMut<'view> {
 }
 
 impl RenamedOpaqueZSTIndexer {
-    pub fn new() -> super::RenamedOpaqueZSTIndexer {
+    pub fn new() -> crate::RenamedOpaqueZSTIndexer {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::namespace_OpaqueZSTIndexer_new() };
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null RenamedOpaqueZSTIndexer");
-            super::RenamedOpaqueZSTIndexer {
+            crate::RenamedOpaqueZSTIndexer {
                 inner,
                 _not_send_sync: PhantomData,
             }
         }
     }
-    pub fn index(&self, idx: usize) -> Option<super::RenamedOpaqueZSTIndexer> {
+    pub fn index(&self, idx: usize) -> Option<crate::RenamedOpaqueZSTIndexer> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::namespace_OpaqueZSTIndexer_index(self.inner.as_ptr() as *const _, idx) };
-        NonNull::new(result as *mut _).map(|inner| super::RenamedOpaqueZSTIndexer {
+        NonNull::new(result as *mut _).map(|inner| crate::RenamedOpaqueZSTIndexer {
             inner,
             _not_send_sync: PhantomData,
         })
@@ -124,11 +131,11 @@ impl RenamedOpaqueZSTIndexer {
 }
 
 impl<'view> RenamedOpaqueZSTIndexerRef<'view> {
-    pub fn index(&self, idx: usize) -> Option<super::RenamedOpaqueZSTIndexer> {
+    pub fn index(&self, idx: usize) -> Option<crate::RenamedOpaqueZSTIndexer> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::namespace_OpaqueZSTIndexer_index(self.inner.as_ptr() as *const _, idx) };
-        NonNull::new(result as *mut _).map(|inner| super::RenamedOpaqueZSTIndexer {
+        NonNull::new(result as *mut _).map(|inner| crate::RenamedOpaqueZSTIndexer {
             inner,
             _not_send_sync: PhantomData,
         })
@@ -136,11 +143,11 @@ impl<'view> RenamedOpaqueZSTIndexerRef<'view> {
 }
 
 impl<'view> RenamedOpaqueZSTIndexerRefMut<'view> {
-    pub fn index(&self, idx: usize) -> Option<super::RenamedOpaqueZSTIndexer> {
+    pub fn index(&self, idx: usize) -> Option<crate::RenamedOpaqueZSTIndexer> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result =
             unsafe { ffi::namespace_OpaqueZSTIndexer_index(self.inner.as_ptr() as *const _, idx) };
-        NonNull::new(result as *mut _).map(|inner| super::RenamedOpaqueZSTIndexer {
+        NonNull::new(result as *mut _).map(|inner| crate::RenamedOpaqueZSTIndexer {
             inner,
             _not_send_sync: PhantomData,
         })

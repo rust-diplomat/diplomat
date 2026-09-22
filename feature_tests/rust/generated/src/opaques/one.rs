@@ -36,29 +36,36 @@ impl<'a> crate::private::OneSharedSealed for One<'a> {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> crate::private::OneMutSealed for One<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::One {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> OneSharedArg for One<'a> {}
 impl<'a> OneMutArg for One<'a> {}
+
 impl<'view, 'a> crate::private::OneSharedSealed for OneRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::One {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> OneSharedArg for OneRef<'view, 'a> {}
+
 impl<'view, 'a> crate::private::OneSharedSealed for OneRefMut<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::One {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> crate::private::OneMutSealed for OneRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::One {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> OneSharedArg for OneRefMut<'view, 'a> {}
 impl<'view, 'a> OneMutArg for OneRefMut<'view, 'a> {}
 
@@ -99,9 +106,9 @@ impl<'o> One<'o> {
         'x,
         'anon_0,
     >(
-        hold: &'x impl super::OneSharedArg,
-        nohold: &'anon_0 impl super::OneSharedArg,
-    ) -> super::One<'a> {
+        hold: &'x impl crate::OneSharedArg,
+        nohold: &'anon_0 impl crate::OneSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_transitivity(
@@ -112,7 +119,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -120,9 +127,9 @@ impl<'o> One<'o> {
         }
     }
     pub fn cycle<'a: 'b + 'c, 'b: 'c + 'a, 'c: 'a + 'b, 'x, 'anon_0>(
-        hold: &'anon_0 impl super::TwoSharedArg,
-        nohold: &'x impl super::OneSharedArg,
-    ) -> super::One<'a> {
+        hold: &'anon_0 impl crate::TwoSharedArg,
+        nohold: &'x impl crate::OneSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_cycle(
@@ -133,7 +140,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -149,12 +156,12 @@ impl<'o> One<'o> {
         'y: 'x,
         'anon_0,
     >(
-        a: &'x impl super::OneSharedArg,
-        b: &'b impl super::OneSharedArg,
-        c: &'anon_0 impl super::TwoSharedArg,
-        d: &'x impl super::TwoSharedArg,
-        nohold: &'x impl super::TwoSharedArg,
-    ) -> super::One<'a> {
+        a: &'x impl crate::OneSharedArg,
+        b: &'b impl crate::OneSharedArg,
+        c: &'anon_0 impl crate::TwoSharedArg,
+        d: &'x impl crate::TwoSharedArg,
+        nohold: &'x impl crate::TwoSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_many_dependents(
@@ -168,7 +175,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -176,9 +183,9 @@ impl<'o> One<'o> {
         }
     }
     pub fn return_outlives_param<'short, 'long: 'short, 'anon_0>(
-        hold: &'anon_0 impl super::TwoSharedArg,
-        nohold: &'short impl super::OneSharedArg,
-    ) -> super::One<'long> {
+        hold: &'anon_0 impl crate::TwoSharedArg,
+        nohold: &'short impl crate::OneSharedArg,
+    ) -> crate::One<'long> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_return_outlives_param(
@@ -189,7 +196,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -206,11 +213,11 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl super::OneSharedArg,
-        left: &'anon_1 impl super::OneSharedArg,
-        right: &'anon_2 impl super::OneSharedArg,
-        bottom: &'anon_3 impl super::OneSharedArg,
-    ) -> super::One<'top> {
+        top: &'anon_0 impl crate::OneSharedArg,
+        left: &'anon_1 impl crate::OneSharedArg,
+        right: &'anon_2 impl crate::OneSharedArg,
+        bottom: &'anon_3 impl crate::OneSharedArg,
+    ) -> crate::One<'top> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_diamond_top(
@@ -223,7 +230,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -240,11 +247,11 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl super::OneSharedArg,
-        left: &'anon_1 impl super::OneSharedArg,
-        right: &'anon_2 impl super::OneSharedArg,
-        bottom: &'anon_3 impl super::OneSharedArg,
-    ) -> super::One<'left> {
+        top: &'anon_0 impl crate::OneSharedArg,
+        left: &'anon_1 impl crate::OneSharedArg,
+        right: &'anon_2 impl crate::OneSharedArg,
+        bottom: &'anon_3 impl crate::OneSharedArg,
+    ) -> crate::One<'left> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_diamond_left(
@@ -257,7 +264,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -274,11 +281,11 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl super::OneSharedArg,
-        left: &'anon_1 impl super::OneSharedArg,
-        right: &'anon_2 impl super::OneSharedArg,
-        bottom: &'anon_3 impl super::OneSharedArg,
-    ) -> super::One<'right> {
+        top: &'anon_0 impl crate::OneSharedArg,
+        left: &'anon_1 impl crate::OneSharedArg,
+        right: &'anon_2 impl crate::OneSharedArg,
+        bottom: &'anon_3 impl crate::OneSharedArg,
+    ) -> crate::One<'right> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_diamond_right(
@@ -291,7 +298,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -308,11 +315,11 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl super::OneSharedArg,
-        left: &'anon_1 impl super::OneSharedArg,
-        right: &'anon_2 impl super::OneSharedArg,
-        bottom: &'anon_3 impl super::OneSharedArg,
-    ) -> super::One<'bottom> {
+        top: &'anon_0 impl crate::OneSharedArg,
+        left: &'anon_1 impl crate::OneSharedArg,
+        right: &'anon_2 impl crate::OneSharedArg,
+        bottom: &'anon_3 impl crate::OneSharedArg,
+    ) -> crate::One<'bottom> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_diamond_bottom(
@@ -325,7 +332,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -344,12 +351,12 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        a: &'anon_0 impl super::OneSharedArg,
-        b: &'y impl super::OneSharedArg,
-        c: &'anon_1 impl super::OneSharedArg,
-        d: &'anon_2 impl super::OneSharedArg,
-        nohold: &'anon_3 impl super::OneSharedArg,
-    ) -> super::One<'a> {
+        a: &'anon_0 impl crate::OneSharedArg,
+        b: &'y impl crate::OneSharedArg,
+        c: &'anon_1 impl crate::OneSharedArg,
+        d: &'anon_2 impl crate::OneSharedArg,
+        nohold: &'anon_3 impl crate::OneSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_diamond_and_nested_types(
@@ -363,7 +370,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -380,10 +387,10 @@ impl<'o> One<'o> {
         'anon_0,
         'anon_1,
     >(
-        explicit_hold: &'d impl super::OneSharedArg,
-        implicit_hold: &'anon_0 impl super::OneSharedArg,
-        nohold: &'anon_1 impl super::OneSharedArg,
-    ) -> super::One<'a> {
+        explicit_hold: &'d impl crate::OneSharedArg,
+        implicit_hold: &'anon_0 impl crate::OneSharedArg,
+        nohold: &'anon_1 impl crate::OneSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_implicit_bounds(
@@ -395,7 +402,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -403,11 +410,11 @@ impl<'o> One<'o> {
         }
     }
     pub fn implicit_bounds_deep<'a, 'b: 'a, 'c: 'b + 'a, 'd: 'c + 'b + 'a, 'x>(
-        explicit_: &'a impl super::OneSharedArg,
-        implicit_1: &'b impl super::OneSharedArg,
-        implicit_2: &'c impl super::OneSharedArg,
-        nohold: &'x impl super::OneSharedArg,
-    ) -> super::One<'a> {
+        explicit_: &'a impl crate::OneSharedArg,
+        implicit_1: &'b impl crate::OneSharedArg,
+        implicit_2: &'c impl crate::OneSharedArg,
+        nohold: &'x impl crate::OneSharedArg,
+    ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::One_implicit_bounds_deep(
@@ -420,7 +427,7 @@ impl<'o> One<'o> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null One");
-            super::One {
+            crate::One {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -428,7 +435,3 @@ impl<'o> One<'o> {
         }
     }
 }
-
-impl<'view, 'o> OneRef<'view, 'o> {}
-
-impl<'view, 'o> OneRefMut<'view, 'o> {}

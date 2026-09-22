@@ -36,29 +36,36 @@ impl<'a> crate::private::RefListSharedSealed for RefList<'a> {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> crate::private::RefListMutSealed for RefList<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefList {
         self.inner.as_ptr()
     }
 }
+
 impl<'a> RefListSharedArg for RefList<'a> {}
 impl<'a> RefListMutArg for RefList<'a> {}
+
 impl<'view, 'a> crate::private::RefListSharedSealed for RefListRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::RefList {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> RefListSharedArg for RefListRef<'view, 'a> {}
+
 impl<'view, 'a> crate::private::RefListSharedSealed for RefListRefMut<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::RefList {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> crate::private::RefListMutSealed for RefListRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefList {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a> RefListSharedArg for RefListRefMut<'view, 'a> {}
 impl<'view, 'a> RefListMutArg for RefListRefMut<'view, 'a> {}
 
@@ -94,7 +101,7 @@ impl<'view, 'a> fmt::Debug for RefListRefMut<'view, 'a> {
 }
 
 impl<'b> RefList<'b> {
-    pub fn node(data: &'b impl super::RefListParameterSharedArg) -> super::RefList<'b> {
+    pub fn node(data: &'b impl crate::RefListParameterSharedArg) -> crate::RefList<'b> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
             ffi::RefList_node(crate::private::RefListParameterSharedSealed::__as_const_ptr(data))
@@ -102,7 +109,7 @@ impl<'b> RefList<'b> {
         {
             let inner = NonNull::new(result as *mut _)
                 .expect("Diplomat ABI returned null for non-null RefList");
-            super::RefList {
+            crate::RefList {
                 inner,
                 _lifetimes: PhantomData,
                 _not_send_sync: PhantomData,
@@ -110,7 +117,3 @@ impl<'b> RefList<'b> {
         }
     }
 }
-
-impl<'view, 'b> RefListRef<'view, 'b> {}
-
-impl<'view, 'b> RefListRefMut<'view, 'b> {}

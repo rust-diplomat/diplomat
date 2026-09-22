@@ -36,29 +36,36 @@ impl<'a, 'b> crate::private::TwoSharedSealed for Two<'a, 'b> {
         self.inner.as_ptr()
     }
 }
+
 impl<'a, 'b> crate::private::TwoMutSealed for Two<'a, 'b> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Two {
         self.inner.as_ptr()
     }
 }
+
 impl<'a, 'b> TwoSharedArg for Two<'a, 'b> {}
 impl<'a, 'b> TwoMutArg for Two<'a, 'b> {}
+
 impl<'view, 'a, 'b> crate::private::TwoSharedSealed for TwoRef<'view, 'a, 'b> {
     fn __as_const_ptr(&self) -> *const ffi::Two {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a, 'b> TwoSharedArg for TwoRef<'view, 'a, 'b> {}
+
 impl<'view, 'a, 'b> crate::private::TwoSharedSealed for TwoRefMut<'view, 'a, 'b> {
     fn __as_const_ptr(&self) -> *const ffi::Two {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a, 'b> crate::private::TwoMutSealed for TwoRefMut<'view, 'a, 'b> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Two {
         self.inner.as_ptr()
     }
 }
+
 impl<'view, 'a, 'b> TwoSharedArg for TwoRefMut<'view, 'a, 'b> {}
 impl<'view, 'a, 'b> TwoMutArg for TwoRefMut<'view, 'a, 'b> {}
 
@@ -88,9 +95,3 @@ impl<'view, 'a, 'b> fmt::Debug for TwoRefMut<'view, 'a, 'b> {
             .finish()
     }
 }
-
-impl<'a, 'b> Two<'a, 'b> {}
-
-impl<'view, 'a, 'b> TwoRef<'view, 'a, 'b> {}
-
-impl<'view, 'a, 'b> TwoRefMut<'view, 'a, 'b> {}
