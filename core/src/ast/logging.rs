@@ -133,6 +133,21 @@ pub enum PrettyPrint {
     ForceUgly,
 }
 
+fn get_span_src(sp : &Span) -> String {
+    match &sp.span_location {
+        SpanLocation::FilePath(f) => {
+            let st = std::fs::read_to_string(f);
+            if let Ok(s) = st {
+                s
+            } else {
+                panic!("Could not read source file {f}: {:?}", st.unwrap_err());
+            }
+        }
+        SpanLocation::LocalSource(src) => src.clone(),
+        SpanLocation::None => "<unknown location>".into(),
+    }
+}
+
 pub fn write_report(
     report: &AstReport,
     mut out: impl WriteReport,
@@ -141,18 +156,7 @@ pub fn write_report(
 ) -> Result<(), String> {
     let span = report.primary_loc.as_ref();
     let src = if let Some(sp) = &span {
-        match &sp.span_location {
-            SpanLocation::FilePath(f) => {
-                let st = std::fs::read_to_string(f);
-                if let Ok(s) = st {
-                    s
-                } else {
-                    panic!("Could not read source file {f}: {:?}", st.unwrap_err());
-                }
-            }
-            SpanLocation::LocalSource(src) => src.clone(),
-            SpanLocation::None => "<unknown location>".into(),
-        }
+        get_span_src(*sp)
     } else {
         "<No associated span>".into()
     };
@@ -182,12 +186,36 @@ pub fn write_report(
         let report = if let Some(sp) = span {
             use annotate_snippets::{Annotation, AnnotationKind};
 
-            let annotations = report.context_locations.iter().map(|l| {
-                let bytes = evaluate_bytes(&l.location, &src);
-                AnnotationKind::Context.span(bytes).label(&l.label)
+            // Additional info in a separate file.
+            let mut elements : Vec<annotate_snippets::Element> = Vec::new();
+            // Additional info in the same file.
+            let mut annotations = Vec::new();
+
+            report.context_locations.iter().for_each(|l| {
+                // If these spans are in the same location, we can re-use the source.
+                if Some(&l.location.span_location) == span.map(|s| &s.span_location) {
+                    let bytes = evaluate_bytes(&l.location, &src);
+                    annotations.push(AnnotationKind::Context.span(bytes).label(&l.label));
+                } else {
+                    let local_src = get_span_src(&l.location);
+                    let bytes = evaluate_bytes(&l.location, &local_src);
+                    elements.push(
+                        annotate_snippets::Element::Cause(
+                            Snippet::<Annotation>::source(local_src)
+                            .annotation(
+                                AnnotationKind::Context.span(bytes)
+                                .label(&l.label)
+                            )
+                            .path(match &l.location.span_location {
+                                SpanLocation::FilePath(f) => Some(f),
+                                _ => None
+                            })
+                        )
+                    );
+                }
             });
 
-            &[Level::ERROR.primary_title(&report.title).element(
+            [Level::ERROR.primary_title(&report.title).element(
                 Snippet::<Annotation>::source(&src)
                     .path(match &sp.span_location {
                         SpanLocation::FilePath(f) => Some(f),
@@ -198,15 +226,15 @@ pub fn write_report(
                             .span(bytes_range.clone().unwrap())
                             .label(&report.primary_label),
                     )
-                    .annotations(annotations),
-            )]
+                    .annotations(annotations)
+            ).elements(elements)]
         } else {
-            &[Level::ERROR
+            [Level::ERROR
                 .primary_title(&report.title)
                 .element(Level::ERROR.message(&report.primary_label))]
         };
         let renderer = Renderer::styled().decor_style(DecorStyle::Unicode);
-        writeln!(out, "{}", renderer.render(report))?;
+        writeln!(out, "{}", renderer.render(&report))?;
     }
 
     // Either the pretty printer is disabled, or we're forced to use the ugly printer:

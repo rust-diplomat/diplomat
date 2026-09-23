@@ -3,7 +3,7 @@ use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
 use syn::{spanned::Spanned, Token};
 
-use std::fmt;
+use std::{borrow::Cow, fmt};
 use std::ops::ControlFlow;
 use std::str::FromStr;
 
@@ -12,12 +12,9 @@ use super::{
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    ast::{
-        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
-        logging::{create_report, create_simple_report, AstReport, ContextLocation},
-        Function,
-    },
-    Env,
+    Env, ast::{
+        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, ContextLocation, create_report, create_simple_report},
+    }
 };
 
 /// A type declared inside a Diplomat-annotated module.
@@ -577,6 +574,51 @@ pub enum TypeName {
     Function(Vec<Box<TypeName>>, Box<TypeName>, Mutability),
     ImplTrait(PathType),
 }
+
+/// [`TypeName`] that was evaluated at a paritcular location.
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct SpannedTypeName<'a> {
+    pub(crate) ty : Cow<'a, TypeName>,
+    pub(crate) location : Option<super::Span>,
+}
+
+/// A clear distinction of ownership from [`SpannedTypeName`], so we don't have to worry about lifetimes.
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+pub struct OwnedSpannedTypeName {
+    pub(crate) ty : TypeName,
+    pub(crate) location : Option<super::Span>,
+}
+
+impl From<&SpannedTypeName<'_>> for OwnedSpannedTypeName {
+    fn from(value: &SpannedTypeName) -> Self {
+        Self {
+            ty: value.ty.as_ref().clone(),
+            location: value.location.clone(),
+        }
+    }
+}
+
+impl<'a> From<&'a OwnedSpannedTypeName> for SpannedTypeName<'a> {
+    fn from(value: &'a OwnedSpannedTypeName) -> Self {
+        SpannedTypeName {
+            ty: Cow::Borrowed(&value.ty),
+            location: value.location.clone(),
+        }
+    }
+}
+
+impl OwnedSpannedTypeName {
+    pub fn ty(&self) -> &TypeName {
+        &self.ty
+    }
+}
+
+impl<'a> SpannedTypeName<'a> {
+    pub fn ty(&'a self) -> Cow<'a, TypeName> {
+        self.ty.clone()
+    }
+}
+
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
 #[non_exhaustive]

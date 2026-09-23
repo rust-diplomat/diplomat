@@ -4,7 +4,8 @@ use syn::spanned::Spanned;
 
 use crate::ast::idents::IntoWithSpan;
 use crate::ast::logging::{create_report, AstReport};
-use crate::ast::SpanLocation;
+use crate::ast::types::SpannedTypeName;
+use crate::ast::{OwnedSpannedTypeName, Span, SpanLocation};
 
 use super::docs::Docs;
 use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};
@@ -34,7 +35,7 @@ pub struct Method {
     pub params: Vec<Param>,
 
     /// The return type of the method, if any.
-    pub return_type: Option<TypeName>,
+    pub return_type: Option<OwnedSpannedTypeName>,
 
     /// The lifetimes introduced in this method and surrounding impl block.
     pub lifetime_env: LifetimeEnv,
@@ -112,7 +113,12 @@ impl Method {
             self_param,
             self_type: Some(self_path_type),
             params: all_params,
-            return_type: return_ty,
+            return_type: return_ty.map(|ty| {
+                OwnedSpannedTypeName {
+                    ty,
+                    location: Some(m.sig.output.span().spanned_into(module_location)),
+                }
+            }),
             lifetime_env,
             attrs,
         }
@@ -143,7 +149,7 @@ impl Method {
         // find the params that contain a lifetime that's also in the return type.
         if let Some(ref return_type) = self.return_type {
             // The lifetimes that must outlive the return type
-            let lifetimes = return_type.longer_lifetimes(&self.lifetime_env);
+            let lifetimes = return_type.ty.longer_lifetimes(&self.lifetime_env);
 
             let held_self_param = self.self_param.as_ref().filter(|self_param| {
                 // Check if `self` is a reference with a lifetime in the return type.
@@ -169,7 +175,7 @@ impl Method {
                 .filter_map(|param| {
                     let mut lt_kind = LifetimeKind::ReturnValue;
                     param
-                        .ty
+                        .ty.ty
                         .visit_lifetimes(&mut |lt, _| {
                             // Thanks to `TypeName::visit_lifetimes`, we can
                             // traverse the lifetimes without allocations and
@@ -209,7 +215,7 @@ impl Method {
         let return_compatible = self
             .return_type
             .as_ref()
-            .map(|return_type| match return_type {
+            .map(|return_type| match &return_type.ty {
                 TypeName::Unit => true,
                 TypeName::Result(ok, _, _) | TypeName::Option(ok, _) => {
                     matches!(ok.as_ref(), TypeName::Unit)
@@ -329,7 +335,7 @@ pub struct Param {
     pub name: Ident,
 
     /// The type of the parameter.
-    pub ty: TypeName,
+    pub ty: OwnedSpannedTypeName,
 
     /// Parameter attributes (like #[diplomat::demo(label = "Out")])
     pub attrs: Attrs,
@@ -338,7 +344,7 @@ pub struct Param {
 impl Param {
     /// Check if this parameter is a Write
     pub fn is_write(&self) -> bool {
-        match self.ty {
+        match self.ty.ty {
             TypeName::Reference(_, Mutability::Mutable, ref w) => **w == TypeName::Write,
             _ => false,
         }
@@ -365,7 +371,10 @@ impl Param {
 
         Param {
             name: (&ident.ident).spanned_into(module_location),
-            ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
+            ty: OwnedSpannedTypeName {
+                ty: TypeName::from_syn(&t.ty, Some(self_path_type), module_location),
+                location: Some(t.span().spanned_into(module_location)),
+            },
             attrs,
         }
     }

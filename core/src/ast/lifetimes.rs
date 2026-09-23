@@ -124,7 +124,7 @@ impl LifetimeEnv {
             this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
         }
         for param in params {
-            this.extend_implicit_lifetime_bounds(&param.ty, None);
+            this.extend_implicit_lifetime_bounds(&param.ty.ty, None);
         }
         if let Some(return_type) = return_type {
             this.extend_implicit_lifetime_bounds(return_type, None);
@@ -145,7 +145,7 @@ impl LifetimeEnv {
                 this.extend_implicit_lifetime_bounds(&self_param.to_typename(), None);
             }
             for param in params {
-                this.extend_implicit_lifetime_bounds(&param.ty, None);
+                this.extend_implicit_lifetime_bounds(&param.ty.ty, None);
             }
             if let Some(return_type) = return_type {
                 this.extend_implicit_lifetime_bounds(return_type, None);
@@ -213,7 +213,7 @@ impl LifetimeEnv {
         let mut this = LifetimeEnv::new();
         this.extend_generics(&f.sig.generics, module_location);
         for param in params {
-            this.extend_implicit_lifetime_bounds(&param.ty, None);
+            this.extend_implicit_lifetime_bounds(&param.ty.ty, None);
         }
         if let Some(return_type) = return_type {
             this.extend_implicit_lifetime_bounds(return_type, None);
