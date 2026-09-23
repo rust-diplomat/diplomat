@@ -138,11 +138,11 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
         pub alignment: usize,
     ));
     for m in &custom_trait.methods {
-        let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty)).collect();
+        let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty.ty())).collect();
         let method_name = Ident::new(&format!("run_{}_callback", m.name), Span::call_site());
         let return_tokens = match &m.output_type {
             Some(ret_ty) => {
-                let conv_ret_ty = ret_ty.ffi_safe_version().to_syn();
+                let conv_ret_ty = ret_ty.ty().ffi_safe_version().to_syn();
 
                 quote!( -> #conv_ret_ty)
             }
@@ -181,9 +181,9 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
             .params
             .iter()
             .map(|p| {
-                let orig_type = p.ty.to_syn();
-                let p_ty = param_ty(&p.ty);
-                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty, Some(&p_ty)) {
+                let orig_type = p.ty.ty().to_syn();
+                let p_ty = param_ty(&p.ty.ty());
+                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty.ty(), Some(&p_ty)) {
                     all_params_conversion.push(conversion);
                 }
                 let p_name = &p.name;
@@ -193,10 +193,10 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
         let method_name = &m.name;
         let (return_tokens, end_token) = match &m.output_type {
             Some(ret_ty) => {
-                let conv_ret_ty = ret_ty.to_syn();
+                let conv_ret_ty = ret_ty.ty().to_syn();
                 (
                     quote!( -> #conv_ret_ty),
-                    match ret_ty {
+                    match ret_ty.ty() {
                         ast::TypeName::Result(_, _, StdlibOrDiplomat::Stdlib)
                         | ast::TypeName::Option(_, StdlibOrDiplomat::Stdlib) => {
                             quote!(.into())
@@ -265,7 +265,7 @@ fn gen_custom_type_method(strct: &ast::CustomType, m: &ast::Method) -> Item {
         extern_ident,
         self_param: m.self_param.as_ref(),
         params: &m.params,
-        return_type: m.return_type.as_ref(),
+        return_type: m.return_type.as_ref().map(|r| r.ty()),
         lifetime_env: &m.lifetime_env,
         attrs: &m.attrs,
     })
@@ -288,11 +288,11 @@ fn gen_custom_function(func_info: FuncGen) -> Item {
     let mut all_params_conversion = vec![];
     let mut all_params_names = vec![];
     func_info.params.iter().for_each(|p| {
-        let ty = param_ty(&p.ty);
+        let ty = param_ty(&p.ty.ty());
         let name = &p.name;
         all_params_names.push(name);
         all_params.push(syn::parse_quote!(#name: #ty));
-        if let Some(conversion) = param_conversion(&p.name, &p.ty, None) {
+        if let Some(conversion) = param_conversion(&p.name, &p.ty.ty(), None) {
             all_params_conversion.push(conversion);
         }
     });
@@ -692,7 +692,7 @@ fn gen_bridge(mut input: ItemMod) -> ItemMod {
             extern_ident,
             self_param: None,
             params: &func.params,
-            return_type: func.output_type.as_ref(),
+            return_type: func.output_type.as_ref().map(|o| o.ty()),
             lifetime_env: &func.lifetimes,
             attrs: &func.attrs,
         }))

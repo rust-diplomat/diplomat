@@ -607,6 +607,19 @@ impl<'a> From<&'a OwnedSpannedTypeName> for SpannedTypeName<'a> {
     }
 }
 
+impl OwnedSpannedTypeName {
+    pub fn ty(&self) -> &TypeName {
+        &self.ty
+    }
+}
+
+impl<'a> SpannedTypeName<'a> {
+    pub fn ty(&'a self) -> Cow<'a, TypeName> {
+        self.ty.clone()
+    }
+}
+
+
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
 #[non_exhaustive]
 pub enum StringEncoding {
