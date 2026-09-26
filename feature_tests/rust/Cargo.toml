@@ -1,0 +1,15 @@
+[workspace]
+resolver = "2"
+members = ["generated", "consumer"]
+exclude = ["compile_fail"]
+
+[workspace.package]
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+# The generated crate depends on `diplomat-runtime` by version, so that a real
+# generated package stays publishable. The in-repo fixture has to build against
+# this checkout, so it resolves that dependency to the local runtime crate.
+[patch.crates-io]
+diplomat-runtime = { path = "../../runtime" }

@@ -9,6 +9,7 @@ Diplomat supports generating bindings from Rust to:
 - .NET (C#)
 - Kotlin (using JNA)
 - Python (using [nanobind](https://nanobind.readthedocs.io/en/latest/index.html))
+- Rust (safe bindings over the C ABI)
 
 Diplomat supports languages through a plugin interface that makes it easy to add support for your favourite language. See [the book to get started](https://rust-diplomat.github.io/diplomat/developer.html), and `tool/src/{c, cpp, js}` for examples of existing language plugins.
 

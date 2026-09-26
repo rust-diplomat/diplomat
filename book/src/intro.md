@@ -28,6 +28,7 @@ Diplomat currently supports the following backends:
  - [.NET (C#)](./backends/dotnet.md)
  - [Kotlin (using JNA)](./backends/kotlin.md)
  - Python via [Nanobind](https://github.com/wjakob/nanobind) (maintained by [Zeromatter](https://www.zeromatter.com/))
+ - [Rust](./backends/rust.md)
  
 There is work in progress for a [Java backend] (using Panama).
 

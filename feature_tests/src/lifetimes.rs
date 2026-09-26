@@ -45,14 +45,58 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
-    #[diplomat::attr(dotnet, disable)]
+    // Type-level lifetimes on opaque arguments must remain visible in the generated
+    // capability trait. Otherwise a `TypeLifetimeOpaque<'short>` can be passed where
+    // the provider requires `TypeLifetimeOpaque<'long>`, allowing it to store a
+    // short borrow as long. Rust-only: other backends do not need this regression.
+    #[diplomat::attr(not(rust), disable)]
+    #[diplomat::opaque_mut]
+    pub struct TypeLifetimeOpaque<'a>(&'a DiplomatStr);
+
+    impl<'a> TypeLifetimeOpaque<'a> {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(value: &'a DiplomatStr) -> Box<Self> {
+            Box::new(Self(value))
+        }
+
+        pub fn accept_same_lifetime(&mut self, other: &TypeLifetimeOpaque<'a>) {
+            self.0 = other.0;
+        }
+
+        pub fn get(&self) -> &'a DiplomatStr {
+            self.0
+        }
+    }
+
+    /// Storing a slice must keep the opaque's lifetime on the input. Eliding it
+    /// to `&[u8]` would let `Slot<'static>` store a temporary.
+    #[diplomat::attr(not(rust), disable)]
+    #[diplomat::opaque_mut]
+    pub struct Slot<'a>(&'a DiplomatStr);
+
+    impl<'a> Slot<'a> {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(initial: &'a DiplomatStr) -> Box<Self> {
+            Box::new(Self(initial))
+        }
+
+        pub fn store(&mut self, value: &'a DiplomatStr) {
+            self.0 = value;
+        }
+
+        pub fn get(&self) -> &'a DiplomatStr {
+            self.0
+        }
+    }
+
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct BorrowedFields<'a> {
         a: DiplomatStr16Slice<'a>,
         b: DiplomatStrSlice<'a>,
         c: DiplomatUtf8StrSlice<'a>,
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: DiplomatStr16Slice<'a>,
         field_b: DiplomatStrSlice<'b>,
@@ -89,14 +133,14 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, named_constructor)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn extract_from_fields(fields: BorrowedFields<'a>) -> Box<Self> {
             Box::new(Foo(fields.b.into()))
         }
 
         // Don't yet support borrowing from slices
         #[diplomat::attr(auto, named_constructor)]
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         /// Test that the extraction logic correctly pins the right fields
         pub fn extract_from_bounds<'x, 'y: 'x + 'a, 'z: 'x + 'y>(
             bounds: BorrowedFieldsWithBounds<'x, 'y, 'z>,
@@ -138,7 +182,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,

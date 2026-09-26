@@ -73,6 +73,42 @@ pub mod ffi {
         pub(crate) b: DiplomatOption<DefaultEnum>,
     }
 
+    // Rust-only regression fixture for recursive ABI mirrors: the outer struct
+    // must mirror its inner char/option structs instead of crossing the ABI as
+    // the public `Outer` type.
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedConvertingFields {
+        pub char_inner: NestedCharField,
+        pub option_inner: NestedOptionField,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedCharField {
+        pub ch: DiplomatChar,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedOptionField {
+        pub value: DiplomatOption<u8>,
+    }
+
+    // `f64` is not `Eq`. A derive that only looks at the outer fields accepts
+    // these and then rustc rejects the generated struct.
+    #[diplomat::attr(not(rust), disable)]
+    pub struct FloatField {
+        pub value: f64,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedFloatField {
+        pub inner: FloatField,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct OptionalFloatField {
+        pub value: DiplomatOption<f64>,
+    }
+
     #[diplomat::attr(auto, error)]
     pub struct MyZst;
 
@@ -119,7 +155,7 @@ pub mod ffi {
             unimplemented!()
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn cmp() -> core::cmp::Ordering {
             unimplemented!()
         }
@@ -317,6 +353,23 @@ pub mod ffi {
         }
     }
 
+    impl NestedConvertingFields {
+        pub fn new() -> Self {
+            Self {
+                char_inner: NestedCharField {
+                    ch: '餐' as DiplomatChar,
+                },
+                option_inner: NestedOptionField {
+                    value: Some(37).into(),
+                },
+            }
+        }
+
+        pub fn round_trip(value: Self) -> Self {
+            value
+        }
+    }
+
     // Test that cycles between structs work even when
     // they reference each other in the methods
     #[derive(Default)]
@@ -493,7 +546,7 @@ pub mod ffi {
         }
     }
 
-    #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct StructWithSlices<'a> {
         pub first: DiplomatStrSlice<'a>,
         pub second: DiplomatSlice<'a, u16>,
@@ -508,6 +561,10 @@ pub mod ffi {
     #[diplomat::attr(auto, abi_compatible)]
     #[diplomat::attr(auto, mut_struct_ref)]
     #[derive(Clone)]
+    // By-value `char` fields now have an ABI mirror (`MyStruct`). A slice of this
+    // type still cannot be zero-copy: the public struct's `char` is not layout-
+    // identical to the provider's `DiplomatChar` for `&[PrimitiveStruct]`.
+    #[diplomat::attr(rust, disable)]
     pub struct PrimitiveStruct {
         x: f32,
         a: bool,
@@ -553,6 +610,7 @@ pub mod ffi {
             Box::new(Self(Vec::new()))
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(nanobind, rename = "append")]
         pub fn push(&mut self, value: PrimitiveStruct) {
             self.0.push(value);
@@ -563,17 +621,20 @@ pub mod ffi {
             self.0.len()
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "asSlice")]
         pub fn as_slice<'a>(&'a self) -> &'a [PrimitiveStruct] {
             &self.0
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(auto, getter = "asSliceMut")]
         #[diplomat::cfg(supports=mutable_slices)]
         pub fn as_slice_mut<'a>(&'a mut self) -> &'a mut [PrimitiveStruct] {
             &mut self.0
         }
 
+        #[diplomat::attr(rust, disable)]
         // Technically we could rename this to __getitem__, but this is not best practice,
         // as there are additional considerations that the Nanobind backend has for indexers.
         #[diplomat::attr(nanobind, indexer)]
@@ -581,11 +642,13 @@ pub mod ffi {
             self.0.get(idx).cloned()
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::cfg(supports=abi_compatibles)]
         pub fn take_slice_from_other_namespace(_sl: &[crate::attrs::ffi::StructWithAttrs]) {
             assert!(true)
         }
 
+        #[diplomat::attr(rust, disable)]
         pub fn take_in_slice(a: &[PrimitiveStruct]) -> Box<Self> {
             Box::new(Self(a.iter().cloned().collect()))
         }
@@ -602,7 +665,7 @@ pub mod ffi {
     }
 
     // FIXME: https://github.com/rust-diplomat/diplomat/issues/1111
-    #[diplomat::attr(dart, disable)]
+    #[diplomat::attr(any(dart, rust), disable)]
     #[diplomat::attr(dotnet, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
     pub struct StructOfOpaque<'a> {

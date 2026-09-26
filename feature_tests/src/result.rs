@@ -24,6 +24,16 @@ pub mod ffi {
         i: i32,
         j: i32,
     }
+
+    // Rust-only regression fixture: the public error carries char while the
+    // ABI payload carries DiplomatChar/u32.
+    #[diplomat::attr(not(rust), disable)]
+    #[derive(Debug)]
+    #[diplomat::attr(auto, error)]
+    pub struct ErrorWithChar {
+        pub c: DiplomatChar,
+    }
+
     impl ErrorStruct {
         #[diplomat::attr(kotlin, disable)]
         #[diplomat::attr(dotnet, disable)]
@@ -58,6 +68,7 @@ pub mod ffi {
             Err(())
         }
 
+        #[diplomat::attr(rust, disable)]
         #[diplomat::attr(all(supports = named_constructors, supports = fallible_constructors), named_constructor = "failing_struct")]
         pub fn new_failing_struct(i: i32) -> Result<Box<ResultOpaque>, ErrorStruct> {
             Err(ErrorStruct { i, j: 12 })
@@ -76,11 +87,21 @@ pub mod ffi {
             Err(i)
         }
 
+        #[diplomat::attr(not(rust), disable)]
+        pub fn new_failing_char(c: DiplomatChar) -> Result<(), ErrorWithChar> {
+            Err(ErrorWithChar { c })
+        }
+
+        #[diplomat::attr(not(rust), disable)]
+        pub fn new_failing_char_scalar(c: DiplomatChar) -> Result<(), DiplomatChar> {
+            Err(c)
+        }
+
         pub fn new_in_enum_err(i: i32) -> Result<ErrorEnum, Box<ResultOpaque>> {
             Err(Box::new(ResultOpaque(i)))
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn give_self<'a>(&'a self) -> Result<(), &'a Self> {
             Err(self)
         }
@@ -93,7 +114,9 @@ pub mod ffi {
         }
 
         #[diplomat::attr(auto, stringifier)]
-        #[diplomat::attr(any(kotlin), disable)]
+        // Writer lowering is in; the remaining blocker is the borrowed opaque error
+        // (`Result<(), &'a Self>`), which is ticket 07.
+        #[diplomat::attr(any(kotlin, rust), disable)]
         #[diplomat::attr(dotnet, disable)]
         pub fn stringify_error<'a>(&'a self, _w: &mut DiplomatWrite) -> Result<(), &'a Self> {
             Err(self)

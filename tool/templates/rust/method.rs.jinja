@@ -1,0 +1,3 @@
+{{ method.docs }}    pub fn {{ method.name }}{{ method.generics }}({{ method.params }}){{ method.return_suffix }} {
+{% for line in method.body %}{{ line }}
+{% endfor %}    }

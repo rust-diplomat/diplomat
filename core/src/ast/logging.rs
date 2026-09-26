@@ -140,22 +140,20 @@ pub fn write_report(
     #[allow(unused)] force_ugly: PrettyPrint,
 ) -> Result<(), String> {
     let span = report.primary_loc.as_ref();
-    let src = if let Some(sp) = &span {
-        match &sp.span_location {
-            SpanLocation::FilePath(f) => {
-                let st = std::fs::read_to_string(f);
-                if let Ok(s) = st {
-                    s
-                } else {
-                    panic!("Could not read source file {f}: {:?}", st.unwrap_err());
-                }
-            }
-            SpanLocation::LocalSource(src) => src.clone(),
-            SpanLocation::None => "<unknown location>".into(),
-        }
-    } else {
-        "<No associated span>".into()
+    // A `FilePath` span does not always name a *file*. A module declared inline in
+    // the entry file keeps the entry file's parent directory as its location,
+    // because that is what makes a sibling `mod foo;` resolve to `<dir>/foo.rs`;
+    // reading that directory as a file fails. Fall back to "no span" rather than
+    // panicking: a report that prints its title and label is still useful, while a
+    // panic swallows the diagnostic entirely. `SpanLocation::None` already takes
+    // this path below, so there is nothing new to render.
+    let src = match span.map(|sp| &sp.span_location) {
+        Some(SpanLocation::FilePath(f)) => std::fs::read_to_string(f).ok(),
+        Some(SpanLocation::LocalSource(src)) => Some(src.clone()),
+        Some(SpanLocation::None) | None => None,
     };
+    let span = if src.is_some() { span } else { None };
+    let src = src.unwrap_or_default();
 
     let bytes_range = span.as_ref().map(|sp| evaluate_bytes(sp, &src));
 
@@ -298,6 +296,8 @@ pub(crate) fn create_report(report: AstReport) -> ! {
 mod tests {
     use std::fmt::Write;
 
+    use super::*;
+    use crate::ast::idents::LineColumn;
     use crate::ast::ModuleIncludeInfo;
 
     #[derive(Clone, Debug)]
@@ -422,5 +422,43 @@ mod tests {
     #[test]
     fn test_errors_ugly() {
         test_file_list("ugly");
+    }
+
+    /// A span whose `FilePath` is not a readable file must degrade to a location-less
+    /// report rather than aborting the report.
+    ///
+    /// This is not a hypothetical shape. `Modules::from_syn` gives a module declared
+    /// inline in the entry file its parent *directory* as the location, because that
+    /// is what lets a sibling `mod foo;` resolve to `<dir>/foo.rs`. So for any
+    /// provider whose `#[diplomat::bridge]` module is inline in `lib.rs`, reading the
+    /// span as a file fails — and aborting there swallowed the diagnostic entirely,
+    /// leaving a bare panic where the error should have been.
+    #[test]
+    fn unreadable_span_file_reports_instead_of_aborting() {
+        let directory = std::env::temp_dir();
+        let report = AstReport::new(
+            "Could not resolve symbol".into(),
+            Some(Span {
+                start: LineColumn { line: 1, col: 0 },
+                end: LineColumn { line: 1, col: 1 },
+                range: 0..1,
+                span_location: SpanLocation::FilePath(directory.to_string_lossy().into_owned()),
+            }),
+            "Could not resolve char".into(),
+            vec![],
+        );
+
+        let mut out = String::new();
+        write_report(&report, &mut out, PrettyPrint::ForceUgly)
+            .expect("reporting an unreadable span must not fail");
+
+        assert!(
+            out.contains("Could not resolve symbol"),
+            "the title must survive: {out:?}"
+        );
+        assert!(
+            out.contains("Could not resolve char"),
+            "the label must survive: {out:?}"
+        );
     }
 }

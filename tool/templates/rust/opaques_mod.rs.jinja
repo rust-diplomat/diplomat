@@ -1,0 +1,6 @@
+//! Generated opaque wrappers, one module per type.
+
+{% for module in modules %}mod {{ module }};
+{% endfor %}{% if has_modules %}
+{% endif %}{% for module in modules %}pub use {{ module }}::*;
+{% endfor %}

@@ -14,6 +14,7 @@ use toml::{value::Table, Value};
 
 use crate::{
     cpp::CppConfig, demo_gen::DemoConfig, dotnet::DotnetConfig, js::JsConfig, kotlin::KotlinConfig,
+    r#rust::RustConfig,
 };
 use diplomat_core::hir::LoweringConfig;
 
@@ -156,6 +157,8 @@ pub struct Config {
     pub cpp_config: CppConfig,
     #[serde(rename = "dotnet")]
     pub dotnet_config: DotnetConfig,
+    #[serde(rename = "rust")]
+    pub rust_config: RustConfig,
     /// Any language can override what's in [`SharedConfig`]. This is a structure that holds information about those specific overrides. [`Config`] will update [`SharedConfig`] based on the current language.
     #[serde(skip)]
     pub language_overrides: HashMap<String, Value>,
@@ -197,6 +200,12 @@ impl Config {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
                 self.dotnet_config.set(&key.replace("dotnet.", ""), value);
+            }
+        } else if key.starts_with("rust.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                self.rust_config.set(&key.replace("rust.", ""), value);
             }
         } else {
             self.shared_config.set(key, value)

@@ -1,0 +1,234 @@
+use core::fmt;
+use core::marker::PhantomData;
+use core::ptr::NonNull;
+use std::rc::Rc;
+
+use crate::ffi;
+#[allow(unused_imports)]
+use crate::types::*;
+
+pub struct Opaque {
+    pub(crate) inner: NonNull<ffi::Opaque>,
+    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+pub struct OpaqueRef<'view> {
+    pub(crate) inner: NonNull<ffi::Opaque>,
+    pub(crate) _borrow: PhantomData<&'view ()>,
+    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+pub struct OpaqueRefMut<'view> {
+    pub(crate) inner: NonNull<ffi::Opaque>,
+    pub(crate) _borrow: PhantomData<&'view mut ()>,
+    pub(crate) _not_send_sync: PhantomData<Rc<()>>,
+}
+
+#[doc(hidden)]
+pub trait OpaqueSharedArg: crate::private::OpaqueSharedSealed {}
+
+#[doc(hidden)]
+pub trait OpaqueMutArg: crate::private::OpaqueMutSealed {}
+
+impl crate::private::OpaqueSharedSealed for Opaque {
+    fn __as_const_ptr(&self) -> *const ffi::Opaque {
+        self.inner.as_ptr()
+    }
+}
+
+impl crate::private::OpaqueMutSealed for Opaque {
+    fn __as_mut_ptr(&mut self) -> *mut ffi::Opaque {
+        self.inner.as_ptr()
+    }
+}
+
+impl OpaqueSharedArg for Opaque {}
+impl OpaqueMutArg for Opaque {}
+
+impl<'view> crate::private::OpaqueSharedSealed for OpaqueRef<'view> {
+    fn __as_const_ptr(&self) -> *const ffi::Opaque {
+        self.inner.as_ptr()
+    }
+}
+
+impl<'view> OpaqueSharedArg for OpaqueRef<'view> {}
+
+impl<'view> crate::private::OpaqueSharedSealed for OpaqueRefMut<'view> {
+    fn __as_const_ptr(&self) -> *const ffi::Opaque {
+        self.inner.as_ptr()
+    }
+}
+
+impl<'view> crate::private::OpaqueMutSealed for OpaqueRefMut<'view> {
+    fn __as_mut_ptr(&mut self) -> *mut ffi::Opaque {
+        self.inner.as_ptr()
+    }
+}
+
+impl<'view> OpaqueSharedArg for OpaqueRefMut<'view> {}
+impl<'view> OpaqueMutArg for OpaqueRefMut<'view> {}
+
+impl Drop for Opaque {
+    fn drop(&mut self) {
+        // SAFETY: this wrapper uniquely owns the non-null handle and calls the provider destructor once.
+        unsafe { ffi::Opaque_destroy(self.inner.as_ptr()) };
+    }
+}
+
+impl fmt::Debug for Opaque {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("Opaque").field(&self.inner.as_ptr()).finish()
+    }
+}
+
+impl<'view> fmt::Debug for OpaqueRef<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("OpaqueRef")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl<'view> fmt::Debug for OpaqueRefMut<'view> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("OpaqueRefMut")
+            .field(&self.inner.as_ptr())
+            .finish()
+    }
+}
+
+impl Opaque {
+    pub fn new() -> crate::Opaque {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Opaque_new() };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Opaque");
+            crate::Opaque {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
+    pub fn try_from_utf8(input: &[u8]) -> Option<crate::Opaque> {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Opaque_try_from_utf8(ffi::DiplomatSlice::from(input)) };
+        NonNull::new(result as *mut _).map(|inner| crate::Opaque {
+            inner,
+            _not_send_sync: PhantomData,
+        })
+    }
+    pub fn from_str(input: &str) -> crate::Opaque {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        let result = unsafe { ffi::Opaque_from_str(ffi::DiplomatSlice::from(input.as_bytes())) };
+        {
+            let inner = NonNull::new(result as *mut _)
+                .expect("Diplomat ABI returned null for non-null Opaque");
+            crate::Opaque {
+                inner,
+                _not_send_sync: PhantomData,
+            }
+        }
+    }
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
+    }
+    pub fn returns_usize() -> usize {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::Opaque_returns_usize() }
+    }
+    pub fn returns_imported() -> ImportedStruct {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe { ffi::Opaque_returns_imported() }
+    }
+}
+
+impl<'view> OpaqueRef<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
+    }
+}
+
+impl<'view> OpaqueRefMut<'view> {
+    pub fn get_debug_str(&self) -> String {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        crate::private::with_write(|write| {
+            unsafe { ffi::Opaque_get_debug_str(self.inner.as_ptr() as *const _, write) };
+        })
+        .1
+    }
+    /// See the [Rust documentation for `something`](https://docs.rs/Something/latest/struct.Something.html#method.something) for more information.
+    ///
+    /// See the [Rust documentation for `something_else`](https://docs.rs/Something/latest/struct.Something.html#method.something_else) for more information.
+    ///
+    /// Additional information: [1](https://docs.rs/Something/latest/struct.Something.html#method.something_small), [2](https://docs.rs/SomethingElse/latest/struct.SomethingElse.html#method.something)
+    pub fn assert_struct(&self, s: MyStruct) {
+        // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
+        unsafe {
+            ffi::Opaque_assert_struct(
+                self.inner.as_ptr() as *const _,
+                ffi::MyStruct {
+                    a: s.a,
+                    b: s.b,
+                    c: s.c,
+                    d: s.d,
+                    e: s.e,
+                    f: s.f as u32,
+                    g: s.g,
+                },
+            )
+        };
+    }
+}

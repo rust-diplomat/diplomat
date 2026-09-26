@@ -73,6 +73,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: rustfmt
 
     - name: Install cargo-make
       uses: taiki-e/install-action@v2
@@ -96,6 +98,20 @@ jobs:
 
     - name: Test C
       run: cargo make test-c
+
+  test-rust:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        components: rustfmt, clippy
+
+    - name: Install cargo-make
+      uses: taiki-e/install-action@cargo-make
+
+    - name: Test safe Rust backend
+      run: cargo make test-rust
 
   check-c:
     strategy:

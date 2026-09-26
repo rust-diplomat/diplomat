@@ -461,6 +461,9 @@ pub mod ffi {
     #[diplomat::macro_rules]
     macro_rules! macro_frag_spec_test {
         (BLOCK $b:block [EXPR $e:expr, IDENT $i:ident] LT $lt:lifetime literal $l:literal <=> $m:meta $p:path; $t:tt $ty:ty, $vis:vis, $it:item) => {
+            // The Rust backend does not generate inherent methods on value structs
+            // yet, and `test_func` below is one. Gate the type it hangs off.
+            #[diplomat::attr(rust, disable)]
             struct $i {
                 a: usize,
             }

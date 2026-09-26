@@ -24,12 +24,12 @@ pub mod ffi {
             Box::new(Self(String::from_utf8(v.into()).unwrap()))
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_from_first(v: &[DiplomatStrSlice]) -> Box<MyString> {
             Box::new(Self(core::str::from_utf8(v[0].into()).unwrap().into()))
         }
 
-        #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(any(dotnet, rust), disable)]
         pub fn new_from_utf16(v: &[DiplomatStr16Slice]) -> Box<MyString> {
             let first: &[u16] = v[0].into();
             Box::new(Self(String::from_utf16(first).unwrap()))
@@ -245,6 +245,7 @@ pub mod ffi {
             Ok((0..len).map(|i| (i % 256) as u8).collect())
         }
 
+        #[diplomat::attr(rust, disable)]
         /// Optional variant of [`Self::make_bytes`]: `None` on `len == 0`.
         /// Exercises the `Option<Box<[u8]>>` bridge shape.
         pub fn maybe_make_bytes(len: u32) -> Option<Box<[u8]>> {
