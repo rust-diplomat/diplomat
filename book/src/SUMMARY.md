@@ -54,3 +54,4 @@
   - [Javascript](backends/js.md)
   - [Kotlin](backends/kotlin.md)
   - [Nanobind](backends/nanobind.md)
+  - [Rust](backends/rust.md)

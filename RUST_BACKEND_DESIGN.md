@@ -1,7 +1,7 @@
 # Experimental Safe Rust native-ABI backend
 
-Status: implemented and exercised against Diplomat `main` at `84f57d78`, then rebased
-onto `002db80c`.
+Usage — configuration, linking, and what the command emits — is in the book:
+`book/src/backends/rust.md`. This file is the design note for the backend.
 
 This is specifically a **Safe Rust backend that consumes Diplomat's native
 ABI**. It does not call the provider through the Rust ABI, depend on the
@@ -203,7 +203,8 @@ slice/struct edges or larger output lifetime graphs. It never substitutes
 
 Supported:
 
-- `bool`, `DiplomatByte`, `i8`–`i64`, `u8`–`u64`, `isize`, `usize`, and `f32`/`f64`;
+- `bool`, `DiplomatByte`, `i8`–`i64`, `u8`–`u64`, `isize`, `usize`, `f32`/`f64`, and
+  `char` (`DiplomatChar` / `u32` on the wire, `char` in the public API);
 - opaque definitions with or without type-level lifetime parameters;
 - static methods/constructors, `&self`, and `&mut self`;
 - shared and mutable opaque parameters through sealed capabilities;
@@ -224,7 +225,10 @@ Supported:
   opaque on either side becomes the owning wrapper — which is what frees the provider's
   allocation when a caller discards the error with `?`;
 - simple enums;
-- `repr(C)` value structs whose fields are supported primitives/enums;
+- `repr(C)` value structs, including nested structs and `Option` fields. A field
+  whose public type is not layout-identical (`char`) crosses an ABI mirror;
+- inherent methods on value structs and enums;
+- `DiplomatWrite` methods as `String`, `Result<String, E>`, or `Option<String>`;
 - lifetime-bearing value structs whose fields are supported primitives/enums or
   borrowed slices (e.g. `BorrowedFields<'a>`), with per-field lifetime mapping;
 - value `Option<T>` for supported value-type payloads (the old local mirror's `Copy` bound is gone);
@@ -236,16 +240,15 @@ Supported:
 
 Explicitly rejected with contextual backend errors:
 
-- unsupported primitives: `char` (it reaches the ABI as a `DiplomatChar`/`u32`, so
-  accepting it would need a code-point validity decision), `Ordering` (no agreed ABI
-  shape), and 128-bit integers (not FFI-safe on every target);
-- nested/owning struct fields and output-only structs;
+- unsupported primitives: `Ordering` (no agreed ABI shape) and 128-bit integers
+  (not FFI-safe on every target);
+- output-only structs, and struct fields that are not supported value types;
 - owned slice *inputs* and owned slices of non-byte elements, including
   `Box<[S]>` for a value struct `S` (core rejects it at the AST with "Owned
   slices only support primitives"; the allocator contract is #15);
 - slices of lifetime-bearing structs, strings-of-strings, and opaques, and
   `Option`/`Result` composition of owned slices;
-- writers (`SuccessType::Write`), and every `Result` shape outside the subset above:
+- every `Result` shape outside the subset above:
   a nullable owned opaque error (`Result<T, Option<Box<E>>>`, which has no single owner
   to destruct), a `#[diplomat::attr(auto, error)]`-marked struct that is not a plain
   value struct, and a custom enum or struct error that is not marked at all — the last
@@ -260,55 +263,29 @@ expressed by its flags are checked during Rust generation. Any error makes
 the backend return an empty `FileMap`; the top-level driver also refuses all
 writes when diagnostics exist.
 
-The declared flags are not the whole story — what backs each one matters. All eleven are
-gated in the fixture with `#[diplomat::cfg(supports = ...)]`, so dropping a flag removes
-the API and the consumer's test targets stop compiling:
+`attr_support()` claims seven flags. `feature_tests/rust/scripts/check.sh` parses
+that function and requires each claimed flag to change which shared-corpus items
+survive:
 
-| flag | gated fixture API |
+| flag | shared-corpus items it gates |
 |---|---|
-| `constructors` | `Counter::from_value` (a plain `attr(auto, constructor)`) |
-| `memory_sharing` | `Numbers::from_slice`, `Float64Vec::new` |
-| `mutable_slices` | `Numbers::values_mut`, `Numbers::fill`, `Points::scale` |
-| `named_constructors` | `Counter::with_value` (from `new_named`) |
-| `option` | `Counter::add`, `Counter::maybe_snapshot` |
-| `owned_byte_slice_returns` | `Bytes::make`, `Bytes::join` |
-| `custom_errors` | `Counter::try_from_value`, `Counter::take` |
-| `static_slices` | `Numbers::from_static` |
-| `utf8_strings` | `Message::utf8_len` |
-| `utf16_strings` | `WideMessage::new`, `WideMessage::units` |
-| `abi_compatibles` | `Points::total`, `Points::new`, `Points::as_slice`, `Points::scale` |
+| `memory_sharing` | `Float64Vec::new` |
+| `mutable_slices` | `Float64Vec::fill_slice`, `PrimitiveStruct::mutable_slice` |
+| `option` | the `OptionOpaque` value-option helpers |
+| `static_slices` | `Foo::new_static` |
+| `owned_byte_slice_returns` | `OwnedSliceReturn` |
+| `custom_errors` | `ResultOpaque::new_failing_int` |
+| `abi_compatibles` | `CyclicStructA::nested_slice`, `ScalarPairWithPadding`, `BigStructWithStuff` |
 
-The gating was verified by turning each flag off in turn, regenerating, and requiring
-three things: generation still succeeds (the guard must *disable* an API, not raise a
-diagnostic), the gated symbol disappears from the generated source, and
-`cargo check --all-targets` on the consumer fails. `--all-targets` is load-bearing here:
-the consumer's lib target references no gated API — every reference lives in
-`tests/runtime.rs` — so a plain `cargo check` passes with all eleven flags off.
+`constructors`, `named_constructors`, `utf8_strings`, and `utf16_strings` are not
+claimed. UTF-8 and UTF-16 slices still lower when the corpus item is not itself
+gated on those flags. `named_constructors` would not be load-bearing anyway: the
+attribute path is `named_constructor` and the flag name is `named_constructors`,
+so core does not consult the flag when applying the attribute. `option` gates
+`Option<struct/enum/primitive>` only; `Option<Box<Opaque>>` is a separate arm.
 
-Two of the guards are not the obvious ones, and both were found by that experiment
-rather than by reading the fixture:
-
-- **`option` does not cover nullable owned opaques.** Lowering reads the flag only for
-  `Option<struct/enum/primitive>` (`Type::DiplomatOption`); `Option<Box<Opaque>>` is a
-  different arm that never consults it. Gating `Counter::maybe_new` on `option` would
-  therefore have been a false claim, so the gated shapes are the value-type ones.
-- **`named_constructors` cannot gate its own attribute.** The `auto` support check calls
-  `BackendAttrSupport::check_string` with the *attribute path*, but that match's keys are
-  the *flag* names — `named_constructors`, plural — while the path is
-  `named_constructor`, singular. The lookup returns `None`, the check is skipped, and the
-  attribute is applied even with the flag off: with `support.named_constructors = false`
-  the generated `Counter` still exposed `with_value`. Nothing else in `core` reads that
-  flag either, so an explicit `cfg` guard is the only thing that can gate it. The same
-  spelling mismatch applies to every `attr(auto, ...)` whose path is not spelled exactly
-  like a flag name (`constructor`, `comparison`, `stringifier`, `getter`, `setter`,
-  `iterator`, `namespace`, `indexer`); `constructors` *is* read in `core`, but only to
-  decide whether to diagnose a fallible constructor, not to gate `attr(auto, constructor)`.
-
-`memory_sharing` is claimed because generated code borrows directly out of
-provider-owned memory. Note the interaction with the rejected primitive set: the
-shared `feature_tests/src` corpus gates `&[f64]` constructors on that same flag, so the
-fixture's `Float64Vec` holds that exact shape — it failed outright until floats were
-added to the primitive subset.
+`memory_sharing` is claimed because a `&[T]` parameter is the caller's own slice.
+The shared corpus gates `Float64Vec::new` on that flag.
 
 ## Safety audit
 
@@ -404,17 +381,10 @@ constructor/destructor definition in the consumer. These checks establish
 that the generated crate calls Diplomat native symbols and that the consumer
 does not contain a statically linked provider implementation.
 
-Verification completed for this implementation:
-
-- `cargo fmt --all --check`;
-- `cargo clippy --workspace --all-targets -- -D warnings` for the main workspace and
-  for the generated/provider/consumer fixture workspace;
-- all 134 `diplomat-tool` unit tests, including 23 Rust-backend generator tests;
-- the complete `cargo test --workspace --no-fail-fast` unit and doc-test suite;
-- `feature_tests/rust/scripts/check.sh`, including the safe runtime and
-  compile-fail test suites (11 + 12 cases);
-- every capability flag turned off in turn, with generation, generated-symbol and
-  consumer `--all-targets` compilation checked each time (see the flag table above).
+The checks that cover this backend are `cargo test -p diplomat-tool --lib rust::`
+and `feature_tests/rust/scripts/check.sh`. The script regenerates the fixture,
+builds the shared corpus as the provider, runs the consumer runtime tests and
+the compile-fail cases, and checks formatting, clippy, and the claimed flags.
 
 Cargo resolves `rustdoc` through PATH, and on the development host that served Homebrew
 rustdoc 1.97.1 while `rustc` was rustup 1.96.0 (there is no rustdoc shim beside the rustc
@@ -440,9 +410,9 @@ struct-contained lifetime edges are now implemented: the hard part was building
 a lifetime-graph emitter that maps HIR's `LifetimeEnv`/edge data onto Rust
 generic parameters and bounds (and a `repr(C)`-to-reference bridge for struct
 fields). Still remaining are owned slice returns of non-byte
-elements, slices of structs/strings/opaques, multiple/transitive output lifetime
-graphs, callbacks, writers, and arbitrary tagged-union payload ownership (`Result`
-payloads are no longer on this list). HIR has enough
+elements, slices of strings and opaques, multiple output lifetimes, and
+callbacks. `DiplomatWrite` and `Result` payloads in the supported subset are
+implemented. HIR has enough
 information for the implemented lifetime subset. The material missing datum is
 a per-opaque `Send`/`Sync` contract; therefore conservative negative auto traits
 are required.

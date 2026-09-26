@@ -10,5 +10,8 @@ dylib-name = "diplomat_example"
 [dotnet]
 native-lib = "diplomat_example"
 
+[rust]
+dylib-name = "diplomat_example"
+
 [demo-gen]
 relative-js-path = "../../js/lib/api/"

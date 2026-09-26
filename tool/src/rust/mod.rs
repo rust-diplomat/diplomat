@@ -33,10 +33,19 @@ pub struct RustConfig {
     pub crate_name: Option<String>,
     /// Native library name passed to Rust's `#[link]` attribute.
     pub dylib_name: Option<String>,
+    /// When `Some(false)`, the generated `Cargo.toml` sets `publish = false`.
+    /// Omitted by default, so the package can be published.
+    pub publish: Option<bool>,
 }
 
 impl RustConfig {
     pub fn set(&mut self, key: &str, value: toml::Value) {
+        if key == "publish" {
+            self.publish = value
+                .as_bool()
+                .or_else(|| value.as_str().map(|v| v == "true"));
+            return;
+        }
         let value = value
             .as_str()
             .unwrap_or_else(|| panic!("Rust config key `{key}` must be a string"))
@@ -81,6 +90,8 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
 #[template(path = "rust/Cargo.toml.jinja", escape = "none")]
 struct CargoTemplate<'a> {
     crate_name: &'a str,
+    /// `publish = false\n` or empty. Empty leaves the package publishable.
+    publish_line: &'a str,
 }
 
 #[derive(Template)]
@@ -141,8 +152,14 @@ pub(crate) fn run<'tcx>(
         return (files, errors);
     }
 
+    let publish_line = if config.rust_config.publish.unwrap_or(true) {
+        ""
+    } else {
+        "publish = false\n"
+    };
     let package = CargoTemplate {
         crate_name: &crate_name,
+        publish_line,
     }
     .render()
     .expect("Rust Cargo.toml template rendering cannot fail");
@@ -645,8 +662,10 @@ mod tests {
         let mut config = super::RustConfig::default();
         config.set("crate_name", toml::Value::String("safe-bindings".into()));
         config.set("dylib_name", toml::Value::String("native_owner".into()));
+        config.set("publish", toml::Value::Boolean(false));
         assert_eq!(config.crate_name.as_deref(), Some("safe-bindings"));
         assert_eq!(config.dylib_name.as_deref(), Some("native_owner"));
+        assert_eq!(config.publish, Some(false));
     }
 
     #[test]
@@ -1513,6 +1532,11 @@ mod tests {
         assert!(errors.is_empty(), "{errors:#?}");
         let safe = &all_rust_sources(&files);
         assert!(safe.contains("pub fn create(value: u32)"), "{safe}");
+        assert!(
+            !files["Cargo.toml"].contains("publish"),
+            "the default package is publishable:\n{}",
+            files["Cargo.toml"]
+        );
     }
 
     /// How each capability flag claimed by `attr_support` is covered.

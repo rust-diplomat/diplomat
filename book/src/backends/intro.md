@@ -3,3 +3,4 @@ to see what is necessary. Documentation for more backends will be added in the f
 * [.NET](dotnet.md)
 * [Kotlin](kotlin.md)
 * [Nanobind](nanobind.md)
+* [Rust](rust.md)
