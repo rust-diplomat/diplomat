@@ -16,12 +16,14 @@ pub(crate) fn char_from_u32(value: u32) -> char {
         .expect("provider returned a DiplomatChar outside the Unicode scalar range")
 }
 
-{% for opaque in opaques %}pub trait {{ opaque.name }}SharedSealed {
+{% for opaque in opaques %}pub trait {{ opaque.name }}SharedSealed{{ opaque.type_params }} {
     fn __as_const_ptr(&self) -> *const crate::ffi::{{ opaque.name }};
-}
-pub trait {{ opaque.name }}MutSealed: {{ opaque.name }}SharedSealed {
+{% if opaque.has_type_lifetimes %}    fn __type_lifetime(&self) -> {{ opaque.lifetime_witness }};
+{% endif %}}
+pub trait {{ opaque.name }}MutSealed{{ opaque.type_params }}: {{ opaque.name }}SharedSealed{{ opaque.type_args }} {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::{{ opaque.name }};
-}
+{% if opaque.has_type_lifetimes %}    fn __type_lifetime(&self) -> {{ opaque.lifetime_witness }};
+{% endif %}}
 {% endfor %}
     /// Reconstruct a validated `&str` from a provider-returned UTF-8 slice.
     ///

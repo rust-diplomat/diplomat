@@ -76,23 +76,29 @@ pub trait RenamedVectorTestSharedSealed {
 pub trait RenamedVectorTestMutSealed: RenamedVectorTestSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::RenamedVectorTest;
 }
-pub trait BarSharedSealed {
+pub trait BarSharedSealed<'b, 'a: 'b> {
     fn __as_const_ptr(&self) -> *const crate::ffi::Bar;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())>;
 }
-pub trait BarMutSealed: BarSharedSealed {
+pub trait BarMutSealed<'b, 'a: 'b>: BarSharedSealed<'b, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Bar;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())>;
 }
-pub trait FooSharedSealed {
+pub trait FooSharedSealed<'a> {
     fn __as_const_ptr(&self) -> *const crate::ffi::Foo;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
-pub trait FooMutSealed: FooSharedSealed {
+pub trait FooMutSealed<'a>: FooSharedSealed<'a> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Foo;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
-pub trait OneSharedSealed {
+pub trait OneSharedSealed<'a> {
     fn __as_const_ptr(&self) -> *const crate::ffi::One;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
-pub trait OneMutSealed: OneSharedSealed {
+pub trait OneMutSealed<'a>: OneSharedSealed<'a> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::One;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
 pub trait OpaqueThinSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::OpaqueThin;
@@ -100,11 +106,13 @@ pub trait OpaqueThinSharedSealed {
 pub trait OpaqueThinMutSealed: OpaqueThinSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::OpaqueThin;
 }
-pub trait OpaqueThinIterSharedSealed {
+pub trait OpaqueThinIterSharedSealed<'a> {
     fn __as_const_ptr(&self) -> *const crate::ffi::OpaqueThinIter;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
-pub trait OpaqueThinIterMutSealed: OpaqueThinIterSharedSealed {
+pub trait OpaqueThinIterMutSealed<'a>: OpaqueThinIterSharedSealed<'a> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::OpaqueThinIter;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
 pub trait OpaqueThinVecSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::OpaqueThinVec;
@@ -112,11 +120,21 @@ pub trait OpaqueThinVecSharedSealed {
 pub trait OpaqueThinVecMutSealed: OpaqueThinVecSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::OpaqueThinVec;
 }
-pub trait TwoSharedSealed {
+pub trait TwoSharedSealed<'a, 'b> {
     fn __as_const_ptr(&self) -> *const crate::ffi::Two;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())>;
 }
-pub trait TwoMutSealed: TwoSharedSealed {
+pub trait TwoMutSealed<'a, 'b>: TwoSharedSealed<'a, 'b> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Two;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())>;
+}
+pub trait TypeLifetimeOpaqueSharedSealed<'a> {
+    fn __as_const_ptr(&self) -> *const crate::ffi::TypeLifetimeOpaque;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
+}
+pub trait TypeLifetimeOpaqueMutSealed<'a>: TypeLifetimeOpaqueSharedSealed<'a> {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::TypeLifetimeOpaque;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
 pub trait OptionOpaqueSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::OptionOpaque;
@@ -142,11 +160,13 @@ pub trait ResultOpaqueSharedSealed {
 pub trait ResultOpaqueMutSealed: ResultOpaqueSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::ResultOpaque;
 }
-pub trait RefListSharedSealed {
+pub trait RefListSharedSealed<'a> {
     fn __as_const_ptr(&self) -> *const crate::ffi::RefList;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
-pub trait RefListMutSealed: RefListSharedSealed {
+pub trait RefListMutSealed<'a>: RefListSharedSealed<'a> {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::RefList;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
 }
 pub trait RefListParameterSharedSealed {
     fn __as_const_ptr(&self) -> *const crate::ffi::RefListParameter;

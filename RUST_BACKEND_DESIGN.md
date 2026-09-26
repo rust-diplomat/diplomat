@@ -141,8 +141,8 @@ API safe.
 | `bool`, `DiplomatByte`, 8–64-bit integers, `isize`, `usize`, `f32`, `f64` | Corresponding C-compatible scalar | Native scalar conversions | Same Rust scalar (`DiplomatByte` becomes `u8`) | `Type::Primitive`, `PrimitiveType`; primitive formatters informed the mapping | Unsafe extern call only. Both sides use the exact scalar ABI type. Unsupported primitive kinds are rejected. |
 | Owned opaque / `Box<T>` return | Non-null `T*` allocated by provider | .NET owning `RustHandle<T>`; C++ owning RAII wrapper | Non-cloneable `T { NonNull<ffi::T>, ... }` | Output `Type::Opaque`, `MaybeOwn::Own`, `OpaqueDef::dtor_abi_name` | Check null, construct private fields, later call provider destructor. Only one constructible owner exists and consumer never reconstructs `Box<T>`. |
 | Nullable owned opaque | Nullable `T*` | Nullable managed/RAII wrapper | `Option<T>` | `OpaquePath::is_optional` plus owned `OpaqueOwner` | `NonNull::new(ptr).map(...)`. Null is `None`; non-null creates exactly one owner. |
-| `&T` input | `const T*` | Handle/pointer extraction or C++ const reference | `&impl TSharedArg` | Input opaque `Borrow { mutability: Immutable, lifetime }`; reuse HIR lifetime | Private sealed trait extracts the pointer. Public capability trait has no methods and downstream crates cannot implement it. `T`, `TRef`, and `TRefMut` provide only shared capability. |
-| `&mut T` input | `T*` | Exclusive lease or C++ mutable reference | `&mut impl TMutArg` | Input opaque mutable `Borrow`; `ParamSelf::get_mutability` | Private sealed trait extracts a mutable pointer. Only `T` and `TRefMut` implement it, and Rust enforces uniqueness of the argument borrow. |
+| `&T` input | `const T*` | Handle/pointer extraction or C++ const reference | `&impl TSharedArg<'type lifetimes>` | Input opaque `Borrow { mutability: Immutable, lifetime }`; reuse HIR lifetime | A private sealed trait extracts the pointer and carries the opaque's type-level lifetimes. The public capability marker has the same lifetime parameters, so `T<'short>` cannot satisfy a method requiring `T<'long>`; downstream crates cannot implement it. `T`, `TRef`, and `TRefMut` provide only shared capability. |
+| `&mut T` input | `T*` | Exclusive lease or C++ mutable reference | `&mut impl TMutArg<'type lifetimes>` | Input opaque mutable `Borrow`; `ParamSelf::get_mutability` | Private sealed trait extracts a mutable pointer and carries the opaque's type-level lifetimes. Only `T` and `TRefMut` implement it, and Rust enforces uniqueness of the argument borrow. |
 | `&self` | `const T*` receiver | Managed shared borrow/lease; C++ const member | `&self` on `T`, `TRef<'_>`, and `TRefMut<'_>` | `ParamSelf`, `SelfType::Opaque`, immutable `Borrow` | Private `NonNull` is passed as const. No public mutable capability is created. |
 | `&mut self` | `T*` receiver | Managed exclusive lease; C++ mutable member | `&mut self` on `T` and `TRefMut<'_>` only | Mutable `ParamSelf` | Private `NonNull` is passed as mutable. `TRef` does not receive mutable methods; borrow checking prevents aliases. |
 | Shared borrowed opaque return | Non-owning non-null `const U*` | .NET non-owning handle with source lease/version; C++ reference | `URef<'a>` with `PhantomData<&'a ()>`, no `Drop` | Borrowed output `OpaqueOwner`, output lifetime, `Method::used_method_lifetimes`, `borrowing_param_visitor` | Check null then construct a non-owning view. Generated signature ties `'a` to the HIR-selected opaque input(s), so the view cannot outlive them. |
@@ -168,8 +168,10 @@ For each opaque `T`, the safe file generates:
 - `T`: owned, private `NonNull`, non-cloneable, provider destructor in `Drop`;
 - `TRef<'a>`: shared, non-owning, method set limited to shared methods;
 - `TRefMut<'a>`: exclusive, non-owning, shared and mutable methods;
-- public, methodless `TSharedArg` and `TMutArg` marker traits whose pointer
-  operations live in a private sealing module;
+- public `TSharedArg<'type lifetimes>` and `TMutArg<'type lifetimes>` marker
+  traits whose pointer operations and lifetime witness live in a private sealing
+  module; the lifetime parameters prevent an opaque carrying a shorter borrow
+  from satisfying a capability for a longer one;
 - a hand-written `Debug` impl on all three wrappers that prints
   `TypeName(<addr>)`. A derive is not used: it would name the `pub(crate)`
   fields and lock the internal representation into the public format.
@@ -185,10 +187,11 @@ per-opaque thread-safety metadata, so the safe conservative answer is
 Opaque types with type-level lifetimes become lifetime-parameterized wrappers:
 `T<'a>`, `TRef<'view, 'a>`, and `TRefMut<'view, 'a>`. The type lifetimes are
 threaded through the generated `Drop` impl, the sealed capability traits, and
-every method, and an invariant `PhantomData<fn(&'a ()) -> &'a ()>` prevents
-unsound variance. Method-level lifetimes come after the type-level ones in
-HIR's `LifetimeEnv`, and only the lifetimes actually named in the generated
-signature are declared on the method.
+every method, and an invariant `PhantomData<*mut &'a ()>` prevents unsound
+variance. Opaque input capability traits repeat those type-level lifetime
+parameters, so the safe method signature cannot erase them. Method-level
+lifetimes come after the type-level ones in HIR's `LifetimeEnv`, and only the
+lifetimes actually named in the generated signature are declared on the method.
 
 The generator reproduces the method lifetimes used by borrowed outputs and
 their HIR bounds. It runs `borrowing_param_visitor`, accepts one simple

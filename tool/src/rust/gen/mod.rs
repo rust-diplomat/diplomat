@@ -14,7 +14,9 @@ use askama::Template;
 use diplomat_core::hir::{self, TypeContext, TypeDef};
 
 use super::formatter::{field_name, opaque_module_name, type_def_name};
-use super::lifetimes::struct_generics;
+use super::lifetimes::{
+    lifetime_generics, lifetime_witness_type, render_generics, struct_generics,
+};
 use super::type_map::{
     ffi_input_type, ffi_return_generics, ffi_return_type, ffi_self_type, ffi_struct_field_type,
     struct_needs_abi_mirror,
@@ -73,6 +75,10 @@ struct AbiMethodView {
 
 struct OpaqueCapabilityView {
     name: String,
+    type_params: String,
+    type_args: String,
+    has_type_lifetimes: bool,
+    lifetime_witness: String,
 }
 
 pub(super) fn generate_ffi(tcx: &TypeContext, dylib_name: &str) -> String {
@@ -181,8 +187,20 @@ pub(super) fn generate_private(tcx: &TypeContext) -> String {
         .opaques()
         .iter()
         .filter(|ty| !ty.attrs.disable)
-        .map(|opaque| OpaqueCapabilityView {
-            name: type_def_name(TypeDef::Opaque(opaque)),
+        .map(|opaque| {
+            let (type_params, type_args) = lifetime_generics(&opaque.lifetimes);
+            let has_type_lifetimes = !type_args.is_empty();
+            OpaqueCapabilityView {
+                name: type_def_name(TypeDef::Opaque(opaque)),
+                type_params: render_generics(&type_params),
+                type_args: render_generics(&type_args),
+                has_type_lifetimes,
+                lifetime_witness: if has_type_lifetimes {
+                    lifetime_witness_type(&type_args)
+                } else {
+                    String::new()
+                },
+            }
         })
         .collect();
     PrivateTemplate { opaques }

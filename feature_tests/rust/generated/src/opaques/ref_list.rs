@@ -26,48 +26,63 @@ pub struct RefListRefMut<'view, 'a> {
 }
 
 #[doc(hidden)]
-pub trait RefListSharedArg: crate::private::RefListSharedSealed {}
+pub trait RefListSharedArg<'a>: crate::private::RefListSharedSealed<'a> {}
 
 #[doc(hidden)]
-pub trait RefListMutArg: crate::private::RefListMutSealed {}
+pub trait RefListMutArg<'a>: crate::private::RefListMutSealed<'a> {}
 
-impl<'a> crate::private::RefListSharedSealed for RefList<'a> {
+impl<'a> crate::private::RefListSharedSealed<'a> for RefList<'a> {
     fn __as_const_ptr(&self) -> *const ffi::RefList {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'a> crate::private::RefListMutSealed for RefList<'a> {
+impl<'a> crate::private::RefListMutSealed<'a> for RefList<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefList {
         self.inner.as_ptr()
     }
-}
-
-impl<'a> RefListSharedArg for RefList<'a> {}
-impl<'a> RefListMutArg for RefList<'a> {}
-
-impl<'view, 'a> crate::private::RefListSharedSealed for RefListRef<'view, 'a> {
-    fn __as_const_ptr(&self) -> *const ffi::RefList {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'a> RefListSharedArg for RefListRef<'view, 'a> {}
+impl<'a> RefListSharedArg<'a> for RefList<'a> {}
+impl<'a> RefListMutArg<'a> for RefList<'a> {}
 
-impl<'view, 'a> crate::private::RefListSharedSealed for RefListRefMut<'view, 'a> {
+impl<'view, 'a> crate::private::RefListSharedSealed<'a> for RefListRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::RefList {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> crate::private::RefListMutSealed for RefListRefMut<'view, 'a> {
+impl<'view, 'a> RefListSharedArg<'a> for RefListRef<'view, 'a> {}
+
+impl<'view, 'a> crate::private::RefListSharedSealed<'a> for RefListRefMut<'view, 'a> {
+    fn __as_const_ptr(&self) -> *const ffi::RefList {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'a> crate::private::RefListMutSealed<'a> for RefListRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::RefList {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> RefListSharedArg for RefListRefMut<'view, 'a> {}
-impl<'view, 'a> RefListMutArg for RefListRefMut<'view, 'a> {}
+impl<'view, 'a> RefListSharedArg<'a> for RefListRefMut<'view, 'a> {}
+impl<'view, 'a> RefListMutArg<'a> for RefListRefMut<'view, 'a> {}
 
 impl<'a> Drop for RefList<'a> {
     fn drop(&mut self) {

@@ -28,48 +28,63 @@ pub struct FooRefMut<'view, 'a> {
 }
 
 #[doc(hidden)]
-pub trait FooSharedArg: crate::private::FooSharedSealed {}
+pub trait FooSharedArg<'a>: crate::private::FooSharedSealed<'a> {}
 
 #[doc(hidden)]
-pub trait FooMutArg: crate::private::FooMutSealed {}
+pub trait FooMutArg<'a>: crate::private::FooMutSealed<'a> {}
 
-impl<'a> crate::private::FooSharedSealed for Foo<'a> {
+impl<'a> crate::private::FooSharedSealed<'a> for Foo<'a> {
     fn __as_const_ptr(&self) -> *const ffi::Foo {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'a> crate::private::FooMutSealed for Foo<'a> {
+impl<'a> crate::private::FooMutSealed<'a> for Foo<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Foo {
         self.inner.as_ptr()
     }
-}
-
-impl<'a> FooSharedArg for Foo<'a> {}
-impl<'a> FooMutArg for Foo<'a> {}
-
-impl<'view, 'a> crate::private::FooSharedSealed for FooRef<'view, 'a> {
-    fn __as_const_ptr(&self) -> *const ffi::Foo {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'a> FooSharedArg for FooRef<'view, 'a> {}
+impl<'a> FooSharedArg<'a> for Foo<'a> {}
+impl<'a> FooMutArg<'a> for Foo<'a> {}
 
-impl<'view, 'a> crate::private::FooSharedSealed for FooRefMut<'view, 'a> {
+impl<'view, 'a> crate::private::FooSharedSealed<'a> for FooRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Foo {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> crate::private::FooMutSealed for FooRefMut<'view, 'a> {
+impl<'view, 'a> FooSharedArg<'a> for FooRef<'view, 'a> {}
+
+impl<'view, 'a> crate::private::FooSharedSealed<'a> for FooRefMut<'view, 'a> {
+    fn __as_const_ptr(&self) -> *const ffi::Foo {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'a> crate::private::FooMutSealed<'a> for FooRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Foo {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> FooSharedArg for FooRefMut<'view, 'a> {}
-impl<'view, 'a> FooMutArg for FooRefMut<'view, 'a> {}
+impl<'view, 'a> FooSharedArg<'a> for FooRefMut<'view, 'a> {}
+impl<'view, 'a> FooMutArg<'a> for FooRefMut<'view, 'a> {}
 
 impl<'a> Drop for Foo<'a> {
     fn drop(&mut self) {

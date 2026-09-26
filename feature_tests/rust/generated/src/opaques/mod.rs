@@ -30,6 +30,7 @@ mod renamed_test_opaque;
 mod renamed_vector_test;
 mod result_opaque;
 mod two;
+mod type_lifetime_opaque;
 mod unnamespaced;
 mod utf16_wrap;
 
@@ -63,5 +64,6 @@ pub use renamed_test_opaque::*;
 pub use renamed_vector_test::*;
 pub use result_opaque::*;
 pub use two::*;
+pub use type_lifetime_opaque::*;
 pub use unnamespaced::*;
 pub use utf16_wrap::*;

@@ -26,48 +26,63 @@ pub struct BarRefMut<'view, 'b, 'a: 'b> {
 }
 
 #[doc(hidden)]
-pub trait BarSharedArg: crate::private::BarSharedSealed {}
+pub trait BarSharedArg<'b, 'a: 'b>: crate::private::BarSharedSealed<'b, 'a> {}
 
 #[doc(hidden)]
-pub trait BarMutArg: crate::private::BarMutSealed {}
+pub trait BarMutArg<'b, 'a: 'b>: crate::private::BarMutSealed<'b, 'a> {}
 
-impl<'b, 'a: 'b> crate::private::BarSharedSealed for Bar<'b, 'a> {
+impl<'b, 'a: 'b> crate::private::BarSharedSealed<'b, 'a> for Bar<'b, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Bar {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'b, 'a: 'b> crate::private::BarMutSealed for Bar<'b, 'a> {
+impl<'b, 'a: 'b> crate::private::BarMutSealed<'b, 'a> for Bar<'b, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Bar {
         self.inner.as_ptr()
     }
-}
-
-impl<'b, 'a: 'b> BarSharedArg for Bar<'b, 'a> {}
-impl<'b, 'a: 'b> BarMutArg for Bar<'b, 'a> {}
-
-impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed for BarRef<'view, 'b, 'a> {
-    fn __as_const_ptr(&self) -> *const ffi::Bar {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'b, 'a: 'b> BarSharedArg for BarRef<'view, 'b, 'a> {}
+impl<'b, 'a: 'b> BarSharedArg<'b, 'a> for Bar<'b, 'a> {}
+impl<'b, 'a: 'b> BarMutArg<'b, 'a> for Bar<'b, 'a> {}
 
-impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed for BarRefMut<'view, 'b, 'a> {
+impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed<'b, 'a> for BarRef<'view, 'b, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::Bar {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'b, 'a: 'b> crate::private::BarMutSealed for BarRefMut<'view, 'b, 'a> {
+impl<'view, 'b, 'a: 'b> BarSharedArg<'b, 'a> for BarRef<'view, 'b, 'a> {}
+
+impl<'view, 'b, 'a: 'b> crate::private::BarSharedSealed<'b, 'a> for BarRefMut<'view, 'b, 'a> {
+    fn __as_const_ptr(&self) -> *const ffi::Bar {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'b, 'a: 'b> crate::private::BarMutSealed<'b, 'a> for BarRefMut<'view, 'b, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Bar {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'b (), *mut &'a ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'b, 'a: 'b> BarSharedArg for BarRefMut<'view, 'b, 'a> {}
-impl<'view, 'b, 'a: 'b> BarMutArg for BarRefMut<'view, 'b, 'a> {}
+impl<'view, 'b, 'a: 'b> BarSharedArg<'b, 'a> for BarRefMut<'view, 'b, 'a> {}
+impl<'view, 'b, 'a: 'b> BarMutArg<'b, 'a> for BarRefMut<'view, 'b, 'a> {}
 
 impl<'b, 'a: 'b> Drop for Bar<'b, 'a> {
     fn drop(&mut self) {

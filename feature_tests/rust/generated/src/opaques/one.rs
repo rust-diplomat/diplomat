@@ -26,48 +26,63 @@ pub struct OneRefMut<'view, 'a> {
 }
 
 #[doc(hidden)]
-pub trait OneSharedArg: crate::private::OneSharedSealed {}
+pub trait OneSharedArg<'a>: crate::private::OneSharedSealed<'a> {}
 
 #[doc(hidden)]
-pub trait OneMutArg: crate::private::OneMutSealed {}
+pub trait OneMutArg<'a>: crate::private::OneMutSealed<'a> {}
 
-impl<'a> crate::private::OneSharedSealed for One<'a> {
+impl<'a> crate::private::OneSharedSealed<'a> for One<'a> {
     fn __as_const_ptr(&self) -> *const ffi::One {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'a> crate::private::OneMutSealed for One<'a> {
+impl<'a> crate::private::OneMutSealed<'a> for One<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::One {
         self.inner.as_ptr()
     }
-}
-
-impl<'a> OneSharedArg for One<'a> {}
-impl<'a> OneMutArg for One<'a> {}
-
-impl<'view, 'a> crate::private::OneSharedSealed for OneRef<'view, 'a> {
-    fn __as_const_ptr(&self) -> *const ffi::One {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'a> OneSharedArg for OneRef<'view, 'a> {}
+impl<'a> OneSharedArg<'a> for One<'a> {}
+impl<'a> OneMutArg<'a> for One<'a> {}
 
-impl<'view, 'a> crate::private::OneSharedSealed for OneRefMut<'view, 'a> {
+impl<'view, 'a> crate::private::OneSharedSealed<'a> for OneRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::One {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> crate::private::OneMutSealed for OneRefMut<'view, 'a> {
+impl<'view, 'a> OneSharedArg<'a> for OneRef<'view, 'a> {}
+
+impl<'view, 'a> crate::private::OneSharedSealed<'a> for OneRefMut<'view, 'a> {
+    fn __as_const_ptr(&self) -> *const ffi::One {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'a> crate::private::OneMutSealed<'a> for OneRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::One {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> OneSharedArg for OneRefMut<'view, 'a> {}
-impl<'view, 'a> OneMutArg for OneRefMut<'view, 'a> {}
+impl<'view, 'a> OneSharedArg<'a> for OneRefMut<'view, 'a> {}
+impl<'view, 'a> OneMutArg<'a> for OneRefMut<'view, 'a> {}
 
 impl<'a> Drop for One<'a> {
     fn drop(&mut self) {
@@ -106,8 +121,8 @@ impl<'o> One<'o> {
         'x,
         'anon_0,
     >(
-        hold: &'x impl crate::OneSharedArg,
-        nohold: &'anon_0 impl crate::OneSharedArg,
+        hold: &'x impl crate::OneSharedArg<'e>,
+        nohold: &'anon_0 impl crate::OneSharedArg<'x>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -127,8 +142,8 @@ impl<'o> One<'o> {
         }
     }
     pub fn cycle<'a: 'b + 'c, 'b: 'c + 'a, 'c: 'a + 'b, 'x, 'anon_0>(
-        hold: &'anon_0 impl crate::TwoSharedArg,
-        nohold: &'x impl crate::OneSharedArg,
+        hold: &'anon_0 impl crate::TwoSharedArg<'x, 'b>,
+        nohold: &'x impl crate::OneSharedArg<'x>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -156,11 +171,11 @@ impl<'o> One<'o> {
         'y: 'x,
         'anon_0,
     >(
-        a: &'x impl crate::OneSharedArg,
-        b: &'b impl crate::OneSharedArg,
-        c: &'anon_0 impl crate::TwoSharedArg,
-        d: &'x impl crate::TwoSharedArg,
-        nohold: &'x impl crate::TwoSharedArg,
+        a: &'x impl crate::OneSharedArg<'a>,
+        b: &'b impl crate::OneSharedArg<'a>,
+        c: &'anon_0 impl crate::TwoSharedArg<'x, 'c>,
+        d: &'x impl crate::TwoSharedArg<'d, 'y>,
+        nohold: &'x impl crate::TwoSharedArg<'x, 'y>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -183,8 +198,8 @@ impl<'o> One<'o> {
         }
     }
     pub fn return_outlives_param<'short, 'long: 'short, 'anon_0>(
-        hold: &'anon_0 impl crate::TwoSharedArg,
-        nohold: &'short impl crate::OneSharedArg,
+        hold: &'anon_0 impl crate::TwoSharedArg<'long, 'short>,
+        nohold: &'short impl crate::OneSharedArg<'short>,
     ) -> crate::One<'long> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -213,10 +228,10 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl crate::OneSharedArg,
-        left: &'anon_1 impl crate::OneSharedArg,
-        right: &'anon_2 impl crate::OneSharedArg,
-        bottom: &'anon_3 impl crate::OneSharedArg,
+        top: &'anon_0 impl crate::OneSharedArg<'top>,
+        left: &'anon_1 impl crate::OneSharedArg<'left>,
+        right: &'anon_2 impl crate::OneSharedArg<'right>,
+        bottom: &'anon_3 impl crate::OneSharedArg<'bottom>,
     ) -> crate::One<'top> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -247,10 +262,10 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl crate::OneSharedArg,
-        left: &'anon_1 impl crate::OneSharedArg,
-        right: &'anon_2 impl crate::OneSharedArg,
-        bottom: &'anon_3 impl crate::OneSharedArg,
+        top: &'anon_0 impl crate::OneSharedArg<'top>,
+        left: &'anon_1 impl crate::OneSharedArg<'left>,
+        right: &'anon_2 impl crate::OneSharedArg<'right>,
+        bottom: &'anon_3 impl crate::OneSharedArg<'bottom>,
     ) -> crate::One<'left> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -281,10 +296,10 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl crate::OneSharedArg,
-        left: &'anon_1 impl crate::OneSharedArg,
-        right: &'anon_2 impl crate::OneSharedArg,
-        bottom: &'anon_3 impl crate::OneSharedArg,
+        top: &'anon_0 impl crate::OneSharedArg<'top>,
+        left: &'anon_1 impl crate::OneSharedArg<'left>,
+        right: &'anon_2 impl crate::OneSharedArg<'right>,
+        bottom: &'anon_3 impl crate::OneSharedArg<'bottom>,
     ) -> crate::One<'right> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -315,10 +330,10 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        top: &'anon_0 impl crate::OneSharedArg,
-        left: &'anon_1 impl crate::OneSharedArg,
-        right: &'anon_2 impl crate::OneSharedArg,
-        bottom: &'anon_3 impl crate::OneSharedArg,
+        top: &'anon_0 impl crate::OneSharedArg<'top>,
+        left: &'anon_1 impl crate::OneSharedArg<'left>,
+        right: &'anon_2 impl crate::OneSharedArg<'right>,
+        bottom: &'anon_3 impl crate::OneSharedArg<'bottom>,
     ) -> crate::One<'bottom> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -351,11 +366,11 @@ impl<'o> One<'o> {
         'anon_2,
         'anon_3,
     >(
-        a: &'anon_0 impl crate::OneSharedArg,
-        b: &'y impl crate::OneSharedArg,
-        c: &'anon_1 impl crate::OneSharedArg,
-        d: &'anon_2 impl crate::OneSharedArg,
-        nohold: &'anon_3 impl crate::OneSharedArg,
+        a: &'anon_0 impl crate::OneSharedArg<'a>,
+        b: &'y impl crate::OneSharedArg<'b>,
+        c: &'anon_1 impl crate::OneSharedArg<'c>,
+        d: &'anon_2 impl crate::OneSharedArg<'d>,
+        nohold: &'anon_3 impl crate::OneSharedArg<'x>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -387,9 +402,9 @@ impl<'o> One<'o> {
         'anon_0,
         'anon_1,
     >(
-        explicit_hold: &'d impl crate::OneSharedArg,
-        implicit_hold: &'anon_0 impl crate::OneSharedArg,
-        nohold: &'anon_1 impl crate::OneSharedArg,
+        explicit_hold: &'d impl crate::OneSharedArg<'x>,
+        implicit_hold: &'anon_0 impl crate::OneSharedArg<'x>,
+        nohold: &'anon_1 impl crate::OneSharedArg<'y>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {
@@ -410,10 +425,10 @@ impl<'o> One<'o> {
         }
     }
     pub fn implicit_bounds_deep<'a, 'b: 'a, 'c: 'b + 'a, 'd: 'c + 'b + 'a, 'x>(
-        explicit_: &'a impl crate::OneSharedArg,
-        implicit_1: &'b impl crate::OneSharedArg,
-        implicit_2: &'c impl crate::OneSharedArg,
-        nohold: &'x impl crate::OneSharedArg,
+        explicit_: &'a impl crate::OneSharedArg<'b>,
+        implicit_1: &'b impl crate::OneSharedArg<'c>,
+        implicit_2: &'c impl crate::OneSharedArg<'d>,
+        nohold: &'x impl crate::OneSharedArg<'x>,
     ) -> crate::One<'a> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe {

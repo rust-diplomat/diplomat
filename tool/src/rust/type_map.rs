@@ -8,7 +8,7 @@ use diplomat_core::hir::{
 };
 
 use super::formatter::{enum_name, field_name, opaque_name, type_def_name};
-use super::lifetimes::{lifetime_name, lifetime_prefix, struct_generics};
+use super::lifetimes::{lifetime_name, lifetime_prefix, render_generics, struct_generics};
 
 /// A primitive, enum, or plain `repr(C)` value struct — the payload this backend
 /// can copy across the ABI without a wrapper. Nested owning/lifetime fields fail
@@ -558,9 +558,14 @@ pub(super) fn safe_input_type(
         Type::Opaque(path) => {
             let name = opaque_name(path.tcx_id, tcx);
             let lifetime = lifetime_prefix(path.owner.lifetime, method);
+            let type_args = opaque_type_lifetime_args(path, method);
             match path.owner.mutability {
-                Mutability::Immutable => format!("&{lifetime}impl crate::{name}SharedArg"),
-                Mutability::Mutable => format!("&{lifetime}mut impl crate::{name}MutArg"),
+                Mutability::Immutable => {
+                    format!("&{lifetime}impl crate::{name}SharedArg{type_args}")
+                }
+                Mutability::Mutable => {
+                    format!("&{lifetime}mut impl crate::{name}MutArg{type_args}")
+                }
             }
         }
         Type::DiplomatOption(inner) => {
@@ -676,6 +681,18 @@ pub(super) fn safe_error_type(
 /// How the native ABI layer names a value type definition: enums and plain value
 /// structs live in the parent module, while a lifetime-carrying struct is emitted
 /// at the crate root.
+fn opaque_type_lifetime_args<Opt>(
+    path: &hir::OpaquePath<Opt, hir::Borrow>,
+    method: &hir::Method,
+) -> String {
+    let args = path
+        .lifetimes
+        .lifetimes()
+        .map(|lifetime| lifetime_name(lifetime, method))
+        .collect::<Vec<_>>();
+    render_generics(&args)
+}
+
 /// The safe public Rust type of an opaque output, including type-level lifetimes,
 /// e.g. `Bar<'b, 'a>` or `FooRef<'x, 'a>`.
 pub(super) fn opaque_safe_type(

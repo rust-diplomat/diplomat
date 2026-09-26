@@ -45,6 +45,28 @@ pub mod ffi {
     #[diplomat::transparent_convert]
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
+    // Type-level lifetimes on opaque arguments must remain visible in the generated
+    // capability trait. Otherwise a `TypeLifetimeOpaque<'short>` can be passed where
+    // the provider requires `TypeLifetimeOpaque<'long>`, allowing it to store a
+    // short borrow as long.
+    #[diplomat::opaque_mut]
+    pub struct TypeLifetimeOpaque<'a>(&'a DiplomatStr);
+
+    impl<'a> TypeLifetimeOpaque<'a> {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(value: &'a DiplomatStr) -> Box<Self> {
+            Box::new(Self(value))
+        }
+
+        pub fn accept_same_lifetime(&mut self, other: &TypeLifetimeOpaque<'a>) {
+            self.0 = other.0;
+        }
+
+        pub fn get(&self) -> &'a DiplomatStr {
+            self.0
+        }
+    }
+
     #[diplomat::attr(any(dotnet, rust), disable)]
     pub struct BorrowedFields<'a> {
         a: DiplomatStr16Slice<'a>,

@@ -115,3 +115,9 @@ compile_fail_case!(two_exclusive_views => "E0499");
 compile_fail_case!(mutable_view_blocks_source => ["E0502", "E0499"]);
 // A shared borrow of provider-owned memory blocks an exclusive borrow.
 compile_fail_case!(borrowed_view_blocks_source => "E0502");
+// An opaque input must preserve its type-level lifetime; a shorter Foo cannot
+// be passed to a method whose provider signature requires the owner's Foo<'a>.
+compile_fail_case!(opaque_type_lifetime_mismatch => ["E0277", "E0597"]);
+// Storing a short-lived opaque into one tied to a longer buffer, then handing
+// that borrow back to the caller, is rejected.
+compile_fail_case!(lifetime_store_short_as_long => "E0515");

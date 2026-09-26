@@ -26,48 +26,63 @@ pub struct OpaqueThinIterRefMut<'view, 'a> {
 }
 
 #[doc(hidden)]
-pub trait OpaqueThinIterSharedArg: crate::private::OpaqueThinIterSharedSealed {}
+pub trait OpaqueThinIterSharedArg<'a>: crate::private::OpaqueThinIterSharedSealed<'a> {}
 
 #[doc(hidden)]
-pub trait OpaqueThinIterMutArg: crate::private::OpaqueThinIterMutSealed {}
+pub trait OpaqueThinIterMutArg<'a>: crate::private::OpaqueThinIterMutSealed<'a> {}
 
-impl<'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIter<'a> {
+impl<'a> crate::private::OpaqueThinIterSharedSealed<'a> for OpaqueThinIter<'a> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'a> crate::private::OpaqueThinIterMutSealed for OpaqueThinIter<'a> {
+impl<'a> crate::private::OpaqueThinIterMutSealed<'a> for OpaqueThinIter<'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
-}
-
-impl<'a> OpaqueThinIterSharedArg for OpaqueThinIter<'a> {}
-impl<'a> OpaqueThinIterMutArg for OpaqueThinIter<'a> {}
-
-impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIterRef<'view, 'a> {
-    fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'a> OpaqueThinIterSharedArg for OpaqueThinIterRef<'view, 'a> {}
+impl<'a> OpaqueThinIterSharedArg<'a> for OpaqueThinIter<'a> {}
+impl<'a> OpaqueThinIterMutArg<'a> for OpaqueThinIter<'a> {}
 
-impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed for OpaqueThinIterRefMut<'view, 'a> {
+impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed<'a> for OpaqueThinIterRef<'view, 'a> {
     fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> crate::private::OpaqueThinIterMutSealed for OpaqueThinIterRefMut<'view, 'a> {
+impl<'view, 'a> OpaqueThinIterSharedArg<'a> for OpaqueThinIterRef<'view, 'a> {}
+
+impl<'view, 'a> crate::private::OpaqueThinIterSharedSealed<'a> for OpaqueThinIterRefMut<'view, 'a> {
+    fn __as_const_ptr(&self) -> *const ffi::OpaqueThinIter {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'a> crate::private::OpaqueThinIterMutSealed<'a> for OpaqueThinIterRefMut<'view, 'a> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::OpaqueThinIter {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a> OpaqueThinIterSharedArg for OpaqueThinIterRefMut<'view, 'a> {}
-impl<'view, 'a> OpaqueThinIterMutArg for OpaqueThinIterRefMut<'view, 'a> {}
+impl<'view, 'a> OpaqueThinIterSharedArg<'a> for OpaqueThinIterRefMut<'view, 'a> {}
+impl<'view, 'a> OpaqueThinIterMutArg<'a> for OpaqueThinIterRefMut<'view, 'a> {}
 
 impl<'a> Drop for OpaqueThinIter<'a> {
     fn drop(&mut self) {

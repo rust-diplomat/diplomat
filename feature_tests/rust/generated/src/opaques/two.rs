@@ -26,48 +26,63 @@ pub struct TwoRefMut<'view, 'a, 'b> {
 }
 
 #[doc(hidden)]
-pub trait TwoSharedArg: crate::private::TwoSharedSealed {}
+pub trait TwoSharedArg<'a, 'b>: crate::private::TwoSharedSealed<'a, 'b> {}
 
 #[doc(hidden)]
-pub trait TwoMutArg: crate::private::TwoMutSealed {}
+pub trait TwoMutArg<'a, 'b>: crate::private::TwoMutSealed<'a, 'b> {}
 
-impl<'a, 'b> crate::private::TwoSharedSealed for Two<'a, 'b> {
+impl<'a, 'b> crate::private::TwoSharedSealed<'a, 'b> for Two<'a, 'b> {
     fn __as_const_ptr(&self) -> *const ffi::Two {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'a, 'b> crate::private::TwoMutSealed for Two<'a, 'b> {
+impl<'a, 'b> crate::private::TwoMutSealed<'a, 'b> for Two<'a, 'b> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Two {
         self.inner.as_ptr()
     }
-}
-
-impl<'a, 'b> TwoSharedArg for Two<'a, 'b> {}
-impl<'a, 'b> TwoMutArg for Two<'a, 'b> {}
-
-impl<'view, 'a, 'b> crate::private::TwoSharedSealed for TwoRef<'view, 'a, 'b> {
-    fn __as_const_ptr(&self) -> *const ffi::Two {
-        self.inner.as_ptr()
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())> {
+        core::marker::PhantomData
     }
 }
 
-impl<'view, 'a, 'b> TwoSharedArg for TwoRef<'view, 'a, 'b> {}
+impl<'a, 'b> TwoSharedArg<'a, 'b> for Two<'a, 'b> {}
+impl<'a, 'b> TwoMutArg<'a, 'b> for Two<'a, 'b> {}
 
-impl<'view, 'a, 'b> crate::private::TwoSharedSealed for TwoRefMut<'view, 'a, 'b> {
+impl<'view, 'a, 'b> crate::private::TwoSharedSealed<'a, 'b> for TwoRef<'view, 'a, 'b> {
     fn __as_const_ptr(&self) -> *const ffi::Two {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a, 'b> crate::private::TwoMutSealed for TwoRefMut<'view, 'a, 'b> {
+impl<'view, 'a, 'b> TwoSharedArg<'a, 'b> for TwoRef<'view, 'a, 'b> {}
+
+impl<'view, 'a, 'b> crate::private::TwoSharedSealed<'a, 'b> for TwoRefMut<'view, 'a, 'b> {
+    fn __as_const_ptr(&self) -> *const ffi::Two {
+        self.inner.as_ptr()
+    }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())> {
+        core::marker::PhantomData
+    }
+}
+
+impl<'view, 'a, 'b> crate::private::TwoMutSealed<'a, 'b> for TwoRefMut<'view, 'a, 'b> {
     fn __as_mut_ptr(&mut self) -> *mut ffi::Two {
         self.inner.as_ptr()
     }
+    fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())> {
+        core::marker::PhantomData
+    }
 }
 
-impl<'view, 'a, 'b> TwoSharedArg for TwoRefMut<'view, 'a, 'b> {}
-impl<'view, 'a, 'b> TwoMutArg for TwoRefMut<'view, 'a, 'b> {}
+impl<'view, 'a, 'b> TwoSharedArg<'a, 'b> for TwoRefMut<'view, 'a, 'b> {}
+impl<'view, 'a, 'b> TwoMutArg<'a, 'b> for TwoRefMut<'view, 'a, 'b> {}
 
 impl<'a, 'b> Drop for Two<'a, 'b> {
     fn drop(&mut self) {

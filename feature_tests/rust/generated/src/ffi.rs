@@ -98,6 +98,11 @@ pub struct Two {
 }
 
 #[repr(C)]
+pub struct TypeLifetimeOpaque {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
 pub struct OptionOpaque {
     _private: [u8; 0],
 }
@@ -347,6 +352,15 @@ extern "C" {
     pub(super) fn OpaqueThinVec_get(this: *const OpaqueThinVec, idx: usize) -> *const OpaqueThin;
     pub(super) fn OpaqueThinVec_first(this: *const OpaqueThinVec) -> *const OpaqueThin;
     pub(super) fn Two_destroy(this: *mut Two);
+    pub(super) fn TypeLifetimeOpaque_destroy(this: *mut TypeLifetimeOpaque);
+    pub(super) fn TypeLifetimeOpaque_new(value: DiplomatSlice<u8>) -> *mut TypeLifetimeOpaque;
+    pub(super) fn TypeLifetimeOpaque_accept_same_lifetime(
+        this: *mut TypeLifetimeOpaque,
+        other: *const TypeLifetimeOpaque,
+    );
+    pub(super) fn TypeLifetimeOpaque_get<'a>(
+        this: *const TypeLifetimeOpaque,
+    ) -> DiplomatSlice<'a, u8>;
     pub(super) fn OptionOpaque_destroy(this: *mut OptionOpaque);
     pub(super) fn OptionOpaque_new(i: i32) -> *mut OptionOpaque;
     pub(super) fn OptionOpaque_new_none() -> *mut OptionOpaque;

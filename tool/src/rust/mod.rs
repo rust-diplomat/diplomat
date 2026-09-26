@@ -1238,6 +1238,11 @@ mod tests {
             safe.contains("pub fn get_bar<'b>(&'b self) -> crate::Bar<'b, 'a>"),
             "{safe}"
         );
+        assert!(safe.contains("pub trait FooSharedArg<'a>"), "{safe}");
+        assert!(
+            safe.contains("fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>"),
+            "{safe}"
+        );
     }
 
     /// `#[diplomat::attr(rust, disable)]` types are never generated, so a signature

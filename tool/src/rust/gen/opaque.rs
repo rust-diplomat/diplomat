@@ -12,8 +12,8 @@ use diplomat_core::hir::{
 use super::method::render_method;
 use crate::r#rust::formatter::{opaque_name, render_docs, type_def_name};
 use crate::r#rust::lifetimes::{
-    bounded_lifetime_name, lifetime_generics, opaque_lifetime_names, opaque_lifetime_phantom,
-    render_generics,
+    bounded_lifetime_name, lifetime_generics, lifetime_witness_type, opaque_lifetime_names,
+    opaque_lifetime_phantom, render_generics,
 };
 use crate::r#rust::type_map::opaque_uses_value_types;
 
@@ -23,6 +23,10 @@ struct OpaqueTemplate {
     uses_value_types: bool,
     docs: String,
     name: String,
+    type_params: String,
+    type_args: String,
+    has_type_lifetimes: bool,
+    lifetime_witness: String,
     owned_params: String,
     owned_args: String,
     ref_params: String,
@@ -56,6 +60,15 @@ pub(crate) fn generate_opaque_file(
     docs_url_gen: &DocsUrlGenerator,
 ) -> String {
     let name = type_def_name(TypeDef::Opaque(opaque));
+    let (type_params, type_args) = lifetime_generics(&opaque.lifetimes);
+    let has_type_lifetimes = !type_args.is_empty();
+    let lifetime_witness = if has_type_lifetimes {
+        lifetime_witness_type(&type_args)
+    } else {
+        String::new()
+    };
+    let type_params = render_generics(&type_params);
+    let type_args = render_generics(&type_args);
     let (owned_params, owned_args) = opaque_generics(opaque, Wrapper::Owned);
     let (ref_params, ref_args) = opaque_generics(opaque, Wrapper::Ref);
     let wrappers = [Wrapper::Owned, Wrapper::Ref, Wrapper::RefMut]
@@ -67,6 +80,10 @@ pub(crate) fn generate_opaque_file(
         uses_value_types: opaque_uses_value_types(opaque),
         docs: render_docs(&opaque.docs, docs_url_gen, ""),
         name,
+        type_params,
+        type_args,
+        has_type_lifetimes,
+        lifetime_witness,
         owned_params,
         owned_args,
         ref_params,

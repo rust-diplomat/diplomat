@@ -72,10 +72,7 @@ pub(super) fn struct_lifetime_phantom(strct: &hir::StructDef) -> String {
 /// `'a` on its own — one occurrence per lifetime rather than the two a
 /// `fn(A) -> B` signature needs, which keeps the field type simple enough not to
 /// trip `clippy::type_complexity`.
-pub(super) fn lifetime_phantom(names: &[String]) -> String {
-    if names.is_empty() {
-        return String::new();
-    }
+pub(super) fn lifetime_phantom_type(names: &[String]) -> String {
     let refs: Vec<String> = names
         .iter()
         .map(|name| format!("*mut &{name} ()"))
@@ -86,7 +83,21 @@ pub(super) fn lifetime_phantom(names: &[String]) -> String {
     } else {
         format!("({joined})")
     };
-    format!("    pub(crate) _lifetimes: PhantomData<{output}>,\n")
+    format!("PhantomData<{output}>")
+}
+
+pub(super) fn lifetime_witness_type(names: &[String]) -> String {
+    format!("core::marker::{}", lifetime_phantom_type(names))
+}
+
+pub(super) fn lifetime_phantom(names: &[String]) -> String {
+    if names.is_empty() {
+        return String::new();
+    }
+    format!(
+        "    pub(crate) _lifetimes: {},\n",
+        lifetime_phantom_type(names)
+    )
 }
 
 /// An invariant `PhantomData` field tying a wrapper to its type-level lifetimes.
