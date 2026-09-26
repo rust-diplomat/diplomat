@@ -168,7 +168,7 @@ fn render_struct(
         generics,
         args,
         needs_abi_mirror: struct_needs_abi_mirror(strct, tcx),
-        derives_eq: derives_eq(strct),
+        derives_eq: derives_eq(strct, tcx),
         fields,
         phantom,
         methods,
@@ -177,12 +177,43 @@ fn render_struct(
     .expect("Rust struct template rendering cannot fail")
 }
 
-/// A struct can only derive `Eq` when every field is `Eq`, and a float is not.
-fn derives_eq(strct: &hir::StructDef) -> bool {
+/// A struct can only derive `Eq` when every field is `Eq`, including fields
+/// nested inside other structs and `Option`. A float is not `Eq`, and neither
+/// is `Option<f64>` or a struct that contains one.
+fn derives_eq(strct: &hir::StructDef, tcx: &TypeContext) -> bool {
+    fn type_is_eq<P: hir::TyPosition>(
+        ty: &Type<P>,
+        tcx: &TypeContext,
+        stack: &mut Vec<String>,
+    ) -> bool {
+        match ty {
+            Type::Primitive(hir::PrimitiveType::Float(_)) => false,
+            Type::Primitive(_) | Type::Enum(_) => true,
+            Type::DiplomatOption(inner) => type_is_eq(inner.as_ref(), tcx, stack),
+            Type::Struct(path) => match tcx.resolve_type(path.id()) {
+                TypeDef::Struct(inner) => {
+                    let name = type_def_name(TypeDef::Struct(inner));
+                    if stack.iter().any(|seen| seen == &name) {
+                        return true;
+                    }
+                    stack.push(name);
+                    let ok = inner
+                        .fields
+                        .iter()
+                        .all(|field| type_is_eq(&field.ty, tcx, stack));
+                    stack.pop();
+                    ok
+                }
+                _ => false,
+            },
+            _ => true,
+        }
+    }
+    let mut stack = vec![type_def_name(TypeDef::Struct(strct))];
     strct
         .fields
         .iter()
-        .all(|field| !matches!(&field.ty, Type::Primitive(hir::PrimitiveType::Float(_))))
+        .all(|field| type_is_eq(&field.ty, tcx, &mut stack))
 }
 
 fn referenced_names_for_struct(

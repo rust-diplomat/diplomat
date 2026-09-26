@@ -37,6 +37,10 @@ struct FfiTemplate {
 struct LibTemplate;
 
 #[derive(Template)]
+#[template(path = "rust/owned_slice.rs.jinja", escape = "none")]
+struct OwnedSliceTemplate;
+
+#[derive(Template)]
 #[template(path = "rust/private.rs.jinja", escape = "none")]
 struct PrivateTemplate {
     opaques: Vec<OpaqueCapabilityView>,
@@ -179,6 +183,12 @@ pub(super) fn generate_lib() -> String {
     LibTemplate
         .render()
         .expect("Rust lib template rendering cannot fail")
+}
+
+pub(super) fn generate_owned_slice() -> String {
+    OwnedSliceTemplate
+        .render()
+        .expect("Rust owned-slice template rendering cannot fail")
 }
 
 /// Sealed capability traits plus the unsafe ABI reconstruction helpers.

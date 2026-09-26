@@ -93,6 +93,11 @@ pub struct OpaqueThinVec {
 }
 
 #[repr(C)]
+pub struct Slot {
+    _private: [u8; 0],
+}
+
+#[repr(C)]
 pub struct Two {
     _private: [u8; 0],
 }
@@ -232,8 +237,14 @@ pub struct NestedOptionField {
     pub(super) value: DiplomatOption<u8>,
 }
 
+#[repr(C)]
+pub struct OptionalFloatField {
+    pub(super) value: DiplomatOption<f64>,
+}
+
 #[link(name = "diplomat_feature_tests")]
 extern "C" {
+    pub(super) fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize);
     pub(super) fn namespace_AttrOpaque1_destroy(this: *mut AttrOpaque1Renamed);
     pub(super) fn namespace_AttrOpaque1_new() -> *mut AttrOpaque1Renamed;
     pub(super) fn namespace_AttrOpaque1_mac_test() -> i32;
@@ -351,6 +362,10 @@ extern "C" {
     pub(super) fn OpaqueThinVec_len(this: *const OpaqueThinVec) -> usize;
     pub(super) fn OpaqueThinVec_get(this: *const OpaqueThinVec, idx: usize) -> *const OpaqueThin;
     pub(super) fn OpaqueThinVec_first(this: *const OpaqueThinVec) -> *const OpaqueThin;
+    pub(super) fn Slot_destroy(this: *mut Slot);
+    pub(super) fn Slot_new(initial: DiplomatSlice<u8>) -> *mut Slot;
+    pub(super) fn Slot_store(this: *mut Slot, value: DiplomatSlice<u8>);
+    pub(super) fn Slot_get<'a>(this: *const Slot) -> DiplomatSlice<'a, u8>;
     pub(super) fn Two_destroy(this: *mut Two);
     pub(super) fn TypeLifetimeOpaque_destroy(this: *mut TypeLifetimeOpaque);
     pub(super) fn TypeLifetimeOpaque_new(value: DiplomatSlice<u8>) -> *mut TypeLifetimeOpaque;

@@ -92,6 +92,23 @@ pub mod ffi {
         pub value: DiplomatOption<u8>,
     }
 
+    // `f64` is not `Eq`. A derive that only looks at the outer fields accepts
+    // these and then rustc rejects the generated struct.
+    #[diplomat::attr(not(rust), disable)]
+    pub struct FloatField {
+        pub value: f64,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct NestedFloatField {
+        pub inner: FloatField,
+    }
+
+    #[diplomat::attr(not(rust), disable)]
+    pub struct OptionalFloatField {
+        pub value: DiplomatOption<f64>,
+    }
+
     #[diplomat::attr(auto, error)]
     pub struct MyZst;
 

@@ -120,6 +120,14 @@ pub trait OpaqueThinVecSharedSealed {
 pub trait OpaqueThinVecMutSealed: OpaqueThinVecSharedSealed {
     fn __as_mut_ptr(&mut self) -> *mut crate::ffi::OpaqueThinVec;
 }
+pub trait SlotSharedSealed<'a> {
+    fn __as_const_ptr(&self) -> *const crate::ffi::Slot;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
+}
+pub trait SlotMutSealed<'a>: SlotSharedSealed<'a> {
+    fn __as_mut_ptr(&mut self) -> *mut crate::ffi::Slot;
+    fn __type_lifetime(&self) -> core::marker::PhantomData<*mut &'a ()>;
+}
 pub trait TwoSharedSealed<'a, 'b> {
     fn __as_const_ptr(&self) -> *const crate::ffi::Two;
     fn __type_lifetime(&self) -> core::marker::PhantomData<(*mut &'a (), *mut &'b ())>;

@@ -103,18 +103,18 @@ impl OwnedSliceReturn {
     /// Returns an owned `Box<[u8]>` of `len` bytes, each set to `(i % 256) as u8`.
     /// `len == 0` exercises the empty-buffer case; a large `len` exercises the
     /// GC memory-pressure path.
-    pub fn make_bytes(len: u32) -> Box<[u8]> {
+    pub fn make_bytes(len: u32) -> crate::DiplomatBoxU8 {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OwnedSliceReturn_make_bytes(len) };
-        Box::from(result)
+        crate::DiplomatBoxU8::from_abi(result)
     }
     /// Fallible variant of [Self::make_bytes]: errors on `len == 0`.
     /// Exercises the `Result<Box<[u8]>, E>` bridge shape.
-    pub fn try_make_bytes(len: u32) -> Result<Box<[u8]>, ErrorEnum> {
+    pub fn try_make_bytes(len: u32) -> Result<crate::DiplomatBoxU8, ErrorEnum> {
         // SAFETY: generated arguments preserve the ownership, mutability, and lifetime constraints encoded by HIR.
         let result = unsafe { ffi::OwnedSliceReturn_try_make_bytes(len) };
         match Result::from(result) {
-            Ok(result) => Ok(Box::from(result)),
+            Ok(result) => Ok(crate::DiplomatBoxU8::from_abi(result)),
             Err(result) => Err(result),
         }
     }

@@ -18,8 +18,10 @@
 
 mod ffi;
 mod opaques;
+mod owned_slice;
 mod private;
 mod types;
 
 pub use opaques::*;
+pub use owned_slice::DiplomatBoxU8;
 pub use types::*;

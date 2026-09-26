@@ -107,14 +107,16 @@ fn ffi_slice_element_ty<P: hir::TyPosition>(slice: &Slice<P>, tcx: &TypeContext)
     }
 }
 
-/// The safe public Rust type of a slice, e.g. `&'a [f64]`, `&'a mut str`, `Box<[u8]>`.
+/// The safe public Rust type of a slice, e.g. `&'a [f64]`, `&'a mut str`,
+/// `DiplomatBoxU8`. An owned byte buffer is not a consumer `Box`: the provider
+/// allocated it, and `DiplomatBoxU8` frees it through the provider.
 pub(super) fn safe_slice_type<P: hir::TyPosition>(
     slice: &Slice<P>,
     lifetime: &str,
     tcx: &TypeContext,
 ) -> String {
     if is_owned_slice(slice) {
-        return format!("Box<[{}]>", slice_element_ty(slice, tcx));
+        return "crate::DiplomatBoxU8".into();
     }
     if slice_is_mutable(slice) {
         return format!("&{lifetime}mut [{}]", slice_element_ty(slice, tcx));
@@ -552,12 +554,13 @@ pub(super) fn ffi_return_generics(ret: &ReturnType, tcx: &TypeContext) -> String
 pub(super) fn safe_input_type(
     ty: &Type<hir::InputOnly>,
     method: &hir::Method,
+    type_lifetimes: usize,
     tcx: &TypeContext,
 ) -> String {
     match ty {
         Type::Opaque(path) => {
             let name = opaque_name(path.tcx_id, tcx);
-            let lifetime = lifetime_prefix(path.owner.lifetime, method);
+            let lifetime = lifetime_prefix(path.owner.lifetime, method, type_lifetimes);
             let type_args = opaque_type_lifetime_args(path, method);
             match path.owner.mutability {
                 Mutability::Immutable => {
@@ -573,7 +576,7 @@ pub(super) fn safe_input_type(
         }
         Type::Slice(slice) => {
             let lifetime = slice_lifetime(slice)
-                .map(|lifetime| lifetime_prefix(lifetime, method))
+                .map(|lifetime| lifetime_prefix(lifetime, method, type_lifetimes))
                 .unwrap_or_default();
             safe_slice_type(slice, &lifetime, tcx)
         }

@@ -121,3 +121,5 @@ compile_fail_case!(opaque_type_lifetime_mismatch => ["E0277", "E0597"]);
 // Storing a short-lived opaque into one tied to a longer buffer, then handing
 // that borrow back to the caller, is rejected.
 compile_fail_case!(lifetime_store_short_as_long => "E0515");
+// A slice stored into `Slot<'a>` has to live for `'a`.
+compile_fail_case!(slot_store_outlives => ["E0597", "E0521"]);

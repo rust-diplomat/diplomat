@@ -73,10 +73,16 @@ fn build_method_view(
                 let borrow = path.borrowed();
                 match borrow.mutability {
                     Mutability::Immutable => {
-                        format!("&{}self", lifetime_prefix(borrow.lifetime, method))
+                        format!(
+                            "&{}self",
+                            lifetime_prefix(borrow.lifetime, method, type_lifetimes)
+                        )
                     }
                     Mutability::Mutable => {
-                        format!("&{}mut self", lifetime_prefix(borrow.lifetime, method))
+                        format!(
+                            "&{}mut self",
+                            lifetime_prefix(borrow.lifetime, method, type_lifetimes)
+                        )
                     }
                 }
             }
@@ -84,10 +90,16 @@ fn build_method_view(
                 MaybeOwn::Own => "self".to_string(),
                 MaybeOwn::Borrow(borrow) => match borrow.mutability {
                     Mutability::Immutable => {
-                        format!("&{}self", lifetime_prefix(borrow.lifetime, method))
+                        format!(
+                            "&{}self",
+                            lifetime_prefix(borrow.lifetime, method, type_lifetimes)
+                        )
                     }
                     Mutability::Mutable => {
-                        format!("&{}mut self", lifetime_prefix(borrow.lifetime, method))
+                        format!(
+                            "&{}mut self",
+                            lifetime_prefix(borrow.lifetime, method, type_lifetimes)
+                        )
                     }
                 },
             },
@@ -100,7 +112,7 @@ fn build_method_view(
         format!(
             "{}: {}",
             param.name,
-            safe_input_type(&param.ty, method, tcx)
+            safe_input_type(&param.ty, method, type_lifetimes, tcx)
         )
     }));
     let return_ty = safe_return_type(&method.output, method, tcx);
@@ -317,7 +329,7 @@ fn success_expr(success: &SuccessType, method: &hir::Method, tcx: &TypeContext) 
         SuccessType::OutType(Type::Opaque(path)) => opaque_return_expr(path, method, tcx),
         SuccessType::OutType(Type::Slice(slice)) => {
             if is_owned_slice(slice) {
-                "Box::from(result)".into()
+                "crate::DiplomatBoxU8::from_abi(result)".into()
             } else if matches!(slice, Slice::Str(_, StringEncoding::Utf8)) {
                 "unsafe { crate::private::utf8_str_from_slice(result) }".into()
             } else {

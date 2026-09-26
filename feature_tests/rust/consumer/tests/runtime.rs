@@ -170,13 +170,19 @@ fn utf16_borrows_round_trip() {
     assert_eq!(wrap.borrow_cont(), non_bmp.as_slice());
 }
 
-/// An owned `Box<[u8]>` return transfers the provider's allocation.
+/// An owned byte buffer is freed by the provider. `clone_to_box` is the safe
+/// copy into a consumer `Box<[u8]>`.
 #[test]
 fn owned_byte_slice_return_transfers_ownership() {
-    assert_eq!(&OwnedSliceReturn::make_bytes(5)[..], &[0, 1, 2, 3, 4]);
+    let owned = OwnedSliceReturn::make_bytes(5);
+    assert_eq!(&owned[..], &[0, 1, 2, 3, 4]);
+    assert_eq!(owned.as_ref(), &[0, 1, 2, 3, 4]);
+    assert_eq!(&owned.clone_to_box()[..], &[0, 1, 2, 3, 4]);
     assert!(OwnedSliceReturn::make_bytes(0).is_empty());
 
-    let bytes = OwnedSliceReturn::try_make_bytes(3).expect("3 is non-zero");
+    let bytes = OwnedSliceReturn::try_make_bytes(3)
+        .expect("3 is non-zero")
+        .clone_to_box();
     assert_eq!(&bytes[..], &[0, 1, 2]);
     assert_eq!(
         OwnedSliceReturn::try_make_bytes(0).unwrap_err(),

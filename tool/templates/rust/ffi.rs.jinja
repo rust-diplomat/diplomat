@@ -22,6 +22,7 @@ pub struct {{ mirror.name }}{{ mirror.params }} {
 
 {% endfor %}#[link(name = "{{ dylib_name }}")]
 extern "C" {
+    pub(super) fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize);
 {% for opaque in opaque_methods %}    pub(super) fn {{ opaque.dtor_abi_name }}(this: *mut {{ opaque.name }});
 {% for method in opaque.methods %}    pub(super) fn {{ method.name }}{{ method.generics }}({{ method.params }}){{ method.return_suffix }};
 {% endfor %}{% endfor %}{% for method in value_methods %}    pub(super) fn {{ method.name }}{{ method.generics }}({{ method.params }}){{ method.return_suffix }};

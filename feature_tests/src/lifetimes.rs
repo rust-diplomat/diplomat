@@ -48,7 +48,8 @@ pub mod ffi {
     // Type-level lifetimes on opaque arguments must remain visible in the generated
     // capability trait. Otherwise a `TypeLifetimeOpaque<'short>` can be passed where
     // the provider requires `TypeLifetimeOpaque<'long>`, allowing it to store a
-    // short borrow as long.
+    // short borrow as long. Rust-only: other backends do not need this regression.
+    #[diplomat::attr(not(rust), disable)]
     #[diplomat::opaque_mut]
     pub struct TypeLifetimeOpaque<'a>(&'a DiplomatStr);
 
@@ -60,6 +61,27 @@ pub mod ffi {
 
         pub fn accept_same_lifetime(&mut self, other: &TypeLifetimeOpaque<'a>) {
             self.0 = other.0;
+        }
+
+        pub fn get(&self) -> &'a DiplomatStr {
+            self.0
+        }
+    }
+
+    /// Storing a slice must keep the opaque's lifetime on the input. Eliding it
+    /// to `&[u8]` would let `Slot<'static>` store a temporary.
+    #[diplomat::attr(not(rust), disable)]
+    #[diplomat::opaque_mut]
+    pub struct Slot<'a>(&'a DiplomatStr);
+
+    impl<'a> Slot<'a> {
+        #[diplomat::attr(auto, constructor)]
+        pub fn new(initial: &'a DiplomatStr) -> Box<Self> {
+            Box::new(Self(initial))
+        }
+
+        pub fn store(&mut self, value: &'a DiplomatStr) {
+            self.0 = value;
         }
 
         pub fn get(&self) -> &'a DiplomatStr {

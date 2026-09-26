@@ -19,6 +19,8 @@ Configuration:
 DIPLOMAT_RUST_NATIVE_LIB_DIR=target/debug cargo build
 ```
 
+An owned `Box<[u8]>` from the provider is returned as `DiplomatBoxU8`. `Deref` and `AsRef<[u8]>` borrow the bytes. `clone_to_box` copies them into a `Box<[u8]>` this crate allocates. `into_box` reuses the allocation and is `unsafe`: this crate and the provider cdylib must use the same global allocator. `Drop` calls `diplomat_owned_slice_u8_destroy` in the provider cdylib.
+
 Method names are rendered in snake_case, including a `named_constructor` name. `f64BeBytes` becomes `f64_be_bytes`.
 
 The backend is experimental. Callbacks, traits, and free functions are rejected. A shape it cannot encode produces a diagnostic and no files.

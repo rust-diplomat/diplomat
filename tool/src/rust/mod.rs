@@ -22,8 +22,8 @@ use crate::{Config, ErrorStore, FileMap};
 
 use formatter::{opaque_module_name, sanitize_package_component, valid_package_name};
 use gen::{
-    generate_ffi, generate_lib, generate_opaque_file, generate_opaques_index, generate_private,
-    generate_type_files,
+    generate_ffi, generate_lib, generate_opaque_file, generate_opaques_index, generate_owned_slice,
+    generate_private, generate_type_files,
 };
 use validate::{validate, Reporter};
 
@@ -169,6 +169,7 @@ pub(crate) fn run<'tcx>(
     files.add_file("Cargo.toml".into(), package);
     files.add_file("build.rs".into(), build);
     files.add_file("src/lib.rs".into(), generate_lib());
+    files.add_file("src/owned_slice.rs".into(), generate_owned_slice());
     files.add_file("src/ffi.rs".into(), generate_ffi(tcx, &dylib_name));
     files.add_file("src/private.rs".into(), generate_private(tcx));
     for (path, source) in generate_type_files(tcx, docs_url_gen) {
@@ -969,7 +970,11 @@ mod tests {
             safe.contains("crate::private::utf8_str_from_slice(result)"),
             "{safe}"
         );
-        assert!(!safe.contains("slice_from_raw_parts"), "{safe}");
+        assert!(
+            !files["src/opaques/my_string.rs"].contains("slice_from_raw_parts"),
+            "{}",
+            files["src/opaques/my_string.rs"]
+        );
     }
 
     #[test]
@@ -1184,11 +1189,88 @@ mod tests {
         let safe = &all_rust_sources(&files);
         let ffi = &files["src/ffi.rs"];
         assert!(
-            safe.contains("pub fn make(len: u32) -> Box<[u8]>"),
+            safe.contains("pub fn make(len: u32) -> crate::DiplomatBoxU8"),
             "{safe}"
         );
-        assert!(safe.contains("Box::from(result)"), "{safe}");
+        assert!(
+            safe.contains("crate::DiplomatBoxU8::from_abi(result)"),
+            "{safe}"
+        );
+        assert!(
+            safe.contains("fn clone_to_box(&self) -> Box<[u8]>"),
+            "{safe}"
+        );
+        assert!(
+            safe.contains("unsafe fn into_box(self) -> Box<[u8]>"),
+            "{safe}"
+        );
+        assert!(ffi.contains("diplomat_owned_slice_u8_destroy"), "{ffi}");
         assert!(ffi.contains("DiplomatOwnedSlice<u8>"), "{ffi}");
+    }
+
+    #[test]
+    fn stored_input_lifetime_is_not_elided() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+                #[diplomat::opaque_mut]
+                pub struct Slot<'a>(&'a DiplomatStr);
+                impl<'a> Slot<'a> {
+                    pub fn new(initial: &'a DiplomatStr) -> Box<Self> { unimplemented!() }
+                    pub fn store(&mut self, value: &'a DiplomatStr) { unimplemented!() }
+                    pub fn get(&self) -> &'a DiplomatStr { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        assert!(
+            safe.contains("pub fn store") && safe.contains("value: &'a [u8]"),
+            "{safe}"
+        );
+    }
+
+    #[test]
+    fn float_structs_do_not_derive_eq() {
+        let (files, errors) = generate(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatOption;
+                pub struct FloatField {
+                    pub value: f64,
+                }
+                pub struct NestedFloatField {
+                    pub inner: FloatField,
+                }
+                pub struct OptionalFloatField {
+                    pub value: DiplomatOption<f64>,
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:#?}");
+        let safe = &all_rust_sources(&files);
+        for name in ["FloatField", "NestedFloatField", "OptionalFloatField"] {
+            let marker = format!("pub struct {name}");
+            let mut rest = safe.as_str();
+            let mut found = false;
+            while let Some(rel) = rest.find(&marker) {
+                let abs = safe.len() - rest.len() + rel;
+                if let Some(derive_at) = safe[..abs].rfind("#[derive") {
+                    let between = &safe[derive_at..abs];
+                    if !between[8..].contains("pub struct") && between.contains("PartialEq") {
+                        assert!(
+                            !between.contains(", Eq"),
+                            "{name} must not derive Eq:\n{between}"
+                        );
+                        found = true;
+                        break;
+                    }
+                }
+                rest = &rest[rel + marker.len()..];
+            }
+            assert!(found, "{name} was not generated as a safe struct:\n{safe}");
+        }
     }
 
     #[test]

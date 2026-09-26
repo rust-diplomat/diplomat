@@ -216,8 +216,9 @@ Supported:
 - borrowed slices of plain `repr(C)` value structs (`&[S]`, `&mut [S]`) as
   parameters and as returns (`abi_compatibles`): one `DiplomatSlice<S>` across
   the ABI, then a native Rust loop, with no per-element call;
-- owned `Box<[u8]>` returns (`owned_byte_slice_returns`), taking ownership of
-  provider-allocated memory;
+- owned byte returns (`owned_byte_slice_returns`) as `DiplomatBoxU8`, freed by
+  the provider's `diplomat_owned_slice_u8_destroy`. `clone_to_box` copies into
+  a consumer `Box<[u8]>`; `into_box` is the unsafe zero-copy conversion;
 - `Result<T, E>` returns (`custom_errors`), where the success payload is any of the
   shapes above and `E` is one of `()`, a supported primitive, an **owned** opaque
   (`Box<T>`), or an enum/struct the provider marked with
