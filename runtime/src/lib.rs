@@ -38,9 +38,9 @@ use alloc::alloc::Layout;
 mod wasm_glue;
 
 mod write;
-pub use write::DiplomatWrite;
 pub use write::{
     diplomat_buffer_write_create, diplomat_buffer_write_destroy, diplomat_simple_write,
+    DiplomatAbiCompatible, DiplomatWrite, DiplomatWriteGeneric,
 };
 mod slices;
 pub use slices::{
