@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "ErrorEnum.d.h"
 
 #include "Float64Vec.d.h"
 
@@ -41,6 +42,16 @@ DiplomatF64View Float64Vec_borrow(const Float64Vec* self);
 
 typedef struct Float64Vec_get_result {union {double ok; }; bool is_ok;} Float64Vec_get_result;
 Float64Vec_get_result Float64Vec_get(const Float64Vec* self, size_t i);
+
+void Float64Vec_write_to(const Float64Vec* self, DiplomatWrite* write);
+
+void Float64Vec_write_multi(const Float64Vec* self, DiplomatWrite* write);
+
+typedef struct Float64Vec_try_write_to_result {union { ErrorEnum err;}; bool is_ok;} Float64Vec_try_write_to_result;
+Float64Vec_try_write_to_result Float64Vec_try_write_to(const Float64Vec* self, bool should_succeed, DiplomatWrite* write);
+
+typedef struct Float64Vec_maybe_write_to_result { bool is_ok;} Float64Vec_maybe_write_to_result;
+Float64Vec_maybe_write_to_result Float64Vec_maybe_write_to(const Float64Vec* self, bool should_succeed, DiplomatWrite* write);
 
 void Float64Vec_destroy(Float64Vec* self);
 
