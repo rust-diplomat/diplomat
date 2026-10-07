@@ -6,7 +6,7 @@ use super::{
     ParamSelf, PrimitiveType, ReturnLifetimeLowerer, ReturnType, ReturnableStructPath,
     SelfParamLifetimeLowerer, SelfType, Slice, SpecialMethod, SpecialMethodPresence, StructDef,
     StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
-    TypeDef, TypeId,
+    TypeDef, TypeId, WriteType,
 };
 use crate::ast::attrs::AttrInheritContext;
 use crate::ast::logging::write_report;
@@ -619,9 +619,9 @@ impl<'ast> LoweringContext<'ast> {
             self,
         )?);
 
-        let (ast_params, takes_write) = match ast_function.item.params.split_last() {
-            Some((last, remaining)) if last.is_write() => (remaining, true),
-            _ => (&ast_function.item.params[..], false),
+        let (ast_params, write_type) = match ast_function.item.params.split_last() {
+            Some((last, remaining)) if let Some(w) = last.write_type() => (remaining, Some(w)),
+            _ => (&ast_function.item.params[..], None),
         };
 
         let attrs = self.attr_validator.attr_from_ast(
@@ -643,7 +643,7 @@ impl<'ast> LoweringContext<'ast> {
 
             let (return_type, lifetime_env) = self.lower_return_type(
                 ast_function.item.output_type.as_ref(),
-                takes_write,
+                write_type,
                 return_ltl,
                 ast_function.in_path,
             )?;
@@ -777,9 +777,9 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Method, ()> {
         let name = self.lower_ident(&method.name, "method name");
 
-        let (ast_params, takes_write) = match method.params.split_last() {
-            Some((last, remaining)) if last.is_write() => (remaining, true),
-            _ => (&method.params[..], false),
+        let (ast_params, write_type) = match method.params.split_last() {
+            Some((last, remaining)) if let Some(w) = last.write_type() => (remaining, Some(w)),
+            _ => (&method.params[..], None),
         };
 
         let self_param_ltl = SelfParamLifetimeLowerer::new(&method.lifetime_env, self)?;
@@ -794,12 +794,8 @@ impl<'ast> LoweringContext<'ast> {
 
         let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
-        let (output, lifetime_env) = self.lower_return_type(
-            method.return_type.as_ref(),
-            takes_write,
-            return_ltl,
-            in_path,
-        )?;
+        let (output, lifetime_env) =
+            self.lower_return_type(method.return_type.as_ref(), write_type, return_ltl, in_path)?;
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
@@ -1208,7 +1204,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::Write => {
+            ast::TypeName::Write(..) => {
                 self.errors.push(LoweringError::Other(
                     "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
@@ -1629,7 +1625,7 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::Write => {
+            ast::TypeName::Write(..) => {
                 self.errors.push(LoweringError::Other(
                     "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
@@ -2082,12 +2078,19 @@ impl<'ast> LoweringContext<'ast> {
     fn lower_return_type(
         &mut self,
         return_type: Option<&ast::TypeName>,
-        takes_write: bool,
+        write_type: Option<ast::WriteType>,
         mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
     ) -> Result<(ReturnType, LifetimeEnv), ()> {
-        let write_or_unit = if takes_write {
-            SuccessType::Write
+        if matches!(write_type, Some(ast::WriteType::Primitive(_)))
+            && !self.attr_validator.attrs_supported().generic_writeables
+        {
+            self.errors.push(LoweringError::Other(
+                "DiplomatWriteGeneric is not supported in this backend. Try #[diplomat::cfg(supports = generic_writeables)]".into(),
+            ));
+        }
+        let write_or_unit = if let Some(w) = write_type {
+            SuccessType::Write(WriteType::from_ast(w))
         } else {
             SuccessType::Unit
         };

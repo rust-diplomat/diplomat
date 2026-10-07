@@ -1336,4 +1336,25 @@ mod tests {
             .to_token_stream()
         ));
     }
+
+    #[test]
+    fn mod_with_write_generic() {
+        let code = pretty_print_code(
+            gen_bridge(parse_quote! {
+                mod ffi {
+                    use diplomat_runtime::DiplomatWriteGeneric;
+                    struct Foo {}
+
+                    impl Foo {
+                        pub fn get_ints(&self, out: &mut DiplomatWriteGeneric<u32>) {
+                            out.push(42);
+                        }
+                    }
+                }
+            })
+            .to_token_stream(),
+        );
+        assert!(code.contains("out: &mut diplomat_runtime::DiplomatWriteGeneric<u32>"));
+        assert!(code.contains("out.flush();"));
+    }
 }

@@ -336,11 +336,20 @@ pub struct Param {
 }
 
 impl Param {
-    /// Check if this parameter is a Write
+    /// Check if this parameter is a Write (`&mut DiplomatWrite` or `&mut DiplomatWriteGeneric<T>`)
     pub fn is_write(&self) -> bool {
+        self.write_type().is_some()
+    }
+
+    /// If this parameter is a Write, returns `Some(WriteType::Str)` for `DiplomatWrite` (strings)
+    /// or `Some(WriteType::Primitive(prim))` for `DiplomatWriteGeneric<T>`.
+    pub fn write_type(&self) -> Option<super::WriteType> {
         match self.ty {
-            TypeName::Reference(_, Mutability::Mutable, ref w) => **w == TypeName::Write,
-            _ => false,
+            TypeName::Reference(_, Mutability::Mutable, ref w) => match **w {
+                TypeName::Write(write_ty) => Some(write_ty),
+                _ => None,
+            },
+            _ => None,
         }
     }
 
