@@ -26,6 +26,9 @@ inline {##}
     {%- if m.method.output.is_write() %}
     {%- if is_generic_writeable %}
     {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteTrait<W>::Construct(writeable);
+    {%- else if let Some(prim) = m.method.output.write_primitive() %}
+    std::vector<{{fmt.fmt_primitive_as_c(prim.clone())}}> output;
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromVector(output);
     {%- else %}
     std::string output;
     {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromString(output);

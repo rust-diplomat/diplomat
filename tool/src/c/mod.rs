@@ -46,6 +46,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.free_functions = true;
     a.mutable_slices = true;
     a.opaque_slices = true;
+    a.generic_writeables = true;
 
     a
 }

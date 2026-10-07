@@ -120,7 +120,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
     /// Generate `.d.ts` equivalents for -> Result<>, or -> Option<>, etc.
     pub(super) fn gen_success_ty(&self, out_ty: &SuccessType) -> Cow<'tcx, str> {
         match out_ty {
-            SuccessType::Write => self.formatter.fmt_string().into(),
+            SuccessType::Write(..) => self.formatter.fmt_string().into(),
             SuccessType::OutType(o) => self.gen_js_type_str(o),
             SuccessType::Unit => self.formatter.fmt_void().into(),
             _ => unreachable!("Unknown success type {out_ty:?}"),
@@ -330,8 +330,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
 
             // Something we can write to? We just treat it as a string.
-            ReturnType::Infallible(SuccessType::Write)
-            | ReturnType::Fallible(SuccessType::Write, Some(_)) => {
+            ReturnType::Infallible(SuccessType::Write(..))
+            | ReturnType::Fallible(SuccessType::Write(..), Some(_)) => {
                 self.formatter.fmt_string().into()
             }
 
@@ -340,8 +340,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_js_type_str(o),
 
             // Nullable string (no error on return).
-            ReturnType::Fallible(SuccessType::Write, None)
-            | ReturnType::Nullable(SuccessType::Write) => self
+            ReturnType::Fallible(SuccessType::Write(..), None)
+            | ReturnType::Nullable(SuccessType::Write(..)) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string())
                 .into(),
@@ -381,7 +381,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             // -> ()
             ReturnType::Infallible(SuccessType::Unit) => None,
 
-            ReturnType::Infallible(SuccessType::Write) => {
+            ReturnType::Infallible(SuccessType::Write(..)) => {
                 method_info
                     .alloc_expressions
                     .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
@@ -429,8 +429,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             | ReturnType::Nullable(SuccessType::Unit) => Some("return result === 1;".into()),
 
             // Result<Write, ()> or Option<Write>.
-            ReturnType::Fallible(SuccessType::Write, None)
-            | ReturnType::Nullable(SuccessType::Write) => {
+            ReturnType::Fallible(SuccessType::Write(..), None)
+            | ReturnType::Nullable(SuccessType::Write(..)) => {
                 method_info
                     .alloc_expressions
                     .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
@@ -495,7 +495,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                     SuccessType::OutType(ref o) => {
                         crate::js::layout::type_size_alignment(o, self.tcx)
                     }
-                    SuccessType::Write => match return_type {
+                    SuccessType::Write(..) => match return_type {
                         ReturnType::Fallible(_, ref err) if err.is_some() => {
                             crate::js::layout::type_size_alignment(&err.clone().unwrap(), self.tcx)
                         }
@@ -547,7 +547,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 Some(
                     match ok {
                         SuccessType::Unit => err_check,
-                        SuccessType::Write => {
+                        SuccessType::Write(..) => {
                             method_info.alloc_expressions.push(
                                 "const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into(),
                             );
