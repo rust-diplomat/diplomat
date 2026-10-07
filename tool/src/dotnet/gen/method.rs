@@ -2337,8 +2337,19 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 }
             }
             hir::Type::Slice(slice) => {
-                self.lower_slice_input(input_context, slice, borrow_info, in_accessor)?
+                self.lower_slice_input(input_context, slice, borrow_info, in_accessor, false)?
             }
+            hir::Type::DiplomatOption(inner) => match &**inner {
+                hir::Type::Slice(slice) if !in_accessor => {
+                    self.lower_slice_input(input_context, slice, borrow_info, in_accessor, true)?
+                }
+                other => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] optional input not yet supported: {other:?}"
+                    ));
+                    return None;
+                }
+            },
             hir::Type::Callback(callback) => self.lower_callback_input(input_context, callback)?,
             hir::Type::Enum(enum_path) => {
                 // Enums cross the FFI boundary by value as their underlying
@@ -2385,10 +2396,17 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         slice: &hir::Slice<hir::InputOnly>,
         borrow_info: ParamBorrowInfo<'tcx>,
         in_accessor: bool,
+        is_optional: bool,
     ) -> Option<InputLowering> {
         let arg_name = input_context.local_name();
         let raw_name = input_context.raw_name();
-        Some(match slice {
+        if is_optional && matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+            self.errors.push_error(format!(
+                "[.NET backend] optional slice parameter `{arg_name}` borrowed by the output is not yet supported"
+            ));
+            return None;
+        }
+        let lowering = match slice {
             hir::Slice::Str(maybe_static, string_encoding) => match maybe_static {
                 Some(lifetime) => match lifetime {
                     hir::MaybeStatic::Static => {
@@ -2399,18 +2417,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         return None;
                     }
                     hir::MaybeStatic::NonStatic(_) => match string_encoding {
-                        // `&str` requires the caller to *guarantee*
-                        // valid UTF-8 (UB on the Rust side otherwise —
-                        // see the doc comment on `StringEncoding::Utf8`),
-                        // so this can't be reshaped to a raw `byte[]`
-                        // like `UnvalidatedUtf8` below: a careless
-                        // caller could then hand Rust invalid UTF-8.
-                        // `Encoding.UTF8.GetBytes` on a real C# `string`
-                        // is the only thing that can make that
-                        // guarantee, so the transcode-copy stays —
-                        // routed through the explicitly-named
-                        // `Diplomat.Utf8.Clone` instead of inlining the
-                        // BCL call, so the allocation is visible.
                         hir::StringEncoding::UnvalidatedUtf8 if !in_accessor => self
                             .lower_immutable_element_slice(
                                 &input_context,
@@ -2423,6 +2429,18 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 },
                                 hir::Mutability::Immutable,
                             )?,
+                        // `&str` requires the caller to *guarantee*
+                        // valid UTF-8 (UB on the Rust side otherwise —
+                        // see the doc comment on `StringEncoding::Utf8`),
+                        // so this can't be reshaped to a raw `byte[]`
+                        // like `UnvalidatedUtf8` below: a careless
+                        // caller could then hand Rust invalid UTF-8.
+                        // `Encoding.UTF8.GetBytes` on a real C# `string`
+                        // is the only thing that can make that
+                        // guarantee, so the transcode-copy stays —
+                        // routed through the explicitly-named
+                        // `Diplomat.Utf8.Clone` instead of inlining the
+                        // BCL call, so the allocation is visible.
                         hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => {
                             let base = input_context.local_base();
                             let ptr = self.slice_local_name(base, "Ptr");
@@ -2431,7 +2449,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 raw_param: format!("DiplomatSliceU8 {raw_name}"),
                                 idiomatic_param: format!("string {arg_name}"),
                                 raw_call_arg: format!(
-                                    "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}.Length }}"
+                                    "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}{}.Length }}",
+                                    if is_optional { "!" } else { "" }
                                 ),
                                 // `&str` is non-optional on the Rust
                                 // side, so a null string is a contract
@@ -2446,9 +2465,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                 borrow_declaration: None,
                                 borrow_statement: None,
                                 borrow_lease: None,
-                                to_bytes_statement: Some(format!(
-                                    "byte[] {bytes} = Diplomat.Utf8.Clone({arg_name});"
-                                )),
+                                to_bytes_statement: Some(if is_optional {
+                                    format!("byte[]? {bytes} = {arg_name} == null ? null : Diplomat.Utf8.Clone({arg_name});")
+                                } else {
+                                    format!("byte[] {bytes} = Diplomat.Utf8.Clone({arg_name});")
+                                }),
                                 // FIXME: an empty string yields a zero-length
                                 // `byte[]`, and `fixed` on an empty array binds
                                 // a null pointer — so Rust receives
@@ -2616,7 +2637,43 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 ));
                 return None;
             }
+        };
+
+        Some(if is_optional {
+            self.optionalize(lowering, arg_name)?
+        } else {
+            lowering
         })
+    }
+
+    fn optionalize(&self, mut l: InputLowering, arg_name: &str) -> Option<InputLowering> {
+        let (slice_class, raw_name) = l.raw_param.split_once(' ')?;
+        let slice_class: &'static str = match slice_class {
+            "DiplomatSliceU8" => "DiplomatSliceU8",
+            "DiplomatSliceMutU8" => "DiplomatSliceMutU8",
+            "DiplomatSliceU16" => "DiplomatSliceU16",
+            "DiplomatSliceU32" => "DiplomatSliceU32",
+            "DiplomatSliceMutU32" => "DiplomatSliceMutU32",
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] optional slice of `{other}` not yet supported"
+                ));
+                return None;
+            }
+        };
+        self.option_slice_registry.borrow_mut().insert(slice_class);
+        let option_class = format!("DiplomatOption{}", &slice_class["Diplomat".len()..]);
+
+        let (ty, name) = l.idiomatic_param.rsplit_once(' ')?;
+        l.raw_param = format!("{option_class} {raw_name}");
+        l.idiomatic_param = format!("{ty}? {name}");
+        l.raw_call_arg = format!(
+            "{arg_name} == null ? {option_class}.None : {option_class}.Some({})",
+            l.raw_call_arg
+        );
+        l.validation_statement = None; // null is allowed now
+        l.accessor_value = None; // setters are rejected before we get here
+        Some(l)
     }
 
     // -------------------------------------------------------------------

@@ -129,6 +129,14 @@ struct DiplomatSliceMutU32Template<'a> {
     namespace: &'a str,
 }
 
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatOptionSlice.cs.jinja", escape = "none")]
+struct DiplomatOptionSliceTemplate<'a> {
+    namespace: &'a str,
+    option_name: &'a str,
+    slice_name: &'a str,
+}
+
 /// `DiplomatWrite` — caller-provided buffer Rust appends UTF-8 bytes
 /// into. Carries function pointers for `flush` and `grow` callbacks so
 /// Rust can ask C# to enlarge the buffer when it runs out. Used for
@@ -400,6 +408,7 @@ pub(crate) fn run<'tcx>(
         exception_trim_suffix: config.dotnet_config.exception_trim_suffix.as_deref(),
         exception_message_method: config.dotnet_config.exception_message_method.as_deref(),
         result_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
+        option_slice_registry: std::cell::RefCell::new(std::collections::HashSet::new()),
         option_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
@@ -462,6 +471,25 @@ pub(crate) fn run<'tcx>(
             option_struct
                 .render()
                 .expect("DotnetOption template render failed"),
+        );
+    }
+
+    // Emit option slices — one file per unique inner type encountered
+    for slice_name in ctx.option_slice_registry.into_inner() {
+        let option_name = format!(
+            "DiplomatOption{}",
+            slice_name.trim_start_matches("Diplomat")
+        );
+        add_cs_file(
+            &files,
+            format!("{option_name}.cs"),
+            DiplomatOptionSliceTemplate {
+                namespace: &namespace,
+                option_name: &option_name,
+                slice_name,
+            }
+            .render()
+            .expect("DiplomatOptionSlice template render failed"),
         );
     }
 
