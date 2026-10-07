@@ -75,6 +75,8 @@ namespace capi {
 
     int64_t OptionOpaque_accepts_option_primitive(somelib::diplomat::capi::OptionU32View arg, uint8_t sentinel);
 
+    size_t OptionOpaque_accepts_option_diplomat_str(somelib::diplomat::capi::OptionStringView arg, uint8_t sentinel);
+
     void OptionOpaque_destroy(OptionOpaque* self);
 
     } // extern "C"
@@ -196,6 +198,12 @@ inline bool somelib::OptionOpaque::accepts_option_str_slice(std::optional<someli
 
 inline int64_t somelib::OptionOpaque::accepts_option_primitive(std::optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel) {
     auto result = somelib::capi::OptionOpaque_accepts_option_primitive(arg.has_value() ? (somelib::diplomat::capi::OptionU32View{ { {arg.value().data(), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionU32View{ {}, false }),
+        sentinel);
+    return result;
+}
+
+inline size_t somelib::OptionOpaque::accepts_option_diplomat_str(std::optional<std::string_view> arg, uint8_t sentinel) {
+    auto result = somelib::capi::OptionOpaque_accepts_option_diplomat_str(arg.has_value() ? (somelib::diplomat::capi::OptionStringView{ { {arg.value().data(), arg.value().size()} }, true }) : (somelib::diplomat::capi::OptionStringView{ {}, false }),
         sentinel);
     return result;
 }

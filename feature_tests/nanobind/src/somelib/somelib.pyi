@@ -1051,6 +1051,9 @@ class OptionOpaque:
     def accepts_multiple_option_enum(sentinel1: int, arg1: OptionEnum | None = None, arg2: OptionEnum | None = None, arg3: OptionEnum | None = None, sentinel2: int) -> OptionEnum | None: ...
 
     @staticmethod
+    def accepts_option_diplomat_str(arg: str | None = None, sentinel: int) -> int: ...
+
+    @staticmethod
     def accepts_option_enum(arg: OptionEnum | None = None, sentinel: int) -> OptionEnum | None: ...
 
     @staticmethod
