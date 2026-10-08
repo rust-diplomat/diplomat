@@ -45,5 +45,10 @@ void main() {
 
     final borrowed = BorrowingOptionStruct(a: 'test string');
     OptionOpaque.acceptsBorrowingOptionStruct(borrowed);
+
+    expect(Foo.newOpt(), null);
+    final fooOpt = Foo.newOpt('borrowed optional');
+    expect(fooOpt, isNotNull);
+    expect(fooOpt!.asReturning().bytes, 'borrowed optional');
   });
 }
