@@ -37,6 +37,14 @@ final class Foo implements ffi.Finalizable {
     return Foo._fromFfi(result, [], aEdges);
   }
 
+  static Foo? newOpt([String? x]) {
+    final xArena = _FinalizedArena();
+    // This lifetime edge depends on lifetimes: 'a
+    final aEdges = [xArena];
+    final result = _Foo_new_opt(x != null ? _ResultSliceUtf8Void.ok(x._utf8AllocIn(xArena.arena)) : _ResultSliceUtf8Void.err());
+    return result.address == 0 ? null : Foo._fromFfi(result, [], aEdges);
+  }
+
   Bar get bar {
     // This lifetime edge depends on lifetimes: 'a
     final aEdges = [this];
@@ -84,6 +92,12 @@ external void _internal_Foo_destroy(ffi.Pointer<ffi.Void> self);
 @ffi.Native<ffi.Pointer<ffi.Opaque> Function(_SliceUtf8)>(isLeaf: true, symbol: 'Foo_new')
 // ignore: non_constant_identifier_names
 external ffi.Pointer<ffi.Opaque> _Foo_new(_SliceUtf8 x);
+
+// ignore: experimental_member_use
+@meta.RecordUse()
+@ffi.Native<ffi.Pointer<ffi.Opaque> Function(_ResultSliceUtf8Void)>(isLeaf: true, symbol: 'Foo_new_opt')
+// ignore: non_constant_identifier_names
+external ffi.Pointer<ffi.Opaque> _Foo_new_opt(_ResultSliceUtf8Void x);
 
 // ignore: experimental_member_use
 @meta.RecordUse()

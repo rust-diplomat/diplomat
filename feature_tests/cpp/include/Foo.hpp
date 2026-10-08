@@ -24,6 +24,8 @@ namespace capi {
 
     somelib::capi::Foo* Foo_new(somelib::diplomat::capi::DiplomatStringView x);
 
+    somelib::capi::Foo* Foo_new_opt(somelib::diplomat::capi::OptionStringView x);
+
     somelib::capi::Bar* Foo_get_bar(const somelib::capi::Foo* self);
 
     somelib::capi::Foo* Foo_new_static(somelib::diplomat::capi::DiplomatStringView x);
@@ -42,6 +44,11 @@ namespace capi {
 
 inline std::unique_ptr<somelib::Foo> somelib::Foo::new_(std::string_view x DIPLOMAT_LIFETIME_BOUND) {
     auto result = somelib::capi::Foo_new({x.data(), x.size()});
+    return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));
+}
+
+inline somelib::diplomat::maybe_null<std::unique_ptr<somelib::Foo>> somelib::Foo::new_opt(std::optional<std::string_view> x DIPLOMAT_LIFETIME_BOUND) {
+    auto result = somelib::capi::Foo_new_opt(x.has_value() ? (somelib::diplomat::capi::OptionStringView{ { {x.value().data(), x.value().size()} }, true }) : (somelib::diplomat::capi::OptionStringView{ {}, false }));
     return std::unique_ptr<somelib::Foo>(somelib::Foo::FromFFI(result));
 }
 

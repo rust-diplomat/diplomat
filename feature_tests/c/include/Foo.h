@@ -21,6 +21,8 @@
 
 Foo* Foo_new(DiplomatStringView x);
 
+Foo* Foo_new_opt(OptionStringView x);
+
 Bar* Foo_get_bar(const Foo* self);
 
 Foo* Foo_new_static(DiplomatStringView x);

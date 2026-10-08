@@ -61,6 +61,27 @@ export class Foo {
         }
     }
 
+    static newOpt(x) {
+        let functionCleanupArena = new diplomatRuntime.CleanupArena();
+
+        const xSlice = diplomatRuntime.CleanupArena.createWith();
+        // This lifetime edge depends on lifetimes 'a
+        let aEdges = [xSlice];
+
+
+        const result = wasm.Foo_new_opt(diplomatRuntime.optionToBufferForCalling(wasm, x, 8, 4, functionCleanupArena, (arrayBuffer, offset, jsValue) => [xSlice.alloc(diplomatRuntime.DiplomatBuf.str8(wasm, jsValue)).writePtrLenToArrayBuffer(arrayBuffer, offset + 0)]));
+
+        try {
+            return result === 0 ? null : new Foo(diplomatRuntime.internalConstructor, result, [], aEdges);
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            functionCleanupArena.free();
+
+        }
+    }
+
     get bar() {
         // This lifetime edge depends on lifetimes 'a
         let aEdges = [this];
