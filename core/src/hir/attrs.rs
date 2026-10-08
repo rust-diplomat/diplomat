@@ -1178,9 +1178,14 @@ impl Attrs {
             ));
         }
 
-        if *abi_compatible && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
+        if *abi_compatible
+            && !matches!(
+                context,
+                AttributeContext::Type(TypeDef::Struct(..) | TypeDef::Enum(..))
+            )
+        {
             errors.push(LoweringError::Other(
-                "`abi_compatible` can only be used on non-output-only struct types.".into(),
+                "`abi_compatible` can only be used on non-output-only struct or enum types.".into(),
             ));
         }
 

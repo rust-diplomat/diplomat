@@ -36,6 +36,18 @@ def test_structs():
     bg.append(somelib.BigStructWithStuff(1, 2, 3, somelib.ScalarPairWithPadding(1, 2), 0))
     somelib.BigStructWithStuff.assert_slice(bg, 2)
 
+    ms = somelib.MyStructSlice()
+    ms.append(somelib.MyStruct())
+    s_d = somelib.MyStruct()
+    s_d.g = somelib.MyEnum.D
+    ms.append(s_d)
+    somelib.MyStruct.assert_slice(ms, somelib.MyEnum.D)
+
+    es = somelib.ContiguousEnumSlice()
+    es.append(somelib.ContiguousEnum.C)
+    es.append(somelib.ContiguousEnum.F)
+    somelib.MyStruct.assert_enum_slice(es, somelib.ContiguousEnum.F)
+
 def test_struct_holding_opaques():
     original_op = somelib.Opaque()
     op_st = somelib.StructOfOpaque(original_op, somelib.OpaqueMut())

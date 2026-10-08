@@ -258,30 +258,23 @@ impl<'tcx> CFormatter<'tcx> {
         st_ty: &P::StructPath,
     ) -> Cow<'tcx, str> {
         let st_id = hir::StructPathLike::id(st_ty);
-        let st_name = self.fmt_type_name(st_id);
-
-        let def = self.tcx.resolve_type(st_id);
-
-        let mtb = match borrow {
-            MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
-            _ => "Mut",
-        };
-
-        let ty = format!("Diplomat{st_name}View{mtb}");
-
-        self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
+        self.fmt_type_slice_name(borrow, st_id)
     }
 
-    pub fn fmt_opaque_slice_name(&self, borrow: MaybeOwn, op_id: TypeId) -> Cow<'tcx, str> {
-        let op_name = self.fmt_type_name(op_id);
+    pub fn fmt_enum_slice_name(&self, borrow: MaybeOwn, enm_ty: &hir::EnumPath) -> Cow<'tcx, str> {
+        self.fmt_type_slice_name(borrow, enm_ty.tcx_id.into())
+    }
+
+    pub fn fmt_type_slice_name(&self, borrow: MaybeOwn, ty_id: TypeId) -> Cow<'tcx, str> {
+        let ty_name = self.fmt_type_name(ty_id);
 
         let mtb = match borrow {
             MaybeOwn::Borrow(borrow) if borrow.mutability.is_immutable() => "",
             _ => "Mut",
         };
-        let ty = format!("Diplomat{op_name}View{mtb}");
+        let ty = format!("Diplomat{ty_name}View{mtb}");
 
-        let def = self.tcx.resolve_type(op_id);
+        let def = self.tcx.resolve_type(ty_id);
         self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
     }
 

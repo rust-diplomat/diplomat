@@ -1298,6 +1298,10 @@ impl<'ast> LoweringContext<'ast> {
                         self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                     }
+                    Type::Enum(enm) => {
+                        self.usage_get_or_insert(enm.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Enum(new_lifetime.into(), enm)))
+                    }
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
@@ -1713,6 +1717,10 @@ impl<'ast> LoweringContext<'ast> {
                         self.usage_get_or_insert(st.id().into()).sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                     }
+                    Type::Enum(enm) => {
+                        self.usage_get_or_insert(enm.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Enum(new_lifetime.into(), enm)))
+                    }
                     Type::Opaque(..) => {
                         self.errors.push(LoweringError::Other(
                             "Opaque slices are currently disallowed as an output type.".to_string(),
@@ -1721,7 +1729,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     _ => {
                         self.errors.push(LoweringError::Other(format!(
-                            "Cannot make a slice from type {type_name}. Only abi_compatible structs and borrowed opaques are allowed."
+                            "Cannot make a slice from type {type_name}. Only abi_compatible structs, borrowed opaques, and enums are allowed."
                         )));
                         Err(())
                     }

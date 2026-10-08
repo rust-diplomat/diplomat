@@ -195,7 +195,7 @@ pub(crate) fn run<'cx>(
         let mut body = String::default();
         let mut binding_prefix = String::default();
         match ty {
-            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body),
+            hir::TypeDef::Enum(o) => context.gen_enum_def(o, id, &mut body, &mut binding_prefix),
             hir::TypeDef::Opaque(o) => context.gen_opaque_def(o, id, &mut body),
             hir::TypeDef::Struct(s) => {
                 context.gen_struct_def(s, id, &mut body, &mut binding_prefix)
@@ -559,8 +559,9 @@ mod test {
         let callback = |_, out| {
             insta::assert_snapshot!(out);
         };
+        let mut header = String::new();
         test_gen! {
-            Enum, gen_enum_def, [], callback,
+            Enum, gen_enum_def, [&mut header,], callback,
             {#[diplomat::bridge]
             #[diplomat::attr(auto, namespace = "mylib")]
             mod ffi {

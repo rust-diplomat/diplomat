@@ -145,6 +145,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
         ty: &'tcx hir::EnumDef,
         id: TypeId,
         out: &mut dyn std::fmt::Write,
+        binding_prefix: &mut dyn std::fmt::Write,
     ) {
         let type_name = self.formatter.cxx.fmt_type_name(id);
         let type_name_unnamespaced = self.formatter.cxx.fmt_type_name_unnamespaced(id);
@@ -168,6 +169,15 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name_unnamespaced: &'a str,
             extra_init_code: ExtraCode,
             docs: Option<String>,
+            is_sliceable: bool,
+        }
+
+        if ty.attrs.abi_compatible {
+            write!(binding_prefix, "NB_MAKE_OPAQUE(std::vector<{type_name}>)")
+                .expect("Could not write to header.");
+            if ty.special_method_presence.comparator {
+                write!(binding_prefix, "\nnamespace nanobind::detail {{ template<> struct is_equality_comparable<{type_name}>{{static constexpr bool value = false;}}; }}").expect("Could not write to header");
+            }
         }
 
         ImplTemplate {
@@ -176,6 +186,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx> {
             type_name_unnamespaced: &type_name_unnamespaced,
             extra_init_code,
             docs: self.formatter.fmt_doc_literal(&ty.docs, &ty.attrs),
+            is_sliceable: ty.attrs.abi_compatible,
         }
         .render_into(out)
         .unwrap();

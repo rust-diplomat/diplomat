@@ -11,6 +11,7 @@
 #include <functional>
 #include <optional>
 #include <cstdlib>
+#include "ContiguousEnum.hpp"
 #include "MyEnum.hpp"
 #include "MyZst.hpp"
 #include "diplomat_runtime.hpp"
@@ -38,6 +39,10 @@ namespace capi {
     typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
     MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
 
+    void MyStruct_assert_slice(somelib::capi::DiplomatMyStructView slice, somelib::capi::MyEnum second_value);
+
+    void MyStruct_assert_enum_slice(somelib::capi::DiplomatContiguousEnumView slice, somelib::capi::ContiguousEnum second_value);
+
     } // extern "C"
 } // namespace capi
 } // namespace
@@ -53,20 +58,13 @@ inline somelib::MyStruct somelib::MyStruct::new_overload(int32_t i) {
 }
 
 inline void somelib::MyStruct::takes_mut(somelib::MyStruct& o) {
-    auto thisDiplomatRefClone = this->AsFFI();
-    auto oDiplomatRefClone = o.AsFFI();
-    somelib::capi::MyStruct_takes_mut(&thisDiplomatRefClone,
-        &oDiplomatRefClone);
-    *this = somelib::MyStruct::FromFFI(thisDiplomatRefClone);
-    o = somelib::MyStruct::FromFFI(oDiplomatRefClone);
+    somelib::capi::MyStruct_takes_mut(reinterpret_cast<somelib::capi::MyStruct*>(this),
+        reinterpret_cast<somelib::capi::MyStruct*>(&o));
 }
 
 inline void somelib::MyStruct::takes_const(somelib::MyStruct& o) const {
-    auto thisDiplomatRefClone = this->AsFFI();
-    auto oDiplomatRefClone = o.AsFFI();
-    somelib::capi::MyStruct_takes_const(&thisDiplomatRefClone,
-        &oDiplomatRefClone);
-    o = somelib::MyStruct::FromFFI(oDiplomatRefClone);
+    somelib::capi::MyStruct_takes_const(reinterpret_cast<const somelib::capi::MyStruct*>(this),
+        reinterpret_cast<somelib::capi::MyStruct*>(&o));
 }
 
 inline uint8_t somelib::MyStruct::into_a() const {
@@ -75,8 +73,7 @@ inline uint8_t somelib::MyStruct::into_a() const {
 }
 
 inline uint8_t somelib::MyStruct::take_ref_ret() const {
-    auto thisDiplomatRefClone = this->AsFFI();
-    auto result = somelib::capi::MyStruct_take_ref_ret(&thisDiplomatRefClone);
+    auto result = somelib::capi::MyStruct_take_ref_ret(reinterpret_cast<const somelib::capi::MyStruct*>(this));
     return result;
 }
 
@@ -88,6 +85,16 @@ inline somelib::diplomat::result<std::monostate, somelib::MyZst> somelib::MyStru
 inline somelib::diplomat::result<std::monostate, somelib::MyZst> somelib::MyStruct::fails_zst_result() {
     auto result = somelib::capi::MyStruct_fails_zst_result();
     return result.is_ok ? somelib::diplomat::result<std::monostate, somelib::MyZst>(somelib::diplomat::Ok<std::monostate>()) : somelib::diplomat::result<std::monostate, somelib::MyZst>(somelib::diplomat::Err<somelib::MyZst>(somelib::MyZst {}));
+}
+
+inline void somelib::MyStruct::assert_slice(somelib::diplomat::span<const somelib::MyStruct> slice, somelib::MyEnum second_value) {
+    somelib::capi::MyStruct_assert_slice({reinterpret_cast<const somelib::capi::MyStruct*>(slice.data()), slice.size()},
+        second_value.AsFFI());
+}
+
+inline void somelib::MyStruct::assert_enum_slice(somelib::diplomat::span<const somelib::ContiguousEnum> slice, somelib::ContiguousEnum second_value) {
+    somelib::capi::MyStruct_assert_enum_slice({reinterpret_cast<const somelib::capi::ContiguousEnum*>(slice.data()), slice.size()},
+        second_value.AsFFI());
 }
 
 

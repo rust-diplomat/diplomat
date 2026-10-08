@@ -309,6 +309,77 @@ class ContiguousEnum:
 
     def __repr__(self) -> str: ...
 
+class ContiguousEnumSlice:
+    @overload
+    def __init__(self) -> None:
+        """Default constructor"""
+
+    @overload
+    def __init__(self, arg: ContiguousEnumSlice) -> None:
+        """Copy constructor"""
+
+    @overload
+    def __init__(self, arg: Iterable[ContiguousEnum], /) -> None:
+        """Construct from an iterable object"""
+
+    def __len__(self) -> int: ...
+
+    def __bool__(self) -> bool:
+        """Check whether the vector is nonempty"""
+
+    def __repr__(self) -> str: ...
+
+    def __iter__(self) -> Iterator[ContiguousEnum]: ...
+
+    @overload
+    def __getitem__(self, arg: int, /) -> ContiguousEnum: ...
+
+    @overload
+    def __getitem__(self, arg: slice, /) -> ContiguousEnumSlice: ...
+
+    def clear(self) -> None:
+        """Remove all items from list."""
+
+    def append(self, arg: ContiguousEnum, /) -> None:
+        """Append `arg` to the end of the list."""
+
+    def insert(self, arg0: int, arg1: ContiguousEnum, /) -> None:
+        """Insert object `arg1` before index `arg0`."""
+
+    def pop(self, index: int = -1) -> ContiguousEnum:
+        """Remove and return item at `index` (default last)."""
+
+    def extend(self, arg: ContiguousEnumSlice, /) -> None:
+        """Extend `self` by appending elements from `arg`."""
+
+    @overload
+    def __setitem__(self, arg0: int, arg1: ContiguousEnum, /) -> None: ...
+
+    @overload
+    def __setitem__(self, arg0: slice, arg1: ContiguousEnumSlice, /) -> None: ...
+
+    @overload
+    def __delitem__(self, arg: int, /) -> None: ...
+
+    @overload
+    def __delitem__(self, arg: slice, /) -> None: ...
+
+    def __eq__(self, arg: object, /) -> bool: ...
+
+    def __ne__(self, arg: object, /) -> bool: ...
+
+    @overload
+    def __contains__(self, arg: ContiguousEnum, /) -> bool: ...
+
+    @overload
+    def __contains__(self, arg: object, /) -> bool: ...
+
+    def count(self, arg: ContiguousEnum, /) -> int:
+        """Return number of occurrences of `arg`."""
+
+    def remove(self, arg: ContiguousEnum, /) -> None:
+        """Remove first occurrence of `arg`."""
+
 class CyclicStructA:
     @overload
     def __init__(self) -> None: ...
@@ -812,6 +883,12 @@ class MyStruct:
     def g(self, arg: MyEnum, /) -> None: ...
 
     @staticmethod
+    def assert_enum_slice(slice: Sequence[ContiguousEnum], second_value: ContiguousEnum) -> None: ...
+
+    @staticmethod
+    def assert_slice(slice: Sequence[MyStruct], second_value: MyEnum) -> None: ...
+
+    @staticmethod
     def fails_zst_result() -> None: ...
 
     def into_a(self) -> int: ...
@@ -842,6 +919,61 @@ class MyStructContainingAnOption:
 
     @staticmethod
     def filled() -> MyStructContainingAnOption: ...
+
+class MyStructSlice:
+    @overload
+    def __init__(self) -> None:
+        """Default constructor"""
+
+    @overload
+    def __init__(self, arg: MyStructSlice) -> None:
+        """Copy constructor"""
+
+    @overload
+    def __init__(self, arg: Iterable[MyStruct], /) -> None:
+        """Construct from an iterable object"""
+
+    def __len__(self) -> int: ...
+
+    def __bool__(self) -> bool:
+        """Check whether the vector is nonempty"""
+
+    def __repr__(self) -> str: ...
+
+    def __iter__(self) -> Iterator[MyStruct]: ...
+
+    @overload
+    def __getitem__(self, arg: int, /) -> MyStruct: ...
+
+    @overload
+    def __getitem__(self, arg: slice, /) -> MyStructSlice: ...
+
+    def clear(self) -> None:
+        """Remove all items from list."""
+
+    def append(self, arg: MyStruct, /) -> None:
+        """Append `arg` to the end of the list."""
+
+    def insert(self, arg0: int, arg1: MyStruct, /) -> None:
+        """Insert object `arg1` before index `arg0`."""
+
+    def pop(self, index: int = -1) -> MyStruct:
+        """Remove and return item at `index` (default last)."""
+
+    def extend(self, arg: MyStructSlice, /) -> None:
+        """Extend `self` by appending elements from `arg`."""
+
+    @overload
+    def __setitem__(self, arg0: int, arg1: MyStruct, /) -> None: ...
+
+    @overload
+    def __setitem__(self, arg0: slice, arg1: MyStructSlice, /) -> None: ...
+
+    @overload
+    def __delitem__(self, arg: int, /) -> None: ...
+
+    @overload
+    def __delitem__(self, arg: slice, /) -> None: ...
 
 class MyZst:
     def __init__(self) -> None: ...

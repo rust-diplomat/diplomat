@@ -16,6 +16,7 @@ struct EnumTemplate<'a> {
     fmt: &'a CFormatter<'a>,
     ty_name: &'a str,
     is_for_cpp: bool,
+    is_sliceable: bool,
 }
 
 #[derive(Template)]
@@ -107,6 +108,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
             fmt: self.formatter,
             ty_name: &ty_name,
             is_for_cpp: self.is_for_cpp,
+            is_sliceable: def.attrs.abi_compatible && def.usage.sliced,
         }
         .render_into(&mut decl_header)
         .unwrap();
@@ -624,9 +626,23 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
                     st_name
                 }
+                hir::Slice::Enum(borrow, ref enm_ty) => {
+                    let enm_id: TypeId = enm_ty.tcx_id.into();
+                    let enm_name = self.formatter.fmt_enum_slice_name(*borrow, enm_ty);
+
+                    if self.tcx.resolve_type(enm_id).attrs().disable {
+                        self.errors
+                            .push_error(format!("Found usage of disabled type {enm_name}"))
+                    }
+
+                    let header_path = self.formatter.fmt_decl_header_path(enm_id.into());
+                    header.includes.insert(header_path);
+
+                    enm_name
+                }
                 hir::Slice::Opaque(borrow, ref op_ty) => {
                     let op_id = op_ty.id();
-                    let op_name = self.formatter.fmt_opaque_slice_name(*borrow, op_id);
+                    let op_name = self.formatter.fmt_type_slice_name(*borrow, op_id);
 
                     if self.tcx.resolve_type(op_id).attrs().disable {
                         self.errors

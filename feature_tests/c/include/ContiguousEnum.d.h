@@ -19,6 +19,16 @@ typedef enum ContiguousEnum {
 } ContiguousEnum;
 
 typedef struct ContiguousEnum_option {union { ContiguousEnum ok; }; bool is_ok; } ContiguousEnum_option;
+typedef struct DiplomatContiguousEnumView {
+  const ContiguousEnum* data;
+  size_t len;
+} DiplomatContiguousEnumView;
+
+typedef struct DiplomatContiguousEnumViewMut {
+  ContiguousEnum* data;
+  size_t len;
+} DiplomatContiguousEnumViewMut;
+
 
 
 
