@@ -2417,8 +2417,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                         return None;
                     }
                     hir::MaybeStatic::NonStatic(_) => match string_encoding {
-                        hir::StringEncoding::UnvalidatedUtf8 if !in_accessor => self
-                            .lower_immutable_element_slice(
+                        hir::StringEncoding::UnvalidatedUtf8
+                            if !in_accessor
+                                && (!self.diplomat_str_as_string
+                                    || matches!(borrow_info, ParamBorrowInfo::BorrowedSlice)) =>
+                        {
+                            self.lower_immutable_element_slice(
                                 &input_context,
                                 borrow_info,
                                 ImmutableElementShape {
@@ -2428,7 +2432,8 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                                     mutable_class: "DiplomatSliceU8",
                                 },
                                 hir::Mutability::Immutable,
-                            )?,
+                            )?
+                        }
                         // `&str` requires the caller to *guarantee*
                         // valid UTF-8 (UB on the Rust side otherwise —
                         // see the doc comment on `StringEncoding::Utf8`),

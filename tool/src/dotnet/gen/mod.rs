@@ -68,6 +68,7 @@ pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub namespace: &'ctx str,
     pub exception_trim_suffix: Option<&'ctx str>,
     pub exception_message_method: Option<&'ctx str>,
+    pub diplomat_str_as_string: bool,
 
     pub result_struct_registry: RefCell<HashMap<String, DotnetResult>>,
     pub option_slice_registry: RefCell<HashSet<&'static str>>,
