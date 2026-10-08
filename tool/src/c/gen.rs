@@ -642,7 +642,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                 }
                 hir::Slice::Opaque(borrow, ref op_ty) => {
                     let op_id = op_ty.id();
-                    let op_name = self.formatter.fmt_opaque_slice_name(*borrow, op_id);
+                    let op_name = self.formatter.fmt_type_slice_name(*borrow, op_id);
 
                     if self.tcx.resolve_type(op_id).attrs().disable {
                         self.errors

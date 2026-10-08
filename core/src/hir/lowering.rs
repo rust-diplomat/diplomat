@@ -1729,7 +1729,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     _ => {
                         self.errors.push(LoweringError::Other(format!(
-                            "Cannot make a slice from type {type_name}. Only abi_compatible structs and borrowed opaques are allowed."
+                            "Cannot make a slice from type {type_name}. Only abi_compatible structs, borrowed opaques, and enums are allowed."
                         )));
                         Err(())
                     }
