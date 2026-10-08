@@ -7,6 +7,8 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "ContiguousEnum.d.h"
+#include "MyEnum.d.h"
 
 #include "MyStruct.d.h"
 
@@ -30,6 +32,10 @@ MyStruct_returns_zst_result_result MyStruct_returns_zst_result(void);
 
 typedef struct MyStruct_fails_zst_result_result { bool is_ok;} MyStruct_fails_zst_result_result;
 MyStruct_fails_zst_result_result MyStruct_fails_zst_result(void);
+
+void MyStruct_assert_slice(DiplomatMyStructView slice, MyEnum second_value);
+
+void MyStruct_assert_enum_slice(DiplomatContiguousEnumView slice, ContiguousEnum second_value);
 
 
 

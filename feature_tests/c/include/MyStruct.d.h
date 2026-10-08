@@ -23,6 +23,16 @@ typedef struct MyStruct {
 } MyStruct;
 
 typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
+typedef struct DiplomatMyStructView {
+  const MyStruct* data;
+  size_t len;
+} DiplomatMyStructView;
+
+typedef struct DiplomatMyStructViewMut {
+  MyStruct* data;
+  size_t len;
+} DiplomatMyStructViewMut;
+
 
 
 

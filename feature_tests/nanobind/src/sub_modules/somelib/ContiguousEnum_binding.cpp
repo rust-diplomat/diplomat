@@ -2,9 +2,12 @@
 
 
 #include "ContiguousEnum.hpp"
+NB_MAKE_OPAQUE(std::vector<somelib::ContiguousEnum>)
 
 namespace somelib {
 void add_ContiguousEnum_binding(nb::module_ mod) {
+    
+    nb::bind_vector<std::vector<somelib::ContiguousEnum>>(mod, "ContiguousEnumSlice");
     nb::class_<somelib::ContiguousEnum> e_class(mod, "ContiguousEnum");
     
         nb::enum_<somelib::ContiguousEnum::Value> enumerator(e_class, "ContiguousEnum");

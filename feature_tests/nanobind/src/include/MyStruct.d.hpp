@@ -14,6 +14,7 @@
 namespace somelib {
 struct MyStruct;
 struct MyZst;
+class ContiguousEnum;
 class MyEnum;
 } // namespace somelib
 
@@ -32,6 +33,15 @@ namespace capi {
     };
 
     typedef struct MyStruct_option {union { MyStruct ok; }; bool is_ok; } MyStruct_option;
+    typedef struct DiplomatMyStructView {
+      const MyStruct* data;
+      size_t len;
+    } DiplomatMyStructView;
+
+    typedef struct DiplomatMyStructViewMut {
+      MyStruct* data;
+      size_t len;
+    } DiplomatMyStructViewMut;
 } // namespace capi
 } // namespace
 
@@ -62,9 +72,24 @@ struct MyStruct {
 
   inline static somelib::diplomat::result<std::monostate, somelib::MyZst> fails_zst_result();
 
+  inline static void assert_slice(somelib::diplomat::span<const somelib::MyStruct> slice, somelib::MyEnum second_value);
+
+  inline static void assert_enum_slice(somelib::diplomat::span<const somelib::ContiguousEnum> slice, somelib::ContiguousEnum second_value);
+
     inline somelib::capi::MyStruct AsFFI() const;
     inline static somelib::MyStruct FromFFI(somelib::capi::MyStruct c_struct);
 };
 
 } // namespace
+namespace somelib::diplomat {
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<const somelib::MyStruct>>>> {
+        using type = somelib::capi::DiplomatMyStructView;
+    };
+
+    template<typename T>
+    struct diplomat_c_span_convert<T, std::enable_if_t<std::is_same_v<T, span<somelib::MyStruct>>>> {
+        using type = somelib::capi::DiplomatMyStructViewMut;
+};
+}
 #endif // SOMELIB_MyStruct_D_HPP
