@@ -569,6 +569,15 @@ impl TypeContext {
                     _ => unreachable!(),
                 }
             }
+            hir::Type::Slice(hir::Slice::Enum(_, enm)) => {
+                let enm = self.resolve_enum(enm.tcx_id);
+                if !enm.attrs.abi_compatible {
+                    ctx.errors.push(LoweringError::Other(format!(
+                        "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
+                        enm.name
+                    )));
+                }
+            }
             hir::Type::Struct(st) => {
                 let st_ty = self.resolve_type(st.id());
 
@@ -744,7 +753,7 @@ impl TypeContext {
             }
             if st.attrs.abi_compatible {
                 match &f.ty {
-                    hir::Type::Primitive(..) => {}
+                    hir::Type::Primitive(..) | hir::Type::Enum(..) => {}
                     hir::Type::Struct(st_pth) => {
                         let ty = self.resolve_type(st_pth.id());
                         match ty {
@@ -766,7 +775,7 @@ impl TypeContext {
                     }
                     _ => {
                         ctx.errors.push(LoweringError::Other(format!(
-                            "Cannot construct a slice of {:?} with non-primitive, non-struct field {:?}",
+                            "Cannot construct a slice of {:?} with non-primitive, non-enum, non-struct field {:?}",
                             st.name, f.name
                         )));
                     }
@@ -2098,5 +2107,87 @@ mod tests {
             }
         };
         insta::with_settings!({}, { insta::assert_snapshot!(output) });
+    }
+
+    #[test]
+    fn test_abi_compatible_enum() {
+        let parsed: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::attr(auto, abi_compatible)]
+                pub enum SliceableEnum {
+                    A,
+                    B,
+                }
+
+                pub enum RegularEnum {
+                    X,
+                    Y,
+                }
+
+                #[diplomat::attr(auto, abi_compatible)]
+                pub struct StructWithEnum {
+                    pub a: SliceableEnum,
+                    pub b: RegularEnum,
+                    pub c: u32,
+                }
+
+                impl StructWithEnum {
+                    pub fn takes_slices<'a>(
+                        enums: &'a [SliceableEnum],
+                        mut_enums: &'a mut [SliceableEnum],
+                        structs: &'a [StructWithEnum],
+                    ) -> &'a [SliceableEnum] {
+                        todo!()
+                    }
+                }
+            }
+        };
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        attr_validator.support.mutable_slices = true;
+        let res = hir::TypeContext::from_syn(
+            &parsed,
+            Default::default(),
+            attr_validator,
+            None,
+            &SpanLocation::None,
+        );
+        assert!(
+            res.is_ok(),
+            "expected lowering to succeed, got: {:?}",
+            res.err()
+        );
+
+        let parsed_invalid: syn::File = syn::parse_quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub enum UnmarkedEnum {
+                    X,
+                    Y,
+                }
+
+                impl UnmarkedEnum {
+                    pub fn bad_slice(s: &[UnmarkedEnum]) {}
+                }
+            }
+        };
+
+        let mut attr_validator = hir::BasicAttributeValidator::new("tests");
+        attr_validator.support.abi_compatibles = true;
+        let res_invalid = hir::TypeContext::from_syn(
+            &parsed_invalid,
+            Default::default(),
+            attr_validator,
+            None,
+            &SpanLocation::None,
+        );
+        let errs = res_invalid.expect_err("expected unmarked enum slice to fail");
+        assert!(
+            errs.iter()
+                .any(|e| e.to_string().contains("Cannot construct a slice of")),
+            "unexpected errors: {errs:?}"
+        );
     }
 }

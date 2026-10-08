@@ -208,6 +208,9 @@ impl<'tcx> PyFormatter<'tcx> {
                 crate::hir::Slice::Struct(_, st) => {
                     format!("list[{}]", self.symbol_to_python_type(st.id().into())).into()
                 }
+                crate::hir::Slice::Enum(_, e) => {
+                    format!("list[{}]", self.symbol_to_python_type(e.id().into())).into()
+                }
                 _ => unreachable!("Unknown AST/HIR variant: {sl:?}"),
             },
             crate::hir::Type::Callback(cb) => {

@@ -244,6 +244,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             deprecated: Option<&'a str>,
             default_variant: Cow<'a, str>,
             extra_def_code: ExtraCode,
+            is_sliceable: bool,
         }
 
         DeclTemplate {
@@ -259,6 +260,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             deprecated: ty.attrs.deprecated.as_deref(),
             default_variant,
             extra_def_code,
+            is_sliceable: ty.attrs.abi_compatible && ty.usage.sliced,
         }
         .render_into(self.decl_header)
         .unwrap();
@@ -969,28 +971,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             Type::Primitive(prim) => self.formatter.fmt_primitive_as_c(prim),
             Type::Opaque(ref op) => self.gen_opaque_name::<P>(op, false),
             Type::Struct(ref st) => self.gen_struct_name::<P>(st),
-            Type::Enum(ref e) => {
-                let id = e.tcx_id.into();
-                let type_name = self.formatter.fmt_type_name(id);
-                let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
-                let def = self.c.tcx.resolve_type(id);
-                if def.attrs().disable {
-                    self.errors
-                        .push_error(format!("Found usage of disabled type {type_name}"))
-                }
-
-                self.decl_header
-                    .append_forward(def, &type_name_unnamespaced);
-                if self.generate_definition_includes {
-                    self.decl_header
-                        .includes
-                        .insert(self.formatter.fmt_decl_header_path(id.into()));
-                }
-                self.impl_header
-                    .includes
-                    .insert(self.formatter.fmt_impl_header_path(id.into()));
-                type_name
-            }
+            Type::Enum(ref e) => self.gen_enum_name(e),
             Type::Slice(hir::Slice::Str(_, encoding)) => self.formatter.fmt_borrowed_str(encoding),
             Type::Slice(hir::Slice::Primitive(b, p)) => {
                 let ret = self.formatter.fmt_primitive_as_c(p);
@@ -1005,6 +986,11 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             Type::Slice(hir::Slice::Struct(b, ref st_ty)) => {
                 let st_name = self.gen_struct_name::<P>(st_ty);
                 let ret = self.formatter.fmt_borrowed_slice(&st_name, b.mutability());
+                ret.into_owned().into()
+            }
+            Type::Slice(hir::Slice::Enum(b, ref enm_ty)) => {
+                let enm_name = self.gen_enum_name(enm_ty);
+                let ret = self.formatter.fmt_borrowed_slice(&enm_name, b.mutability());
                 ret.into_owned().into()
             }
             Type::Slice(hir::Slice::Opaque(b, ref op_ty)) => {
@@ -1036,6 +1022,29 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
             }
             _ => unreachable!("unknown AST/HIR variant"),
         }
+    }
+
+    fn gen_enum_name(&mut self, e: &hir::EnumPath) -> Cow<'ccx, str> {
+        let id = e.tcx_id.into();
+        let type_name = self.formatter.fmt_type_name(id);
+        let type_name_unnamespaced = self.formatter.fmt_type_name_unnamespaced(id);
+        let def = self.c.tcx.resolve_type(id);
+        if def.attrs().disable {
+            self.errors
+                .push_error(format!("Found usage of disabled type {type_name}"))
+        }
+
+        self.decl_header
+            .append_forward(def, &type_name_unnamespaced);
+        if self.generate_definition_includes {
+            self.decl_header
+                .includes
+                .insert(self.formatter.fmt_decl_header_path(id.into()));
+        }
+        self.impl_header
+            .includes
+            .insert(self.formatter.fmt_impl_header_path(id.into()));
+        type_name
     }
 
     fn gen_struct_name<P: TyPosition>(&mut self, st: &P::StructPath) -> Cow<'ccx, str> {
@@ -1301,6 +1310,22 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 )
                 .into()
             }
+            Type::Slice(Slice::Enum(b, ref enm)) => {
+                let mutability = if b.mutability().is_mutable() {
+                    ""
+                } else {
+                    "const "
+                };
+                let id: hir::TypeId = enm.tcx_id.into();
+                let c_name = self.formatter.namespace_c_name(
+                    id.into(),
+                    &self.formatter.fmt_type_name_unnamespaced(id),
+                );
+                format!(
+                    "{{reinterpret_cast<{mutability}{c_name}*>({cpp_name}.data()), {cpp_name}.size()}}",
+                )
+                .into()
+            }
             Type::Slice(Slice::Opaque(b, ref op)) => format!(
                 "{{reinterpret_cast<{}{}**>({cpp_name}.data()), {cpp_name}.size()}}",
                 if b.mutability().is_mutable() {
@@ -1547,6 +1572,16 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 let span = self.formatter.fmt_borrowed_slice(&st_name, mt);
                 format!(
                     "{span}(reinterpret_cast<{}{st_name}*>({var_name}.data), {var_name}.len)",
+                    if mt.is_mutable() { "" } else { "const " }
+                )
+                .into()
+            }
+            Type::Slice(hir::Slice::Enum(b, ref enm_ty)) => {
+                let mt = b.mutability();
+                let enm_name = self.formatter.fmt_type_name(enm_ty.tcx_id.into());
+                let span = self.formatter.fmt_borrowed_slice(&enm_name, mt);
+                format!(
+                    "{span}(reinterpret_cast<{}{enm_name}*>({var_name}.data), {var_name}.len)",
                     if mt.is_mutable() { "" } else { "const " }
                 )
                 .into()

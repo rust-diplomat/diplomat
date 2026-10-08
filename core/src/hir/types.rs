@@ -75,10 +75,12 @@ pub enum Slice<P: TyPosition> {
     Strs(StringEncoding),
 
     /// A `&[Struct]`, where `Struct` is a structure that is only comprised of primitive types and
-    /// structures that only contain primitive types. Must be marked with `#[diplomat::attr(auto, allowed_in_slices)]`.
+    /// structures that only contain primitive types. Must be marked with `#[diplomat::attr(auto, abi_compatible)]`.
     /// Currently assumes that `&[Struct]` is provided as an input only for function parameters.
-    /// Validated in [`super::type_context::TypeContext::validate_primitive_slice_struct`]
     Struct(MaybeOwn, P::StructPath),
+
+    /// A `&[Enum]`, where `Enum` is marked with `#[diplomat::attr(auto, abi_compatible)]`.
+    Enum(MaybeOwn, EnumPath),
 
     /// A `&[&Opaque]` or `Box<[&Opaque]>`.
     ///
@@ -227,8 +229,9 @@ impl<P: TyPosition> Slice<P> {
             Slice::Str(lifetime, ..) => lifetime.as_ref(),
             Slice::Primitive(MaybeOwn::Borrow(reference), ..)
             | Slice::Struct(MaybeOwn::Borrow(reference), ..)
+            | Slice::Enum(MaybeOwn::Borrow(reference), ..)
             | Slice::Opaque(MaybeOwn::Borrow(reference), ..) => Some(&reference.lifetime),
-            Slice::Primitive(..) | Slice::Struct(..) => None,
+            Slice::Primitive(..) | Slice::Struct(..) | Slice::Enum(..) => None,
             Slice::Strs(..) => Some({
                 const X: MaybeStatic<Lifetime> = MaybeStatic::NonStatic(Lifetime::new(usize::MAX));
                 &X

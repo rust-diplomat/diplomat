@@ -1298,6 +1298,10 @@ impl<'ast> LoweringContext<'ast> {
                         self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
                     }
+                    Type::Enum(enm) => {
+                        self.usage_get_or_insert(enm.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Enum(new_lifetime.into(), enm)))
+                    }
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
@@ -1712,6 +1716,10 @@ impl<'ast> LoweringContext<'ast> {
                     Type::Struct(st) => {
                         self.usage_get_or_insert(st.id().into()).sliced = true;
                         Ok(Type::Slice(Slice::Struct(new_lifetime.into(), st)))
+                    }
+                    Type::Enum(enm) => {
+                        self.usage_get_or_insert(enm.tcx_id.into()).sliced = true;
+                        Ok(Type::Slice(Slice::Enum(new_lifetime.into(), enm)))
                     }
                     Type::Opaque(..) => {
                         self.errors.push(LoweringError::Other(

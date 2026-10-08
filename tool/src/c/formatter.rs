@@ -272,6 +272,10 @@ impl<'tcx> CFormatter<'tcx> {
         self.diplomat_namespace_for_custom_type(ty.into(), def.attrs().namespace.as_deref())
     }
 
+    pub fn fmt_enum_slice_name(&self, borrow: MaybeOwn, enm_ty: &hir::EnumPath) -> Cow<'tcx, str> {
+        self.fmt_opaque_slice_name(borrow, enm_ty.tcx_id.into())
+    }
+
     pub fn fmt_opaque_slice_name(&self, borrow: MaybeOwn, op_id: TypeId) -> Cow<'tcx, str> {
         let op_name = self.fmt_type_name(op_id);
 
