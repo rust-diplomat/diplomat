@@ -565,7 +565,11 @@ pub enum TypeName {
     /// `&[Struct]`. Meant for passing slices of structs where the struct's layout is known to be shared between Rust
     /// and the backend language. Primarily meant for large lists of compound types like `Vector3f64` or `Color4i16`.
     /// This is implemented on a per-backend basis.
-    CustomTypeSlice(Option<(Lifetime, Mutability)>, Box<TypeName>),
+    CustomTypeSlice(
+        Option<(Lifetime, Mutability)>,
+        Box<TypeName>,
+        StdlibOrDiplomat,
+    ),
     /// The `()` type.
     Unit,
     /// The `Self` type.
@@ -686,13 +690,13 @@ impl TypeName {
             // can only be passed across the FFI boundary; callbacks and traits are input-only
             TypeName::Function(..) | TypeName::ImplTrait(..) |
             // These are specified using FFI-safe diplomat_runtime types
-            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) | TypeName::CustomTypeSlice(..) => true,
+            TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) | TypeName::CustomTypeSlice(.., StdlibOrDiplomat::Diplomat) => true,
             // These are special anyway and shouldn't show up in structs
             TypeName::Unit | TypeName::Write | TypeName::Result(..) |
             // This is basically only useful in return types
             TypeName::Ordering |
             // These are specified using Rust stdlib types and not safe across FFI
-            TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)  => false,
+            TypeName::StrReference(.., StdlibOrDiplomat::Stdlib) | TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib) | TypeName::CustomTypeSlice(.., StdlibOrDiplomat::Stdlib) => false,
             TypeName::Option(inner, stdlib) => match **inner {
                 // Option<&T>/Option<Box<T>> are the ffi-safe way to specify options
                 TypeName::Reference(..) | TypeName::Box(..) => *stdlib == StdlibOrDiplomat::Stdlib,
@@ -716,6 +720,13 @@ impl TypeName {
             }
             TypeName::PrimitiveSlice(ltmt, prim, StdlibOrDiplomat::Stdlib) => {
                 TypeName::PrimitiveSlice(ltmt.clone(), *prim, StdlibOrDiplomat::Diplomat)
+            }
+            TypeName::CustomTypeSlice(ltmt, type_name, StdlibOrDiplomat::Stdlib) => {
+                TypeName::CustomTypeSlice(
+                    ltmt.clone(),
+                    type_name.clone(),
+                    StdlibOrDiplomat::Diplomat,
+                )
             }
             TypeName::Ordering => TypeName::Primitive(PrimitiveType::i8),
             TypeName::Option(inner, _stdlib) => match **inner {
@@ -814,13 +825,24 @@ impl TypeName {
                     primitive.get_diplomat_slice_type(ltmt)
                 }
             }
-            TypeName::CustomTypeSlice(ltmt, type_name) => {
+            TypeName::CustomTypeSlice(ltmt, type_name, is_stdlib_type) => {
                 let inner = type_name.to_syn();
-                if let Some((ref lt, ref mtbl)) = ltmt {
-                    let reference = ReferenceDisplay(lt, mtbl);
-                    syn::parse_quote_spanned!(Span::call_site() => #reference [#inner])
+                if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
+                    if let Some((ref lt, ref mtbl)) = ltmt {
+                        let reference = ReferenceDisplay(lt, mtbl);
+                        syn::parse_quote_spanned!(Span::call_site() => #reference [#inner])
+                    } else {
+                        syn::parse_quote_spanned! (Span::call_site() => &[#inner])
+                    }
+                } else if let Some((lt, mtbl)) = ltmt {
+                    let lifetime = LifetimeGenericsListPartialDisplay(lt);
+                    if *mtbl == Mutability::Immutable {
+                        syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatSlice<#lifetime #inner>)
+                    } else {
+                        syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatSliceMut<#lifetime #inner>)
+                    }
                 } else {
-                    syn::parse_quote_spanned! (Span::call_site() => &[#inner])
+                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedSlice<#inner>)
                 }
             }
 
@@ -930,6 +952,7 @@ impl TypeName {
                             self_path_type,
                             module_location,
                         )),
+                        StdlibOrDiplomat::Stdlib,
                     );
                 }
                 TypeName::Reference(
@@ -1594,10 +1617,27 @@ impl fmt::Display for TypeName {
                 write!(f, "DiplomatSlice{maybemut}<{lt}{typ}>")
             }
             TypeName::PrimitiveSlice(None, typ, _) => write!(f, "Box<[{typ}]>"),
-            TypeName::CustomTypeSlice(Some((lifetime, mutability)), type_name) => {
+            TypeName::CustomTypeSlice(
+                Some((lifetime, mutability)),
+                type_name,
+                StdlibOrDiplomat::Stdlib,
+            ) => {
                 write!(f, "{}[{type_name}]", ReferenceDisplay(lifetime, mutability))
             }
-            TypeName::CustomTypeSlice(None, type_name) => write!(f, "Box<[{type_name}]>"),
+            TypeName::CustomTypeSlice(
+                Some((lifetime, mutability)),
+                type_name,
+                StdlibOrDiplomat::Diplomat,
+            ) => {
+                let maybemut = if *mutability == Mutability::Immutable {
+                    ""
+                } else {
+                    "Mut"
+                };
+                let lt = LifetimeGenericsListPartialDisplay(lifetime);
+                write!(f, "DiplomatSlice{maybemut}<{lt}{type_name}>")
+            }
+            TypeName::CustomTypeSlice(None, type_name, _) => write!(f, "Box<[{type_name}]>"),
             TypeName::Unit => "()".fmt(f),
             TypeName::Function(input_types, out_type, _mutability) => {
                 write!(f, "fn (")?;

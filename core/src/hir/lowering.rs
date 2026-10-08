@@ -1270,7 +1270,7 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::CustomTypeSlice(lm, type_name) => {
+            ast::TypeName::CustomTypeSlice(lm, type_name, _stdlib) => {
                 let new_lifetime = lm
                     .as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
@@ -1689,7 +1689,7 @@ impl<'ast> LoweringContext<'ast> {
                     PrimitiveType::from_ast(*prim),
                 )))
             }
-            ast::TypeName::CustomTypeSlice(ltmt, type_name) => {
+            ast::TypeName::CustomTypeSlice(ltmt, type_name, _stdlib) => {
                 let new_lifetime = ltmt
                     .as_ref()
                     .map(|(lt, m)| Borrow::new(ltl.lower_lifetime(lt), *m));
