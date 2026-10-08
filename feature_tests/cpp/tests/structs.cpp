@@ -1,6 +1,7 @@
 #include <iostream>
 #include "../include/MyStruct.hpp"
 #include "../include/MyEnum.hpp"
+#include "../include/ContiguousEnum.hpp"
 #include "../include/Opaque.hpp"
 #include "../include/StructArithmetic.hpp"
 #include "../include/ns/RenamedOpaqueArithmetic.hpp"
@@ -39,6 +40,12 @@ int main(int argc, char* argv[]) {
 
     MyStruct default_s;
     simple_assert_eq("default struct values", default_s.g.into_value(), MyEnum(MyEnum::D).into_value());
+
+    MyStruct myStructArr[] { s, default_s };
+    MyStruct::assert_slice(diplomat::span<const MyStruct>(myStructArr, 2), MyEnum::D);
+
+    ContiguousEnum enumArr[] { ContiguousEnum::C, ContiguousEnum::F };
+    MyStruct::assert_enum_slice(diplomat::span<const ContiguousEnum>(enumArr, 2), ContiguousEnum::F);
 
     auto a = StructArithmetic{ 1, 2 };
     auto b = StructArithmetic{ 2, 3 };

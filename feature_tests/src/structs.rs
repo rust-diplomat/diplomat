@@ -32,6 +32,7 @@ pub mod ffi {
     }
 
     #[derive(Debug, PartialEq, Eq)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub enum ContiguousEnum {
         C = 0,
         D = 1,
@@ -55,6 +56,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(auto, mut_struct_ref)]
+    #[diplomat::attr(auto, abi_compatible)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -297,6 +299,22 @@ pub mod ffi {
 
         pub fn fails_zst_result() -> Result<(), MyZst> {
             Err(MyZst {})
+        }
+
+        #[diplomat::cfg(supports=abi_compatibles)]
+        pub fn assert_slice(slice: &[MyStruct], second_value: MyEnum) {
+            assert!(slice.len() > 1);
+            let mut i = slice.iter();
+            i.next();
+            assert_eq!(i.next().unwrap().g, second_value);
+        }
+
+        #[diplomat::cfg(supports=abi_compatibles)]
+        pub fn assert_enum_slice(slice: &[ContiguousEnum], second_value: ContiguousEnum) {
+            assert!(slice.len() > 1);
+            let mut i = slice.iter();
+            i.next();
+            assert_eq!(*i.next().unwrap(), second_value);
         }
     }
 

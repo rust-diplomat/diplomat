@@ -1317,10 +1317,9 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                     "const "
                 };
                 let id: hir::TypeId = enm.tcx_id.into();
-                let c_name = self.formatter.namespace_c_name(
-                    id.into(),
-                    &self.formatter.fmt_type_name_unnamespaced(id),
-                );
+                let c_name = self
+                    .formatter
+                    .namespace_c_name(id.into(), &self.formatter.fmt_type_name_unnamespaced(id));
                 format!(
                     "{{reinterpret_cast<{mutability}{c_name}*>({cpp_name}.data()), {cpp_name}.size()}}",
                 )
