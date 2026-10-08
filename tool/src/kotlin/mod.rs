@@ -460,15 +460,24 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 format!("{name}.fromCallback({real_param_name}).nativeStruct").into()
             }
             Type::DiplomatOption(ref inner) => {
-                // We pass false for is_params here the type is a struct field
-                let inner_expr =
-                    self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, context);
                 let ffi_option = format!(
                     "Option{}",
                     self.formatter.fmt_struct_field_type_native(inner)
                 );
-                format!("{name}?.let {{ {ffi_option}.some({inner_expr}) }} ?: {ffi_option}.none()")
+                if is_param && matches!(**inner, Type::Slice(_)) {
+                    format!(
+                        "{name}SliceMemory?.let {{ {ffi_option}.some(it.slice) }} ?: {ffi_option}.none()"
+                    )
                     .into()
+                } else {
+                    // We pass false for is_params here the type is a struct field
+                    let inner_expr =
+                        self.gen_kt_to_c_for_type(inner, "it".into(), struct_borrow_info, context);
+                    format!(
+                        "{name}?.let {{ {ffi_option}.some({inner_expr}) }} ?: {ffi_option}.none()"
+                    )
+                    .into()
+                }
             }
             _ => todo!(),
         }
@@ -1097,8 +1106,9 @@ returnVal.option() ?: return null
 
             let param_borrow_kind = visitor.visit_param(&param.ty, &param_name);
 
-            match &param.ty {
+            match param.ty.unwrap_option() {
                 Type::Slice(slice) => {
+                    let is_option = param.ty.is_option();
                     let borrowed_lt = match param_borrow_kind {
                         ParamBorrowInfo::Struct(_) => None,
                         ParamBorrowInfo::TemporarySlice => {
@@ -1106,7 +1116,10 @@ returnVal.option() ?: return null
                                 // The GC should handle this, but explicit closing helps
                                 // This also ensures that fooSliceMemory is not prematurely cleaned up
                                 // (though the JVM never cleans up things before their stack frame is over)
-                                cleanups.push(format!("{param_name}SliceMemory.close()").into());
+                                let maybe_null = if is_option { "?" } else { "" };
+                                cleanups.push(
+                                    format!("{param_name}SliceMemory{maybe_null}.close()").into(),
+                                );
                             }
                             None
                         }
@@ -1122,16 +1135,25 @@ returnVal.option() ?: return null
                         ParamBorrowInfo::NotBorrowed => None,
                         _ => todo!(),
                     };
-                    slice_conversions.push((
-                        param_name.clone(),
+                    let slice_conv = if is_option {
+                        let inner_conv = self.gen_slice_conversion(
+                            true,
+                            "it",
+                            &method.lifetime_env,
+                            slice,
+                            borrowed_lt,
+                        );
+                        format!("{param_name}?.let {{ {inner_conv} }}").into()
+                    } else {
                         self.gen_slice_conversion(
                             true,
                             &param_name,
                             &method.lifetime_env,
                             slice,
                             borrowed_lt,
-                        ),
-                    ));
+                        )
+                    };
+                    slice_conversions.push((param_name.clone(), slice_conv));
                 }
                 Type::Callback(Callback {
                     param_self: _,
