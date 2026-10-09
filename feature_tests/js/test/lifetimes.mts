@@ -10,4 +10,9 @@ test("Foo", (t) => {
 
 	let b = f.bar.foo.asReturning().bytes;
 	t.is(b.toString(), "This is a test string.");
+
+	t.is(Foo.newOpt(null), null);
+	let fOpt = Foo.newOpt("This is an optional test string.");
+	t.not(fOpt, null);
+	t.is(fOpt!.asReturning().bytes.toString(), "This is an optional test string.");
 });

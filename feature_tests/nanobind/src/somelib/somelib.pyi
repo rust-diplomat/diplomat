@@ -717,6 +717,9 @@ class Foo:
     def extract_from_fields(fields: BorrowedFields) -> Foo: ...
 
     @staticmethod
+    def new_opt(x: str | None = None) -> Foo: ...
+
+    @staticmethod
     def new_static(x: str) -> Foo: ...
 
 class ImmutableStructOfOpaque:

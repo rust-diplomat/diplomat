@@ -19,6 +19,7 @@ void add_Foo_binding(nb::module_ mod) {
         .def_prop_ro("bar", std::move(maybe_op_unwrap(&somelib::Foo::get_bar)), nb::keep_alive<0, 1>())
         .def_static("extract_from_bounds", std::move(maybe_op_unwrap(&somelib::Foo::extract_from_bounds)), "bounds"_a, "another_string"_a, nb::keep_alive<0, 1>(), nb::keep_alive<0, 2>(), "Test that the extraction logic correctly pins the right fields")
         .def_static("extract_from_fields", std::move(maybe_op_unwrap(&somelib::Foo::extract_from_fields)), "fields"_a, nb::keep_alive<0, 1>())
+        .def_static("new_opt", std::move(maybe_op_unwrap(&somelib::Foo::new_opt)), "x"_a= nb::none(), nb::keep_alive<0, 1>())
         .def_static("new_static", std::move(maybe_op_unwrap(&somelib::Foo::new_static)), "x"_a);
 }
 

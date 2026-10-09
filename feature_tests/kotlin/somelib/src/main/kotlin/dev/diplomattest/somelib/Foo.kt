@@ -8,6 +8,7 @@ import com.sun.jna.Structure
 internal interface FooLib: Library {
     fun Foo_destroy(handle: Pointer)
     fun Foo_new(x: Slice): Pointer
+    fun Foo_new_opt(x: OptionSlice): Pointer?
     fun Foo_get_bar(handle: Pointer): Pointer
     fun Foo_new_static(x: Slice): Pointer
     fun Foo_as_returning(handle: Pointer): BorrowedFieldsReturningNative
@@ -52,6 +53,19 @@ class Foo internal constructor (
             val returnVal = lib.Foo_new(xSliceMemory.slice);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
+            val returnOpaque = Foo(handle, selfEdges, aEdges, true)
+            return returnOpaque
+        }
+        @JvmStatic
+        
+        fun newOpt(x: String?): Foo? {
+            // This lifetime edge depends on lifetimes: 'a
+            val aEdges: MutableList<Any> = mutableListOf();
+            val xSliceMemory = x?.let { PrimitiveArrayTools.borrowUtf8(it).into(listOf(aEdges)) }
+            
+            val returnVal = lib.Foo_new_opt(xSliceMemory?.let { OptionSlice.some(it.slice) } ?: OptionSlice.none());
+            val selfEdges: List<Any> = listOf()
+            val handle = returnVal ?: return null
             val returnOpaque = Foo(handle, selfEdges, aEdges, true)
             return returnOpaque
         }
