@@ -1339,7 +1339,7 @@ mod tests {
 
     #[test]
     fn mod_with_write_generic() {
-        let code = pretty_print_code(
+        insta::assert_snapshot!(pretty_print_code(
             gen_bridge(parse_quote! {
                 mod ffi {
                     use diplomat_runtime::DiplomatWriteGeneric;
@@ -1352,9 +1352,7 @@ mod tests {
                     }
                 }
             })
-            .to_token_stream(),
-        );
-        assert!(code.contains("out: &mut diplomat_runtime::DiplomatWriteGeneric<u32>"));
-        assert!(code.contains("out.flush();"));
+            .to_token_stream()
+        ));
     }
 }

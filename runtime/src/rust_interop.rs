@@ -13,10 +13,10 @@ use crate::diplomat_buffer_write_destroy;
 use crate::DiplomatAbiCompatible;
 use crate::DiplomatWrite;
 use crate::DiplomatWriteGeneric;
-use alloc::boxed::Box;
 use alloc::vec::Vec;
 use core::borrow::Borrow;
 use core::marker::PhantomData;
+use core::mem::ManuallyDrop;
 use core::ptr;
 
 /// A [`DiplomatWrite`] backed by a `Vec`, for convenient use in Rust.
@@ -70,13 +70,14 @@ impl Drop for RustWriteVec {
 
 /// A [`DiplomatWriteGeneric<T>`] backed by a `Vec<T>`, for convenient use in Rust.
 pub struct RustWriteVecGeneric<T: DiplomatAbiCompatible> {
-    // Safety invariant: `ptr` points to a Box<DiplomatWrite> whose `buf`, `len`, and `cap`
-    // correspond to a valid `Vec<T>` allocation with `len = this.len / size_of::<T>()`
-    // and `cap = this.cap / size_of::<T>()`.
-    ptr: *mut DiplomatWrite,
-    _marker: PhantomData<T>,
+    // Safety invariant: `inner.raw`'s `buf`, `len`, and `cap` correspond to a valid
+    // `Vec<T>` allocation with `len = inner.raw.len / size_of::<T>()` and
+    // `cap = inner.raw.cap / size_of::<T>()`.
+    inner: DiplomatWriteGeneric<T>,
 }
 
+// Note: `this` must be `*mut DiplomatWrite` rather than `&mut DiplomatWrite` to match
+// the `extern "C" fn(*mut DiplomatWrite, usize) -> bool` signature of `DiplomatWrite::grow`.
 extern "C" fn grow_vec<T: DiplomatAbiCompatible>(
     this: *mut DiplomatWrite,
     new_cap_bytes: usize,
@@ -108,7 +109,7 @@ impl<T: DiplomatAbiCompatible> RustWriteVecGeneric<T> {
     pub fn with_capacity(cap: usize) -> Self {
         extern "C" fn flush(_: *mut DiplomatWrite) {}
         let mut vec = Vec::<T>::with_capacity(cap);
-        let ret = DiplomatWrite {
+        let raw = DiplomatWrite {
             context: ptr::null_mut(),
             buf: vec.as_mut_ptr() as *mut u8,
             len: 0,
@@ -119,17 +120,17 @@ impl<T: DiplomatAbiCompatible> RustWriteVecGeneric<T> {
         };
         core::mem::forget(vec);
         Self {
-            ptr: Box::into_raw(Box::new(ret)),
-            _marker: PhantomData,
+            inner: DiplomatWriteGeneric {
+                raw,
+                _marker: PhantomData,
+            },
         }
     }
 
     /// Borrows the underlying [`DiplomatWriteGeneric<T>`].
     #[allow(clippy::should_implement_trait)] // the trait is also implemented
     pub fn borrow(&self) -> &DiplomatWriteGeneric<T> {
-        // SAFETY: `self.ptr` is valid until Drop, and `DiplomatWriteGeneric<T>` is `#[repr(transparent)]`
-        // over `DiplomatWrite` with `T`'s invariants upheld by construction.
-        unsafe { &*(self.ptr as *const DiplomatWriteGeneric<T>) }
+        &self.inner
     }
 
     /// Mutably borrows the underlying [`DiplomatWriteGeneric<T>`].
@@ -138,32 +139,26 @@ impl<T: DiplomatAbiCompatible> RustWriteVecGeneric<T> {
     /// The contents of the returned reference MUST NOT be swapped with another instance
     /// of [`DiplomatWriteGeneric<T>`] that may have been created from a different source.
     pub unsafe fn borrow_mut(&mut self) -> &mut DiplomatWriteGeneric<T> {
-        // SAFETY: `self.ptr` is valid until Drop, and `DiplomatWriteGeneric<T>` is `#[repr(transparent)]`
-        // over `DiplomatWrite` with `T`'s invariants upheld by construction.
-        unsafe { &mut *(self.ptr as *mut DiplomatWriteGeneric<T>) }
+        &mut self.inner
     }
 
     /// Returns a slice of the elements written so far.
     pub fn as_slice(&self) -> &[T] {
-        self.borrow().as_slice()
+        self.inner.as_slice()
     }
 
     /// Consumes the wrapper and returns the filled `Vec<T>`.
     pub fn into_vec(self) -> Vec<T> {
+        let this = ManuallyDrop::new(self);
+        let elem_size = core::mem::size_of::<T>();
+        let len_elems = this.inner.raw.len.checked_div(elem_size).unwrap_or(0);
+        let cap_elems = this.inner.raw.cap.checked_div(elem_size).unwrap_or(0);
         // SAFETY:
-        // 1. By `self.ptr`'s safety invariant, `this.buf` was allocated by `Vec<T>` with
-        //    `len_elems` initialized elements and `cap_elems` capacity.
-        // 2. We free the `Box<DiplomatWrite>` and `forget(self)` so `Drop` does not double-free.
-        unsafe {
-            let this = Box::from_raw(self.ptr);
-            let elem_size = core::mem::size_of::<T>();
-            let len_elems = this.len.checked_div(elem_size).unwrap_or(0);
-            let cap_elems = this.cap.checked_div(elem_size).unwrap_or(0);
-            let vec = Vec::<T>::from_raw_parts(this.buf as *mut T, len_elems, cap_elems);
-            drop(this);
-            core::mem::forget(self);
-            vec
-        }
+        // 1. By `self.inner`'s safety invariant, `this.inner.raw.buf` was allocated by `Vec<T>`
+        //    with `len_elems` initialized elements and `cap_elems` capacity.
+        // 2. Wrapping `self` in `ManuallyDrop` prevents `Drop` from reconstructing and freeing
+        //    the `Vec<T>` a second time.
+        unsafe { Vec::<T>::from_raw_parts(this.inner.raw.buf as *mut T, len_elems, cap_elems) }
     }
 }
 
@@ -175,16 +170,13 @@ impl<T: DiplomatAbiCompatible> Borrow<DiplomatWriteGeneric<T>> for RustWriteVecG
 
 impl<T: DiplomatAbiCompatible> Drop for RustWriteVecGeneric<T> {
     fn drop(&mut self) {
-        // SAFETY: By `self.ptr`'s safety invariant, `this.buf` was allocated by `Vec<T>` with
-        // `len_elems` initialized elements and `cap_elems` capacity, and `self.ptr` was allocated via `Box`.
+        let elem_size = core::mem::size_of::<T>();
+        let len_elems = self.inner.raw.len.checked_div(elem_size).unwrap_or(0);
+        let cap_elems = self.inner.raw.cap.checked_div(elem_size).unwrap_or(0);
+        // SAFETY: By `self.inner`'s safety invariant, `self.inner.raw.buf` was allocated by `Vec<T>`
+        // with `len_elems` initialized elements and `cap_elems` capacity.
         unsafe {
-            let this = Box::from_raw(self.ptr);
-            let elem_size = core::mem::size_of::<T>();
-            let len_elems = this.len.checked_div(elem_size).unwrap_or(0);
-            let cap_elems = this.cap.checked_div(elem_size).unwrap_or(0);
-            let vec = Vec::<T>::from_raw_parts(this.buf as *mut T, len_elems, cap_elems);
-            drop(vec);
-            drop(this);
+            let _ = Vec::<T>::from_raw_parts(self.inner.raw.buf as *mut T, len_elems, cap_elems);
         }
     }
 }

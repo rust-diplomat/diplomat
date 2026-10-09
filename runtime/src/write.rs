@@ -311,8 +311,8 @@ impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, us
 ///   values of `T`.
 #[repr(transparent)]
 pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
-    raw: DiplomatWrite,
-    _marker: core::marker::PhantomData<T>,
+    pub(crate) raw: DiplomatWrite,
+    pub(crate) _marker: core::marker::PhantomData<T>,
 }
 
 impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {

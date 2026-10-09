@@ -892,7 +892,8 @@ impl Attrs {
                             SuccessType::Write(super::WriteType::Str)
                         ) {
                             errors.push(LoweringError::Other(
-                                "Stringifier must return string".into(),
+                                "Stringifier must return string (contain &mut DiplomatWrite)"
+                                    .into(),
                             ));
                         }
                     }

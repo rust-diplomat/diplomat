@@ -2113,4 +2113,55 @@ mod tests {
             &SpanLocation::None
         ));
     }
+
+    #[test]
+    fn typename_write_generic() {
+        let ty = TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<u32>
+            },
+            None,
+            &SpanLocation::None,
+        );
+        assert_eq!(
+            ty,
+            TypeName::Write(super::WriteType::Primitive(super::PrimitiveType::u32))
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Found DiplomatWriteGeneric without numeric primitive generic")]
+    fn typename_write_generic_bool_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<bool>
+            },
+            None,
+            &SpanLocation::None,
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Found DiplomatWriteGeneric without numeric primitive generic")]
+    fn typename_write_generic_struct_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<MyLocalStruct>
+            },
+            None,
+            &SpanLocation::None,
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Expected type argument")]
+    fn typename_write_generic_missing_arg_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric
+            },
+            None,
+            &SpanLocation::None,
+        );
+    }
 }
