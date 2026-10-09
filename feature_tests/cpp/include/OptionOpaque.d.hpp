@@ -75,6 +75,8 @@ public:
 
   inline static int64_t accepts_option_primitive(std::optional<somelib::diplomat::span<const uint32_t>> arg, uint8_t sentinel);
 
+  inline static size_t accepts_option_diplomat_str(std::optional<std::string_view> arg, uint8_t sentinel);
+
     inline const somelib::capi::OptionOpaque* AsFFI() const;
     inline somelib::capi::OptionOpaque* AsFFI();
     inline static const somelib::OptionOpaque* FromFFI(const somelib::capi::OptionOpaque* ptr);

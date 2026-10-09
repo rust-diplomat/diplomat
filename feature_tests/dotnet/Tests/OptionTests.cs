@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using Somelib;
 using Xunit;
@@ -48,5 +49,33 @@ public class OptionTests
             Assert.IsType<OptionString>(OptionString.New(Encoding.UTF8.GetBytes("hello 餐")));
 
         Assert.Equal("hello 餐", value.Write());
+    }
+
+    [Fact]
+    public void OptionStrArgument_MapsNullEmptyAndUtf8()
+    {
+        // `Option<&str>` lowers to `string?`; Rust returns the UTF-8 byte length.
+        Assert.Equal((nuint)0, OptionOpaque.AcceptsOptionStr(null, 123));
+        Assert.Equal((nuint)0, OptionOpaque.AcceptsOptionStr("", 123));
+        Assert.Equal((nuint)5, OptionOpaque.AcceptsOptionStr("hello", 123));
+        Assert.Equal((nuint)2, OptionOpaque.AcceptsOptionStr("é", 123));
+    }
+
+    [Fact]
+    public void OptionDiplomatStrArgument_DistinguishesNullFromEmpty()
+    {
+        // `Option<&DiplomatStr>` lowers to `byte[]?`; Rust returns usize::MAX for None.
+        Assert.Equal(nuint.MaxValue, OptionOpaque.AcceptsOptionDiplomatStr(null, 123));
+        Assert.Equal((nuint)0, OptionOpaque.AcceptsOptionDiplomatStr(Array.Empty<byte>(), 123));
+        Assert.Equal((nuint)3, OptionOpaque.AcceptsOptionDiplomatStr(new byte[] { 1, 2, 3 }, 123));
+    }
+
+    [Fact]
+    public void OptionPrimitiveSliceArgument_MapsNullEmptyAndValues()
+    {
+        // `Option<&[u32]>` lowers to `uint[]?`; Rust returns -1 for None, else the sum.
+        Assert.Equal(-1L, OptionOpaque.AcceptsOptionPrimitive(null, 123));
+        Assert.Equal(0L, OptionOpaque.AcceptsOptionPrimitive(Array.Empty<uint>(), 123));
+        Assert.Equal(3L, OptionOpaque.AcceptsOptionPrimitive(new uint[] { 1, 2 }, 123));
     }
 }

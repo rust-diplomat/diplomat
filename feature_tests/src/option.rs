@@ -217,7 +217,7 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind, dotnet))), disable)]
         pub fn accepts_option_str(arg: Option<&str>, sentinel: u8) -> usize {
             assert_eq!(sentinel, 123, "{arg:?}");
             arg.unwrap_or_default().len()
@@ -233,10 +233,16 @@ pub mod ffi {
             }
         }
 
-        #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind))), disable)]
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind, dotnet))), disable)]
         pub fn accepts_option_primitive(arg: Option<&[u32]>, sentinel: u8) -> i64 {
             assert_eq!(sentinel, 123);
             arg.map(|v| v.iter().sum::<u32>().into()).unwrap_or(-1)
+        }
+
+        #[diplomat::attr(any(not(supports = option), not(any(c, cpp, nanobind, dotnet))), disable)]
+        pub fn accepts_option_diplomat_str(arg: Option<&DiplomatStr>, sentinel: u8) -> usize {
+            assert_eq!(sentinel, 123);
+            arg.map(|a| a.len()).unwrap_or(usize::MAX)
         }
     }
 
