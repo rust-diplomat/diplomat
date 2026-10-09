@@ -332,7 +332,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
 
         let return_ty: Cow<str> = match method.output {
             ReturnType::Infallible(SuccessType::Unit) => "void".into(),
-            ReturnType::Infallible(SuccessType::Write) => {
+            ReturnType::Infallible(SuccessType::Write(..)) => {
                 param_decls.push((
                     format!("{}*", self.formatter.fmt_write_name()).into(),
                     "write".into(),
@@ -348,7 +348,7 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
                     None
                 };
                 let ok_ty = match ok {
-                    SuccessType::Write => {
+                    SuccessType::Write(..) => {
                         param_decls.push((
                             format!("{}*", self.formatter.fmt_write_name()).into(),
                             "write".into(),

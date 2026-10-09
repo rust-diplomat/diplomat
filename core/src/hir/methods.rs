@@ -87,12 +87,34 @@ impl CallbackInstantiationFunctionality for NoCallback {
     }
 }
 
+/// The element type written by a `Write` return.
+#[derive(Copy, Clone, Debug)]
+#[non_exhaustive]
+pub enum WriteType {
+    /// A UTF-8 string (`DiplomatWrite`).
+    Str,
+    /// A primitive array (`DiplomatWriteGeneric<T>`).
+    Primitive(super::PrimitiveType),
+}
+
+impl WriteType {
+    pub(super) fn from_ast(w: crate::ast::WriteType) -> Self {
+        match w {
+            crate::ast::WriteType::Str => WriteType::Str,
+            crate::ast::WriteType::Primitive(prim) => {
+                WriteType::Primitive(super::PrimitiveType::from_ast(prim))
+            }
+        }
+    }
+}
+
 /// Type that the method returns.
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType<P: super::TyPosition = OutputOnly> {
-    /// Conceptually returns a string, which gets written to the `write: DiplomatWrite` argument
-    Write,
+    /// Conceptually returns a string (`WriteType::Str`, via `DiplomatWrite`) or a primitive array
+    /// (`WriteType::Primitive(prim)`, via `DiplomatWriteGeneric<T>`).
+    Write(WriteType),
     /// A Diplomat type. Some types can be outputs, but not inputs, which is expressed by the `OutType` parameter.
     OutType(Type<P>),
     /// A `()` type in Rust.
@@ -143,7 +165,15 @@ pub struct CallbackParam {
 impl<P: crate::hir::TyPosition> SuccessType<P> {
     /// Returns whether the variant is `Write`.
     pub fn is_write(&self) -> bool {
-        matches!(self, SuccessType::Write)
+        matches!(self, SuccessType::Write(..))
+    }
+
+    /// If the variant is `Write(WriteType::Primitive(prim))`, returns `Some(prim)`.
+    pub fn write_primitive(&self) -> Option<super::PrimitiveType> {
+        match self {
+            SuccessType::Write(WriteType::Primitive(prim)) => Some(*prim),
+            _ => None,
+        }
     }
 
     /// Returns whether the variant is `Unit`.
@@ -177,7 +207,7 @@ impl ReturnType {
     pub fn is_ffi_unit(&self) -> bool {
         matches!(
             self,
-            ReturnType::Infallible(SuccessType::Unit | SuccessType::Write)
+            ReturnType::Infallible(SuccessType::Unit | SuccessType::Write(..))
         )
     }
 

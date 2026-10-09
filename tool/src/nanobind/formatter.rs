@@ -244,7 +244,10 @@ impl<'tcx> PyFormatter<'tcx> {
     ) -> Cow<'tcx, str> {
         match ty {
             crate::hir::SuccessType::Unit => "None".into(),
-            crate::hir::SuccessType::Write => "str".into(),
+            crate::hir::SuccessType::Write(crate::hir::WriteType::Str) => "str".into(),
+            crate::hir::SuccessType::Write(crate::hir::WriteType::Primitive(p)) => {
+                format!("list[{}]", self.primitive_to_python_type(p)).into()
+            }
             crate::hir::SuccessType::OutType(o) => self.hir_type_to_python_type(o),
             _ => unreachable!("Unrecognized success type: {ty:?}"),
         }

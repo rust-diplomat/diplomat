@@ -521,6 +521,13 @@ pub enum StdlibOrDiplomat {
     Diplomat,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
+#[non_exhaustive]
+pub enum WriteType {
+    Str,
+    Primitive(PrimitiveType),
+}
+
 /// A local type reference, such as the type of a field, parameter, or return value.
 /// Unlike [`CustomType`], which represents a type declaration, [`TypeName`]s can compose
 /// types through references and boxing, and can also capture unresolved paths.
@@ -540,7 +547,8 @@ pub enum TypeName {
     Option(Box<TypeName>, StdlibOrDiplomat),
     /// A `Result<T, E>` or `diplomat_runtime::DiplomatResult` type.
     Result(Box<TypeName>, Box<TypeName>, StdlibOrDiplomat),
-    Write,
+    /// A `DiplomatWrite` (`WriteType::Str`) or `DiplomatWriteGeneric<T>` (`WriteType::Primitive(prim)`) type.
+    Write(WriteType),
     /// A `&DiplomatStr` or `Box<DiplomatStr>` type.
     /// Owned strings don't have a lifetime.
     ///
@@ -688,7 +696,7 @@ impl TypeName {
             // These are specified using FFI-safe diplomat_runtime types
             TypeName::StrReference(.., StdlibOrDiplomat::Diplomat) | TypeName::StrSlice(.., StdlibOrDiplomat::Diplomat) |TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Diplomat) | TypeName::CustomTypeSlice(..) => true,
             // These are special anyway and shouldn't show up in structs
-            TypeName::Unit | TypeName::Write | TypeName::Result(..) |
+            TypeName::Unit | TypeName::Write(..) | TypeName::Result(..) |
             // This is basically only useful in return types
             TypeName::Ordering |
             // These are specified using Rust stdlib types and not safe across FFI
@@ -788,8 +796,12 @@ impl TypeName {
                 let err = err.to_syn();
                 syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatResult<#ok, #err>)
             }
-            TypeName::Write => {
+            TypeName::Write(WriteType::Str) => {
                 syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite)
+            }
+            TypeName::Write(WriteType::Primitive(primitive)) => {
+                let primitive = primitive.to_ident();
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWriteGeneric<#primitive>)
             }
             TypeName::StrReference(lt, encoding, is_stdlib_type) => {
                 if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
@@ -1227,7 +1239,31 @@ impl TypeName {
                         ));
                     }
                 } else if is_runtime_type(p, "DiplomatWrite") {
-                    TypeName::Write
+                    TypeName::Write(WriteType::Str)
+                } else if is_runtime_type(p, "DiplomatWriteGeneric") {
+                    let ty = get_ty_from_syn_path(p).unwrap_or_else(|| {
+                        create_report(AstReport::new(
+                            "Expected type argument".into(),
+                            Some(p.span().spanned_into(module_location)),
+                            "Add writeable primitive type specification here".into(),
+                            vec![],
+                        ));
+                    });
+                    if let syn::Type::Path(p) = &ty {
+                        if let Some(ident) = p.path.get_ident() {
+                            if let Ok(prim) = PrimitiveType::from_str(&ident.to_string()) {
+                                if !matches!(prim, PrimitiveType::bool) {
+                                    return TypeName::Write(WriteType::Primitive(prim));
+                                }
+                            }
+                        }
+                    }
+                    create_report(AstReport::new(
+                        "Found DiplomatWriteGeneric without numeric primitive generic".into(),
+                        Some(ty.span().spanned_into(module_location)),
+                        "Must be a numeric primitive type (bool is not supported)".into(),
+                        vec![],
+                    ));
                 } else {
                     TypeName::Named(p.spanned_into(module_location))
                 }
@@ -1533,7 +1569,10 @@ impl fmt::Display for TypeName {
             TypeName::Result(ok, err, _) => {
                 write!(f, "Result<{ok}, {err}>")
             }
-            TypeName::Write => "DiplomatWrite".fmt(f),
+            TypeName::Write(WriteType::Str) => "DiplomatWrite".fmt(f),
+            TypeName::Write(WriteType::Primitive(prim)) => {
+                write!(f, "DiplomatWriteGeneric<{prim}>")
+            }
             TypeName::StrReference(lt, encoding, is_stdlib_type) => {
                 if let Some(lt) = lt {
                     if *is_stdlib_type == StdlibOrDiplomat::Stdlib {
@@ -2073,5 +2112,56 @@ mod tests {
             None,
             &SpanLocation::None
         ));
+    }
+
+    #[test]
+    fn typename_write_generic() {
+        let ty = TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<u32>
+            },
+            None,
+            &SpanLocation::None,
+        );
+        assert_eq!(
+            ty,
+            TypeName::Write(super::WriteType::Primitive(super::PrimitiveType::u32))
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Found DiplomatWriteGeneric without numeric primitive generic")]
+    fn typename_write_generic_bool_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<bool>
+            },
+            None,
+            &SpanLocation::None,
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Found DiplomatWriteGeneric without numeric primitive generic")]
+    fn typename_write_generic_struct_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric<MyLocalStruct>
+            },
+            None,
+            &SpanLocation::None,
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Expected type argument")]
+    fn typename_write_generic_missing_arg_invalid() {
+        TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWriteGeneric
+            },
+            None,
+            &SpanLocation::None,
+        );
     }
 }

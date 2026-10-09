@@ -743,7 +743,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
     fn gen_success_ty(&mut self, out_ty: &SuccessType) -> Cow<'cx, str> {
         match out_ty {
-            SuccessType::Write => self
+            SuccessType::Write(..) => self
                 .formatter
                 .fmt_string_type(hir::StringEncoding::UnvalidatedUtf8)
                 .into(),
@@ -811,15 +811,15 @@ impl<'cx> ItemGenContext<'_, 'cx> {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit)
             | ReturnType::Fallible(SuccessType::Unit, Some(_)) => self.formatter.fmt_void().into(),
-            ReturnType::Infallible(SuccessType::Write)
-            | ReturnType::Fallible(SuccessType::Write, Some(_)) => self
+            ReturnType::Infallible(SuccessType::Write(..))
+            | ReturnType::Fallible(SuccessType::Write(..), Some(_)) => self
                 .formatter
                 .fmt_string_type(hir::StringEncoding::Utf8)
                 .into(),
             ReturnType::Infallible(SuccessType::OutType(ref o))
             | ReturnType::Fallible(SuccessType::OutType(ref o), Some(_)) => self.gen_type_name(o),
-            ReturnType::Fallible(SuccessType::Write, None)
-            | ReturnType::Nullable(SuccessType::Write) => self
+            ReturnType::Fallible(SuccessType::Write(..), None)
+            | ReturnType::Nullable(SuccessType::Write(..)) => self
                 .formatter
                 .fmt_nullable(self.formatter.fmt_string_type(hir::StringEncoding::Utf8))
                 .into(),
@@ -882,7 +882,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 self.formatter.fmt_ffi_void()
             }
             .into(),
-            ReturnType::Infallible(SuccessType::Write) => if cast {
+            ReturnType::Infallible(SuccessType::Write(..)) => if cast {
                 self.formatter.fmt_void()
             } else {
                 self.formatter.fmt_ffi_void()
@@ -1159,7 +1159,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Write) => {
+            ReturnType::Infallible(SuccessType::Write(..)) => {
                 Some(wrap_success("write.finalize()".to_string()))
             }
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
@@ -1183,7 +1183,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 let err_check = format!("if (!result.isOk) {{\n  {err_statement}\n}}\n");
 
                 let success_expr = match ok {
-                    SuccessType::Write => "write.finalize()".to_string(),
+                    SuccessType::Write(..) => "write.finalize()".to_string(),
                     SuccessType::OutType(o) => self
                         .gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
                         .into_owned(),

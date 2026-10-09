@@ -887,9 +887,13 @@ impl Attrs {
                             errors
                                 .push(LoweringError::Other("Getter cannot have parameters".into()));
                         }
-                        if !matches!(method.output.success_type(), SuccessType::Write) {
+                        if !matches!(
+                            method.output.success_type(),
+                            SuccessType::Write(super::WriteType::Str)
+                        ) {
                             errors.push(LoweringError::Other(
-                                "Stringifier must return string".into(),
+                                "Stringifier must return string (contain &mut DiplomatWrite)"
+                                    .into(),
                             ));
                         }
                     }
@@ -1429,6 +1433,8 @@ pub struct BackendAttrSupport {
     /// If a callback's return in a given backend has the possibility to always fail (with the exception of unit types).
     /// See https://github.com/rust-diplomat/diplomat/issues/1262
     pub callback_returns_must_be_fallible: bool,
+    /// Whether the language supports `DiplomatWriteGeneric<T>` primitive writeables.
+    pub generic_writeables: bool,
 }
 
 impl BackendAttrSupport {
@@ -1476,6 +1482,7 @@ impl BackendAttrSupport {
             opaque_slices: true,
             owned_byte_slice_returns: true,
             callback_returns_must_be_fallible: true,
+            generic_writeables: true,
         }
     }
 
@@ -1517,6 +1524,7 @@ impl BackendAttrSupport {
             "mutable_slices" => Some(self.mutable_slices),
             "tuples" => Some(self.tuples),
             "owned_byte_slice_returns" => Some(self.owned_byte_slice_returns),
+            "generic_writeables" => Some(self.generic_writeables),
             _ => None,
         }
     }
@@ -1677,6 +1685,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 opaque_slices,
                 owned_byte_slice_returns,
                 callback_returns_must_be_fallible,
+                generic_writeables,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1720,6 +1729,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "opaque_slices" => opaque_slices,
                 "owned_byte_slice_returns" => owned_byte_slice_returns,
                 "callback_returns_must_be_fallible" => callback_returns_must_be_fallible,
+                "generic_writeables" => generic_writeables,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

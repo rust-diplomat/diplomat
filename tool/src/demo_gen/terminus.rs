@@ -146,7 +146,7 @@ impl RenderTerminusContext<'_, '_> {
     pub fn is_valid_terminus(method: &Method) -> bool {
         #[allow(clippy::match_like_matches_macro)] // more readable
         let is_return_ty_displayable = match method.output.success_type() {
-            SuccessType::Write => true,
+            SuccessType::Write(..) => true,
             SuccessType::OutType(OutType::Primitive(_) | OutType::Enum(_)) => true,
             _ => false,
         };

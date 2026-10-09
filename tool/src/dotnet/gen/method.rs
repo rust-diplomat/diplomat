@@ -1776,7 +1776,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 );
                 return None;
             }
-            hir::ReturnType::Nullable(hir::SuccessType::Write) => {
+            hir::ReturnType::Nullable(hir::SuccessType::Write(..)) => {
                 self.errors.push_error(
                     "[.NET backend] `Option<&mut DiplomatWrite>` return is not supported."
                         .to_string(),
@@ -1793,7 +1793,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         let mut ownership = Ownership::Owned;
         let return_type = match success {
             hir::SuccessType::Unit => DotnetReturnType::Unit,
-            hir::SuccessType::Write => DotnetReturnType::Write,
+            hir::SuccessType::Write(..) => DotnetReturnType::Write,
             hir::SuccessType::OutType(hir::Type::Primitive(p)) => {
                 DotnetReturnType::Primitive(self.lower_primitive(p)?)
             }

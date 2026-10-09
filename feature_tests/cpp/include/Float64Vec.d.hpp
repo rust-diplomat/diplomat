@@ -13,6 +13,7 @@
 namespace somelib {
 namespace capi { struct Float64Vec; }
 class Float64Vec;
+class ErrorEnum;
 } // namespace somelib
 
 
@@ -59,6 +60,22 @@ public:
   inline somelib::diplomat::span<const double> borrow() const DIPLOMAT_LIFETIME_BOUND;
 
   inline std::optional<double> operator[](size_t i) const;
+
+  inline std::vector<double> write_to() const;
+  template<typename W>
+  inline void write_to_write(W& writeable_output) const;
+
+  inline std::vector<double> write_multi() const;
+  template<typename W>
+  inline void write_multi_write(W& writeable_output) const;
+
+  inline somelib::diplomat::result<std::vector<double>, somelib::ErrorEnum> try_write_to(bool should_succeed) const;
+  template<typename W>
+  inline somelib::diplomat::result<std::monostate, somelib::ErrorEnum> try_write_to_write(bool should_succeed, W& writeable_output) const;
+
+  inline std::optional<std::vector<double>> maybe_write_to(bool should_succeed) const;
+  template<typename W>
+  inline std::optional<std::monostate> maybe_write_to_write(bool should_succeed, W& writeable_output) const;
 
     inline const somelib::capi::Float64Vec* AsFFI() const;
     inline somelib::capi::Float64Vec* AsFFI();

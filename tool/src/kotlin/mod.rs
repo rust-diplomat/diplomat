@@ -317,7 +317,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_infallible_return_type_name(&self, success_type: &SuccessType) -> Cow<'cx, str> {
         match success_type {
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            SuccessType::Write => self.formatter.fmt_string().into(),
+            SuccessType::Write(..) => self.formatter.fmt_string().into(),
             SuccessType::OutType(ref o) => self.gen_type_name(o, None),
             _ => panic!("Unsupported success type"),
         }
@@ -477,7 +477,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     fn gen_infallible_return_type_ffi(&self, success: &SuccessType) -> Cow<'cx, str> {
         match success {
             SuccessType::Unit => self.formatter.fmt_void().into(),
-            SuccessType::Write => self.formatter.fmt_void().into(),
+            SuccessType::Write(..) => self.formatter.fmt_void().into(),
             SuccessType::OutType(ref o) => self.gen_type_name_ffi(o, None),
             _ => panic!("Unsupported success type"),
         }
@@ -536,7 +536,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
                 format!("Result{ok_type}{err_type}").into()
             }
-            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write) => "OptionUnit".into(),
+            ReturnType::Nullable(SuccessType::Unit | SuccessType::Write(..)) => "OptionUnit".into(),
             ReturnType::Nullable(
                 ref success @ SuccessType::OutType(
                     Type::Struct(..) | Type::Enum(..) | Type::Primitive(..),
@@ -878,7 +878,7 @@ val intermediateOption = {val_name}.option() ?: return null
         return_type_postfix: &str,
     ) -> String {
         match res {
-            SuccessType::Write => Self::write_return(return_type_postfix),
+            SuccessType::Write(..) => Self::write_return(return_type_postfix),
             SuccessType::OutType(ref o) => self.gen_out_type_return_conversion(
                 method,
                 method_lifetimes_map,
@@ -961,7 +961,7 @@ val intermediateOption = {val_name}.option() ?: return null
                 self.gen_nullable_return_conversion(method, method_lifetimes_map, "returnVal", res)
             }
 
-            ReturnType::Nullable(SuccessType::Write) => format!(
+            ReturnType::Nullable(SuccessType::Write(..)) => format!(
                 r#"
 returnVal.option() ?: return null
 {}
@@ -1264,9 +1264,9 @@ returnVal.option() ?: return null
         }
         let write_return = matches!(
             &method.output,
-            ReturnType::Infallible(SuccessType::Write)
-                | ReturnType::Fallible(SuccessType::Write, _)
-                | ReturnType::Nullable(SuccessType::Write)
+            ReturnType::Infallible(SuccessType::Write(..))
+                | ReturnType::Fallible(SuccessType::Write(..), _)
+                | ReturnType::Nullable(SuccessType::Write(..))
         );
         if write_return {
             param_conversions.push("write".into());
@@ -1398,6 +1398,7 @@ returnVal.option() ?: return null
             let param_name = self.formatter.fmt_param_name(param.name.as_str());
 
             visitor.visit_param(&param.ty, &param_name);
+
             if let Type::Callback(_) = &param.ty {
                 additional_name = Some(
                     type_name.to_owned()
@@ -1414,9 +1415,9 @@ returnVal.option() ?: return null
                 self.gen_native_type_name(&param.ty, additional_name.clone()),
             ));
         }
-        if let ReturnType::Infallible(SuccessType::Write)
-        | ReturnType::Fallible(SuccessType::Write, _)
-        | ReturnType::Nullable(SuccessType::Write) = method.output
+        if let ReturnType::Infallible(SuccessType::Write(..))
+        | ReturnType::Fallible(SuccessType::Write(..), _)
+        | ReturnType::Nullable(SuccessType::Write(..)) = method.output
         {
             param_decls.push("write: Pointer".into())
         }

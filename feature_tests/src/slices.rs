@@ -168,6 +168,47 @@ pub mod ffi {
         pub fn get(&self, i: usize) -> Option<f64> {
             self.0.get(i).copied()
         }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_to(&self, w: &mut DiplomatWriteGeneric<f64>) {
+            w.write_slice(&self.0);
+        }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_multi(&self, w: &mut DiplomatWriteGeneric<f64>) {
+            for &x in &self.0 {
+                w.push(x);
+            }
+            w.extend(self.0.iter().map(|&x| x * 2.0));
+        }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn try_write_to(
+            &self,
+            should_succeed: bool,
+            w: &mut DiplomatWriteGeneric<f64>,
+        ) -> Result<(), ErrorEnum> {
+            if should_succeed {
+                w.write_slice(&self.0);
+                Ok(())
+            } else {
+                Err(ErrorEnum::Foo)
+            }
+        }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn maybe_write_to(
+            &self,
+            should_succeed: bool,
+            w: &mut DiplomatWriteGeneric<f64>,
+        ) -> Option<()> {
+            if should_succeed {
+                w.write_slice(&self.0);
+                Some(())
+            } else {
+                None
+            }
+        }
     }
 
     // Owned opaque returns borrowing a `&[u8]` param: on .NET the param becomes

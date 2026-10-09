@@ -72,22 +72,22 @@ pub struct DiplomatWrite {
     ///
     /// The pointer may reference structured data on the foreign side,
     /// such as C++ std::string, used to reallocate buf.
-    context: *mut c_void,
+    pub(crate) context: *mut c_void,
     /// The raw string buffer, which will be mutated on the Rust side.
-    buf: *mut u8,
+    pub(crate) buf: *mut u8,
     /// The current filled size of the buffer
-    len: usize,
+    pub(crate) len: usize,
     /// The current capacity of the buffer
-    cap: usize,
+    pub(crate) cap: usize,
     /// Set to true if `grow` ever fails.
-    grow_failed: bool,
+    pub(crate) grow_failed: bool,
     /// Called by Rust to indicate that there is no more data to write.
     ///
     /// May be called multiple times.
     ///
     /// Arguments:
     /// - `self` (`*mut DiplomatWrite`): This `DiplomatWrite`
-    flush: extern "C" fn(*mut DiplomatWrite),
+    pub(crate) flush: extern "C" fn(*mut DiplomatWrite),
     /// Called by Rust to request more capacity in the buffer. The implementation should allocate a new
     /// buffer and copy the contents of the old buffer into the new buffer, updating `self.buf` and `self.cap`
     ///
@@ -96,7 +96,7 @@ pub struct DiplomatWrite {
     /// - `capacity` (`usize`): The requested capacity.
     ///
     /// Returns: `true` if the allocation succeeded. Should not update any state if it failed.
-    grow: extern "C" fn(*mut DiplomatWrite, usize) -> bool,
+    pub(crate) grow: extern "C" fn(*mut DiplomatWrite, usize) -> bool,
 }
 
 impl DiplomatWrite {
@@ -267,4 +267,222 @@ pub unsafe extern "C" fn diplomat_buffer_write_destroy(this: *mut DiplomatWrite)
     let vec = Vec::from_raw_parts(this.buf, 0, this.cap);
     drop(vec);
     drop(this);
+}
+
+mod sealed {
+    pub trait Sealed {}
+}
+
+/// Marker trait for types that have a stable, shared C ABI layout and can be written
+/// directly into a [`DiplomatWriteGeneric`].
+///
+/// This trait is currently sealed and implemented only for scalar primitive types.
+///
+/// # Safety
+/// Implementors must:
+/// - Be `Copy` and Plain Old Data (POD).
+/// - Have a fixed, shared layout across the FFI boundary.
+/// - Contain no pointers, references, or custom `Drop` glue.
+pub unsafe trait DiplomatAbiCompatible: Copy + sealed::Sealed {}
+
+macro_rules! impl_abi_compatible {
+    ($($ty:ty),* $(,)?) => {
+        $(
+            impl sealed::Sealed for $ty {}
+            // SAFETY: Scalar primitives are Copy, POD, have no pointers or Drop glue,
+            // and share a fixed C ABI layout across FFI.
+            unsafe impl DiplomatAbiCompatible for $ty {}
+        )*
+    };
+}
+
+impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, usize, f32, f64);
+
+/// An object that can write a sequence of primitive values of type `T` across FFI.
+///
+/// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
+/// writing slices, and extending from iterators.
+///
+/// # Safety invariants
+/// - All safety invariants of [`DiplomatWrite`] hold on `self.raw`.
+/// - `self.raw.len` and `self.raw.cap` are measured in bytes, and `self.raw.len` is always
+///   a multiple of `size_of::<T>()`.
+/// - `self.raw.buf` points to `self.raw.len / size_of::<T>()` consecutive properly initialized
+///   values of `T`.
+#[repr(transparent)]
+pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
+    pub(crate) raw: DiplomatWrite,
+    pub(crate) _marker: core::marker::PhantomData<T>,
+}
+
+impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
+    /// Pushes a single element into the buffer.
+    #[inline]
+    pub fn push(&mut self, val: T) {
+        if self.raw.grow_failed {
+            return;
+        }
+        let elem_size = core::mem::size_of::<T>();
+        if elem_size == 0 {
+            return;
+        }
+        let Some(needed_bytes) = self.raw.len.checked_add(elem_size) else {
+            self.raw.grow_failed = true;
+            return;
+        };
+        if needed_bytes > self.raw.cap {
+            let success = (self.raw.grow)(&mut self.raw, needed_bytes);
+            if !success {
+                self.raw.grow_failed = true;
+                return;
+            }
+        }
+        debug_assert!(needed_bytes <= self.raw.cap);
+        // SAFETY:
+        // 1. `self.raw.buf` is valid for at least `needed_bytes` bytes (`<= self.raw.cap`).
+        // 2. `write_unaligned` is used so no alignment assumption on `self.raw.buf` is required.
+        unsafe {
+            ptr::write_unaligned(self.raw.buf.add(self.raw.len) as *mut T, val);
+        }
+        // Maintains safety invariant: `self.raw.len <= self.raw.cap` and `len` is a multiple of `size_of::<T>()`.
+        self.raw.len = needed_bytes;
+    }
+
+    /// Appends a contiguous slice of elements into the buffer.
+    #[inline]
+    pub fn write_slice(&mut self, slice: &[T]) {
+        if self.raw.grow_failed || slice.is_empty() {
+            return;
+        }
+        let elem_size = core::mem::size_of::<T>();
+        if elem_size == 0 {
+            return;
+        }
+        let Some(byte_len) = slice.len().checked_mul(elem_size) else {
+            self.raw.grow_failed = true;
+            return;
+        };
+        let Some(needed_bytes) = self.raw.len.checked_add(byte_len) else {
+            self.raw.grow_failed = true;
+            return;
+        };
+        if needed_bytes > self.raw.cap {
+            let success = (self.raw.grow)(&mut self.raw, needed_bytes);
+            if !success {
+                self.raw.grow_failed = true;
+                return;
+            }
+        }
+        debug_assert!(needed_bytes <= self.raw.cap);
+        // SAFETY:
+        // 1. `slice.as_ptr()` is valid for `byte_len` bytes.
+        // 2. `self.raw.buf.add(self.raw.len)` is valid for `byte_len` bytes (`needed_bytes <= self.raw.cap`).
+        // 3. The two memory regions do not overlap because `&mut self` exclusively borrows the write buffer.
+        unsafe {
+            ptr::copy_nonoverlapping(
+                slice.as_ptr() as *const u8,
+                self.raw.buf.add(self.raw.len),
+                byte_len,
+            );
+        }
+        // Maintains safety invariant: `self.raw.len <= self.raw.cap` and `len` is a multiple of `size_of::<T>()`.
+        self.raw.len = needed_bytes;
+    }
+
+    /// Extends the buffer with elements from an iterator.
+    pub fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        let iter = iter.into_iter();
+        let (lower, _) = iter.size_hint();
+        if lower > 0 {
+            self.reserve(lower);
+        }
+        for item in iter {
+            self.push(item);
+        }
+    }
+
+    /// Reserves capacity for at least `additional` more elements of type `T`.
+    ///
+    /// Returns `true` if the reservation succeeded, or `false` if allocation failed.
+    pub fn reserve(&mut self, additional: usize) -> bool {
+        if self.raw.grow_failed {
+            return false;
+        }
+        let elem_size = core::mem::size_of::<T>();
+        let Some(additional_bytes) = additional.checked_mul(elem_size) else {
+            self.raw.grow_failed = true;
+            return false;
+        };
+        let Some(needed_bytes) = self.raw.len.checked_add(additional_bytes) else {
+            self.raw.grow_failed = true;
+            return false;
+        };
+        if needed_bytes > self.raw.cap {
+            let success = (self.raw.grow)(&mut self.raw, needed_bytes);
+            if !success {
+                self.raw.grow_failed = true;
+                return false;
+            }
+        }
+        true
+    }
+
+    /// Returns the number of elements of type `T` written so far.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.raw
+            .len
+            .checked_div(core::mem::size_of::<T>())
+            .unwrap_or(0)
+    }
+
+    /// Returns `true` if no elements have been written.
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns the current capacity in elements of type `T`.
+    #[inline]
+    pub fn capacity(&self) -> usize {
+        self.raw
+            .cap
+            .checked_div(core::mem::size_of::<T>())
+            .unwrap_or(0)
+    }
+
+    /// Returns a slice of the elements written so far if the underlying buffer is aligned for `T`.
+    ///
+    /// If growth has failed, this returns what has been written so far.
+    pub fn as_slice(&self) -> &[T] {
+        if self.raw.buf.is_null() || self.raw.len == 0 {
+            return &[];
+        }
+        let elem_size = core::mem::size_of::<T>();
+        if elem_size == 0 {
+            return &[];
+        }
+        let count = self.raw.len / elem_size;
+        if !(self.raw.buf as usize).is_multiple_of(core::mem::align_of::<T>()) {
+            return &[];
+        }
+        debug_assert!(self.raw.len <= self.raw.cap);
+        // SAFETY:
+        // 1. `self.raw.buf` is non-null and aligned to `align_of::<T>()` (checked above).
+        // 2. By `DiplomatWriteGeneric<T>`'s safety invariants, `self.raw.buf` points to `count`
+        //    consecutive properly initialized values of `T` with total size `<= isize::MAX`.
+        // 3. The buffer will not be mutated while `&self` is borrowed.
+        unsafe { core::slice::from_raw_parts(self.raw.buf as *const T, count) }
+    }
+
+    /// Call this function before releasing the buffer to C.
+    pub fn flush(&mut self) {
+        self.raw.flush();
+    }
+}
+
+impl<T: DiplomatAbiCompatible> Extend<T> for DiplomatWriteGeneric<T> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        DiplomatWriteGeneric::extend(self, iter);
+    }
 }
