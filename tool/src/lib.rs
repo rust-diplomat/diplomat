@@ -14,6 +14,7 @@ mod dotnet;
 mod js;
 mod kotlin;
 mod nanobind;
+mod rust;
 
 use colored::*;
 use config::toml_value_from_str;
@@ -40,6 +41,7 @@ pub fn get_supported(target_language: &str) -> hir::BackendAttrSupport {
         "kotlin" => kotlin::attr_support(),
         "dotnet" => dotnet::attr_support(),
         "py-nanobind" | "nanobind" => nanobind::attr_support(),
+        "rust" => rust::attr_support(),
         o => panic!("Unknown target: {}", o),
     }
 }
@@ -165,6 +167,7 @@ pub fn gen(
             demo_gen::run(entry, &tcx, docs_url_gen, config.clone())
         }
         "kotlin" => kotlin::run(&tcx, config.clone(), docs_url_gen),
+        "rust" => rust::run(&tcx, docs_url_gen),
         o => panic!("Unknown target: {}", o),
     };
 
