@@ -1,0 +1,3 @@
+{% for line in docs.lines() -%}
+///{% if !line.is_empty() %} {{ line }}{% endif %}
+{% endfor -%}
