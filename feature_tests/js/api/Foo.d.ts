@@ -14,6 +14,8 @@ export class Foo {
     get ffiValue(): pointer;
 
 
+    static newOpt(x: string | null): Foo | null;
+
     get bar(): Bar;
 
     asReturning(): BorrowedFieldsReturning;

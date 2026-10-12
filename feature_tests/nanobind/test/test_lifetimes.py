@@ -11,6 +11,13 @@ def test_lifetimes():
 
     assert a.as_returning().bytes == "fananna"
 
+    assert somelib.Foo.new_opt(None) is None
+    opt_str = "bananna".replace('b', 'f')
+    a_opt = somelib.Foo.new_opt(opt_str)
+    opt_str = "bobanna"
+    gc.collect()
+    assert a_opt.as_returning().bytes == "fananna"
+
     it = somelib.OpaqueThinVec([1,2,3,4], [.1, .2, .3, .4], "")
     for i, o in enumerate(it):
         assert o.a == i+1, "Iteraton over thin vec didn't work"

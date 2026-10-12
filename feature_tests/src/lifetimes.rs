@@ -70,6 +70,12 @@ pub mod ffi {
             Box::new(Foo(x))
         }
 
+        #[diplomat::cfg(supports = option)]
+        #[diplomat::attr(dotnet, disable)]
+        pub fn new_opt(x: Option<&'a DiplomatStr>) -> Option<Box<Self>> {
+            x.map(|x| Box::new(Foo(x)))
+        }
+
         #[diplomat::attr(auto, getter = "bar")]
         pub fn get_bar<'b>(&'b self) -> Box<Bar<'b, 'a>> {
             Box::new(Bar(self))

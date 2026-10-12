@@ -55,5 +55,10 @@ class OptionOpaqueTest {
         assertEquals(returned.a, 6.toUByte());
         assertEquals(returned.b, null);
         assertEquals(returned.c, OptionEnum.Bar);
+
+        assertNull(Foo.newOpt(null))
+        val fooOpt = Foo.newOpt("borrowed optional")
+        assertNotNull(fooOpt)
+        assertEquals(fooOpt.asReturning().bytes, "borrowed optional")
     }
 }

@@ -211,7 +211,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         tcx: &'tcx TypeContext,
         ty: &hir::Type<P>,
     ) {
-        match ty {
+        match ty.unwrap_option() {
             hir::Type::Struct(s) => {
                 let st = s.resolve(tcx);
                 for f in &st.fields {
@@ -245,6 +245,8 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
         ty: &hir::Type<P>,
         param_name: &str,
     ) -> ParamBorrowInfo<'tcx> {
+        let is_option = ty.is_option();
+        let ty = ty.unwrap_option();
         let mut is_borrowed = false;
         if self.used_method_lifetimes.is_empty() {
             if let hir::Type::Slice(..) = *ty {
@@ -279,7 +281,7 @@ impl<'tcx> BorrowingParamVisitor<'tcx> {
                                 kind: LifetimeEdgeKind::StructLifetime(
                                     link.def_env(),
                                     def_lt,
-                                    ty.is_option(),
+                                    is_option,
                                 ),
                             };
                             method_lifetime_info.incoming_edges.push(edge);

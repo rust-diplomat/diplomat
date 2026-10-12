@@ -563,7 +563,18 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 });
             } else {
                 // Set allocators for all the types we know require allocation (basically anything that's a struct in the underlying Rust):
-                let alloc = if matches!(
+                let slice_arena;
+                let alloc = if matches!(param.ty, hir::Type::DiplomatOption(..))
+                    && matches!(param_borrow_kind, ParamBorrowInfo::BorrowedSlice)
+                {
+                    method_info.needs_cleanup = true;
+                    slice_arena = format!("{}Slice", param_info.name);
+                    method_info.slice_params.push(SliceParam {
+                        name: param_info.name.clone(),
+                        slice_expr: "diplomatRuntime.CleanupArena.createWith()".to_string(),
+                    });
+                    Some(slice_arena.as_str())
+                } else if matches!(
                     param.ty,
                     hir::Type::DiplomatOption(..) | hir::Type::Struct(..)
                 ) {

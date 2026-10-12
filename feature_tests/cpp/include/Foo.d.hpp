@@ -34,6 +34,8 @@ public:
 
   inline static std::unique_ptr<somelib::Foo> new_(std::string_view x DIPLOMAT_LIFETIME_BOUND);
 
+  inline static somelib::diplomat::maybe_null<std::unique_ptr<somelib::Foo>> new_opt(std::optional<std::string_view> x DIPLOMAT_LIFETIME_BOUND);
+
   inline std::unique_ptr<somelib::Bar> get_bar() const DIPLOMAT_LIFETIME_BOUND;
 
   inline static std::unique_ptr<somelib::Foo> new_static(std::string_view x);

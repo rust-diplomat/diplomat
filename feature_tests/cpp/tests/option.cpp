@@ -1,4 +1,6 @@
 #include <iostream>
+#include "../include/BorrowedFieldsReturning.hpp"
+#include "../include/Foo.hpp"
 #include "../include/OptionOpaqueChar.hpp"
 #include "../include/OptionOpaque.hpp"
 #include "../include/OptionStruct.hpp"
@@ -60,4 +62,9 @@ int main(int argc, char *argv[])
     constexpr uint32_t array[]{1, 2, 3, 4};
     simple_assert_eq("Optional primitive param (Some)", OptionOpaque::accepts_option_primitive(std::make_optional(diplomat::span{array, 4}), 123), 10);
     simple_assert_eq("Optional primitive param (None)", OptionOpaque::accepts_option_primitive(std::nullopt, 123), -1);
+
+    simple_assert("Foo::new_opt(nullopt) returns None", !Foo::new_opt(std::nullopt));
+    auto foo_opt = Foo::new_opt(std::make_optional("borrowed optional"sv));
+    simple_assert("Foo::new_opt(Some) returns Some", static_cast<bool>(foo_opt));
+    simple_assert_eq("Foo::new_opt borrows string", foo_opt->as_returning().bytes, "borrowed optional"sv);
 }
