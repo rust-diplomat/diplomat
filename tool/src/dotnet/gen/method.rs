@@ -1230,7 +1230,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         if self.reject_manually_disposable_borrows(
             &method_name,
             &manually_disposable_sources,
-            &ok_dependencies,
+            // Scoped read-only spans acquire a SafeHandle claim for each access.
+            if matches!(return_type, DotnetReturnType::BorrowedSpan(_)) {
+                &[]
+            } else {
+                &ok_dependencies
+            },
             &err_dependencies,
         ) {
             return None;
