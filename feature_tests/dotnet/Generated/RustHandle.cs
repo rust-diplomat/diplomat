@@ -203,39 +203,6 @@ internal struct BorrowLedger
     }
 }
 
-internal sealed unsafe class DependencyOperationLease<T> : ILifetimeEdge where T : unmanaged
-{
-    private RustHandle<T>? _owner;
-    private ILifetimeEdge[] _dependencies;
-
-    internal DependencyOperationLease(RustHandle<T> owner, ILifetimeEdge[] dependencies)
-    {
-        _owner = owner;
-        _dependencies = dependencies;
-    }
-
-    public void Release()
-    {
-        RustHandle<T>? owner = Interlocked.Exchange(ref _owner, null);
-        if (owner is null)
-        {
-            return;
-        }
-
-        ILifetimeEdge[] dependencies = Interlocked.Exchange(
-            ref _dependencies,
-            Array.Empty<ILifetimeEdge>());
-        try
-        {
-            LifetimeEdges.ReleaseLeases(dependencies);
-        }
-        finally
-        {
-            GC.KeepAlive(owner);
-        }
-    }
-}
-
 internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanaged
 {
     private RustHandle<T>? _owner;
@@ -269,8 +236,8 @@ internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanag
     }
 }
 
-// The SafeHandle count protects only a native call made directly on this value. Source edges
-// keep managed handles reachable and validate borrow state without taking SafeHandle claims.
+// Direct calls and scoped borrowed reads retain a SafeHandle claim until access ends.
+// Persistent source edges keep handles reachable and validate borrow state on each access.
 internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 {
     private readonly RustDestructor<T>? _destructor;
@@ -414,24 +381,8 @@ internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
         }
     }
 
-    internal DependencyOperationLease<T> HoldForCall()
-    {
-        if (IsClosed)
-        {
-            throw new InvalidOperationException(
-                "The source of this borrowed value was disposed.");
-        }
-
-        ILifetimeEdge[] dependencies = _edges.HoldDependenciesForCall();
-        if (!IsClosed)
-        {
-            return new DependencyOperationLease<T>(this, dependencies);
-        }
-
-        LifetimeEdges.ReleaseNoThrow(dependencies);
-        throw new InvalidOperationException(
-            "The source of this borrowed value was disposed.");
-    }
+    // Borrowed access must pin the SafeHandle against concurrent source disposal.
+    internal OperationLease<T> HoldForCall() => StartCall();
 
     internal void ExitBorrow(BorrowKind kind) => _borrows.Exit(kind);
 
