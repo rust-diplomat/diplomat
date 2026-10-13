@@ -40,6 +40,11 @@ fn param_ty(param_ty: &ast::TypeName) -> syn::Type {
             // not Rust stdlib types (which are not FFI-safe and must be converted)
             prim.get_diplomat_slice_type(ltmt)
         }
+        ast::TypeName::CustomTypeSlice(..) => {
+            // At the param boundary we MUST use FFI-safe diplomat slice types,
+            // not Rust stdlib types (which are not FFI-safe and must be converted)
+            param_ty.ffi_safe_version().to_syn()
+        }
         ast::TypeName::Option(..) if !param_ty.is_ffi_safe() => {
             param_ty.ffi_safe_version().to_syn()
         }
@@ -57,6 +62,7 @@ fn param_conversion(
         ast::TypeName::StrReference(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::PrimitiveSlice(.., StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::CustomTypeSlice(.., StdlibOrDiplomat::Stdlib)
         | ast::TypeName::Result(..) => Some(if let Some(cast_to) = cast_to {
             quote!(let #name: #cast_to = #name.into();)
         } else {
@@ -360,7 +366,8 @@ fn gen_custom_function(func_info: FuncGen) -> Item {
             )
         } else if let ast::TypeName::StrReference(_, _, StdlibOrDiplomat::Stdlib)
         | ast::TypeName::StrSlice(.., StdlibOrDiplomat::Stdlib)
-        | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
+        | ast::TypeName::PrimitiveSlice(_, _, StdlibOrDiplomat::Stdlib)
+        | ast::TypeName::CustomTypeSlice(_, _, StdlibOrDiplomat::Stdlib) = return_type
         {
             let return_type_syn = return_type.ffi_safe_version().to_syn();
             (quote! { -> #return_type_syn }, quote! { .into() })
@@ -1336,7 +1343,6 @@ mod tests {
             .to_token_stream()
         ));
     }
-
     #[test]
     fn mod_with_write_generic() {
         insta::assert_snapshot!(pretty_print_code(
@@ -1348,6 +1354,27 @@ mod tests {
                     impl Foo {
                         pub fn get_ints(&self, out: &mut DiplomatWriteGeneric<u32>) {
                             out.push(42);
+                        }
+                    }
+                }
+            })
+            .to_token_stream()
+        ));
+    }
+
+    #[test]
+    fn custom_type_slices_are_ffi_safe() {
+        insta::assert_snapshot!(pretty_print_code(
+            gen_bridge(parse_quote! {
+                mod ffi {
+                    pub struct Foo {
+                        pub x: u32,
+                    }
+
+                    impl Foo {
+                        pub fn slices<'a>(s: &'a [Foo], m: &'a mut [Foo]) -> &'a [Foo] {
+                            let _ = m;
+                            s
                         }
                     }
                 }
