@@ -1364,7 +1364,7 @@ mod tests {
 
     #[test]
     fn custom_type_slices_are_ffi_safe() {
-        let code = pretty_print_code(
+        insta::assert_snapshot!(pretty_print_code(
             gen_bridge(parse_quote! {
                 mod ffi {
                     pub struct Foo {
@@ -1379,19 +1379,7 @@ mod tests {
                     }
                 }
             })
-            .to_token_stream(),
-        );
-        assert!(
-            code.contains("s: diplomat_runtime::DiplomatSlice<'a, Foo>"),
-            "expected DiplomatSlice param in:\n{code}"
-        );
-        assert!(
-            code.contains("m: diplomat_runtime::DiplomatSliceMut<'a, Foo>"),
-            "expected DiplomatSliceMut param in:\n{code}"
-        );
-        assert!(
-            code.contains("-> diplomat_runtime::DiplomatSlice<'a, Foo>"),
-            "expected DiplomatSlice return in:\n{code}"
-        );
+            .to_token_stream()
+        ));
     }
 }
