@@ -1,9 +1,14 @@
 import test from "ava";
-import { MyString, Float64Vec } from "diplomat-wasm-js-feature-tests";
+import { MyString, Float64Vec, Utf16Wrap } from "diplomat-wasm-js-feature-tests";
 
 test("MyString functionality", (t) => {
   let str = new MyString("This is a test value.");
   t.is(str.str, "This is a test value.");
+});
+
+test("Utf16Wrap", (t) => {
+  let s = new Utf16Wrap("A const str with non byte char: 𐐷 which is a DiplomatChar,");
+  t.is(s.borrowCont(), "A const str with non byte char: 𐐷 which is a DiplomatChar,");
 });
 
 test("String List", (t) => {
