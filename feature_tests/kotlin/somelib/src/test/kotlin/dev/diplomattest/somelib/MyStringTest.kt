@@ -35,4 +35,20 @@ class MyStringTest {
         val myString = MyString.new_(emptyString)
         assertEquals(myString.getStr(), "")
     }
+
+    @Test
+    fun testUtf16() {
+        val testStr = "A const str with non byte char: 𐐷 which is a DiplomatChar,"
+        val wrap = Utf16Wrap.fromUtf16(testStr)
+        assertEquals(testStr, wrap.borrowCont())
+
+        val wrapEmpty = Utf16Wrap.fromUtf16("")
+        assertEquals("", wrapEmpty.borrowCont())
+
+        val wrapChinese = Utf16Wrap.fromUtf16(javaStr)
+        assertEquals(javaStr, wrapChinese.borrowCont())
+
+        val wrapEgyptian = Utf16Wrap.fromUtf16(ancientEgyptian)
+        assertEquals(ancientEgyptian, wrapEgyptian.borrowCont())
+    }
 }
