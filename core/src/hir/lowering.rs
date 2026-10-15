@@ -2097,6 +2097,13 @@ impl<'ast> LoweringContext<'ast> {
                 "DiplomatWriteGeneric is not supported in this backend. Try #[diplomat::cfg(supports = generic_writeables)]".into(),
             ));
         }
+        if matches!(write_type, Some(ast::WriteType::Str16))
+            && !self.attr_validator.attrs_supported().utf16_writeables
+        {
+            self.errors.push(LoweringError::Other(
+                "DiplomatWrite16 is not supported in this backend. Try #[diplomat::cfg(supports = utf16_writeables)]".into(),
+            ));
+        }
         let write_or_unit = if let Some(w) = write_type {
             SuccessType::Write(WriteType::from_ast(w))
         } else {

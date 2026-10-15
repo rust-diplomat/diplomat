@@ -486,3 +486,19 @@ impl<T: DiplomatAbiCompatible> Extend<T> for DiplomatWriteGeneric<T> {
         DiplomatWriteGeneric::extend(self, iter);
     }
 }
+
+/// An object that can one-shot write a UTF-16 string.
+///
+/// Over FFI, this acts just like [`DiplomatWrite`], except that the underlying
+/// buffer contains `u16` code units and is converted into a string by backends
+/// that support `utf16_writeables`.
+pub type DiplomatWrite16 = DiplomatWriteGeneric<u16>;
+
+impl DiplomatWriteGeneric<u16> {
+    /// Encodes `c` as UTF-16 (1 or 2 `u16` code units) and appends it to the buffer.
+    #[inline]
+    pub fn write_char_as_utf16(&mut self, c: char) {
+        let mut buf = [0u16; 2];
+        self.write_slice(c.encode_utf16(&mut buf));
+    }
+}

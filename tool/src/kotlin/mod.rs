@@ -52,6 +52,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.traits_are_sync = true;
     a.generate_mocking_interface = true;
     a.owned_slices = true;
+    a.utf16_writeables = true;
 
     a
 }
@@ -664,10 +665,14 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             .expect("Failed to render opaque return block")
     }
 
-    fn write_return(return_type_modifier: &str) -> String {
+    fn write_return(write_type: &hir::WriteType, return_type_modifier: &str) -> String {
+        let fn_name = match write_type {
+            hir::WriteType::Str16 => "writeToString16",
+            _ => "writeToString",
+        };
         format!(
             r#"
-val returnString = DW.writeToString(write)
+val returnString = DW.{fn_name}(write)
 return returnString{return_type_modifier}"#
         )
     }
@@ -887,7 +892,7 @@ val intermediateOption = {val_name}.option() ?: return null
         return_type_postfix: &str,
     ) -> String {
         match res {
-            SuccessType::Write(..) => Self::write_return(return_type_postfix),
+            SuccessType::Write(ref w) => Self::write_return(w, return_type_postfix),
             SuccessType::OutType(ref o) => self.gen_out_type_return_conversion(
                 method,
                 method_lifetimes_map,
@@ -970,12 +975,12 @@ val intermediateOption = {val_name}.option() ?: return null
                 self.gen_nullable_return_conversion(method, method_lifetimes_map, "returnVal", res)
             }
 
-            ReturnType::Nullable(SuccessType::Write(..)) => format!(
+            ReturnType::Nullable(SuccessType::Write(ref w)) => format!(
                 r#"
 returnVal.option() ?: return null
 {}
                         "#,
-                Self::write_return("")
+                Self::write_return(w, "")
             ),
             ReturnType::Nullable(SuccessType::Unit) => "return returnVal.option()".into(),
             _ => panic!("unsupported type"),

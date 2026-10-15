@@ -74,6 +74,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.tuples = true;
     a.opaque_slices = true;
     a.generic_writeables = true;
+    a.utf16_writeables = true;
 
     a
 }

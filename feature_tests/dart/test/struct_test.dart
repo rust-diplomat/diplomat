@@ -18,4 +18,12 @@ void main() {
     final immut = ImmutableStructOfOpaque(i: op);
     expect(immut.takeIn(), '"String"');
   });
+
+  test('Utf16Wrap writeTo and writeChars', () {
+    final w = Utf16Wrap('Hello 𐐷!');
+    expect(w.writeTo(), 'Hello 𐐷!');
+    expect(w.writeChars(), 'Hello 𐐷!');
+    final empty = Utf16Wrap('');
+    expect(empty.writeTo(), '');
+  });
 }

@@ -195,6 +195,18 @@ pub mod ffi {
         pub fn borrow_cont<'a>(&'a self) -> &'a DiplomatStr16 {
             &self.0
         }
+
+        #[diplomat::cfg(supports = utf16_writeables)]
+        pub fn write_to(&self, write: &mut DiplomatWrite16) {
+            write.write_slice(&self.0);
+        }
+
+        #[diplomat::cfg(supports = utf16_writeables)]
+        pub fn write_chars(&self, write: &mut DiplomatWrite16) {
+            for c in char::decode_utf16(self.0.iter().copied()) {
+                write.write_char_as_utf16(c.unwrap_or(char::REPLACEMENT_CHARACTER));
+            }
+        }
     }
 
     impl MyEnum {

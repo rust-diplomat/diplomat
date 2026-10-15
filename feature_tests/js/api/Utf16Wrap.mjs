@@ -87,6 +87,36 @@ export class Utf16Wrap {
         }
     }
 
+    writeTo() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.Utf16Wrap_write_to(this.ffiValue, write.buffer);
+
+        try {
+            return write.readString16();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            write.free();
+        }
+    }
+
+    writeChars() {
+        const write = new diplomatRuntime.DiplomatWriteBuf(wasm);
+
+    wasm.Utf16Wrap_write_chars(this.ffiValue, write.buffer);
+
+        try {
+            return write.readString16();
+        }
+
+        finally {
+            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
+            write.free();
+        }
+    }
+
     constructor(input) {
         if (arguments[0] === diplomatRuntime.exposeConstructor) {
             return this.#internalConstructor(...Array.prototype.slice.call(arguments, 1));

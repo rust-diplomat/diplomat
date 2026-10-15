@@ -278,9 +278,14 @@ impl<'tcx> Cpp2Formatter<'tcx> {
         "std::string".into()
     }
 
+    pub fn fmt_owned_str16(&self) -> Cow<'static, str> {
+        "std::u16string".into()
+    }
+
     pub fn fmt_write_success_type(&self, write_ty: hir::WriteType) -> Cow<'static, str> {
         match write_ty {
             hir::WriteType::Str => self.fmt_owned_str(),
+            hir::WriteType::Str16 => self.fmt_owned_str16(),
             hir::WriteType::Primitive(prim) => {
                 format!("std::vector<{}>", self.fmt_primitive_as_c(prim)).into()
             }

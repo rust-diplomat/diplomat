@@ -889,10 +889,10 @@ impl Attrs {
                         }
                         if !matches!(
                             method.output.success_type(),
-                            SuccessType::Write(super::WriteType::Str)
+                            SuccessType::Write(super::WriteType::Str | super::WriteType::Str16)
                         ) {
                             errors.push(LoweringError::Other(
-                                "Stringifier must return string (contain &mut DiplomatWrite)"
+                                "Stringifier must return string (contain &mut DiplomatWrite or &mut DiplomatWrite16)"
                                     .into(),
                             ));
                         }
@@ -1435,6 +1435,8 @@ pub struct BackendAttrSupport {
     pub callback_returns_must_be_fallible: bool,
     /// Whether the language supports `DiplomatWriteGeneric<T>` primitive writeables.
     pub generic_writeables: bool,
+    /// Whether the language supports `DiplomatWrite16` UTF-16 string writeables.
+    pub utf16_writeables: bool,
 }
 
 impl BackendAttrSupport {
@@ -1483,6 +1485,7 @@ impl BackendAttrSupport {
             owned_byte_slice_returns: true,
             callback_returns_must_be_fallible: true,
             generic_writeables: true,
+            utf16_writeables: true,
         }
     }
 
@@ -1525,6 +1528,7 @@ impl BackendAttrSupport {
             "tuples" => Some(self.tuples),
             "owned_byte_slice_returns" => Some(self.owned_byte_slice_returns),
             "generic_writeables" => Some(self.generic_writeables),
+            "utf16_writeables" => Some(self.utf16_writeables),
             _ => None,
         }
     }
@@ -1686,6 +1690,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 owned_byte_slice_returns,
                 callback_returns_must_be_fallible,
                 generic_writeables,
+                utf16_writeables,
             } = self.support;
             match value {
                 "namespacing" => namespacing,
@@ -1730,6 +1735,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "owned_byte_slice_returns" => owned_byte_slice_returns,
                 "callback_returns_must_be_fallible" => callback_returns_must_be_fallible,
                 "generic_writeables" => generic_writeables,
+                "utf16_writeables" => utf16_writeables,
                 _ => {
                     return Err(LoweringError::Other(format!(
                         "Unknown supports = value found: {value}"

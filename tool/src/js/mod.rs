@@ -74,6 +74,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.generate_mocking_interface = false;
     a.owned_slices = true;
     a.opaque_slices = true;
+    a.utf16_writeables = true;
 
     a
 }

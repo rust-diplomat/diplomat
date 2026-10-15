@@ -210,4 +210,15 @@ mod tests {
         assert_eq!(buffer.as_slice(), &[10, 20, 30, 40, 50, 60, 70]);
         assert_eq!(buffer.into_vec(), alloc::vec![10, 20, 30, 40, 50, 60, 70]);
     }
+
+    #[test]
+    fn test_rust_write_16() {
+        let mut buffer = RustWriteVecGeneric::<u16>::with_capacity(2);
+        // SAFETY: this is the only instance of `DiplomatWrite16` in scope.
+        let writer: &mut crate::DiplomatWrite16 = unsafe { buffer.borrow_mut() };
+        writer.write_char_as_utf16('A');
+        writer.write_char_as_utf16('𐐷'); // surrogate pair: 0xD801, 0xDC37
+        assert_eq!(writer.len(), 3);
+        assert_eq!(buffer.as_slice(), &[0x0041, 0xD801, 0xDC37]);
+    }
 }

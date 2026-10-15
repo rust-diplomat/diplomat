@@ -24,6 +24,10 @@ namespace capi {
 
     somelib::diplomat::capi::DiplomatString16View Utf16Wrap_borrow_cont(const somelib::capi::Utf16Wrap* self);
 
+    void Utf16Wrap_write_to(const somelib::capi::Utf16Wrap* self, somelib::diplomat::capi::DiplomatWrite* write);
+
+    void Utf16Wrap_write_chars(const somelib::capi::Utf16Wrap* self, somelib::diplomat::capi::DiplomatWrite* write);
+
     void Utf16Wrap_destroy(Utf16Wrap* self);
 
     } // extern "C"
@@ -52,6 +56,34 @@ inline void somelib::Utf16Wrap::get_debug_str_write(W& writeable) const {
 inline std::u16string_view somelib::Utf16Wrap::borrow_cont() const DIPLOMAT_LIFETIME_BOUND {
     auto result = somelib::capi::Utf16Wrap_borrow_cont(this->AsFFI());
     return std::u16string_view(result.data, result.len);
+}
+
+inline std::u16string somelib::Utf16Wrap::write_to() const {
+    std::u16string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString16(output);
+    somelib::capi::Utf16Wrap_write_to(this->AsFFI(),
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::Utf16Wrap::write_to_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::Utf16Wrap_write_to(this->AsFFI(),
+        &write);
+}
+
+inline std::u16string somelib::Utf16Wrap::write_chars() const {
+    std::u16string output;
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteFromString16(output);
+    somelib::capi::Utf16Wrap_write_chars(this->AsFFI(),
+        &write);
+    return output;
+}
+template<typename W>
+inline void somelib::Utf16Wrap::write_chars_write(W& writeable) const {
+    somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);
+    somelib::capi::Utf16Wrap_write_chars(this->AsFFI(),
+        &write);
 }
 
 inline const somelib::capi::Utf16Wrap* somelib::Utf16Wrap::AsFFI() const {

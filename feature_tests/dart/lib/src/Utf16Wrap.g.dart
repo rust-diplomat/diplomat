@@ -46,6 +46,18 @@ final class Utf16Wrap implements ffi.Finalizable {
     return result._toDart(aEdges);
   }
 
+  String writeTo() {
+    final write = _Write();
+    _Utf16Wrap_write_to(_ffi, write._ffi);
+    return write.finalize16();
+  }
+
+  String writeChars() {
+    final write = _Write();
+    _Utf16Wrap_write_chars(_ffi, write._ffi);
+    return write.finalize16();
+  }
+
 }
 
 // ignore: experimental_member_use
@@ -71,5 +83,17 @@ external void _Utf16Wrap_get_debug_str(ffi.Pointer<ffi.Opaque> self, ffi.Pointer
 @ffi.Native<_SliceUtf16 Function(ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_borrow_cont')
 // ignore: non_constant_identifier_names
 external _SliceUtf16 _Utf16Wrap_borrow_cont(ffi.Pointer<ffi.Opaque> self);
+
+// ignore: experimental_member_use
+@meta.RecordUse()
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_write_to')
+// ignore: non_constant_identifier_names
+external void _Utf16Wrap_write_to(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
+
+// ignore: experimental_member_use
+@meta.RecordUse()
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Opaque>, ffi.Pointer<ffi.Opaque>)>(isLeaf: true, symbol: 'Utf16Wrap_write_chars')
+// ignore: non_constant_identifier_names
+external void _Utf16Wrap_write_chars(ffi.Pointer<ffi.Opaque> self, ffi.Pointer<ffi.Opaque> write);
 
 // dart format on

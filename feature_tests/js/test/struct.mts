@@ -1,5 +1,5 @@
 import test from 'ava';
-import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum, StructWithSlices } from "diplomat-wasm-js-feature-tests";
+import { MyEnum, MyStruct, CyclicStructB, CyclicStructC, ScalarPairWithPadding, BigStructWithStuff, DefaultEnum, StructWithSlices, Utf16Wrap } from "diplomat-wasm-js-feature-tests";
 
 test("Verify invariants of struct", t => {
     const s = new MyStruct();
@@ -101,4 +101,12 @@ test("Passing struct self with slice", t => {
         second: []
     });
     t.is(s.returnLast(), "g");
+});
+
+test("Utf16Wrap writeTo and writeChars", t => {
+    const w = new Utf16Wrap("Hello 𐐷!");
+    t.is(w.writeTo(), "Hello 𐐷!");
+    t.is(w.writeChars(), "Hello 𐐷!");
+    const empty = new Utf16Wrap("");
+    t.is(empty.writeTo(), "");
 });

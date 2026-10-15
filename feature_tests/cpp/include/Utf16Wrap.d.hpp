@@ -35,6 +35,14 @@ public:
 
   inline std::u16string_view borrow_cont() const DIPLOMAT_LIFETIME_BOUND;
 
+  inline std::u16string write_to() const;
+  template<typename W>
+  inline void write_to_write(W& writeable_output) const;
+
+  inline std::u16string write_chars() const;
+  template<typename W>
+  inline void write_chars_write(W& writeable_output) const;
+
     inline const somelib::capi::Utf16Wrap* AsFFI() const;
     inline somelib::capi::Utf16Wrap* AsFFI();
     inline static const somelib::Utf16Wrap* FromFFI(const somelib::capi::Utf16Wrap* ptr);

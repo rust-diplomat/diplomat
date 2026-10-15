@@ -17,6 +17,9 @@ export function readString8(wasm, ptr, len) {
 }
 
 export function readString16(wasm, ptr, len) {
+    if (len === 0) {
+        return "";
+    }
     const buf = new Uint16Array(wasm.memory.buffer, ptr, len);
     return String.fromCharCode.apply(null, buf)
 }
@@ -376,6 +379,10 @@ export class DiplomatWriteBuf {
 
     readString8() {
         return readString8(this.#wasm, this.ptr, this.size);
+    }
+
+    readString16() {
+        return readString16(this.#wasm, this.ptr, this.size / 2);
     }
 
     get buffer() {
