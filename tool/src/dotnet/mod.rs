@@ -129,6 +129,14 @@ struct DiplomatSliceMutU32Template<'a> {
     namespace: &'a str,
 }
 
+#[derive(Template)]
+#[template(path = "dotnet/DiplomatOptionSlice.cs.jinja", escape = "none")]
+struct DiplomatOptionSliceTemplate<'a> {
+    namespace: &'a str,
+    option_name: &'a str,
+    slice_name: &'a str,
+}
+
 /// `DiplomatWrite` — caller-provided buffer Rust appends UTF-8 bytes
 /// into. Carries function pointers for `flush` and `grow` callbacks so
 /// Rust can ask C# to enlarge the buffer when it runs out. Used for
@@ -310,6 +318,9 @@ pub struct DotnetConfig {
     pub exception_message_method: Option<String>,
     /// If `true`, emit a `.csproj` scaffold next to the generated sources.
     pub scaffold: Option<bool>,
+    /// If `true`, lower `&DiplomatStr` params to `string` (transcoded via
+    /// `Diplomat.Utf8.Clone`) instead of zero-copy `byte[]`.
+    pub diplomat_str_as_string: Option<bool>,
 }
 
 impl DotnetConfig {
@@ -329,6 +340,11 @@ impl DotnetConfig {
             }
             "scaffold" => {
                 self.scaffold = value
+                    .as_bool()
+                    .or_else(|| value.as_str().map(|v| v == "true"));
+            }
+            "diplomat_str_as_string" => {
+                self.diplomat_str_as_string = value
                     .as_bool()
                     .or_else(|| value.as_str().map(|v| v == "true"));
             }
@@ -399,7 +415,9 @@ pub(crate) fn run<'tcx>(
         namespace: &namespace,
         exception_trim_suffix: config.dotnet_config.exception_trim_suffix.as_deref(),
         exception_message_method: config.dotnet_config.exception_message_method.as_deref(),
+        diplomat_str_as_string: config.dotnet_config.diplomat_str_as_string.unwrap_or(false),
         result_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
+        option_slice_registry: std::cell::RefCell::new(std::collections::HashSet::new()),
         option_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
@@ -462,6 +480,25 @@ pub(crate) fn run<'tcx>(
             option_struct
                 .render()
                 .expect("DotnetOption template render failed"),
+        );
+    }
+
+    // Emit option slices — one file per unique inner type encountered
+    for slice_name in ctx.option_slice_registry.into_inner() {
+        let option_name = format!(
+            "DiplomatOption{}",
+            slice_name.trim_start_matches("Diplomat")
+        );
+        add_cs_file(
+            &files,
+            format!("{option_name}.cs"),
+            DiplomatOptionSliceTemplate {
+                namespace: &namespace,
+                option_name: &option_name,
+                slice_name,
+            }
+            .render()
+            .expect("DiplomatOptionSlice template render failed"),
         );
     }
 
@@ -693,9 +730,17 @@ mod test {
     }
 
     fn run_dotnet(tk_stream: proc_macro2::TokenStream) -> (HashMap<String, String>, Vec<String>) {
+        run_dotnet_with(tk_stream, |_| {})
+    }
+
+    fn run_dotnet_with(
+        tk_stream: proc_macro2::TokenStream,
+        configure: impl FnOnce(&mut Config),
+    ) -> (HashMap<String, String>, Vec<String>) {
         let tcx = new_tcx(tk_stream);
         let mut config = Config::default();
         config.shared_config.lib_name = Some("somelib".to_string());
+        configure(&mut config);
         let docs_url_gen = DocsUrlGenerator::with_base_urls(None, HashMap::new());
 
         let (files, errors) = super::run(&tcx, &config, &docs_url_gen);
@@ -4416,6 +4461,142 @@ mod test {
             !config.contains("public nuint Size"),
             "an unannotated method must not become a property, got:
 {config}"
+        );
+    }
+
+    // ---- diplomat_str_as_string ----
+    fn diplomat_str_params() -> proc_macro2::TokenStream {
+        quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+
+                #[diplomat::opaque]
+                pub struct Text;
+
+                impl Text {
+                    pub fn len(x: &DiplomatStr) -> usize {
+                        unimplemented!()
+                    }
+                    pub fn len_opt(x: Option<&DiplomatStr>) -> usize {
+                        unimplemented!()
+                    }
+                }
+            }
+        }
+    }
+
+    fn with_diplomat_str_as_string(config: &mut Config) {
+        config.dotnet_config.diplomat_str_as_string = Some(true);
+    }
+
+    #[test]
+    fn diplomat_str_as_string_config_parses_bool_and_string() {
+        let mut config = super::DotnetConfig::default();
+        assert_eq!(config.diplomat_str_as_string, None);
+
+        config.set("diplomat_str_as_string", toml::Value::Boolean(true));
+        assert_eq!(config.diplomat_str_as_string, Some(true));
+
+        config.set(
+            "diplomat_str_as_string",
+            toml::Value::String("false".to_string()),
+        );
+        assert_eq!(config.diplomat_str_as_string, Some(false));
+    }
+
+    #[test]
+    fn diplomat_str_param_is_byte_array_by_default() {
+        let (files, errors) = run_dotnet(diplomat_str_params());
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let text = files.get("Text.cs").expect("expected Text.cs output");
+        assert!(
+            text.contains("public static nuint Len(byte[] x)"),
+            "default should keep the zero-copy byte[] param:\n{text}"
+        );
+        assert!(
+            text.contains("public static nuint LenOpt(byte[]? x)"),
+            "default optional param should be byte[]?:\n{text}"
+        );
+    }
+
+    #[test]
+    fn diplomat_str_as_string_lowers_params_to_string() {
+        let (files, errors) = run_dotnet_with(diplomat_str_params(), with_diplomat_str_as_string);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let text = files.get("Text.cs").expect("expected Text.cs output");
+        assert!(
+            text.contains("public static nuint Len(string x)"),
+            "&DiplomatStr param should be string:\n{text}"
+        );
+        assert!(
+            text.contains("byte[] xBytes = Diplomat.Utf8.Clone(x);"),
+            "string param should be transcoded via Utf8.Clone:\n{text}"
+        );
+    }
+
+    #[test]
+    fn diplomat_str_as_string_lowers_optional_params_to_nullable_string() {
+        let (files, errors) = run_dotnet_with(diplomat_str_params(), with_diplomat_str_as_string);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let text = files.get("Text.cs").expect("expected Text.cs output");
+        assert!(
+            text.contains("public static nuint LenOpt(string? x)"),
+            "Option<&DiplomatStr> param should be string?:\n{text}"
+        );
+        assert!(
+            text.contains("byte[]? xBytes = x == null ? null : Diplomat.Utf8.Clone(x);")
+                && text.contains("(nuint)xBytes!.Length"),
+            "optional string should skip the transcode when null:\n{text}"
+        );
+    }
+
+    // A borrowed `&'a DiplomatStr` must outlive the call, which a transcoded
+    // copy can't, so it keeps the pinned `ReadOnlyMemory<byte>` shape.
+    #[test]
+    fn diplomat_str_as_string_keeps_borrowed_params_as_pinned_memory() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                use diplomat_runtime::DiplomatStr;
+
+                #[diplomat::opaque]
+                pub struct Foo<'a>(&'a DiplomatStr);
+
+                impl<'a> Foo<'a> {
+                    pub fn new(x: &'a DiplomatStr) -> Box<Self> {
+                        unimplemented!()
+                    }
+                }
+            }
+        };
+
+        let (files, errors) = run_dotnet_with(tk_stream, with_diplomat_str_as_string);
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+
+        let foo = files.get("Foo.cs").expect("expected Foo.cs output");
+        assert!(
+            foo.contains("public static Foo New(ReadOnlyMemory<byte> x)"),
+            "borrowed &DiplomatStr should stay ReadOnlyMemory<byte>:\n{foo}"
         );
     }
 }

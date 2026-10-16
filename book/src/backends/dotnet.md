@@ -21,6 +21,10 @@ The configuration consists of these options:
   error type used to populate the generated exception's message, e.g. `ToDisplay`.
 * `scaffold` - an optional binary value. If set to `true`, `diplomat-tool` will emit a
   `.csproj` scaffold next to the generated sources.
+* `diplomat_str_as_string` - an optional binary value. If set to `true`, `&DiplomatStr`
+  params are exposed as `string` (or `string?` when optional, transcoded with
+  `Diplomat.Utf8.Clone`) instead of zero-copy `byte[]`. Params whose lifetime is
+  borrowed by the return value stay `ReadOnlyMemory<byte>`.
 
 ## Properties
 
@@ -166,7 +170,9 @@ representations line up:
   borrows it, via `ReadOnlyMemory<char>` + the same pinning holder slices use).
 * `&DiplomatStr` params and returns (unvalidated UTF-8 — Rust places no validity
   requirement on the caller): treated exactly like `&[u8]`, so these are also zero-copy —
-  `byte[]` / `ReadOnlyMemory<byte>` pinned directly, no transcoding.
+  `byte[]` / `ReadOnlyMemory<byte>` pinned directly, no transcoding. With
+  `diplomat_str_as_string = true`, non-borrowed `&DiplomatStr` params are `string` /
+  `string?` instead, transcoded like `&str`.
 * `&str` params (validated UTF-8 — Rust requires the caller to guarantee well-formed
   UTF-8, undefined behavior otherwise): a transcode from the UTF-16 `string` is
   unavoidable here. That copy is always routed through the explicitly-named
