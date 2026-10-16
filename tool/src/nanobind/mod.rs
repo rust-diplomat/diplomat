@@ -29,7 +29,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.non_exhaustive_structs = false;
     a.method_overloading = true;
     a.utf8_strings = true;
-    a.utf16_strings = true;
+    a.utf16_strings = false;
     a.static_slices = true;
     a.defaults = true;
 

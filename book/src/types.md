@@ -16,11 +16,11 @@ Diplomat only supports a small set of types that can be passed over FFI.
          - [`OpaqueType`](./types/slices.md#opaques)
          - [`PrimitiveStruct`](./types/slices.md#primitive-structs)
          - `DiplomatStrSlice`: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends
-     - String slices:
+     - [String slices](./types/slices.md#strings-utf8_strings-and-utf16_strings):
          - `&str`: A validated, UTF-8 string. Will be converted/validated by the target language bindings if necessary.
          - `&DiplomatStr`: An unvalidated string expected to be UTF-8.
          - `&DiplomatStr16`: An unvalidated string expected to be UTF-16.
-     - [`DiplomatWrite`](./types/write.md) for returning strings. This needs to be the last parameter of the method.
+     - [`DiplomatWrite`, `DiplomatWrite16`, and `DiplomatWriteGeneric<T>`](./types/write.md) for returning UTF-8 strings, UTF-16 strings, or primitive buffers. This needs to be the last parameter of the method.
      - [`Option<&T>` ,`Option<Box<T>>`](./types/option.md) of opaque types, `Option<T>` of structs, enums, primitives, or the above slice types
      - [Callbacks](./types/callbacks.md) in parameters. Support is limited.
      - [`Result<T, E>`](./types/result.md) in return values

@@ -237,7 +237,11 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.memory_sharing = false;
     a.non_exhaustive_structs = true;
     a.method_overloading = true;
-    a.utf8_strings = true;
+    // C# `string` (`System.String`) is UTF-16, so when dual UTF-8/UTF-16 APIs exist,
+    // .NET prefers the UTF-16 overload (`&DiplomatStr16` pins `char*` zero-copy, whereas
+    // `&str` requires transcoding). Single-encoding `&str` and `&DiplomatStr` APIs remain
+    // supported.
+    a.utf8_strings = false;
     a.utf16_strings = true;
     // `option`, `mutable_slices`, and `utf16_strings` are advertised but
     // coverage is narrower than the flag suggests:
