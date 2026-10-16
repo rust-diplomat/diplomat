@@ -708,6 +708,24 @@ mod test {
     }
 
     #[test]
+    fn read_only_slice_from_disposable_source_uses_scoped_access() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                #[diplomat::attr(dotnet, manually_disposable)]
+                pub struct Source;
+                impl Source {
+                    pub fn bytes<'a>(&'a self) -> &'a [u8] { unimplemented!() }
+                }
+            }
+        });
+        assert!(errors.is_empty(), "{errors:?}");
+        assert!(files["Source.cs"].contains("DiplomatBorrowedSpan<byte>"));
+        assert!(files["Source.cs"].contains("IDisposable"));
+    }
+
+    #[test]
     fn retained_borrows_from_manually_disposable_sources_are_rejected() {
         let cases = vec![
             (
@@ -819,24 +837,6 @@ mod test {
                     }
                 },
                 "source `@string` of type `Source`",
-            ),
-            (
-                "borrowed slice from receiver",
-                quote! {
-                    #[diplomat::bridge]
-                    mod ffi {
-                        #[diplomat::opaque]
-                        #[diplomat::attr(dotnet, manually_disposable)]
-                        pub struct Source;
-
-                        impl Source {
-                            pub fn bytes<'a>(&'a self) -> &'a [u8] {
-                                unimplemented!()
-                            }
-                        }
-                    }
-                },
-                "source `this` of type `Source`",
             ),
             (
                 "owned borrowing error",
@@ -2896,7 +2896,7 @@ mod test {
             "the view should release its managed source edges explicitly:\n{span}"
         );
         assert!(
-            span.contains("Cannot dispose DiplomatBorrowedSpan during a WithSpan callback"),
+            span.contains("Cannot dispose DiplomatBorrowedSpan during access"),
             "disposing a borrowed span from its active callback must fail before releasing edges:\n{span}"
         );
         assert!(
