@@ -1349,9 +1349,26 @@ pub struct BackendAttrSupport {
     pub non_exhaustive_structs: bool,
     /// Whether the language supports method overloading
     pub method_overloading: bool,
-    /// Whether the language uses UTF-8 strings
+    /// Whether the language's idiomatic string representation uses UTF-8, or the language
+    /// exposes a distinct UTF-8 string type alongside UTF-16 (like C and C++).
+    ///
+    /// Note that all backends can marshal `&str`, `&DiplomatStr`, and `DiplomatWrite`.
+    /// Rather than gating UTF-8 support, `utf8_strings` and `utf16_strings` indicate which
+    /// string overloads a backend wants exposed when a library offers both UTF-8 and UTF-16
+    /// versions of an API:
+    /// - Backends with a single UTF-16 `String` type (JS, Dart, Kotlin, .NET) set
+    ///   `utf8_strings = false, utf16_strings = true` so dual APIs can disable the UTF-8
+    ///   overload and rename the UTF-16 overload as the primary method.
+    /// - Backends with a single UTF-8 `str` type (Nanobind/Python) set
+    ///   `utf8_strings = true, utf16_strings = false`.
+    /// - Backends with distinct UTF-8 and UTF-16 string types (C, C++) set both to `true`
+    ///   so both `foo` (`std::string_view`) and `foo16` (`std::u16string_view`) are exposed.
     pub utf8_strings: bool,
-    /// Whether the language uses UTF-16 strings
+    /// Whether the language's idiomatic string representation uses UTF-16, or the language
+    /// exposes a distinct UTF-16 string type alongside UTF-8 (like C and C++).
+    ///
+    /// See [`Self::utf8_strings`] for how `utf8_strings` and `utf16_strings` interact on
+    /// dual UTF-8/UTF-16 APIs.
     pub utf16_strings: bool,
     /// Whether the language supports using slices with 'static lifetimes.
     pub static_slices: bool,

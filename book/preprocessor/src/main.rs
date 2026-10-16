@@ -36,7 +36,9 @@ fn main() {
 
 struct DiplomatPreprocessor;
 
-const LANGUAGES: [&str; 7] = ["c", "cpp", "dart", "demo_gen", "js", "kotlin", "nanobind"];
+const LANGUAGES: [&str; 8] = [
+    "c", "cpp", "dart", "demo_gen", "dotnet", "js", "kotlin", "nanobind",
+];
 
 impl DiplomatPreprocessor {
     fn generate_language_supports(language: &str) -> String {

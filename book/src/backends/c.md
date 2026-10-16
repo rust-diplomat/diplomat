@@ -145,7 +145,7 @@ size_t diplomat_buffer_write_len(DiplomatWrite* t);
 void diplomat_buffer_write_destroy(DiplomatWrite* t);
 ```
 
-Which you can use to easily construct a `DiplomatWrite` for use. See [the chapter on DiplomatWrite](../types/write.md) for more.
+Which you can use to easily construct a `DiplomatWrite` for use. `DiplomatWrite16` and `DiplomatWriteGeneric<T>` are `#[repr(transparent)]` wrappers around `DiplomatWrite` and also appear as `DiplomatWrite*` in the C ABI (with `len` and `cap` measured in bytes). See [the chapter on DiplomatWrite](../types/write.md) for more.
 
 ### Traits
 For each trait, the C backend will generate a `Trait` struct and a `VTable` struct:
