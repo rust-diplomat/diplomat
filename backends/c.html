@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "../searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -311,7 +311,7 @@ char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
 size_t diplomat_buffer_write_len(DiplomatWrite* t);
 void diplomat_buffer_write_destroy(DiplomatWrite* t);
 </code></pre>
-<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. See <a href="../types/write.html">the chapter on DiplomatWrite</a> for more.</p>
+<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. <code>DiplomatWrite16</code> and <code>DiplomatWriteGeneric&lt;T&gt;</code> are <code>#[repr(transparent)]</code> wrappers around <code>DiplomatWrite</code> and also appear as <code>DiplomatWrite*</code> in the C ABI (with <code>len</code> and <code>cap</code> measured in bytes). See <a href="../types/write.html">the chapter on DiplomatWrite</a> for more.</p>
 <h3 id="traits"><a class="header" href="#traits">Traits</a></h3>
 <p>For each trait, the C backend will generate a <code>Trait</code> struct and a <code>VTable</code> struct:</p>
 <pre><code class="language-c">typedef struct DiplomatTraitStruct_TraitName {
@@ -351,10 +351,16 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/write.html#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/write.html#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html">Static Slices</a></p>

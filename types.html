@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-548185b0.js"></script>
@@ -195,14 +195,14 @@
 <li><code>DiplomatStrSlice</code>: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends</li>
 </ul>
 </li>
-<li>String slices:
+<li><a href="./types/slices.html#strings-utf8_strings-and-utf16_strings">String slices</a>:
 <ul>
 <li><code>&amp;str</code>: A validated, UTF-8 string. Will be converted/validated by the target language bindings if necessary.</li>
 <li><code>&amp;DiplomatStr</code>: An unvalidated string expected to be UTF-8.</li>
 <li><code>&amp;DiplomatStr16</code>: An unvalidated string expected to be UTF-16.</li>
 </ul>
 </li>
-<li><a href="./types/write.html"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
+<li><a href="./types/write.html"><code>DiplomatWrite</code>, <code>DiplomatWrite16</code>, and <code>DiplomatWriteGeneric&lt;T&gt;</code></a> for returning UTF-8 strings, UTF-16 strings, or primitive buffers. This needs to be the last parameter of the method.</li>
 <li><a href="./types/option.html"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
 <li><a href="./types/callbacks.html">Callbacks</a> in parameters. Support is limited.</li>
 <li><a href="./types/result.html"><code>Result&lt;T, E&gt;</code></a> in return values</li>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "../searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -261,6 +261,7 @@ template&lt;typename T&gt; struct WriteTrait {
 };
 </code></pre>
 <p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="./c.html#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
+<p>Similarly, functions taking <code>&amp;mut DiplomatWrite16</code> return <code>std::u16string</code> in C++ (via <code>WriteTrait&lt;std::u16string&gt;</code>), and functions taking <code>&amp;mut DiplomatWriteGeneric&lt;T&gt;</code> return <code>std::vector&lt;T&gt;</code> in C++ (via <code>WriteTrait&lt;std::vector&lt;T&gt;&gt;</code>), each also generating a <code>_write</code> method accepting custom <code>WriteTrait</code> specializations.</p>
 <h3 id="callbacks"><a class="header" href="#callbacks">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
 <h3 id="traits"><a class="header" href="#traits">Traits</a></h3>
@@ -320,10 +321,16 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/write.html#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="../types/write.html#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="../types/slices.html">Static Slices</a></p>

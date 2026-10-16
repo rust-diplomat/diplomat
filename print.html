@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-548185b0.js"></script>
@@ -359,14 +359,14 @@ impl SomeConfig {
 <li><code>DiplomatStrSlice</code>: An array of unvalidated strings, expected to be UTF-8. Currently only supported in C/C++ backends</li>
 </ul>
 </li>
-<li>String slices:
+<li><a href="#strings-utf8_strings-and-utf16_strings">String slices</a>:
 <ul>
 <li><code>&amp;str</code>: A validated, UTF-8 string. Will be converted/validated by the target language bindings if necessary.</li>
 <li><code>&amp;DiplomatStr</code>: An unvalidated string expected to be UTF-8.</li>
 <li><code>&amp;DiplomatStr16</code>: An unvalidated string expected to be UTF-16.</li>
 </ul>
 </li>
-<li><a href="#returning-strings-write"><code>DiplomatWrite</code></a> for returning strings. This needs to be the last parameter of the method.</li>
+<li><a href="#returning-strings-write"><code>DiplomatWrite</code>, <code>DiplomatWrite16</code>, and <code>DiplomatWriteGeneric&lt;T&gt;</code></a> for returning UTF-8 strings, UTF-16 strings, or primitive buffers. This needs to be the last parameter of the method.</li>
 <li><a href="#option-types"><code>Option&lt;&amp;T&gt;</code> ,<code>Option&lt;Box&lt;T&gt;&gt;</code></a> of opaque types, <code>Option&lt;T&gt;</code> of structs, enums, primitives, or the above slice types</li>
 <li><a href="#callbacks">Callbacks</a> in parameters. Support is limited.</li>
 <li><a href="#result-types"><code>Result&lt;T, E&gt;</code></a> in return values</li>
@@ -592,7 +592,7 @@ mod ffi {
 <p>Traits are treated internally like holders of <a href="#callbacks">callbacks</a>, and so support all the same types that callbacks do.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="option-types"><a class="header" href="#option-types">Option types</a></h1>
-<p>Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=option)]</code></p>
+<p>Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>dotnet</code>, <code>js</code>, <code>kotlin</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=option)]</code></p>
 <p>Option types in Diplomat are relatively straightforward, you simply use <code>Option&lt;T&gt;</code> and it turns into the idiomatic equivalent over FFI.</p>
 <p><code>Option&lt;T&gt;</code> currently only works when wrapping reference types (<code>Box&lt;OpaqueType&gt;</code> and <code>&amp;OpaqueType</code>), structs/enums/primitives, or slices of the above. It may be used as an input argument, or in return type position:</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -712,6 +712,90 @@ mod ffi {
 <p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
 <p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
 <p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
+<h2 id="diplomatwrite16-utf-16-strings"><a class="header" href="#diplomatwrite16-utf-16-strings"><code>DiplomatWrite16</code> (UTF-16 Strings)</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, and <code>kotlin</code>, queried with <code>#[diplomat::cfg(supports=utf16_writeables)]</code>)</p>
+<p>By default, <code>DiplomatWrite</code> buffers UTF-8 bytes (<code>u8</code>). For backends whose native string representation is UTF-16 (such as JavaScript, Dart, and Kotlin), returning a <code>DiplomatWrite</code> requires decoding UTF-8 into a UTF-16 string on the target language side.</p>
+<p>When your Rust code can produce UTF-16 code units directly (or when you want to avoid UTF-8 decoding in UTF-16 runtimes or return <code>std::u16string</code> in C++), you can use <code>DiplomatWrite16</code> (which is a type alias for <code>DiplomatWriteGeneric&lt;u16&gt;</code>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::DiplomatWrite16;
+
+    #[diplomat::opaque]
+    pub struct Formatter;
+
+    impl Formatter {
+        #[diplomat::cfg(supports = utf16_writeables)]
+        pub fn format_utf16(&amp;self, write: &amp;mut DiplomatWrite16) {
+            // `DiplomatWrite16` provides `write_slice(&amp;[u16])`, `push(u16)`,
+            // `extend(...)`, and `write_char_as_utf16(char)` for writing UTF-16
+            // code units directly.
+            write.write_slice(&amp;[0x0048, 0x0069]); // "Hi"
+            write.write_char_as_utf16('🦀');
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li>In <strong>JS, Dart, and Kotlin</strong>, a method taking <code>&amp;mut DiplomatWrite16</code> returns a native <code>String</code>, reading the UTF-16 buffer directly without a UTF-8 decode step.</li>
+<li>In <strong>C++</strong>, a method taking <code>&amp;mut DiplomatWrite16</code> returns <code>std::u16string</code> (and generates a <code>_write</code> template accepting any <code>WriteTrait</code> implementation, specialized by default for <code>std::u16string</code>).</li>
+<li>In <strong>C</strong>, the parameter is exposed as <code>DiplomatWrite*</code> (since <code>DiplomatWrite16</code> is <code>#[repr(transparent)]</code> over <code>DiplomatWrite</code> with <code>len</code> and <code>cap</code> measured in bytes).</li>
+</ul>
+<p>If you want to expose a UTF-8 <code>DiplomatWrite</code> method for UTF-8 backends and C++, and a <code>DiplomatWrite16</code> method as the primary method on UTF-16 backends (plus <code>foo16</code> on C/C++), you can combine <code>supports = utf16_writeables</code> with <a href="#strings-utf8_strings-and-utf16_strings"><code>supports = utf8_strings</code></a>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::attr(all(supports = utf16_writeables, not(supports = utf8_strings)), disable)]
+#[diplomat::attr(*, rename = "format")]
+pub fn format_utf8(&amp;self, write: &amp;mut DiplomatWrite) {
+    // ...
+}
+
+#[diplomat::cfg(supports = utf16_writeables)]
+#[diplomat::attr(not(supports = utf8_strings), rename = "format")]
+#[diplomat::attr(supports = utf8_strings, rename = "format16")]
+pub fn format_utf16(&amp;self, write: &amp;mut DiplomatWrite16) {
+    // ...
+}
+<span class="boring">}</span></code></pre>
+<h2 id="diplomatwritegenerict-primitive-buffers"><a class="header" href="#diplomatwritegenerict-primitive-buffers"><code>DiplomatWriteGeneric&lt;T&gt;</code> (Primitive Buffers)</a></h2>
+<p>(Supported by <code>c</code>, and <code>cpp</code>, queried with <code>#[diplomat::cfg(supports=generic_writeables)]</code>)</p>
+<p>To return a dynamically-sized buffer of scalar primitives (<code>i8</code>, <code>u8</code>, <code>i16</code>, <code>u16</code>, <code>i32</code>, <code>u32</code>, <code>i64</code>, <code>u64</code>, <code>isize</code>, <code>usize</code>, <code>f32</code>, <code>f64</code>) without intermediate Rust allocations, Diplomat provides <code>DiplomatWriteGeneric&lt;T&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::DiplomatWriteGeneric;
+
+    #[diplomat::opaque]
+    pub struct Float64Vec(Vec&lt;f64&gt;);
+
+    impl Float64Vec {
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_to(&amp;self, write: &amp;mut DiplomatWriteGeneric&lt;f64&gt;) {
+            write.write_slice(&amp;self.0);
+        }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_doubled(&amp;self, write: &amp;mut DiplomatWriteGeneric&lt;f64&gt;) {
+            write.extend(self.0.iter().map(|x| x * 2.0));
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>DiplomatWriteGeneric&lt;T&gt;</code> supports:</p>
+<ul>
+<li><code>write.push(val: T)</code>: Appends a single element.</li>
+<li><code>write.write_slice(slice: &amp;[T])</code>: Appends a contiguous slice of elements via <code>memcpy</code>.</li>
+<li><code>write.extend(iter)</code>: Reserves capacity from the iterator’s <code>size_hint</code> and appends each element.</li>
+<li><code>write.reserve(additional: usize) -&gt; bool</code>: Pre-allocates space for <code>additional</code> elements of type <code>T</code>.</li>
+<li><code>write.len()</code>, <code>write.is_empty()</code>, <code>write.capacity()</code>: Queries the length and capacity in elements of type <code>T</code>.</li>
+</ul>
+<p>On the target language side:</p>
+<ul>
+<li>In <strong>C++</strong>, a method taking <code>&amp;mut DiplomatWriteGeneric&lt;T&gt;</code> returns <code>std::vector&lt;T&gt;</code> (or <code>diplomat::result&lt;std::vector&lt;T&gt;, E&gt;</code> / <code>std::optional&lt;std::vector&lt;T&gt;&gt;</code>), writing directly into the <code>std::vector&lt;T&gt;</code> allocation via <code>diplomat::WriteFromVector</code>. It also generates a <code>_write</code> method accepting any type implementing <code>WriteTrait</code>.</li>
+<li>In <strong>C</strong>, <code>DiplomatWriteGeneric&lt;T&gt;</code> shares the same <code>DiplomatWrite</code> C ABI struct (<code>len</code> and <code>cap</code> are measured in bytes, always a multiple of <code>sizeof(T)</code>).</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="slices"><a class="header" href="#slices">Slices</a></h1>
 <h2 id="static-slices"><a class="header" href="#static-slices">Static Slices</a></h2>
@@ -753,6 +837,53 @@ pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
 // Will throw an error on lowering:
 pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
 </code></pre>
+<h2 id="strings-utf8_strings-and-utf16_strings"><a class="header" href="#strings-utf8_strings-and-utf16_strings">Strings (<code>utf8_strings</code> and <code>utf16_strings</code>)</a></h2>
+<p>(UTF-8 Strings Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=utf8_strings)]</code>)</p>
+<p>(UTF-16 Strings Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>dotnet</code>, <code>js</code>, and <code>kotlin</code>, queried with <code>#[diplomat::cfg(supports=utf16_strings)]</code>)</p>
+<p>Diplomat supports three string slice types:</p>
+<ul>
+<li><code>&amp;str</code> (<code>DiplomatUtf8StrSlice</code>): Validated UTF-8 string slice.</li>
+<li><code>&amp;DiplomatStr</code> (<code>DiplomatStrSlice</code>): Unvalidated (potentially ill-formed) UTF-8 string slice.</li>
+<li><code>&amp;DiplomatStr16</code> (<code>DiplomatStr16Slice</code>): Unvalidated (potentially ill-formed) UTF-16 string slice.</li>
+</ul>
+<p>Every backend can marshal <code>&amp;str</code> and <code>&amp;DiplomatStr</code>, even if the target language’s native string type is UTF-16 (by transcoding across the FFI boundary). Rather than indicating whether UTF-8 or UTF-16 marshalling is implemented at all, the <code>utf8_strings</code> and <code>utf16_strings</code> support flags indicate <strong>which string encodings a backend wants exposed as idioms</strong> when a Rust library provides both UTF-8 and UTF-16 variants of an API:</p>
+<ul>
+<li><strong>Backends with a single UTF-16 <code>String</code> type</strong> (<code>js</code>, <code>dart</code>, <code>kotlin</code>, <code>dotnet</code>) set <code>utf8_strings = false</code> and <code>utf16_strings = true</code>. Passing <code>&amp;DiplomatStr16</code> avoids UTF-8 transcoding (and in <code>.NET</code> can be pinned zero-copy), while exposing both <code>_utf8</code> and <code>_utf16</code> methods would produce duplicate or redundant <code>String</code> parameters.</li>
+<li><strong>Backends with a single UTF-8 <code>str</code> type</strong> (<code>nanobind</code>) set <code>utf8_strings = true</code> and <code>utf16_strings = false</code>.</li>
+<li><strong>Backends with distinct UTF-8 and UTF-16 string types</strong> (<code>c</code>, <code>cpp</code>) set both <code>utf8_strings = true</code> and <code>utf16_strings = true</code>, since <code>std::string_view</code> and <code>std::u16string_view</code> are distinct types and users may want either overload.</li>
+</ul>
+<p>When exposing both UTF-8 and UTF-16 versions of a function, you can use <code>supports = utf8_strings</code> and <code>supports = utf16_strings</code> to give single-string-type backends a single idiomatic method while giving C and C++ both <code>foo</code> and <code>foo16</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::{DiplomatStr, DiplomatStr16};
+
+    #[diplomat::opaque]
+    pub struct Normalizer;
+
+    impl Normalizer {
+        #[diplomat::attr(not(supports = utf8_strings), disable)]
+        #[diplomat::attr(*, rename = "is_normalized")]
+        pub fn is_normalized_utf8(&amp;self, s: &amp;DiplomatStr) -&gt; bool {
+            // ...
+        }
+
+        #[diplomat::attr(not(supports = utf16_strings), disable)]
+        #[diplomat::attr(not(supports = utf8_strings), rename = "is_normalized")]
+        #[diplomat::attr(supports = utf8_strings, rename = "is_normalized16")]
+        pub fn is_normalized_utf16(&amp;self, s: &amp;DiplomatStr16) -&gt; bool {
+            // ...
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>With these attributes:</p>
+<ul>
+<li>In <strong>JS, Dart, Kotlin, and .NET</strong> (<code>utf8_strings = false, utf16_strings = true</code>), <code>is_normalized_utf8</code> is disabled and <code>is_normalized_utf16</code> is renamed to <code>is_normalized</code> (or <code>isNormalized</code> / <code>IsNormalized</code>).</li>
+<li>In <strong>Nanobind</strong> (<code>utf8_strings = true, utf16_strings = false</code>), <code>is_normalized_utf16</code> is disabled and <code>is_normalized_utf8</code> is renamed to <code>is_normalized</code>.</li>
+<li>In <strong>C and C++</strong> (<code>utf8_strings = true, utf16_strings = true</code>), both methods are enabled as <code>is_normalized</code> (taking <code>std::string_view</code>) and <code>is_normalized16</code> (taking <code>std::u16string_view</code>).</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="documentation"><a class="header" href="#documentation">Documentation</a></h1>
 <p>Some Diplomat backends support converting documentation comments into each language’s native comments. Rust doc syntax will be converted to markdown.</p>
@@ -1196,7 +1327,7 @@ mod ffi {
 <span class="boring">}</span></code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="getters-and-setters"><a class="header" href="#getters-and-setters">Getters and setters</a></h1>
-<p>(Supported by <code>dart</code>, <code>demo_gen</code>, <code>js</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=accessors)]</code>)</p>
+<p>(Supported by <code>dart</code>, <code>demo_gen</code>, <code>dotnet</code>, <code>js</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=accessors)]</code>)</p>
 <h2 id="getters"><a class="header" href="#getters">Getters</a></h2>
 <p>A method that returns a value (and takes no argument) can be marked as a getter. It may be fallible.</p>
 <pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2175,7 +2306,7 @@ char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
 size_t diplomat_buffer_write_len(DiplomatWrite* t);
 void diplomat_buffer_write_destroy(DiplomatWrite* t);
 </code></pre>
-<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. See <a href="#returning-strings-write">the chapter on DiplomatWrite</a> for more.</p>
+<p>Which you can use to easily construct a <code>DiplomatWrite</code> for use. <code>DiplomatWrite16</code> and <code>DiplomatWriteGeneric&lt;T&gt;</code> are <code>#[repr(transparent)]</code> wrappers around <code>DiplomatWrite</code> and also appear as <code>DiplomatWrite*</code> in the C ABI (with <code>len</code> and <code>cap</code> measured in bytes). See <a href="#returning-strings-write">the chapter on DiplomatWrite</a> for more.</p>
 <h3 id="traits-1"><a class="header" href="#traits-1">Traits</a></h3>
 <p>For each trait, the C backend will generate a <code>Trait</code> struct and a <code>VTable</code> struct:</p>
 <pre><code class="language-c">typedef struct DiplomatTraitStruct_TraitName {
@@ -2215,10 +2346,16 @@ typedef struct TraitName_VTable {
 <p><input disabled="" type="checkbox"> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
@@ -2402,6 +2539,7 @@ template&lt;typename T&gt; struct WriteTrait {
 };
 </code></pre>
 <p>If you use <code>WriteTrait</code>, you will be interfacing with the <a href="#diplomatwrite">C ABI of DiplomatWrite</a>.</p>
+<p>Similarly, functions taking <code>&amp;mut DiplomatWrite16</code> return <code>std::u16string</code> in C++ (via <code>WriteTrait&lt;std::u16string&gt;</code>), and functions taking <code>&amp;mut DiplomatWriteGeneric&lt;T&gt;</code> return <code>std::vector&lt;T&gt;</code> in C++ (via <code>WriteTrait&lt;std::vector&lt;T&gt;&gt;</code>), each also generating a <code>_write</code> method accepting custom <code>WriteTrait</code> specializations.</p>
 <h3 id="callbacks-2"><a class="header" href="#callbacks-2">Callbacks</a></h3>
 <p>Callbacks are represented as <code>std::function&lt;Ret(Args...)&gt;</code>, where <code>Ret</code> and <code>Args...</code> are diplomat-friendly C++ types. These work just like any other C++ callback function and are converted in to the C ABI with some templating.</p>
 <h3 id="traits-2"><a class="header" href="#traits-2">Traits</a></h3>
@@ -2461,10 +2599,16 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
@@ -2577,10 +2721,16 @@ SomeStruct_takes_mut(ffiFriendly);
 <p><input disabled="" type="checkbox"> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
@@ -2865,10 +3015,16 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
@@ -2981,10 +3137,16 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox"> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
@@ -3097,10 +3259,16 @@ directories in the Diplomat project.</p>
 <p><input disabled="" type="checkbox"> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox"> <a href="#slices">Static Slices</a></p>
@@ -3281,10 +3449,16 @@ so here some specific examples</p>
 <p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox"> UTF8 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox" checked=""> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>
@@ -3540,10 +3714,16 @@ somelib.run_callback(lambda: pass)
 <p><input disabled="" type="checkbox" checked=""> Method Overloading</p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF8 Strings</p>
+<p><input disabled="" type="checkbox" checked=""> <a href="#strings-utf8_strings-and-utf16_strings">UTF8 Strings</a></p>
 </li>
 <li>
-<p><input disabled="" type="checkbox" checked=""> UTF16 Strings</p>
+<p><input disabled="" type="checkbox"> <a href="#strings-utf8_strings-and-utf16_strings">UTF16 Strings</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwrite16-utf-16-strings">UTF16 Writeables</a></p>
+</li>
+<li>
+<p><input disabled="" type="checkbox"> <a href="#diplomatwritegenerict-primitive-buffers">Generic Writeables</a></p>
 </li>
 <li>
 <p><input disabled="" type="checkbox" checked=""> <a href="#slices">Static Slices</a></p>

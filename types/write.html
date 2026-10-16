@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "../searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -202,6 +202,90 @@ mod ffi {
 <p>On the JS side these will get converted to APIs that return strings (<code>maybe_get_string</code> will potentially throw in the case of an error, as is usual with <code>DiplomatResult</code>)</p>
 <p>In C++ these become APIs that return <code>std::string</code> and <code>diplomat::result&lt;std::string, std::monostate&gt;</code> respectively.</p>
 <p>Essentially, versions of the API returning <code>std::string</code> are generated, where the <code>write!()</code> operation will end up writing <em>directly to the <code>std::string</code></em> with no additional intermediate Rust <code>String</code> allocations.</p>
+<h2 id="diplomatwrite16-utf-16-strings"><a class="header" href="#diplomatwrite16-utf-16-strings"><code>DiplomatWrite16</code> (UTF-16 Strings)</a></h2>
+<p>(Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>js</code>, and <code>kotlin</code>, queried with <code>#[diplomat::cfg(supports=utf16_writeables)]</code>)</p>
+<p>By default, <code>DiplomatWrite</code> buffers UTF-8 bytes (<code>u8</code>). For backends whose native string representation is UTF-16 (such as JavaScript, Dart, and Kotlin), returning a <code>DiplomatWrite</code> requires decoding UTF-8 into a UTF-16 string on the target language side.</p>
+<p>When your Rust code can produce UTF-16 code units directly (or when you want to avoid UTF-8 decoding in UTF-16 runtimes or return <code>std::u16string</code> in C++), you can use <code>DiplomatWrite16</code> (which is a type alias for <code>DiplomatWriteGeneric&lt;u16&gt;</code>):</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::DiplomatWrite16;
+
+    #[diplomat::opaque]
+    pub struct Formatter;
+
+    impl Formatter {
+        #[diplomat::cfg(supports = utf16_writeables)]
+        pub fn format_utf16(&amp;self, write: &amp;mut DiplomatWrite16) {
+            // `DiplomatWrite16` provides `write_slice(&amp;[u16])`, `push(u16)`,
+            // `extend(...)`, and `write_char_as_utf16(char)` for writing UTF-16
+            // code units directly.
+            write.write_slice(&amp;[0x0048, 0x0069]); // "Hi"
+            write.write_char_as_utf16('🦀');
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<ul>
+<li>In <strong>JS, Dart, and Kotlin</strong>, a method taking <code>&amp;mut DiplomatWrite16</code> returns a native <code>String</code>, reading the UTF-16 buffer directly without a UTF-8 decode step.</li>
+<li>In <strong>C++</strong>, a method taking <code>&amp;mut DiplomatWrite16</code> returns <code>std::u16string</code> (and generates a <code>_write</code> template accepting any <code>WriteTrait</code> implementation, specialized by default for <code>std::u16string</code>).</li>
+<li>In <strong>C</strong>, the parameter is exposed as <code>DiplomatWrite*</code> (since <code>DiplomatWrite16</code> is <code>#[repr(transparent)]</code> over <code>DiplomatWrite</code> with <code>len</code> and <code>cap</code> measured in bytes).</li>
+</ul>
+<p>If you want to expose a UTF-8 <code>DiplomatWrite</code> method for UTF-8 backends and C++, and a <code>DiplomatWrite16</code> method as the primary method on UTF-16 backends (plus <code>foo16</code> on C/C++), you can combine <code>supports = utf16_writeables</code> with <a href="./slices.html#strings-utf8_strings-and-utf16_strings"><code>supports = utf8_strings</code></a>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::attr(all(supports = utf16_writeables, not(supports = utf8_strings)), disable)]
+#[diplomat::attr(*, rename = "format")]
+pub fn format_utf8(&amp;self, write: &amp;mut DiplomatWrite) {
+    // ...
+}
+
+#[diplomat::cfg(supports = utf16_writeables)]
+#[diplomat::attr(not(supports = utf8_strings), rename = "format")]
+#[diplomat::attr(supports = utf8_strings, rename = "format16")]
+pub fn format_utf16(&amp;self, write: &amp;mut DiplomatWrite16) {
+    // ...
+}
+<span class="boring">}</span></code></pre>
+<h2 id="diplomatwritegenerict-primitive-buffers"><a class="header" href="#diplomatwritegenerict-primitive-buffers"><code>DiplomatWriteGeneric&lt;T&gt;</code> (Primitive Buffers)</a></h2>
+<p>(Supported by <code>c</code>, and <code>cpp</code>, queried with <code>#[diplomat::cfg(supports=generic_writeables)]</code>)</p>
+<p>To return a dynamically-sized buffer of scalar primitives (<code>i8</code>, <code>u8</code>, <code>i16</code>, <code>u16</code>, <code>i32</code>, <code>u32</code>, <code>i64</code>, <code>u64</code>, <code>isize</code>, <code>usize</code>, <code>f32</code>, <code>f64</code>) without intermediate Rust allocations, Diplomat provides <code>DiplomatWriteGeneric&lt;T&gt;</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::DiplomatWriteGeneric;
+
+    #[diplomat::opaque]
+    pub struct Float64Vec(Vec&lt;f64&gt;);
+
+    impl Float64Vec {
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_to(&amp;self, write: &amp;mut DiplomatWriteGeneric&lt;f64&gt;) {
+            write.write_slice(&amp;self.0);
+        }
+
+        #[diplomat::cfg(supports = generic_writeables)]
+        pub fn write_doubled(&amp;self, write: &amp;mut DiplomatWriteGeneric&lt;f64&gt;) {
+            write.extend(self.0.iter().map(|x| x * 2.0));
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p><code>DiplomatWriteGeneric&lt;T&gt;</code> supports:</p>
+<ul>
+<li><code>write.push(val: T)</code>: Appends a single element.</li>
+<li><code>write.write_slice(slice: &amp;[T])</code>: Appends a contiguous slice of elements via <code>memcpy</code>.</li>
+<li><code>write.extend(iter)</code>: Reserves capacity from the iterator’s <code>size_hint</code> and appends each element.</li>
+<li><code>write.reserve(additional: usize) -&gt; bool</code>: Pre-allocates space for <code>additional</code> elements of type <code>T</code>.</li>
+<li><code>write.len()</code>, <code>write.is_empty()</code>, <code>write.capacity()</code>: Queries the length and capacity in elements of type <code>T</code>.</li>
+</ul>
+<p>On the target language side:</p>
+<ul>
+<li>In <strong>C++</strong>, a method taking <code>&amp;mut DiplomatWriteGeneric&lt;T&gt;</code> returns <code>std::vector&lt;T&gt;</code> (or <code>diplomat::result&lt;std::vector&lt;T&gt;, E&gt;</code> / <code>std::optional&lt;std::vector&lt;T&gt;&gt;</code>), writing directly into the <code>std::vector&lt;T&gt;</code> allocation via <code>diplomat::WriteFromVector</code>. It also generates a <code>_write</code> method accepting any type implementing <code>WriteTrait</code>.</li>
+<li>In <strong>C</strong>, <code>DiplomatWriteGeneric&lt;T&gt;</code> shares the same <code>DiplomatWrite</code> C ABI struct (<code>len</code> and <code>cap</code> are measured in bytes, always a multiple of <code>sizeof(T)</code>).</li>
+</ul>
 
                     </main>
 

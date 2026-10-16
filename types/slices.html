@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a8275b12.js";
+            window.path_to_searchindex_js = "../searchindex-0057544b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -214,6 +214,53 @@ pub fn takes_opaque_slice&lt;'a&gt;(&amp;'a self, sl: &amp;'a [MyOpaque]);
 // Will throw an error on lowering:
 pub fn borrows_slice_opaque&lt;'a&gt;(sl : &amp;'a [MyOpaque]) -&gt; &amp;'a SomeType;
 </code></pre>
+<h2 id="strings-utf8_strings-and-utf16_strings"><a class="header" href="#strings-utf8_strings-and-utf16_strings">Strings (<code>utf8_strings</code> and <code>utf16_strings</code>)</a></h2>
+<p>(UTF-8 Strings Supported by <code>c</code>, <code>cpp</code>, and <code>nanobind</code>, queried with <code>#[diplomat::cfg(supports=utf8_strings)]</code>)</p>
+<p>(UTF-16 Strings Supported by <code>c</code>, <code>cpp</code>, <code>dart</code>, <code>demo_gen</code>, <code>dotnet</code>, <code>js</code>, and <code>kotlin</code>, queried with <code>#[diplomat::cfg(supports=utf16_strings)]</code>)</p>
+<p>Diplomat supports three string slice types:</p>
+<ul>
+<li><code>&amp;str</code> (<code>DiplomatUtf8StrSlice</code>): Validated UTF-8 string slice.</li>
+<li><code>&amp;DiplomatStr</code> (<code>DiplomatStrSlice</code>): Unvalidated (potentially ill-formed) UTF-8 string slice.</li>
+<li><code>&amp;DiplomatStr16</code> (<code>DiplomatStr16Slice</code>): Unvalidated (potentially ill-formed) UTF-16 string slice.</li>
+</ul>
+<p>Every backend can marshal <code>&amp;str</code> and <code>&amp;DiplomatStr</code>, even if the target language’s native string type is UTF-16 (by transcoding across the FFI boundary). Rather than indicating whether UTF-8 or UTF-16 marshalling is implemented at all, the <code>utf8_strings</code> and <code>utf16_strings</code> support flags indicate <strong>which string encodings a backend wants exposed as idioms</strong> when a Rust library provides both UTF-8 and UTF-16 variants of an API:</p>
+<ul>
+<li><strong>Backends with a single UTF-16 <code>String</code> type</strong> (<code>js</code>, <code>dart</code>, <code>kotlin</code>, <code>dotnet</code>) set <code>utf8_strings = false</code> and <code>utf16_strings = true</code>. Passing <code>&amp;DiplomatStr16</code> avoids UTF-8 transcoding (and in <code>.NET</code> can be pinned zero-copy), while exposing both <code>_utf8</code> and <code>_utf16</code> methods would produce duplicate or redundant <code>String</code> parameters.</li>
+<li><strong>Backends with a single UTF-8 <code>str</code> type</strong> (<code>nanobind</code>) set <code>utf8_strings = true</code> and <code>utf16_strings = false</code>.</li>
+<li><strong>Backends with distinct UTF-8 and UTF-16 string types</strong> (<code>c</code>, <code>cpp</code>) set both <code>utf8_strings = true</code> and <code>utf16_strings = true</code>, since <code>std::string_view</code> and <code>std::u16string_view</code> are distinct types and users may want either overload.</li>
+</ul>
+<p>When exposing both UTF-8 and UTF-16 versions of a function, you can use <code>supports = utf8_strings</code> and <code>supports = utf16_strings</code> to give single-string-type backends a single idiomatic method while giving C and C++ both <code>foo</code> and <code>foo16</code>:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::bridge]
+mod ffi {
+    use diplomat_runtime::{DiplomatStr, DiplomatStr16};
+
+    #[diplomat::opaque]
+    pub struct Normalizer;
+
+    impl Normalizer {
+        #[diplomat::attr(not(supports = utf8_strings), disable)]
+        #[diplomat::attr(*, rename = "is_normalized")]
+        pub fn is_normalized_utf8(&amp;self, s: &amp;DiplomatStr) -&gt; bool {
+            // ...
+        }
+
+        #[diplomat::attr(not(supports = utf16_strings), disable)]
+        #[diplomat::attr(not(supports = utf8_strings), rename = "is_normalized")]
+        #[diplomat::attr(supports = utf8_strings, rename = "is_normalized16")]
+        pub fn is_normalized_utf16(&amp;self, s: &amp;DiplomatStr16) -&gt; bool {
+            // ...
+        }
+    }
+}
+<span class="boring">}</span></code></pre>
+<p>With these attributes:</p>
+<ul>
+<li>In <strong>JS, Dart, Kotlin, and .NET</strong> (<code>utf8_strings = false, utf16_strings = true</code>), <code>is_normalized_utf8</code> is disabled and <code>is_normalized_utf16</code> is renamed to <code>is_normalized</code> (or <code>isNormalized</code> / <code>IsNormalized</code>).</li>
+<li>In <strong>Nanobind</strong> (<code>utf8_strings = true, utf16_strings = false</code>), <code>is_normalized_utf16</code> is disabled and <code>is_normalized_utf8</code> is renamed to <code>is_normalized</code>.</li>
+<li>In <strong>C and C++</strong> (<code>utf8_strings = true, utf16_strings = true</code>), both methods are enabled as <code>is_normalized</code> (taking <code>std::string_view</code>) and <code>is_normalized16</code> (taking <code>std::u16string_view</code>).</li>
+</ul>
 
                     </main>
 
