@@ -12,6 +12,7 @@ export function typeError(varr, ty) {
 }
 
 const TEXT_DECODER_UTF8 = new TextDecoder("utf-8");
+// WASM linear memory is always little-endian
 const TEXT_DECODER_UTF16 = new TextDecoder("utf-16le");
 const TEXT_ENCODER = new TextEncoder();
 
@@ -228,6 +229,7 @@ export class DiplomatBuf {
                 utf8Length += 4;
                 i++;
             } else {
+                // 3-byte BMP character, or unpaired surrogate (which TextEncoder replaces with 3-byte U+FFFD)
                 utf8Length += 3;
             }
         }
