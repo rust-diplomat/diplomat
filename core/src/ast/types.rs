@@ -2174,6 +2174,15 @@ mod tests {
             ty,
             TypeName::Write(super::WriteType::Primitive(super::PrimitiveType::u32))
         );
+
+        let ty16 = TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWrite16
+            },
+            None,
+            &SpanLocation::None,
+        );
+        assert_eq!(ty16, TypeName::Write(super::WriteType::Str16));
     }
 
     #[test]

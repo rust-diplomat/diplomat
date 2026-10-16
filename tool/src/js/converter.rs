@@ -388,8 +388,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 method_info.param_conversions.push("write.buffer".into());
                 method_info.cleanup_expressions.push("write.free();".into());
                 match w {
+                    hir::WriteType::Str => Some("return write.readString8();".into()),
                     hir::WriteType::Str16 => Some("return write.readString16();".into()),
-                    _ => Some("return write.readString8();".into()),
+                    _ => unreachable!("Unsupported WriteType"),
                 }
             }
 
@@ -440,10 +441,13 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 method_info.param_conversions.push("write.buffer".into());
                 method_info.cleanup_expressions.push("write.free();".into());
                 match w {
+                    hir::WriteType::Str => {
+                        Some("return result === 0 ? null : write.readString8();".into())
+                    }
                     hir::WriteType::Str16 => {
                         Some("return result === 0 ? null : write.readString16();".into())
                     }
-                    _ => Some("return result === 0 ? null : write.readString8();".into()),
+                    _ => unreachable!("Unsupported WriteType"),
                 }
             }
 
@@ -562,8 +566,9 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                             method_info.param_conversions.push("write.buffer".into());
                             method_info.cleanup_expressions.push("write.free();".into());
                             let read_fn = match w {
+                                hir::WriteType::Str => "readString8",
                                 hir::WriteType::Str16 => "readString16",
-                                _ => "readString8",
+                                _ => unreachable!("Unsupported WriteType"),
                             };
                             format!("{err_check}return write.{read_fn}();")
                         }

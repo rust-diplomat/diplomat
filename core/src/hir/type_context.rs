@@ -2190,4 +2190,66 @@ mod tests {
             "unexpected errors: {errs:?}"
         );
     }
+
+    #[test]
+    fn test_write_types_lowering() {
+        uitest_lowering! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Foo;
+
+                impl Foo {
+                    pub fn write_str(&self, w: &mut DiplomatWrite) {}
+                    pub fn write_str16(&self, w: &mut DiplomatWrite16) {}
+                    pub fn write_generic(&self, w: &mut DiplomatWriteGeneric<u32>) {}
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_write_types_supported() {
+        let m = crate::ast::Module::from_syn(
+            &syn::parse_quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    pub struct Foo;
+
+                    impl Foo {
+                        pub fn write_str(&self, w: &mut DiplomatWrite) {}
+                        #[diplomat::attr(auto, stringifier)]
+                        pub fn write_str16(&self, w: &mut DiplomatWrite16) {}
+                        pub fn write_generic(&self, w: &mut DiplomatWriteGeneric<u32>) {}
+                    }
+                }
+            },
+            true,
+            None,
+            &crate::ast::SpanLocation::None,
+        );
+        let mut env = crate::Env::default();
+        let mut top_symbols = crate::ModuleEnv::new(Default::default());
+
+        m.insert_all_types(crate::ast::Path::empty(), &mut env);
+        top_symbols.insert(
+            m.name.clone(),
+            crate::ast::ModSymbol::SubModule(m.name.clone()),
+        );
+        env.insert(crate::ast::Path::empty(), top_symbols);
+
+        let mut backend = crate::hir::BasicAttributeValidator::new("test-backend");
+        backend.support.stringifiers = true;
+        backend.support.utf16_writeables = true;
+        backend.support.generic_writeables = true;
+
+        let (mut ctx, tcx) =
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+                .unwrap();
+        tcx.validate(&mut ctx);
+        assert!(ctx.errors.is_empty());
+
+        insta::assert_debug_snapshot!(tcx);
+    }
 }

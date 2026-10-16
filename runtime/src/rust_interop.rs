@@ -220,5 +220,9 @@ mod tests {
         writer.write_char_as_utf16('𐐷'); // surrogate pair: 0xD801, 0xDC37
         assert_eq!(writer.len(), 3);
         assert_eq!(buffer.as_slice(), &[0x0041, 0xD801, 0xDC37]);
+        assert_eq!(
+            alloc::string::String::from_utf16(buffer.as_slice()).unwrap(),
+            "A𐐷"
+        );
     }
 }

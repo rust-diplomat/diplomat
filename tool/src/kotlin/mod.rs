@@ -667,8 +667,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
 
     fn write_return(write_type: &hir::WriteType, return_type_modifier: &str) -> String {
         let fn_name = match write_type {
+            hir::WriteType::Str => "writeToString",
             hir::WriteType::Str16 => "writeToString16",
-            _ => "writeToString",
+            _ => unreachable!("Unsupported WriteType"),
         };
         format!(
             r#"
