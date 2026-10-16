@@ -21,6 +21,10 @@ void Utf16Wrap_get_debug_str(const Utf16Wrap* self, DiplomatWrite* write);
 
 DiplomatString16View Utf16Wrap_borrow_cont(const Utf16Wrap* self);
 
+void Utf16Wrap_write_to(const Utf16Wrap* self, DiplomatWrite* write);
+
+void Utf16Wrap_write_chars(const Utf16Wrap* self, DiplomatWrite* write);
+
 void Utf16Wrap_destroy(Utf16Wrap* self);
 
 

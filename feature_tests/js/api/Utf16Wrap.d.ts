@@ -12,5 +12,9 @@ export class Utf16Wrap {
 
     borrowCont(): string;
 
+    writeTo(): string;
+
+    writeChars(): string;
+
     constructor(input: string);
 }

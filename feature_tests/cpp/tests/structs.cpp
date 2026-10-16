@@ -13,6 +13,7 @@
 #include "../include/ImmutableStructOfOpaque.hpp"
 #include "../include/TupleStruct.hpp"
 #include "../include/OutTupleStruct.hpp"
+#include "../include/Utf16Wrap.hpp"
 #include "assert.hpp"
 
 using namespace somelib;
@@ -191,4 +192,9 @@ int main(int argc, char* argv[]) {
     auto containing_tuple = std::tuple<std::tuple<int32_t, int32_t, MyStruct, const Opaque&>>{tuple_in};
     simple_assert_eq("Tuple containing input", (uint32_t)TupleStruct::takes_containing(containing_tuple), (uint32_t)'A');
 
+    auto utf16_wrap = Utf16Wrap::from_utf16(u"Hello 𐐷!");
+    simple_assert("Utf16Wrap write_to", utf16_wrap->write_to() == u"Hello 𐐷!");
+    simple_assert("Utf16Wrap write_chars", utf16_wrap->write_chars() == u"Hello 𐐷!");
+    auto utf16_empty = Utf16Wrap::from_utf16(u"");
+    simple_assert("Utf16Wrap empty write_to", utf16_empty->write_to() == u"");
 }

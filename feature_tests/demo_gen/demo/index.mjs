@@ -732,6 +732,38 @@ let termini = Object.assign({
         ]
     },
 
+    "Utf16Wrap.writeTo": {
+        func: (selfInput) => new somelib.Utf16Wrap(selfInput).writeTo(),
+        // For avoiding webpacking minifying issues:
+        funcName: "Utf16Wrap.writeTo",
+        expr: (selfInput) => "new somelib.Utf16Wrap(selfInput).writeTo()".replace(/([\( ])selfInput([,\) \n])/, '$1' + selfInput + '$2'),
+        parameters: [
+            
+            {
+                name: "self_input",
+                type: "string",
+                typeUse: "string"
+            }
+            
+        ]
+    },
+
+    "Utf16Wrap.writeChars": {
+        func: (selfInput) => new somelib.Utf16Wrap(selfInput).writeChars(),
+        // For avoiding webpacking minifying issues:
+        funcName: "Utf16Wrap.writeChars",
+        expr: (selfInput) => "new somelib.Utf16Wrap(selfInput).writeChars()".replace(/([\( ])selfInput([,\) \n])/, '$1' + selfInput + '$2'),
+        parameters: [
+            
+            {
+                name: "self_input",
+                type: "string",
+                typeUse: "string"
+            }
+            
+        ]
+    },
+
     "DefaultEnum.new_": {
         func: () => new somelib.DefaultEnum(),
         // For avoiding webpacking minifying issues:

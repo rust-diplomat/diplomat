@@ -37,5 +37,8 @@ class OpaqueMutexedStringTest {
         val newStr = wrapper.borrowCont()
         val testStr = "A const str with non byte char: 𐐷 which is a DiplomatChar,"
         assertEquals(testStr, newStr)
+        assertEquals(testStr, wrapper.writeTo())
+        assertEquals(testStr, wrapper.writeChars())
+        assertEquals("", Utf16Wrap.fromUtf16("").writeTo())
     }
 }

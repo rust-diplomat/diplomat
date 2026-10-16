@@ -381,13 +381,17 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             // -> ()
             ReturnType::Infallible(SuccessType::Unit) => None,
 
-            ReturnType::Infallible(SuccessType::Write(..)) => {
+            ReturnType::Infallible(SuccessType::Write(ref w)) => {
                 method_info
                     .alloc_expressions
                     .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
                 method_info.param_conversions.push("write.buffer".into());
                 method_info.cleanup_expressions.push("write.free();".into());
-                Some("return write.readString8();".into())
+                match w {
+                    hir::WriteType::Str => Some("return write.readString8();".into()),
+                    hir::WriteType::Str16 => Some("return write.readString16();".into()),
+                    _ => unreachable!("Unsupported WriteType"),
+                }
             }
 
             // Any out that is not a [`SuccessType::Write`].
@@ -429,14 +433,22 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
             | ReturnType::Nullable(SuccessType::Unit) => Some("return result === 1;".into()),
 
             // Result<Write, ()> or Option<Write>.
-            ReturnType::Fallible(SuccessType::Write(..), None)
-            | ReturnType::Nullable(SuccessType::Write(..)) => {
+            ReturnType::Fallible(SuccessType::Write(ref w), None)
+            | ReturnType::Nullable(SuccessType::Write(ref w)) => {
                 method_info
                     .alloc_expressions
                     .push("const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into());
                 method_info.param_conversions.push("write.buffer".into());
                 method_info.cleanup_expressions.push("write.free();".into());
-                Some("return result === 0 ? null : write.readString8();".into())
+                match w {
+                    hir::WriteType::Str => {
+                        Some("return result === 0 ? null : write.readString8();".into())
+                    }
+                    hir::WriteType::Str16 => {
+                        Some("return result === 0 ? null : write.readString16();".into())
+                    }
+                    _ => unreachable!("Unsupported WriteType"),
+                }
             }
 
             // Result<Type, Error> or Option<Type>
@@ -547,13 +559,18 @@ impl<'tcx> ItemGenContext<'_, 'tcx> {
                 Some(
                     match ok {
                         SuccessType::Unit => err_check,
-                        SuccessType::Write(..) => {
+                        SuccessType::Write(ref w) => {
                             method_info.alloc_expressions.push(
                                 "const write = new diplomatRuntime.DiplomatWriteBuf(wasm);".into(),
                             );
                             method_info.param_conversions.push("write.buffer".into());
                             method_info.cleanup_expressions.push("write.free();".into());
-                            format!("{err_check}return write.readString8();")
+                            let read_fn = match w {
+                                hir::WriteType::Str => "readString8",
+                                hir::WriteType::Str16 => "readString16",
+                                _ => unreachable!("Unsupported WriteType"),
+                            };
+                            format!("{err_check}return write.{read_fn}();")
                         }
                         SuccessType::OutType(ref o) => {
                             let ptr_deref = self.gen_c_to_js_deref_for_type(

@@ -93,6 +93,8 @@ impl CallbackInstantiationFunctionality for NoCallback {
 pub enum WriteType {
     /// A UTF-8 string (`DiplomatWrite`).
     Str,
+    /// A UTF-16 string (`DiplomatWrite16`).
+    Str16,
     /// A primitive array (`DiplomatWriteGeneric<T>`).
     Primitive(super::PrimitiveType),
 }
@@ -101,6 +103,7 @@ impl WriteType {
     pub(super) fn from_ast(w: crate::ast::WriteType) -> Self {
         match w {
             crate::ast::WriteType::Str => WriteType::Str,
+            crate::ast::WriteType::Str16 => WriteType::Str16,
             crate::ast::WriteType::Primitive(prim) => {
                 WriteType::Primitive(super::PrimitiveType::from_ast(prim))
             }
@@ -112,7 +115,8 @@ impl WriteType {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum SuccessType<P: super::TyPosition = OutputOnly> {
-    /// Conceptually returns a string (`WriteType::Str`, via `DiplomatWrite`) or a primitive array
+    /// Conceptually returns a string (`WriteType::Str`, via `DiplomatWrite`, or
+    /// `WriteType::Str16`, via `DiplomatWrite16`) or a primitive array
     /// (`WriteType::Primitive(prim)`, via `DiplomatWriteGeneric<T>`).
     Write(WriteType),
     /// A Diplomat type. Some types can be outputs, but not inputs, which is expressed by the `OutType` parameter.
@@ -166,6 +170,11 @@ impl<P: crate::hir::TyPosition> SuccessType<P> {
     /// Returns whether the variant is `Write`.
     pub fn is_write(&self) -> bool {
         matches!(self, SuccessType::Write(..))
+    }
+
+    /// Returns whether the variant is `Write(WriteType::Str16)`.
+    pub fn is_write_16(&self) -> bool {
+        matches!(self, SuccessType::Write(WriteType::Str16))
     }
 
     /// If the variant is `Write(WriteType::Primitive(prim))`, returns `Some(prim)`.

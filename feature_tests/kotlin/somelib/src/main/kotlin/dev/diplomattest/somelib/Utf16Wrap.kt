@@ -10,6 +10,8 @@ internal interface Utf16WrapLib: Library {
     fun Utf16Wrap_from_utf16(input: Slice): Pointer
     fun Utf16Wrap_get_debug_str(handle: Pointer, write: Pointer): Unit
     fun Utf16Wrap_borrow_cont(handle: Pointer): Slice
+    fun Utf16Wrap_write_to(handle: Pointer, write: Pointer): Unit
+    fun Utf16Wrap_write_chars(handle: Pointer, write: Pointer): Unit
 }
 
 class Utf16Wrap internal constructor (
@@ -69,6 +71,22 @@ class Utf16Wrap internal constructor (
         
         val returnVal = lib.Utf16Wrap_borrow_cont(handle);
             return PrimitiveArrayTools.getUtf16(returnVal)
+    }
+    
+    fun writeTo(): String {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Utf16Wrap_write_to(handle, write);
+        
+        val returnString = DW.writeToString16(write)
+        return returnString
+    }
+    
+    fun writeChars(): String {
+        val write = DW.lib.diplomat_buffer_write_create(0)
+        val returnVal = lib.Utf16Wrap_write_chars(handle, write);
+        
+        val returnString = DW.writeToString16(write)
+        return returnString
     }
 
 }

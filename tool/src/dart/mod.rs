@@ -49,6 +49,7 @@ pub(crate) fn attr_support() -> BackendAttrSupport {
     a.generate_mocking_interface = false;
     a.owned_slices = true;
     a.struct_refs = true;
+    a.utf16_writeables = true;
 
     a
 }
@@ -1159,8 +1160,14 @@ impl<'cx> ItemGenContext<'_, 'cx> {
     {
         match *result_ty {
             ReturnType::Infallible(SuccessType::Unit) => None,
-            ReturnType::Infallible(SuccessType::Write(..)) => {
+            ReturnType::Infallible(SuccessType::Write(hir::WriteType::Str)) => {
                 Some(wrap_success("write.finalize()".to_string()))
+            }
+            ReturnType::Infallible(SuccessType::Write(hir::WriteType::Str16)) => {
+                Some(wrap_success("write.finalize16()".to_string()))
+            }
+            ReturnType::Infallible(SuccessType::Write(..)) => {
+                unreachable!("Unsupported WriteType")
             }
             ReturnType::Infallible(SuccessType::OutType(ref out_ty)) => {
                 let ok_conv = self.gen_c_to_dart_for_type(out_ty, "result".into(), lifetime_env);
@@ -1183,7 +1190,9 @@ impl<'cx> ItemGenContext<'_, 'cx> {
                 let err_check = format!("if (!result.isOk) {{\n  {err_statement}\n}}\n");
 
                 let success_expr = match ok {
-                    SuccessType::Write(..) => "write.finalize()".to_string(),
+                    SuccessType::Write(hir::WriteType::Str) => "write.finalize()".to_string(),
+                    SuccessType::Write(hir::WriteType::Str16) => "write.finalize16()".to_string(),
+                    SuccessType::Write(..) => unreachable!("Unsupported WriteType"),
                     SuccessType::OutType(o) => self
                         .gen_c_to_dart_for_type(o, "result.union.ok".into(), lifetime_env)
                         .into_owned(),

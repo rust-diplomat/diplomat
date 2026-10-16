@@ -29,6 +29,9 @@ inline {##}
     {%- else if let Some(prim) = m.method.output.write_primitive() %}
     std::vector<{{fmt.fmt_primitive_as_c(prim.clone())}}> output;
     {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromVector(output);
+    {%- else if m.method.output.is_write_16() %}
+    std::u16string output;
+    {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromString16(output);
     {%- else %}
     std::string output;
     {{fmt.lib_name_ns_prefix}}diplomat::capi::DiplomatWrite write = {{fmt.lib_name_ns_prefix}}diplomat::WriteFromString(output);

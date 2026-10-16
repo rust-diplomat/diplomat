@@ -525,6 +525,7 @@ pub enum StdlibOrDiplomat {
 #[non_exhaustive]
 pub enum WriteType {
     Str,
+    Str16,
     Primitive(PrimitiveType),
 }
 
@@ -809,6 +810,9 @@ impl TypeName {
             }
             TypeName::Write(WriteType::Str) => {
                 syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite)
+            }
+            TypeName::Write(WriteType::Str16) => {
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatWrite16)
             }
             TypeName::Write(WriteType::Primitive(primitive)) => {
                 let primitive = primitive.to_ident();
@@ -1263,6 +1267,8 @@ impl TypeName {
                     }
                 } else if is_runtime_type(p, "DiplomatWrite") {
                     TypeName::Write(WriteType::Str)
+                } else if is_runtime_type(p, "DiplomatWrite16") {
+                    TypeName::Write(WriteType::Str16)
                 } else if is_runtime_type(p, "DiplomatWriteGeneric") {
                     let ty = get_ty_from_syn_path(p).unwrap_or_else(|| {
                         create_report(AstReport::new(
@@ -1593,6 +1599,7 @@ impl fmt::Display for TypeName {
                 write!(f, "Result<{ok}, {err}>")
             }
             TypeName::Write(WriteType::Str) => "DiplomatWrite".fmt(f),
+            TypeName::Write(WriteType::Str16) => "DiplomatWrite16".fmt(f),
             TypeName::Write(WriteType::Primitive(prim)) => {
                 write!(f, "DiplomatWriteGeneric<{prim}>")
             }
@@ -2167,6 +2174,15 @@ mod tests {
             ty,
             TypeName::Write(super::WriteType::Primitive(super::PrimitiveType::u32))
         );
+
+        let ty16 = TypeName::from_syn(
+            &syn::parse_quote! {
+                DiplomatWrite16
+            },
+            None,
+            &SpanLocation::None,
+        );
+        assert_eq!(ty16, TypeName::Write(super::WriteType::Str16));
     }
 
     #[test]
