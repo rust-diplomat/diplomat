@@ -20,8 +20,8 @@ $ cargo install diplomat-tool
 
 Then, add the Diplomat macro and runtime as dependencies to your project:
 ```toml
-diplomat = "0.10.0"
-diplomat-runtime = "0.10.0"
+diplomat = "0.17.0"
+diplomat-runtime = "0.16.1"
 ```
 
 ## Getting Started

@@ -366,7 +366,7 @@ checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
 name = "diplomat"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "diplomat_core",
  "insta",
@@ -378,7 +378,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-example"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "criterion",
  "diplomat",
@@ -392,7 +392,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-feature-tests"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "diplomat",
  "diplomat-runtime",
@@ -400,7 +400,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-runtime"
-version = "0.16.0"
+version = "0.16.1"
 dependencies = [
  "jni",
  "log",
@@ -408,7 +408,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat-tool"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "askama",
  "clap",
@@ -428,7 +428,7 @@ dependencies = [
 
 [[package]]
 name = "diplomat_core"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "annotate-snippets",
  "either",
@@ -1145,7 +1145,7 @@ dependencies = [
 
 [[package]]
 name = "mdbook-diplomat"
-version = "0.16.1"
+version = "0.17.0"
 dependencies = [
  "askama",
  "clap",
