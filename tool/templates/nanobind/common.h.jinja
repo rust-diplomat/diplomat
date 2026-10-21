@@ -20,14 +20,7 @@ extern PyObject* last_ffi_error;
 namespace nb = nanobind;
 using namespace nb::literals;
 
-void swap_ffi_error(PyObject* ffi_error) {
-    if (last_ffi_error != NULL && Py_REFCNT(last_ffi_error) > 0) {
-        Py_DECREF(last_ffi_error);
-        return;
-    }
-    Py_INCREF(ffi_error);
-    last_ffi_error = ffi_error;
-}
+void swap_ffi_error(PyObject* ffi_error);
 
 namespace nanobind::detail
 {
@@ -357,8 +350,8 @@ namespace nanobind::detail
                 try {
                     // nb::handle automatically converts args for us:
                     out = inner(args...);
-                } catch (...) {
-                    PyErr_Clear();
+                } catch (python_error err) {
+                    swap_ffi_error(err.value().ptr());
                     // Diplomat Nanobind makes the assumption that we always are returning a result:
                     return somelib::diplomat::Err(somelib::get_ffi_error<E>::get());
                 }
