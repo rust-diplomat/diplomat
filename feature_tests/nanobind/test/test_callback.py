@@ -116,6 +116,13 @@ def test_callback():
 
     with pytest.raises(Exception) as e:
         o.test_ffi_error(lambda: "Invalid type return")
+    last_error = somelib.get_last_ffi_error()
+    # Invalid return types are set manually, we need to verify the traceback exists:
+    assert hasattr(last_error, "__traceback__")
+    # Test that we actually have a correct traceback object:
+    assert last_error.__traceback__.tb_frame.f_code.co_qualname == "test_callback"
+
+    assert last_error.args[0] == "Unable to convert callback return type"
     assert e.value.args[0] == somelib.FFIError.FFI
     assert o.test_ffi_error(return_unit) == None
 

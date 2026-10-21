@@ -69,7 +69,9 @@ def test_result_trait():
     with pytest.raises(Exception) as e:
         somelib.FallibleTraitWrapper.test_result_output(i, 42)
     assert e.value.args[0] == somelib.FFIError.FFI
-    # FIXME: Test invalid return type with exception
+    ffi_error = somelib.get_last_ffi_error()
+    assert type(ffi_error) == TypeError
+    assert ffi_error.args[0] == "Unable to convert trait return type"
 
     i = ImplementsTrait()
     # Other result types still work:
