@@ -5,6 +5,10 @@ def test_callback():
     o = somelib.CallbackWrapper
     global tmp
     tmp = 0
+
+    with pytest.raises(RuntimeError) as e:
+        somelib.get_last_ffi_error()
+    assert e.value.args[0] == "FFI Error not found, either no FFI error was set or the FFI error has been freed."
     
     def cb0(a: int) -> int:
         global tmp
@@ -118,6 +122,9 @@ def test_callback():
     assert o.test_ffi_error_as_ok(lambda: "Invalid type return") == somelib.FFIError.FFI
     assert o.test_ffi_error_as_ok(lambda: somelib.FFIError(somelib.FFIError.User)) == somelib.FFIError.User
     assert o.test_ffi_error_as_ok(raise_exception) == somelib.FFIError.FFI
+    ffi_error = somelib.get_last_ffi_error()
+    assert type(ffi_error) == Exception
+    assert ffi_error.args[0] == "test"
 
 def raise_exception():
     raise Exception("test")
