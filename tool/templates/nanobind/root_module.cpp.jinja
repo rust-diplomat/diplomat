@@ -49,6 +49,8 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
+PyObject* last_ffi_error;
+
 NB_MODULE({{module_name}}, mod)
 {
     using namespace {{module_name}};
@@ -57,6 +59,17 @@ NB_MODULE({{module_name}}, mod)
         nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
     }
+
+    mod.def("get_last_ffi_error", []() {
+        if (last_ffi_error == NULL || Py_REFCNT(last_ffi_error) == 0) {
+            PyErr_SetString(PyExc_RuntimeError, "FFI Error not found, either no FFI error was set or the FFI error has been freed.");
+            throw nb::python_error();
+        }
+
+        // We still want to hold on to this error, so we incref on return:
+        Py_INCREF(last_ffi_error);
+        return nb::handle(last_ffi_error);
+    });
 
     nb::class_<std::monostate>(mod, "monostate")
         .def("__repr__", [](const std::monostate &)

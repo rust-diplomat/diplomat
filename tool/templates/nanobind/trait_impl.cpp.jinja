@@ -10,7 +10,10 @@ class {{trait_name_unnamespaced}}_PyImpl : public {{trait_name}} {
         nb::object out;
         try {
             out = func({%- for p in m.params -%} {{p.name}} {%- if !loop.last -%}, {% endif -%} {%- endfor -%});
-        } catch (...) {
+        } catch (nb::python_error err) {
+            last_ffi_error = err.value().ptr();
+            // Take ownership of the value.
+            Py_INCREF(last_ffi_error);
             return diplomat::Err({{m.ffi_failed_return}});
         }
         nb::detail::make_caster<{{m.return_type_name}}> caster;
@@ -23,6 +26,7 @@ class {{trait_name_unnamespaced}}_PyImpl : public {{trait_name}} {
                 return diplomat::Err({{m.ffi_failed_return}});
             }
         } else {
+            // TODO: This should set an FFI error
             return diplomat::Err({{m.ffi_failed_return}});
         }
     }
