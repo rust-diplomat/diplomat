@@ -29,13 +29,6 @@ pub mod ffi {
         Min2,
     }
 
-    impl FixedDecimalGroupingStrategy {
-        /// Whether this strategy can group digits at all.
-        pub fn groups_digits(self) -> bool {
-            !matches!(self, FixedDecimalGroupingStrategy::Never)
-        }
-    }
-
     pub struct FixedDecimalFormatterOptions {
         #[diplomat::demo(input(label = "ICU4X Fixed Decimal Grouping Strategy"))]
         pub grouping_strategy: FixedDecimalGroupingStrategy,

@@ -10,16 +10,3 @@ pub enum FixedDecimalGroupingStrategy {
     /// At least 2 groups
     Min2 = 3,
 }
-
-impl FixedDecimalGroupingStrategy {
-    /// Whether this strategy can group digits at all.
-    pub fn groups_digits(self) -> bool {
-        unsafe { icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(self) }
-    }
-}
-
-extern "C" {
-    fn icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(
-        this: crate::FixedDecimalGroupingStrategy,
-    ) -> bool;
-}

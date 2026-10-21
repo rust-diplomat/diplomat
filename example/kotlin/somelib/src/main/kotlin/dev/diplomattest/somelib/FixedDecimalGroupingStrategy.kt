@@ -7,7 +7,6 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface FixedDecimalGroupingStrategyLib: Library {
-    fun icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(inner: Int): Byte
 }
 enum class FixedDecimalGroupingStrategy {
     Auto,
@@ -30,14 +29,5 @@ enum class FixedDecimalGroupingStrategy {
         fun default(): FixedDecimalGroupingStrategy {
             return Auto
         }
-    }
-    
-    /**
-     * Whether this strategy can group digits at all.
-     */
-    fun groupsDigits(): Boolean {
-        
-        val returnVal = lib.icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(this.toNative());
-        return (returnVal > 0)
     }
 }

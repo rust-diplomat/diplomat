@@ -81,22 +81,6 @@ export class FixedDecimalGroupingStrategy {
     static Min2 = FixedDecimalGroupingStrategy.#objectValues[3];
 
 
-    /**
-     * Whether this strategy can group digits at all.
-     */
-    groupsDigits() {
-
-        const result = wasm.icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(this.ffiValue);
-
-        try {
-            return result;
-        }
-
-        finally {
-            diplomatRuntime.FUNCTION_PARAM_ALLOC.clean();
-        }
-    }
-
     constructor(value) {
         return this.#internalConstructor(...arguments)
     }

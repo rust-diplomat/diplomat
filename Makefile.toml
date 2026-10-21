@@ -80,6 +80,7 @@ dependencies = [
     "test-dart-example",
     "test-kotlin-example",
     "test-rust-example",
+
 ]
 
 [tasks.test-feature]

@@ -25,9 +25,3 @@ fn struct_returned_by_value() {
         }
     );
 }
-
-#[test]
-fn enum_method() {
-    assert!(FixedDecimalGroupingStrategy::Auto.groups_digits());
-    assert!(!FixedDecimalGroupingStrategy::Never.groups_digits());
-}

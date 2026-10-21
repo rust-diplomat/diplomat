@@ -13,18 +13,6 @@ enum FixedDecimalGroupingStrategy {
   /// At least 2 groups
   min2;
 
-  /// Whether this strategy can group digits at all.
-  bool groupsDigits() {
-    final result = _icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(index);
-    return result;
-  }
-
 }
-
-// ignore: experimental_member_use
-@meta.RecordUse()
-@ffi.Native<ffi.Bool Function(ffi.Int32)>(isLeaf: true, symbol: 'icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1')
-// ignore: non_constant_identifier_names
-external bool _icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(int self);
 
 // dart format on
