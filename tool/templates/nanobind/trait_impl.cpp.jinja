@@ -21,10 +21,11 @@ class {{trait_name_unnamespaced}}_PyImpl : public {{trait_name}} {
             } else if (caster.err_val.has_value()) {
                 return diplomat::Err(caster.err_val.value());
             } else {
+                set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                 return diplomat::Err({{m.ffi_failed_return}});
             }
         } else {
-            // TODO: This should set an FFI error
+            set_ffi_error(PyExc_TypeError, "Unable to convert trait return type");
             return diplomat::Err({{m.ffi_failed_return}});
         }
     }

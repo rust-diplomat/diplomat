@@ -21,6 +21,7 @@ namespace nb = nanobind;
 using namespace nb::literals;
 
 void swap_ffi_error(PyObject* ffi_error);
+void set_ffi_error(PyObject* exception, const char* msg);
 
 namespace nanobind::detail
 {
@@ -362,9 +363,11 @@ namespace nanobind::detail
                     } else if (caster.err_val.has_value()) {
                         return {{lib_name}}::diplomat::Err<E>(std::move(caster.err_val.value()));
                     } else {
+                        set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                         return {{lib_name}}::diplomat::Err<E>(std::move({{lib_name}}::get_ffi_error<E>::get()));
                     }
                 } else {
+                    set_ffi_error(PyExc_TypeError, "Unable to convert callback return type");
                     return {{lib_name}}::diplomat::Err<E>(std::move({{lib_name}}::get_ffi_error<E>::get()));
                 }
             }

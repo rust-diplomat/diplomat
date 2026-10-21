@@ -58,6 +58,34 @@ void swap_ffi_error(PyObject* ffi_error) {
     last_ffi_error = ffi_error;
 }
 
+void set_ffi_error(PyObject* exception, const char* msg) {
+    Py_XDECREF(last_ffi_error);
+
+    PyObject* str = PyUnicode_FromString(msg);
+    PyObject* tuple = PyTuple_Pack(1, str);
+
+    last_ffi_error = PyObject_Call(exception, tuple, NULL);
+    Py_DECREF(str);
+    Py_DECREF(tuple);
+
+    // Create a traceback from the given frame.
+    // This is a little wonky, could be less so if the methods from
+    // https://peps.python.org/pep-0523/ are stabilized
+    PyFrameObject* current_frame = PyEval_GetFrame();
+
+    // Increment the reference, since setting the exception takes ownership:
+    Py_INCREF(last_ffi_error);
+    // Python 3.12.0 final
+    #if PY_VERSION_HEX >= 0x030c00f0
+    // We can just set the raised exception:
+    PyErr_SetRaisedException(last_ffi_error);
+    #else
+    PyErr_Restore(exception, last_ffi_error, NULL);
+    #endif
+    PyTraceBack_Here(current_frame);
+    PyErr_Clear();
+}
+
 NB_MODULE({{module_name}}, mod)
 {
     using namespace {{module_name}};
