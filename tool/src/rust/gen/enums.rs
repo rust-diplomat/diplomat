@@ -24,14 +24,14 @@ impl ItemGenContext<'_, '_> {
         let def = self.tcx.resolve_enum(id);
         EnumTemplate {
             ty_name: self.formatter.fmt_type_name(id.into()),
-            docs: self.formatter.fmt_docs(&def.docs),
+            docs: self.formatter.fmt_docs(&def.docs, ""),
             variants: def
                 .variants
                 .iter()
                 .map(|v| EnumVariant {
                     name: v.name.to_string(),
                     discriminant: v.discriminant,
-                    docs: self.formatter.fmt_docs(&v.docs),
+                    docs: self.formatter.fmt_docs(&v.docs, "    "),
                 })
                 .collect(),
             methods: self.gen_methods(id.into(), &def.methods),

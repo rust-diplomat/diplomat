@@ -64,6 +64,24 @@ let termini = Object.assign({
             }
             
         ]
+    },
+
+    "FixedDecimalGroupingStrategy.groupsDigits": {
+        func: (self) => new somelib.FixedDecimalGroupingStrategy(self).groupsDigits(),
+        // For avoiding webpacking minifying issues:
+        funcName: "FixedDecimalGroupingStrategy.groupsDigits",
+        expr: (self) => "new somelib.FixedDecimalGroupingStrategy(self).groupsDigits()".replace(/([\( ])self([,\) \n])/, '$1' + self + '$2'),
+        display: displayBool,
+        parameters: [
+            
+            {
+                name: "self",
+                type: "FixedDecimalGroupingStrategy",
+                typeUse: "enumerator",
+                values: ["Auto", "Never", "Always", "Min2"]
+            }
+            
+        ]
     }
 }, RenderTerminiFixedDecimal);
 

@@ -26,6 +26,11 @@ impl FixedDecimal {
     }
 }
 
+extern "C" {
+    fn icu4x_FixedDecimal_new_mv1(v: i32) -> *mut crate::fixed_decimal::FixedDecimalRaw;
+    fn icu4x_FixedDecimal_multiply_pow10_mv1(this: *mut FixedDecimalRaw, power: i16);
+}
+
 impl Drop for FixedDecimal {
     fn drop(&mut self) {
         unsafe { icu4x_FixedDecimal_destroy_mv1(self.0.as_ptr()) }
@@ -33,7 +38,5 @@ impl Drop for FixedDecimal {
 }
 
 extern "C" {
-    fn icu4x_FixedDecimal_new_mv1(v: i32) -> *mut crate::fixed_decimal::FixedDecimalRaw;
-    fn icu4x_FixedDecimal_multiply_pow10_mv1(this: *mut FixedDecimalRaw, power: i16);
     fn icu4x_FixedDecimal_destroy_mv1(this: *mut FixedDecimalRaw);
 }

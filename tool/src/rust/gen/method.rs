@@ -89,7 +89,7 @@ impl ItemGenContext<'_, '_> {
         };
 
         Some(MethodInfo {
-            docs: self.formatter.fmt_docs(&method.docs),
+            docs: self.formatter.fmt_docs(&method.docs, "    "),
             name: method.name.to_string(),
             abi_name: method.abi_name.to_string(),
             params,

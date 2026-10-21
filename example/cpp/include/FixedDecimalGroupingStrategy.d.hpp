@@ -55,6 +55,11 @@ public:
     // Prevent usage as boolean value
     explicit operator bool() const = delete;
 
+  /**
+   * Whether this strategy can group digits at all.
+   */
+  inline bool groups_digits() const;
+
     inline icu4x::capi::FixedDecimalGroupingStrategy AsFFI() const;
     inline static icu4x::FixedDecimalGroupingStrategy FromFFI(icu4x::capi::FixedDecimalGroupingStrategy c_enum);
 private:

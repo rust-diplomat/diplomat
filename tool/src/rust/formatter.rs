@@ -32,9 +32,15 @@ impl<'tcx> RustFormatter<'tcx> {
         self.fmt_type_name(id).to_snake_case()
     }
 
-    pub fn fmt_docs(&self, docs: &hir::Docs) -> String {
+    /// Format docs as `///` lines, each indented by `indent` and ending in a newline
+    pub fn fmt_docs(&self, docs: &hir::Docs, indent: &str) -> String {
         docs.to_markdown(DocsTypeReferenceSyntax::SquareBrackets, self.docs_url_gen)
             .trim()
-            .to_string()
+            .lines()
+            .map(|line| match line {
+                "" => format!("{indent}///\n"),
+                line => format!("{indent}/// {line}\n"),
+            })
+            .collect()
     }
 }

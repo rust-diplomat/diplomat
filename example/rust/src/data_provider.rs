@@ -21,6 +21,10 @@ impl DataProvider {
     }
 }
 
+extern "C" {
+    fn icu4x_DataProvider_new_static_mv1() -> *mut crate::data_provider::DataProviderRaw;
+}
+
 impl Drop for DataProvider {
     fn drop(&mut self) {
         unsafe { icu4x_DataProvider_destroy_mv1(self.0.as_ptr()) }
@@ -28,6 +32,5 @@ impl Drop for DataProvider {
 }
 
 extern "C" {
-    fn icu4x_DataProvider_new_static_mv1() -> *mut crate::data_provider::DataProviderRaw;
     fn icu4x_DataProvider_destroy_mv1(this: *mut DataProviderRaw);
 }

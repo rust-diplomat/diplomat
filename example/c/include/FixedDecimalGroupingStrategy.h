@@ -13,7 +13,9 @@
 
 
 
-// No Content
+
+
+bool icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(FixedDecimalGroupingStrategy self);
 
 
 

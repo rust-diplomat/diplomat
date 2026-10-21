@@ -16,7 +16,11 @@
 
 namespace icu4x {
 namespace capi {
+    extern "C" {
 
+    bool icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(icu4x::capi::FixedDecimalGroupingStrategy self);
+
+    } // extern "C"
 } // namespace capi
 } // namespace
 
@@ -34,5 +38,10 @@ inline icu4x::FixedDecimalGroupingStrategy icu4x::FixedDecimalGroupingStrategy::
         default:
             std::abort();
     }
+}
+
+inline bool icu4x::FixedDecimalGroupingStrategy::groups_digits() const {
+    auto result = icu4x::capi::icu4x_FixedDecimalGroupingStrategy_groups_digits_mv1(this->AsFFI());
+    return result;
 }
 #endif // ICU4X_FixedDecimalGroupingStrategy_HPP

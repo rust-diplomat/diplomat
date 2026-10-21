@@ -1,21 +1,9 @@
-{% include "rust/docs.rs.jinja" -%}
-#[repr(C)]
+{{ docs }}#[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct {{ ty_name }} {
 {%- for f in fields %}
-{%- for line in f.docs.lines() %}
-    ///{% if !line.is_empty() %} {{ line }}{% endif %}
-{%- endfor %}
-    pub {{ f.name }}: {{ f.ty }},
+{{ f.docs }}    pub {{ f.name }}: {{ f.ty }},
 {%- endfor %}
 }
-{%- if !methods.is_empty() %}
-
-impl {{ ty_name }} {
-{%- include "rust/methods.rs.jinja" %}}
-
-extern "C" {
-{%- include "rust/extern.rs.jinja" %}
-}
-{%- endif %}
+{%- include "rust/methods.rs.jinja" %}
 

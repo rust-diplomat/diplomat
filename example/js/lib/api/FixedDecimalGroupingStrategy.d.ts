@@ -31,5 +31,10 @@ export class FixedDecimalGroupingStrategy {
     static Min2 : FixedDecimalGroupingStrategy;
 
 
+    /**
+     * Whether this strategy can group digits at all.
+     */
+    groupsDigits(): boolean;
+
     constructor(value: FixedDecimalGroupingStrategy | string );
 }

@@ -4,13 +4,8 @@ pub(crate) struct {{ ty_name }}Raw {
     _private: [u8; 0],
 }
 
-{% include "rust/docs.rs.jinja" -%}
-pub struct {{ ty_name }}(pub(crate) core::ptr::NonNull<{{ ty_name }}Raw>);
-{%- if !methods.is_empty() %}
-
-impl {{ ty_name }} {
-{%- include "rust/methods.rs.jinja" %}}
-{%- endif %}
+{{ docs }}pub struct {{ ty_name }}(pub(crate) core::ptr::NonNull<{{ ty_name }}Raw>);
+{%- include "rust/methods.rs.jinja" %}
 
 impl Drop for {{ ty_name }} {
     fn drop(&mut self) {
@@ -19,7 +14,6 @@ impl Drop for {{ ty_name }} {
 }
 
 extern "C" {
-{%- include "rust/extern.rs.jinja" %}
     fn {{ dtor_abi_name }}(this: *mut {{ ty_name }}Raw);
 }
 

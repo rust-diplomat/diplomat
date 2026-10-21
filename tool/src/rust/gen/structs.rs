@@ -36,13 +36,13 @@ impl ItemGenContext<'_, '_> {
                 StructField {
                     name: field.name.to_string(),
                     ty,
-                    docs: self.formatter.fmt_docs(&field.docs),
+                    docs: self.formatter.fmt_docs(&field.docs, "    "),
                 }
             })
             .collect();
         StructTemplate {
             ty_name: self.formatter.fmt_type_name(id.into()),
-            docs: self.formatter.fmt_docs(&def.docs),
+            docs: self.formatter.fmt_docs(&def.docs, ""),
             fields,
             methods: self.gen_methods(id.into(), &def.methods),
         }
