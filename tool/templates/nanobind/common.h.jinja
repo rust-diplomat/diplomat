@@ -20,6 +20,15 @@ extern PyObject* last_ffi_error;
 namespace nb = nanobind;
 using namespace nb::literals;
 
+void swap_ffi_error(PyObject* ffi_error) {
+    if (last_ffi_error != NULL && Py_REFCNT(last_ffi_error) > 0) {
+        Py_DECREF(last_ffi_error);
+        return;
+    }
+    Py_INCREF(ffi_error);
+    last_ffi_error = ffi_error;
+}
+
 namespace nanobind::detail
 {
     // Nanobind does not ship with support for casting char32_t, which seems to be an oversight.
