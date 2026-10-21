@@ -187,6 +187,10 @@ void set_ffi_error(PyObject* exception, const char* msg) {
     PyErr_Clear();
 }
 
+void diplomat_cleanup() {
+    Py_XDECREF(last_ffi_error);
+}
+
 NB_MODULE(somelib, mod)
 {
     using namespace somelib;
@@ -206,6 +210,10 @@ NB_MODULE(somelib, mod)
         Py_INCREF(last_ffi_error);
         return nb::handle(last_ffi_error);
     });
+
+    if (Py_AtExit(diplomat_cleanup) != 0) {
+        fprintf(stderr, "Could not clean up Diplomat module.");
+    }
 
     nb::class_<std::monostate>(mod, "monostate")
         .def("__repr__", [](const std::monostate &)
