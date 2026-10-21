@@ -58,3 +58,149 @@ impl ItemGenContext<'_, '_> {
         )
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::super::formatter::RustFormatter;
+    use super::ItemGenContext;
+    use crate::ErrorStore;
+    use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext};
+    use proc_macro2::TokenStream;
+    use quote::quote;
+
+    /// Generates the type named `name` from a `#[diplomat::bridge]` module
+    fn gen_type(tk_stream: TokenStream, name: &str) -> String {
+        let file = syn::parse2::<syn::File>(tk_stream).expect("failed to parse test module");
+        let mut attr_validator = hir::BasicAttributeValidator::new("rust");
+        attr_validator.support = super::super::attr_support();
+        let tcx = TypeContext::from_syn(
+            &file,
+            Default::default(),
+            attr_validator,
+            None,
+            &diplomat_core::ast::SpanLocation::None,
+        )
+        .unwrap_or_else(|e| panic!("Failed to create context: {e:?}"));
+
+        let docs_url_gen = DocsUrlGenerator::default();
+        let formatter = RustFormatter::new(&tcx, &docs_url_gen);
+        let errors = ErrorStore::default();
+        let context = ItemGenContext {
+            tcx: &tcx,
+            formatter: &formatter,
+            errors: &errors,
+        };
+
+        let (id, _) = tcx
+            .all_types()
+            .find(|(_, ty)| ty.name().as_str() == name)
+            .expect("type not found");
+        let code = match id {
+            hir::TypeId::Enum(e) => context.gen_enum(e),
+            hir::TypeId::Opaque(o) => context.gen_opaque(o),
+            hir::TypeId::Struct(s) => context.gen_struct::<hir::Everywhere>(s),
+            _ => unreachable!("not covered by these tests"),
+        };
+        assert!(errors.take_all().is_empty(), "generation reported errors");
+        code
+    }
+
+    #[test]
+    fn test_opaque() {
+        insta::assert_snapshot!(gen_type(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    /// An opaque type
+                    #[diplomat::opaque_mut]
+                    struct MyOpaque(i32);
+
+                    #[diplomat::opaque]
+                    struct MyView<'a>(&'a i32);
+
+                    impl MyOpaque {
+                        pub fn new(value: i32) -> Box<MyOpaque> {
+                            unimplemented!()
+                        }
+
+                        pub fn get(&self) -> i32 {
+                            unimplemented!()
+                        }
+
+                        pub fn set(&mut self, value: i32) {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: strings are not supported yet
+                        pub fn from_str(s: &DiplomatStr) -> Box<MyOpaque> {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: the returned opaque borrows from `self`
+                        pub fn view<'a>(&'a self) -> Box<MyView<'a>> {
+                            unimplemented!()
+                        }
+                    }
+                }
+            },
+            "MyOpaque"
+        ));
+    }
+
+    #[test]
+    fn test_enum() {
+        insta::assert_snapshot!(gen_type(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    /// An enum
+                    enum MyEnum {
+                        /// The first variant
+                        A,
+                        B = 5,
+                    }
+
+                    impl MyEnum {
+                        pub fn is_a(self) -> bool {
+                            unimplemented!()
+                        }
+                    }
+                }
+            },
+            "MyEnum"
+        ));
+    }
+
+    #[test]
+    fn test_struct() {
+        insta::assert_snapshot!(gen_type(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    enum MyEnum {
+                        A,
+                    }
+
+                    /// A struct
+                    struct MyStruct {
+                        /// An integer
+                        a: u8,
+                        b: f64,
+                        c: MyEnum,
+                    }
+
+                    impl MyStruct {
+                        pub fn new(a: u8) -> MyStruct {
+                            unimplemented!()
+                        }
+
+                        pub fn sum(self) -> f64 {
+                            unimplemented!()
+                        }
+                    }
+                }
+            },
+            "MyStruct"
+        ));
+    }
+}
