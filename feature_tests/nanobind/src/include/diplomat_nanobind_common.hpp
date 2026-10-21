@@ -15,8 +15,13 @@
 #include "diplomat_runtime.hpp"
 #include "diplomat_ffi_errors.hpp"
 
+extern PyObject* last_ffi_error;
+
 namespace nb = nanobind;
 using namespace nb::literals;
+
+void swap_ffi_error(PyObject* ffi_error);
+void set_ffi_error(PyObject* exception, const char* msg);
 
 namespace nanobind::detail
 {
@@ -346,8 +351,8 @@ namespace nanobind::detail
                 try {
                     // nb::handle automatically converts args for us:
                     out = inner(args...);
-                } catch (...) {
-                    PyErr_Clear();
+                } catch (python_error err) {
+                    swap_ffi_error(err.value().ptr());
                     // Diplomat Nanobind makes the assumption that we always are returning a result:
                     return somelib::diplomat::Err(somelib::get_ffi_error<E>::get());
                 }
@@ -358,9 +363,11 @@ namespace nanobind::detail
                     } else if (caster.err_val.has_value()) {
                         return somelib::diplomat::Err<E>(std::move(caster.err_val.value()));
                     } else {
+                        set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                         return somelib::diplomat::Err<E>(std::move(somelib::get_ffi_error<E>::get()));
                     }
                 } else {
+                    set_ffi_error(PyExc_TypeError, "Unable to convert callback return type");
                     return somelib::diplomat::Err<E>(std::move(somelib::get_ffi_error<E>::get()));
                 }
             }

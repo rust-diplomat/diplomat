@@ -1685,6 +1685,8 @@ class Utf16Wrap:
 class __dummy__:
     pass
 
+def get_last_ffi_error() -> object: ...
+
 class monostate:
     def __repr__(self) -> str: ...
 

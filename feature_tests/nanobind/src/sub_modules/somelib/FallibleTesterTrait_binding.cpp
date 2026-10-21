@@ -18,7 +18,8 @@ void add_FallibleTesterTrait_binding(nb::module_ mod) {
             nb::object out;
             try {
                 out = func();
-            } catch (...) {
+            } catch (nb::python_error err) {
+                swap_ffi_error(err.value().ptr());
                 return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
             }
             nb::detail::make_caster<somelib::diplomat::result<std::monostate, somelib::FFIError>> caster;
@@ -28,9 +29,11 @@ void add_FallibleTesterTrait_binding(nb::module_ mod) {
                 } else if (caster.err_val.has_value()) {
                     return diplomat::Err(caster.err_val.value());
                 } else {
+                    set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                     return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
                 }
             } else {
+                set_ffi_error(PyExc_TypeError, "Unable to convert trait return type");
                 return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
             }
         }
@@ -42,7 +45,8 @@ void add_FallibleTesterTrait_binding(nb::module_ mod) {
             nb::object out;
             try {
                 out = func(x);
-            } catch (...) {
+            } catch (nb::python_error err) {
+                swap_ffi_error(err.value().ptr());
                 return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
             }
             nb::detail::make_caster<somelib::diplomat::result<uint32_t, somelib::FFIError>> caster;
@@ -52,9 +56,11 @@ void add_FallibleTesterTrait_binding(nb::module_ mod) {
                 } else if (caster.err_val.has_value()) {
                     return diplomat::Err(caster.err_val.value());
                 } else {
+                    set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                     return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
                 }
             } else {
+                set_ffi_error(PyExc_TypeError, "Unable to convert trait return type");
                 return diplomat::Err(somelib::FFIError(somelib::FFIError::Value::FFI));
             }
         }
