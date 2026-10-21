@@ -1,3 +1,21 @@
 {% include "rust/docs.rs.jinja" -%}
-pub enum {{ ty_name }} {}
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum {{ ty_name }} {
+{%- for v in variants %}
+{%- for line in v.docs.lines() %}
+    ///{% if !line.is_empty() %} {{ line }}{% endif %}
+{%- endfor %}
+    {{ v.name }} = {{ v.discriminant }},
+{%- endfor %}
+}
+{%- if !methods.is_empty() %}
+
+impl {{ ty_name }} {
+{%- include "rust/methods.rs.jinja" %}}
+
+extern "C" {
+{%- include "rust/extern.rs.jinja" %}
+}
+{%- endif %}
 

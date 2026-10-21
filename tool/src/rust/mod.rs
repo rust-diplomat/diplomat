@@ -1,5 +1,7 @@
-//! Experimental Safe Rust backend: generates a Rust crate that wraps the C ABI
-//! of a Diplomat library in a safe, idiomatic API.
+//! Experimental Safe Rust backend: generates the `src/` of a Rust crate that wraps
+//! the C ABI of a Diplomat library in a safe, idiomatic API.
+//!
+//! Methods using types that are not supported yet are skipped.
 
 mod formatter;
 mod gen;

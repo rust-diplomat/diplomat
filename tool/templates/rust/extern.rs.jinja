@@ -1,0 +1,3 @@
+{%- for m in methods %}
+    fn {{ m.abi_name }}({{ m.abi_params|join(", ") }}){% if let Some(ret) = m.abi_ret %} -> {{ ret }}{% endif %};
+{%- endfor %}
