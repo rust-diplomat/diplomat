@@ -118,7 +118,7 @@ def test_callback():
     with pytest.raises(Exception) as e:
         o.test_ffi_error(lambda: "Invalid type return")
     last_error = somelib.get_last_ffi_error()
-    # Only test for Python >= 3.12, which is currently where we support tracebacks
+    # Only test for Python >= 3.12, which is currently where we support tracebacks for invalid conversions
     if sys.hexversion >= 0x030c0000:
         # Invalid return types are set manually, we need to verify the traceback exists:
         assert hasattr(last_error, "__traceback__")
@@ -135,6 +135,9 @@ def test_callback():
     ffi_error = somelib.get_last_ffi_error()
     assert type(ffi_error) == Exception
     assert ffi_error.args[0] == "test"
+    # Tracebacks for raised exceptions exist irrespective of Python version, so we check for that here:
+    assert hasattr(last_error, "__traceback__")
+    assert last_error.__traceback__.tb_frame.f_code.co_qualname == "test_callback"
 
 def raise_exception():
     raise Exception("test")
