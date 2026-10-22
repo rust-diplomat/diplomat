@@ -89,7 +89,8 @@ There is an additional `TraitName_PyBase` class that Nanobind generates. This is
 
 1. Python raised an exception in the callback/trait.
 2. Nanobind failed to convert the type into something the trait/callback expected.
-  - Note that if this is the case and your Python version is below 3.12, a traceback will not be set along with the error (this is an issue that has yet to be fixed).
+
+Note that for each of these, a proper location of *where* the error occurred (i.e., `__traceback__`) is only available for Python 3.12+. Support is theoretically possible for 3.11 and below, but has yet to be implemented.
 
 The user may then `raise` the exception, or investigate it further based on the FFI Error they've received.
 
