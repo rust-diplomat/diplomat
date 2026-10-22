@@ -49,7 +49,6 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
-// FIXME: This needs to be freed when the module is freed.
 PyObject* last_ffi_error;
 
 void swap_ffi_error(PyObject* ffi_error) {
