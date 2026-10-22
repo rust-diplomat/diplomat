@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-63ebf66f.js";
+            window.path_to_searchindex_js = "searchindex-e1ccec87.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-548185b0.js"></script>
@@ -3635,11 +3635,20 @@ except Exception as e:
 <h3 id="diplomatwrite-2"><a class="header" href="#diplomatwrite-2">DiplomatWrite</a></h3>
 <p>The Nanobind backend uses the <a href="#diplomatwrite-1">default C++ implementation for DiplomatWrite</a>, and so returns a <code>str</code> type.</p>
 <h3 id="callbacks-4"><a class="header" href="#callbacks-4">Callbacks</a></h3>
-<p>Implemented as any ordinary Python function (lambda or <code>def</code> will work). Callback returns are fallible, so any callback return must be bound with <a href="#fallible-callback-returns">ffi_error</a>.</p>
+<p>Implemented as any ordinary Python function (lambda or <code>def</code> will work). Callback returns are fallible, so any callback return must be bound with <a href="#ffi-errors">ffi_error</a>.</p>
 <h3 id="traits-3"><a class="header" href="#traits-3">Traits</a></h3>
-<p>Trait methods are fallible here, so any returned trait must be bound with <a href="#fallible-callback-returns">ffi_error</a>.</p>
+<p>Trait methods are fallible here, so any returned trait must be bound with <a href="#ffi-errors">ffi_error</a>.</p>
 <p>Implemented as classes that subclass a given <code>TraitName</code>. Python will raise a <code>TypeError</code> if <em>any</em> method is not implemented in the trait. If you attempt to <code>super()</code> a trait name, since the method is abstract, it will raise a <code>TypeError</code>. Any exceptions raised while executing in Rust code will be returned as an FFI error.</p>
 <p>There is an additional <code>TraitName_PyBase</code> class that Nanobind generates. This is purely for stubgen purposes: Nanobind has to bind the <a href="#traits-2">underlying abstract class</a> for stubgen, and create an implementation class for binding the abstract methods from Python.</p>
+<h3 id="ffi-errors"><a class="header" href="#ffi-errors">FFI Errors</a></h3>
+<p><a href="#fallible-callback-returns">FFI errors must be specially defined when writing binding code</a>. The Nanobind backend also provides an additional helper method for users of your binding code if they wish to learn more about an FFI error:</p>
+<p><code>lib_name.get_last_ffi_error()</code> will return an unraised exception object that was any exception that was thrown as the result of an exception occurring at a callback or trait method. This can either be:</p>
+<ol>
+<li>Python raised an exception in the callback/trait.</li>
+<li>Nanobind failed to convert the type into something the trait/callback expected.</li>
+</ol>
+<p>Note that for each of these, a proper location of <em>where</em> the error occurred (i.e., <code>__traceback__</code>) is only available for Python 3.12+. Support is theoretically possible for 3.11 and below, but has yet to be implemented.</p>
+<p>The user may then <code>raise</code> the exception, or investigate it further based on the FFI Error they’ve received.</p>
 <h2 id="debugging"><a class="header" href="#debugging">Debugging</a></h2>
 <p>Nanobind <code>.pyd</code> files can be stepped through using any debugger. As long as you’ve built the <code>.pyd</code> file with debugging symbols, you can attach to any running Python process that has the <code>.pyd</code> imported. Here are the steps:</p>
 <ol>
