@@ -354,7 +354,7 @@ namespace nanobind::detail
                 } catch (python_error err) {
                     swap_ffi_error(err.value().ptr());
                     // Diplomat Nanobind makes the assumption that we always are returning a result:
-                    return somelib::diplomat::Err(somelib::get_ffi_error<E>::get());
+                    return {{lib_name}}::diplomat::Err({{lib_name}}::get_ffi_error<E>::get());
                 }
                 make_caster<{{lib_name}}::diplomat::result<T, E>> caster;
                 if (caster.from_python(out, 0, nullptr)) {
