@@ -150,6 +150,48 @@ void diplomat_tp_dealloc(PyObject *self)
 
 struct _Dummy {};
 
+PyObject* last_ffi_error;
+
+void swap_ffi_error(PyObject* ffi_error) {
+    Py_XDECREF(last_ffi_error);
+    Py_INCREF(ffi_error);
+    last_ffi_error = ffi_error;
+}
+
+void set_ffi_error(PyObject* exception, const char* msg) {
+    Py_XDECREF(last_ffi_error);
+
+    PyObject* str = PyUnicode_FromString(msg);
+    PyObject* tuple = PyTuple_Pack(1, str);
+
+    last_ffi_error = PyObject_Call(exception, tuple, NULL);
+    Py_DECREF(str);
+    Py_DECREF(tuple);
+
+    // Python 3.12.0+ allows us to directly set an exception's __traceback__ value.
+    // (https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetRaisedException)
+    // For versions below, we currently don't support getting tracebacks with exceptions
+    // (it should be feasible? But not worth it for this current iteration)
+    #if PY_VERSION_HEX >= 0x030c0000
+    // Create a traceback from the given frame.
+    // This is a little wonky, could be less so if the methods from
+    // https://peps.python.org/pep-0523/ are stabilized
+    PyFrameObject* current_frame = PyEval_GetFrame();
+
+    // Increment the reference, since setting the exception takes ownership:
+    Py_INCREF(last_ffi_error);
+
+    // We can just set the raised exception:
+    PyErr_SetRaisedException(last_ffi_error);
+    PyTraceBack_Here(current_frame);
+    PyErr_Clear();
+    #endif
+}
+
+void diplomat_cleanup() {
+    Py_XDECREF(last_ffi_error);
+}
+
 NB_MODULE(somelib, mod)
 {
     using namespace somelib;
@@ -157,6 +199,21 @@ NB_MODULE(somelib, mod)
     {
         nb::class_<_Dummy> dummy(mod, "__dummy__");
         nb_tp_dealloc = (void (*)(void *))nb::type_get_slot(dummy, Py_tp_dealloc);
+    }
+
+    mod.def("get_last_ffi_error", []() {
+        if (last_ffi_error == NULL || Py_REFCNT(last_ffi_error) == 0) {
+            PyErr_SetString(PyExc_RuntimeError, "FFI Error not found, either no FFI error was set or the FFI error has been freed.");
+            throw nb::python_error();
+        }
+
+        // We still want to hold on to this error, so we incref on return:
+        Py_INCREF(last_ffi_error);
+        return nb::handle(last_ffi_error);
+    });
+
+    if (Py_AtExit(diplomat_cleanup) != 0) {
+        fprintf(stderr, "Could not clean up Diplomat module.");
     }
 
     nb::class_<std::monostate>(mod, "monostate")

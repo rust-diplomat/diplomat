@@ -10,7 +10,8 @@ class {{trait_name_unnamespaced}}_PyImpl : public {{trait_name}} {
         nb::object out;
         try {
             out = func({%- for p in m.params -%} {{p.name}} {%- if !loop.last -%}, {% endif -%} {%- endfor -%});
-        } catch (...) {
+        } catch (nb::python_error err) {
+            swap_ffi_error(err.value().ptr());
             return diplomat::Err({{m.ffi_failed_return}});
         }
         nb::detail::make_caster<{{m.return_type_name}}> caster;
@@ -20,9 +21,11 @@ class {{trait_name_unnamespaced}}_PyImpl : public {{trait_name}} {
             } else if (caster.err_val.has_value()) {
                 return diplomat::Err(caster.err_val.value());
             } else {
+                set_ffi_error(PyExc_RuntimeError, "Cannot get result OK or ERR value.");
                 return diplomat::Err({{m.ffi_failed_return}});
             }
         } else {
+            set_ffi_error(PyExc_TypeError, "Unable to convert trait return type");
             return diplomat::Err({{m.ffi_failed_return}});
         }
     }

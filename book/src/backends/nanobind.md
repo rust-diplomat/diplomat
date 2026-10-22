@@ -73,14 +73,26 @@ If you have `ndarray` support through `NumPy`, and the inner slice type is suppo
 The Nanobind backend uses the [default C++ implementation for DiplomatWrite](./cpp.md#diplomatwrite), and so returns a `str` type.
 
 ### Callbacks
-Implemented as any ordinary Python function (lambda or `def` will work). Callback returns are fallible, so any callback return must be bound with [ffi_error](../attrs/fallible_callback_returns.md).
+Implemented as any ordinary Python function (lambda or `def` will work). Callback returns are fallible, so any callback return must be bound with [ffi_error](#ffi-errors).
 
 ### Traits
-Trait methods are fallible here, so any returned trait must be bound with [ffi_error](../attrs/fallible_callback_returns.md).
+Trait methods are fallible here, so any returned trait must be bound with [ffi_error](#ffi-errors).
 
 Implemented as classes that subclass a given `TraitName`. Python will raise a `TypeError` if *any* method is not implemented in the trait. If you attempt to `super()` a trait name, since the method is abstract, it will raise a `TypeError`. Any exceptions raised while executing in Rust code will be returned as an FFI error.
 
 There is an additional `TraitName_PyBase` class that Nanobind generates. This is purely for stubgen purposes: Nanobind has to bind the [underlying abstract class](./cpp.md#traits) for stubgen, and create an implementation class for binding the abstract methods from Python.
+
+### FFI Errors
+[FFI errors must be specially defined when writing binding code](../attrs/fallible_callback_returns.md). The Nanobind backend also provides an additional helper method for users of your binding code if they wish to learn more about an FFI error:
+
+`lib_name.get_last_ffi_error()` will return an unraised exception object that was any exception that was thrown as the result of an exception occurring at a callback or trait method. This can either be:
+
+1. Python raised an exception in the callback/trait.
+2. Nanobind failed to convert the type into something the trait/callback expected.
+
+Note that for each of these, a proper location of *where* the error occurred (i.e., `__traceback__`) is only available for Python 3.12+. Support is theoretically possible for 3.11 and below, but has yet to be implemented.
+
+The user may then `raise` the exception, or investigate it further based on the FFI Error they've received.
 
 ## Debugging
 Nanobind `.pyd` files can be stepped through using any debugger. As long as you've built the `.pyd` file with debugging symbols, you can attach to any running Python process that has the `.pyd` imported. Here are the steps:

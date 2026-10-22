@@ -15,7 +15,7 @@ class ImplementsTrait(somelib.FallibleTesterTrait):
         elif x == 28:
             return somelib.FFIError(somelib.FFIError.User)
         elif x == 31:
-            raise Exception()
+            raise Exception("Some exception!")
         return x
 
 class Unimplemented(somelib.FallibleTesterTrait):
@@ -69,6 +69,9 @@ def test_result_trait():
     with pytest.raises(Exception) as e:
         somelib.FallibleTraitWrapper.test_result_output(i, 42)
     assert e.value.args[0] == somelib.FFIError.FFI
+    ffi_error = somelib.get_last_ffi_error()
+    assert type(ffi_error) == TypeError
+    assert ffi_error.args[0] == "Unable to convert trait return type"
 
     i = ImplementsTrait()
     # Other result types still work:
@@ -81,3 +84,6 @@ def test_result_trait():
     with pytest.raises(Exception) as e:
         somelib.FallibleTraitWrapper.test_result_output(i, 31)
     assert e.value.args[0] == somelib.FFIError.FFI
+    ffi_error = somelib.get_last_ffi_error()
+    assert type(ffi_error) == Exception
+    assert ffi_error.args[0] == "Some exception!"
