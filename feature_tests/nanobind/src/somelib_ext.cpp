@@ -169,6 +169,11 @@ void set_ffi_error(PyObject* exception, const char* msg) {
     Py_DECREF(str);
     Py_DECREF(tuple);
 
+    // Python 3.12.0+ allows us to directly set an exception's __traceback__ value.
+    // (https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetRaisedException)
+    // For versions below, we currently don't support getting tracebacks with exceptions
+    // (it should be feasible? But not worth it for this current iteration)
+    #if PY_VERSION_HEX >= 0x030c0000
     // Create a traceback from the given frame.
     // This is a little wonky, could be less so if the methods from
     // https://peps.python.org/pep-0523/ are stabilized
@@ -176,15 +181,12 @@ void set_ffi_error(PyObject* exception, const char* msg) {
 
     // Increment the reference, since setting the exception takes ownership:
     Py_INCREF(last_ffi_error);
-    // Python 3.12.0 final
-    #if PY_VERSION_HEX >= 0x030c00f0
+
     // We can just set the raised exception:
     PyErr_SetRaisedException(last_ffi_error);
-    #else
-    PyErr_Restore(exception, last_ffi_error, NULL);
-    #endif
     PyTraceBack_Here(current_frame);
     PyErr_Clear();
+    #endif
 }
 
 void diplomat_cleanup() {
