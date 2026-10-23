@@ -10,6 +10,7 @@
 #include <nanobind/stl/bind_vector.h>
 #include <nanobind/stl/tuple.h>
 #include <nanobind/stl/detail/nb_list.h>
+#include <nanobind/stl/function.h>
 #include <nanobind/ndarray.h>
 #include <../src/nb_internals.h>  // Required for shimming
 #include "diplomat_runtime.hpp"
@@ -333,30 +334,32 @@ namespace nanobind::detail
     // Callbacks all take the form of std::function<result<T, E>(Args...)>:
     template<typename T, typename E, typename... Args>
     struct type_caster<std::function<somelib::diplomat::result<T, E>(Args...)>> {
-        static constexpr auto Name = const_name("collections.abc.Callable[[") +
-        concat(make_caster<Args>::Name...)
-        + const_name("], ") + make_caster<somelib::diplomat::result<T, E>>::Name + const_name("]");
+        using ResultTy = somelib::diplomat::result<T, E>;
 
-        using Value = std::function<somelib::diplomat::result<T, E>(Args...)>;
-        Value value;
+        NB_TYPE_CASTER(std::function<ResultTy(Args...)>,
+        const_name("collections.abc.Callable[[") +
+        concat(make_caster<Args>::Name...) +
+        const_name("], ") + make_caster<ResultTy>::Name + const_name("]"))
 
-        struct method_owner {
-            object inner;
+        // Nanobind does some weird C++ magic to ensure that pyfunc_wrapper
+        // is copied over appropriately across args:
+        struct method_owner : nb::detail::pyfunc_wrapper {
+            using nb::detail::pyfunc_wrapper::pyfunc_wrapper;
 
-            somelib::diplomat::result<T, E> operator()(Args... args) {
+            ResultTy operator()(Args... args) {
                 // Acquire the GIL:
                 gil_scoped_acquire acq;
                 handle out;
                 // nb::handle will `throw` if it encounters an issue:
                 try {
                     // nb::handle automatically converts args for us:
-                    out = inner((nb::detail::forward_t<Args>)args...);
+                    out = (handle(f))((nb::detail::forward_t<Args>)args...);
                 } catch (python_error err) {
                     swap_ffi_error(err.value().ptr());
                     // Diplomat Nanobind makes the assumption that we always are returning a result:
                     return somelib::diplomat::Err(somelib::get_ffi_error<E>::get());
                 }
-                make_caster<somelib::diplomat::result<T, E>> caster;
+                make_caster<ResultTy> caster;
                 if (caster.from_python(out, 0, nullptr)) {
                     if (caster.ok_val.has_value()) {
                         return somelib::diplomat::Ok<T>(std::move(caster.ok_val.value()));
@@ -372,10 +375,6 @@ namespace nanobind::detail
                 }
             }
         };
-        
-        template <typename T_>
-        using Cast = Value;
-        operator Value() { return value; }
 
         bool from_python(handle src, uint8_t, cleanup_list*) {
             if (src.is_none()) {
@@ -385,9 +384,10 @@ namespace nanobind::detail
             if (!PyCallable_Check(src.ptr())) {
                 return false;
             }
-            value = method_owner {
-                object(src, borrow_t())
-            };
+            
+            // Own the method:
+            PyObject* inner = src.ptr();
+            value = method_owner(inner);
             return true;
         }
     };
