@@ -1,0 +1,22 @@
+---
+source: tool/src/rust/gen/mod.rs
+expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        #[doc = r\" An enum\"] enum MyEnum\n        { #[doc = r\" The first variant\"] A, B = 5, } impl MyEnum\n        { pub fn is_a(self) -> bool { unimplemented!() } }\n    }\n}, \"MyEnum\")"
+---
+/// An enum
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MyEnum {
+    /// The first variant
+    A = 0,
+    B = 5,
+}
+
+impl MyEnum {
+    pub fn is_a(self) -> bool {
+        unsafe { MyEnum_is_a(self) }
+    }
+}
+
+extern "C" {
+    fn MyEnum_is_a(this: crate::MyEnum) -> bool;
+}

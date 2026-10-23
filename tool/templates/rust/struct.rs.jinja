@@ -1,0 +1,9 @@
+{{ docs }}#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct {{ ty_name }} {
+{%- for f in fields %}
+{{ f.docs }}    pub {{ f.name }}: {{ f.ty }},
+{%- endfor %}
+}
+{%- include "rust/methods.rs.jinja" %}
+

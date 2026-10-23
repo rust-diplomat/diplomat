@@ -1,0 +1,15 @@
+# Not generated: the Rust backend only emits `src/`.
+[package]
+name = "diplomat-example-rust"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# Kept out of the root workspace, since `src/` is generated and is not held to
+# the workspace's clippy and rustfmt checks.
+[workspace]
+
+[dev-dependencies]
+# Provides the `extern "C"` symbols the bindings call. Any way of linking the
+# library works; depending on it is simply the easiest in this repository.
+diplomat-example = { path = ".." }
