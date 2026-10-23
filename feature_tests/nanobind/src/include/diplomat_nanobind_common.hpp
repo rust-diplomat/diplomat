@@ -350,7 +350,7 @@ namespace nanobind::detail
                 // nb::handle will `throw` if it encounters an issue:
                 try {
                     // nb::handle automatically converts args for us:
-                    out = inner(args...);
+                    out = inner((nb::detail::forward_t<Args>)args...);
                 } catch (python_error err) {
                     swap_ffi_error(err.value().ptr());
                     // Diplomat Nanobind makes the assumption that we always are returning a result:
