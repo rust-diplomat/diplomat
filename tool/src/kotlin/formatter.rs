@@ -408,7 +408,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 format!("{ty_name}.fromNative({field_val}{lt_list})").into()
             }
             Type::Enum(enum_path) => {
-                let field_type_name: &str = self.tcx.resolve_enum(enum_path.tcx_id).name.as_ref();
+                let field_type_name = self.fmt_type_name(enum_path.id());
                 format!("{field_type_name}.fromNative({field_val})").into()
             }
             Type::Slice(Slice::Primitive(_, prim)) => format!(
@@ -492,9 +492,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
             }
-            Type::Struct(s) => {
-                format!("{}Native", self.tcx.resolve_type(s.id()).name().as_str()).into()
-            }
+            Type::Struct(s) => format!("{}Native", self.fmt_type_name(s.id())).into(),
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::DiplomatOption(t) => {
@@ -635,5 +633,63 @@ pub mod test {
         let (ty_id, _) = all_types.next().expect("Failed to get next type");
 
         assert_eq!(Cow::from("StringWrapper"), formatter.fmt_type_name(ty_id));
+    }
+
+    #[test]
+    fn test_struct_field_renamed_types() {
+        let tk_stream = quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                pub struct Outer {
+                    inner: Inner,
+                    opt_inner: DiplomatOption<Inner>,
+                    e: MyEnum,
+                    opt_e: DiplomatOption<MyEnum>,
+                }
+
+                #[diplomat::attr(*, rename = "RenamedInner")]
+                pub struct Inner {
+                    x: i32,
+                }
+
+                #[diplomat::attr(*, rename = "RenamedEnum")]
+                pub enum MyEnum {
+                    A,
+                    B,
+                }
+            }
+        };
+        let tcx = new_tcx(tk_stream);
+        let docs_urls = std::collections::HashMap::new();
+        let docs_generator = &diplomat_core::hir::DocsUrlGenerator::with_base_urls(None, docs_urls);
+        let formatter = KotlinFormatter::new(&tcx, None, docs_generator);
+        let outer = tcx
+            .structs()
+            .iter()
+            .find(|s| s.name.as_str() == "Outer")
+            .expect("Failed to find struct Outer");
+        let lifetimes = &outer.lifetimes;
+        let inner = &outer.fields[0].ty;
+        let opt_inner = &outer.fields[1].ty;
+        let e = &outer.fields[2].ty;
+        let opt_e = &outer.fields[3].ty;
+
+        // Only the renamed Kotlin classes get generated, so fields must refer to those.
+        assert_eq!(
+            Cow::from("RenamedInnerNative"),
+            formatter.fmt_struct_field_type_native(inner)
+        );
+        assert_eq!(
+            Cow::from("OptionRenamedInnerNative"),
+            formatter.fmt_struct_field_type_native(opt_inner)
+        );
+        assert_eq!(
+            Cow::from("RenamedEnum.fromNative(nativeStruct.e)"),
+            formatter.fmt_struct_field_native_to_kt("nativeStruct.e", lifetimes, e)
+        );
+        assert_eq!(
+            Cow::from("nativeStruct.optE.option()?.let { RenamedEnum.fromNative(it) }"),
+            formatter.fmt_struct_field_native_to_kt("nativeStruct.optE", lifetimes, opt_e)
+        );
     }
 }
