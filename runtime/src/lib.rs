@@ -95,7 +95,7 @@ pub type DiplomatStr16 = [u16];
 /// type, but special types for byte buffers.
 pub type DiplomatByte = u8;
 
-/// Allocates a buffer of a given size in Rust's memory.
+/// \[🔌 C API\] Allocates a buffer of a given size in Rust's memory.
 ///
 /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
 ///
@@ -106,7 +106,7 @@ pub unsafe extern "C" fn diplomat_alloc(size: usize, align: usize) -> *mut u8 {
     alloc::alloc::alloc(Layout::from_size_align(size, align).unwrap())
 }
 
-/// Frees a buffer that was allocated in Rust's memory.
+/// \[🔌 C API\] Frees a buffer that was allocated in Rust's memory.
 ///
 /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
 ///
@@ -117,7 +117,7 @@ pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) 
     alloc::alloc::dealloc(ptr, Layout::from_size_align(size, align).unwrap())
 }
 
-/// Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
+/// \[🔌 C API\] Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
 /// pair (e.g. via `DiplomatOwnedSlice<u8>`).
 ///
 /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
@@ -135,7 +135,7 @@ pub unsafe extern "C" fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usiz
     }
 }
 
-/// Whether a `&[u8]` is a `&str`.
+/// \[🔌 C API\] Whether a `&[u8]` is a `&str`.
 ///
 /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
 ///
