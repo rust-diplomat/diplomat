@@ -19,7 +19,7 @@
 
 use std::{
     cell::RefCell,
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::{self, Display},
 };
 
@@ -70,6 +70,7 @@ pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub exception_message_method: Option<&'ctx str>,
 
     pub result_struct_registry: RefCell<HashMap<String, DotnetResult>>,
+    pub option_slice_registry: RefCell<HashSet<&'static str>>,
     pub option_struct_registry: RefCell<HashMap<String, fillable::DotnetOption>>,
     pub callback_struct_registry: RefCell<HashMap<String, DotnetCallback>>,
 }
