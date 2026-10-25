@@ -1,5 +1,5 @@
 ---
-source: tool/src/rust/gen/mod.rs
+source: tool/src/rust/gen.rs
 expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        #[doc = r\" An opaque type\"] #[diplomat::opaque_mut] struct\n        MyOpaque(i32); #[diplomat::opaque] struct MyView<'a>(&'a i32); impl\n        MyOpaque\n        {\n            pub fn new(value: i32) -> Box<MyOpaque> { unimplemented!() } pub\n            fn get(&self) -> i32 { unimplemented!() } pub fn\n            set(&mut self, value: i32) { unimplemented!() }\n            #[doc = r\" Skipped: strings are not supported yet\"] pub fn\n            from_str(s: &DiplomatStr) -> Box<MyOpaque> { unimplemented!() }\n            #[doc = r\" Skipped: the returned opaque borrows from `self`\"] pub\n            fn view<'a>(&'a self) -> Box<MyView<'a>> { unimplemented!() }\n        }\n    }\n}, \"MyOpaque\")"
 ---
 /// The type behind `MyOpaque` pointers at the ABI level.
@@ -14,7 +14,11 @@ pub struct MyOpaque(pub(crate) core::ptr::NonNull<MyOpaqueRaw>);
 impl MyOpaque {
     pub fn new(value: i32) -> crate::MyOpaque {
         // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe { crate::MyOpaque(core::ptr::NonNull::new_unchecked(MyOpaque_new(value))) }
+        unsafe {
+            crate::MyOpaque(core::ptr::NonNull::new_unchecked(
+                MyOpaque_new(value),
+            ))
+        }
     }
 
     pub fn get(&self) -> i32 {

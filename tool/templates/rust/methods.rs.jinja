@@ -5,7 +5,11 @@ impl {{ ty_name }} {
 {{ m.docs }}    pub fn {{ m.name }}({{ m.params|join(", ") }}){% if let Some(ret) = m.ret %} -> {{ ret }}{% endif %} {
 {%- if let Some(wrapper) = m.opaque_ret %}
         // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe { {{ wrapper }}(core::ptr::NonNull::new_unchecked({{ m.abi_name }}({{ m.args|join(", ") }}))) }
+        unsafe {
+            {{ wrapper }}(core::ptr::NonNull::new_unchecked(
+                {{ m.abi_name }}({{ m.args|join(", ") }}),
+            ))
+        }
 {%- else %}
         unsafe { {{ m.abi_name }}({{ m.args|join(", ") }}) }
 {%- endif %}

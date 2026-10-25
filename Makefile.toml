@@ -559,8 +559,8 @@ exit_on_error true
 generate_generic example dotnet Generated
 '''
 
-# The Rust backend only generates `src/`. It is not formatted, so the committed
-# code is rustfmt's output.
+# The Rust backend only generates `src/`. It formats its own output, so there is
+# no formatter step here.
 [tasks.gen-rust-example]
 category = "Code generation"
 script_runner = "@duckscript"
@@ -568,7 +568,6 @@ script = '''
 exit_on_error true
 !include_files ./support/functions.ds
 generate_generic example rust src
-exec --fail-on-error rustfmt --edition 2021 rust/src/lib.rs
 '''
 
 [tasks.gen-dotnet-feature]

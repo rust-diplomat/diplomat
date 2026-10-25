@@ -1,5 +1,5 @@
 ---
-source: tool/src/rust/gen/mod.rs
+source: tool/src/rust/gen.rs
 expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        #[doc = r\" An enum\"] enum MyEnum\n        { #[doc = r\" The first variant\"] A, B = 5, } impl MyEnum\n        { pub fn is_a(self) -> bool { unimplemented!() } }\n    }\n}, \"MyEnum\")"
 ---
 /// An enum
