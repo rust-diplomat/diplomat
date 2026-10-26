@@ -146,12 +146,14 @@ impl fmt::Write for DiplomatWrite {
     }
 }
 
-/// Create an `DiplomatWrite` that can write to a fixed-length stack allocated `u8` buffer.
+/// \[🔌 C API\] Create an `DiplomatWrite` that can write to a fixed-length stack allocated `u8` buffer.
 ///
 /// Once done, this will append a null terminator to the written string.
 ///
-/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
-/// manually outside of that context. See [`RustWriteVec`](crate::rust_interop::RustWriteVec) if you need this in Rust.
+/// This is largely used internally by Diplomat-generated FFI code, but may be used by C code wishing to
+/// receive a writeable output from a Diplomat API.
+///
+/// See [`RustWriteVec`](crate::rust_interop::RustWriteVec) if you need this in Rust.
 ///
 /// # Safety
 ///
@@ -180,13 +182,15 @@ pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) ->
     }
 }
 
-/// Create an [`DiplomatWrite`] that can write to a dynamically allocated buffer managed by Rust.
+/// \[🔌 C API\] Create an [`DiplomatWrite`] that can write to a dynamically allocated buffer managed by Rust.
 ///
 /// Use [`diplomat_buffer_write_destroy()`] to free the writable and its underlying buffer.
 /// The pointer is valid until that function is called.
 ///
-/// This is largely used internally by Diplomat-generated FFI code, and should not need to be constructed
-/// manually outside of that context. See [`RustWriteVec`](crate::rust_interop::RustWriteVec) if you need this in Rust.
+/// This is largely used internally by Diplomat-generated FFI code, but may be used by C code wishing to
+/// receive a writeable output from a Diplomat API.
+///
+/// See [`RustWriteVec`](crate::rust_interop::RustWriteVec) if you need this in Rust.
 ///
 /// The grow impl never sets `grow_failed`, although it is possible for it to panic.
 #[no_mangle]
@@ -256,7 +260,12 @@ pub extern "C" fn diplomat_buffer_write_len(this: &DiplomatWrite) -> usize {
     }
 }
 
-/// Destructor for Rust-memory backed writables.
+/// \[🔌 C API\] Destructor for Rust-memory backed writables.
+///
+/// This is largely used internally by Diplomat-generated FFI code, but may be used by C code wishing to
+/// receive a writeable output from a Diplomat API.
+///
+/// See [`RustWriteVec`](crate::rust_interop::RustWriteVec) if you need this in Rust.
 ///
 /// # Safety
 /// - `this` must be a pointer to a valid [`DiplomatWrite`] constructed by
