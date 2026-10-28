@@ -1,0 +1,25 @@
+{%- if !methods.is_empty() %}
+
+impl {{ ty_name }} {
+{%- for m in methods %}
+{{ m.docs }}    pub fn {{ m.name }}({{ m.params|join(", ") }}){% if let Some(ret) = m.ret %} -> {{ ret }}{% endif %} {
+{%- if let Some(wrapper) = m.opaque_ret %}
+        // Safety: `Box` returns are never null, and the wrapper takes ownership.
+        unsafe {
+            {{ wrapper }}(core::ptr::NonNull::new_unchecked(
+                {{ m.abi_name }}({{ m.args|join(", ") }}),
+            ))
+        }
+{%- else %}
+        unsafe { {{ m.abi_name }}({{ m.args|join(", ") }}) }
+{%- endif %}
+    }
+{% endfor -%}
+}
+
+extern "C" {
+{%- for m in methods %}
+    fn {{ m.abi_name }}({{ m.abi_params|join(", ") }}){% if let Some(ret) = m.abi_ret %} -> {{ ret }}{% endif %};
+{%- endfor %}
+}
+{%- endif %}

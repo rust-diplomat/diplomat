@@ -1,0 +1,28 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        enum MyEnum { A, } #[doc = r\" A struct\"] struct MyStruct\n        { #[doc = r\" An integer\"] a: u8, b: f64, c: MyEnum, } impl MyStruct\n        {\n            pub fn new(a: u8) -> MyStruct { unimplemented!() } pub fn\n            sum(self) -> f64 { unimplemented!() }\n        }\n    }\n}, \"MyStruct\")"
+---
+/// A struct
+#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MyStruct {
+    /// An integer
+    pub a: u8,
+    pub b: f64,
+    pub c: crate::MyEnum,
+}
+
+impl MyStruct {
+    pub fn new(a: u8) -> crate::MyStruct {
+        unsafe { MyStruct_new(a) }
+    }
+
+    pub fn sum(self) -> f64 {
+        unsafe { MyStruct_sum(self) }
+    }
+}
+
+extern "C" {
+    fn MyStruct_new(a: u8) -> crate::MyStruct;
+    fn MyStruct_sum(this: crate::MyStruct) -> f64;
+}

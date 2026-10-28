@@ -1,0 +1,9 @@
+{{ docs }}#[repr(C)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum {{ ty_name }} {
+{%- for v in variants %}
+{{ v.docs }}    {{ v.name }} = {{ v.discriminant }},
+{%- endfor %}
+}
+{%- include "rust/methods.rs.jinja" %}
+
