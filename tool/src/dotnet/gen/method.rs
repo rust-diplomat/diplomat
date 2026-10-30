@@ -605,6 +605,44 @@ struct OpaqueBorrowLease {
     lease_expr: String,
 }
 
+/// An opaque argument that Rust may keep inside another opaque argument, named by
+/// the locals the idiomatic body uses (`"this"` for the receiver).
+#[derive(Debug)]
+struct StoredBorrow {
+    holder: String,
+    source: String,
+    kind: StoredBorrowKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StoredBorrowKind {
+    /// The reference itself may be stored (`target: &'a Target` into `Holder<'a>`), so the
+    /// holder takes part in the source's borrow rules.
+    SharedReference,
+    ExclusiveReference,
+    /// Only data the source borrows may be copied out (`banana: &Banana<'a>` into
+    /// `Apple<'a>`), so the holder only has to keep the source reachable.
+    Data,
+}
+
+/// One input's lifetimes, as seen when deciding what it may be stored into.
+struct StoredBorrowInput {
+    name: String,
+    /// Every non-static lifetime anywhere in the input's type.
+    lifetimes: Vec<hir::Lifetime>,
+    opaque: Option<StoredBorrowOpaque>,
+}
+
+struct StoredBorrowOpaque {
+    type_name: String,
+    /// The lifetimes the opaque type itself is generic over (`'a` in `Holder<'a>`),
+    /// not the lifetime of the reference to it.
+    type_lifetimes: Vec<hir::Lifetime>,
+    reference_lifetime: Option<hir::Lifetime>,
+    exclusive: bool,
+    manually_disposable: bool,
+}
+
 /// A borrowed slice param pinned for the returned wrapper's lifetime: the
 /// C# argument name and the local holding its `DiplomatPinnedMemory`.
 #[derive(Debug, Clone)]
@@ -725,6 +763,9 @@ pub(super) struct MethodInfo<'ctx> {
     /// apply to the error arm (an exception has no unpin path), so this is
     /// always a pure dependency list.
     pub(super) error_keep_alive_sources: Vec<String>,
+    /// Statements that move an exclusively borrowed argument's lease into the
+    /// argument Rust may store it in. They run right after the raw call.
+    pub(super) retain_statements: Vec<String>,
     /// `Borrowed` for a borrowed opaque return — the wrapper is built
     /// non-owning so it never frees a pointer Rust still owns.
     pub(super) ownership: Ownership,
@@ -969,6 +1010,7 @@ impl MethodInfo<'_> {
             .keep_alive_targets
             .iter()
             .map(|target| format!("GC.KeepAlive({target});"))
+            .chain(self.retain_statements.iter().cloned())
             .collect()
     }
 
@@ -1207,8 +1249,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             self.manually_disposable_borrow_sources(method, &param_borrows);
         let exclusive_sources = self.exclusive_borrow_sources(method, &param_borrows);
         let borrow_map = visitor.borrow_map();
+        let stored_inputs = self.stored_borrow_inputs(method, &param_borrows);
 
-        let inputs = self.lower_inputs(method_context, param_borrows)?;
+        let mut inputs = self.lower_inputs(method_context, param_borrows)?;
 
         // A null result would return before any wrapper is built, leaving the
         // pinned buffer with no owner to unpin it.
@@ -1245,6 +1288,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         ) {
             return None;
         }
+        let stored_borrows = self.stored_borrows(method, &stored_inputs)?;
+        let retain_statements = self.stored_borrow_statements(
+            &mut inputs,
+            &stored_borrows,
+            &ok_dependencies,
+            &err_dependencies,
+        )?;
         let keep_alive_sources = self.borrow_dependencies(&inputs, ok_dependencies)?;
         let error_keep_alive_sources = self.borrow_dependencies(&inputs, err_dependencies)?;
         let lifetime_warning = !keep_alive_sources.is_empty() || !keep_alive_pins.is_empty();
@@ -1312,11 +1362,228 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 keep_alive_sources,
                 keep_alive_pins,
                 error_keep_alive_sources,
+                retain_statements,
                 ownership,
                 error_info,
                 option_info,
             },
         ))
+    }
+
+    fn stored_borrow_inputs(
+        &self,
+        method: &'tcx Method,
+        param_borrows: &[(ParamNames, ParamBorrowInfo<'tcx>)],
+    ) -> Vec<StoredBorrowInput> {
+        fn non_static(
+            lifetimes: impl Iterator<Item = hir::MaybeStatic<hir::Lifetime>>,
+        ) -> Vec<hir::Lifetime> {
+            lifetimes
+                .filter_map(|lt| match lt {
+                    hir::MaybeStatic::NonStatic(lt) => Some(lt),
+                    hir::MaybeStatic::Static => None,
+                })
+                .collect()
+        }
+        fn non_static_one(lt: hir::MaybeStatic<hir::Lifetime>) -> Option<hir::Lifetime> {
+            match lt {
+                hir::MaybeStatic::NonStatic(lt) => Some(lt),
+                hir::MaybeStatic::Static => None,
+            }
+        }
+
+        let mut inputs = Vec::new();
+        if let Some(param_self) = method.param_self.as_ref() {
+            let ty: hir::Type = param_self.ty.clone().into();
+            let opaque = match &param_self.ty {
+                hir::SelfType::Opaque(path) => Some(StoredBorrowOpaque {
+                    type_name: self.opaque_name_borrowed(path),
+                    type_lifetimes: non_static(path.lifetimes.lifetimes()),
+                    reference_lifetime: non_static_one(path.owner.lifetime),
+                    exclusive: matches!(param_self.get_mutability(), hir::Mutability::Mutable),
+                    manually_disposable: path.resolve(self.tcx).attrs.manually_disposable,
+                }),
+                _ => None,
+            };
+            inputs.push(StoredBorrowInput {
+                name: "this".to_string(),
+                lifetimes: non_static(ty.lifetimes()),
+                opaque,
+            });
+        }
+
+        for (param, (names, _)) in method.params.iter().zip(param_borrows) {
+            let opaque = match &param.ty {
+                hir::Type::Opaque(path) => Some(StoredBorrowOpaque {
+                    type_name: self.opaque_name_borrowed(path),
+                    type_lifetimes: non_static(path.lifetimes.lifetimes()),
+                    reference_lifetime: non_static_one(path.owner.lifetime),
+                    exclusive: matches!(path.owner.mutability, hir::Mutability::Mutable),
+                    manually_disposable: path.resolve(self.tcx).attrs.manually_disposable,
+                }),
+                _ => None,
+            };
+            inputs.push(StoredBorrowInput {
+                name: names.local.clone(),
+                lifetimes: non_static(param.ty.lifetimes()),
+                opaque,
+            });
+        }
+
+        inputs
+    }
+
+    /// Rust can keep a borrowed argument inside another argument without saying so in
+    /// the return type: `fn store(&'a self, target: &'a Target)` on `Holder<'a>`. The
+    /// signature only allows it when one of the argument's lifetimes outlives a lifetime
+    /// the holder's type is generic over, so that is the test. It can't tell whether the
+    /// body really stores it, so it assumes it does.
+    ///
+    /// When only a lifetime inside the argument's type matches, the holder can only get
+    /// data the argument already borrows. Keeping the argument reachable keeps that data
+    /// alive, and mutating the argument later is fine in Rust, so that edge is plain.
+    fn stored_borrows(
+        &self,
+        method: &'tcx Method,
+        inputs: &[StoredBorrowInput],
+    ) -> Option<Vec<StoredBorrow>> {
+        let mut stored = Vec::new();
+
+        for holder in inputs {
+            let Some(holder_opaque) = &holder.opaque else {
+                continue;
+            };
+            let storable: BTreeSet<hir::Lifetime> = holder_opaque
+                .type_lifetimes
+                .iter()
+                .flat_map(|lt| method.lifetime_env.all_longer_lifetimes(lt))
+                .collect();
+            if storable.is_empty() {
+                continue;
+            }
+
+            for source in inputs {
+                if source.name == holder.name
+                    || !source.lifetimes.iter().any(|lt| storable.contains(lt))
+                {
+                    continue;
+                }
+                let Some(source_opaque) = &source.opaque else {
+                    self.errors.push_error(format!(
+                        "[.NET backend] `{}` may be stored inside `{}` (it shares a lifetime with \
+                         `{}`'s type), but only opaque arguments can be kept alive that way; \
+                         slices, strings and structs live only for the call",
+                        source.name, holder.name, holder_opaque.type_name
+                    ));
+                    return None;
+                };
+                if source_opaque.manually_disposable {
+                    self.errors.push_error(format!(
+                        "[.NET backend] `{source}` of type `{ty}` may be stored inside \
+                         `{holder}`, but `{ty}` is manually disposable and disposing it would \
+                         free memory `{holder}` still points to; remove `manually_disposable` \
+                         from `{ty}` or don't store it",
+                        source = source.name,
+                        ty = source_opaque.type_name,
+                        holder = holder.name,
+                    ));
+                    return None;
+                }
+                let reference_stored = source_opaque
+                    .reference_lifetime
+                    .is_some_and(|lt| storable.contains(&lt));
+                let kind = match (reference_stored, source_opaque.exclusive) {
+                    (false, _) => StoredBorrowKind::Data,
+                    (true, false) => StoredBorrowKind::SharedReference,
+                    (true, true) => StoredBorrowKind::ExclusiveReference,
+                };
+                if kind == StoredBorrowKind::ExclusiveReference
+                    && !holder_opaque.manually_disposable
+                {
+                    self.errors.push_error(format!(
+                        "[.NET backend] `{source}` is borrowed mutably and may be stored inside \
+                         `{holder}`, which keeps it locked until `{holder}` is released; mark \
+                         `{ty}` `#[diplomat::attr(dotnet, manually_disposable)]` so the caller \
+                         can end the borrow with `Dispose()`",
+                        source = source.name,
+                        holder = holder.name,
+                        ty = holder_opaque.type_name,
+                    ));
+                    return None;
+                }
+                stored.push(StoredBorrow {
+                    holder: holder.name.clone(),
+                    source: source.name.clone(),
+                    kind,
+                });
+            }
+        }
+
+        Some(stored)
+    }
+
+    /// Renders `stored` into the body: shared sources are attached before the raw call,
+    /// exclusive ones are checked before it and moved after it. Returns the after-call
+    /// statements.
+    fn stored_borrow_statements(
+        &self,
+        inputs: &mut DotnetInputs,
+        stored: &[StoredBorrow],
+        ok_dependencies: &[String],
+        err_dependencies: &[String],
+    ) -> Option<Vec<String>> {
+        let lease_of = |source: &str| {
+            inputs
+                .borrow_leases
+                .iter()
+                .find(|lease| lease.source == source)
+                .map(|lease| lease.lease_expr.clone())
+        };
+
+        let mut before_call = Vec::new();
+        let mut after_call = Vec::new();
+        for borrow in stored {
+            let (Some(holder), Some(source)) = (lease_of(&borrow.holder), lease_of(&borrow.source))
+            else {
+                self.errors.push_error(format!(
+                    "[.NET backend] no borrow lease was generated for `{}` stored inside `{}`",
+                    borrow.source, borrow.holder
+                ));
+                return None;
+            };
+            match borrow.kind {
+                StoredBorrowKind::Data => {
+                    before_call.push(format!("LifetimeEdge.KeepAlive({holder}, {source});"));
+                    continue;
+                }
+                StoredBorrowKind::SharedReference => {
+                    before_call.push(format!("LifetimeEdge.Retain({holder}, {source});"));
+                    continue;
+                }
+                StoredBorrowKind::ExclusiveReference => {}
+            }
+
+            let kept_elsewhere = stored
+                .iter()
+                .filter(|other| other.source == borrow.source)
+                .count()
+                > 1
+                || ok_dependencies.contains(&borrow.source)
+                || err_dependencies.contains(&borrow.source);
+            if kept_elsewhere {
+                self.errors.push_error(format!(
+                    "[.NET backend] mutably borrowed `{}` may be kept by more than one value; an \
+                     exclusive borrow can have only one holder",
+                    borrow.source
+                ));
+                return None;
+            }
+            before_call.push(format!("LifetimeEdge.CheckRetain({holder}, {source});"));
+            after_call.push(format!("LifetimeEdge.RetainLease({holder}, ref {source});"));
+        }
+
+        inputs.borrow_statements.extend(before_call);
+        Some(after_call)
     }
 
     fn manually_disposable_borrow_sources(

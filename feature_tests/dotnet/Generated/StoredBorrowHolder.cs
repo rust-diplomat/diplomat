@@ -68,6 +68,7 @@ public partial class StoredBorrowHolder
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Shared);
+                LifetimeEdge.Retain(selfLease, targetLease);
                 Raw.StoredBorrowHolder.Store(selfLease!.Ptr, targetLease!.Ptr);
             }
             finally

@@ -9,6 +9,8 @@ internal interface IBorrowLease : ILifetimeEdge
 {
     BorrowKind Kind { get; }
 
+    ILifetimeSource? Source { get; }
+
     ILifetimeEdge HoldForCall();
 
     ILifetimeEdge IntoVersionedEdge();
@@ -16,6 +18,8 @@ internal interface IBorrowLease : ILifetimeEdge
 
 internal interface IVersionedReference : ILifetimeEdge
 {
+    ILifetimeSource? Source { get; }
+
     IBorrowLease LeaseForOperation();
 }
 
@@ -40,6 +44,14 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
     internal T* Ptr { get; }
 
     public BorrowKind Kind => _kind;
+
+    public ILifetimeSource? Source => Volatile.Read(ref _owner);
+
+    internal RustHandle<T> Owner =>
+        Volatile.Read(ref _owner) ?? throw new ObjectDisposedException(nameof(BorrowLease<T>));
+
+    internal static ILifetimeEdge VersionedEdge(RustHandle<T> owner, MutationVersion version) =>
+        new VersionedReference(owner, version);
 
     public ILifetimeEdge HoldForCall()
     {
@@ -107,6 +119,8 @@ internal sealed unsafe class BorrowLease<T> : IBorrowLease where T : unmanaged
             _owner = owner;
             _version = version;
         }
+
+        public ILifetimeSource? Source => Volatile.Read(ref _owner);
 
         public IBorrowLease LeaseForOperation()
         {

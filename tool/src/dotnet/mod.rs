@@ -1511,6 +1511,191 @@ mod test {
     }
 
     #[test]
+    fn argument_stored_into_receiver_is_retained_before_the_call() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Target;
+
+                #[diplomat::opaque]
+                pub struct Holder<'a>(core::cell::RefCell<&'a Target>);
+
+                impl<'a> Holder<'a> {
+                    pub fn store(&self, target: &'a Target) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
+        let retain = holder
+            .find("LifetimeEdge.Retain(selfLease, targetLease);")
+            .expect("the stored argument should become an edge on the receiver");
+        let call = holder.find("Raw.Holder.Store(").expect("raw call");
+        assert!(
+            retain < call,
+            "the edge must be attached before Rust keeps the pointer:\n{holder}"
+        );
+    }
+
+    #[test]
+    fn lifetime_inside_argument_type_counts_as_stored() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque]
+                pub struct Other;
+
+                #[diplomat::opaque]
+                pub struct Banana<'z>(&'z Other);
+
+                #[diplomat::opaque_mut]
+                pub struct Apple<'x>(Option<&'x Other>);
+
+                impl<'x> Apple<'x> {
+                    pub fn take_other(&mut self, banana: &Banana<'x>) {
+                        unimplemented!()
+                    }
+
+                    pub fn look(&mut self, other: &Other) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let apple = files.get("Apple.cs").expect("expected Apple.cs output");
+        assert!(
+            apple.contains("LifetimeEdge.KeepAlive(selfLease, bananaLease);"),
+            "`Banana<'x>` can hand `'x` data to `Apple<'x>`, so Apple keeps Banana reachable \
+             without taking part in its borrows:\n{apple}"
+        );
+        assert!(
+            !apple.contains("otherLease);"),
+            "an elided borrow can't be stored, so it needs no edge:\n{apple}"
+        );
+    }
+
+    #[test]
+    fn stored_non_opaque_and_disposable_arguments_are_rejected() {
+        let cases = [
+            (
+                "slice",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque_mut]
+                        pub struct Holder<'a>(&'a [u8]);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&mut self, bytes: &'a [u8]) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "only opaque arguments can be kept alive",
+            ),
+            (
+                "manually disposable",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        #[diplomat::attr(dotnet, manually_disposable)]
+                        pub struct Target;
+
+                        #[diplomat::opaque_mut]
+                        pub struct Holder<'a>(&'a Target);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&mut self, target: &'a Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "is manually disposable",
+            ),
+            (
+                "exclusive into undisposable holder",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque_mut]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<&'a mut Target>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&self, target: &'a mut Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "is borrowed mutably and may be stored",
+            ),
+        ];
+        for (name, tokens, expected) in cases {
+            let (_, errors) = run_dotnet(tokens);
+            assert!(
+                errors.iter().any(|e| e.contains(expected)),
+                "{name}: expected `{expected}` in {errors:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn exclusive_argument_stored_into_disposable_holder_moves_its_lease_after_the_call() {
+        let (files, errors) = run_dotnet(quote! {
+            #[diplomat::bridge]
+            mod ffi {
+                #[diplomat::opaque_mut]
+                pub struct Target;
+
+                #[diplomat::opaque]
+                #[diplomat::attr(dotnet, manually_disposable)]
+                pub struct Holder<'a>(core::cell::RefCell<&'a mut Target>);
+
+                impl<'a> Holder<'a> {
+                    pub fn store(&self, target: &'a mut Target) {
+                        unimplemented!()
+                    }
+                }
+            }
+        });
+        assert!(
+            errors.is_empty(),
+            "unexpected diagnostics: {}",
+            errors.join("\n")
+        );
+        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
+        let check = holder
+            .find("LifetimeEdge.CheckRetain(selfLease, targetLease);")
+            .expect("the holder is checked before the call");
+        let call = holder.find("Raw.Holder.Store(").expect("raw call");
+        let retain = holder
+            .find("LifetimeEdge.RetainLease(selfLease, ref targetLease);")
+            .expect("the exclusive lease moves into the holder");
+        assert!(
+            check < call && call < retain,
+            "check, call, then move:\n{holder}"
+        );
+    }
+
+    #[test]
     fn generated_runtime_has_one_owner_and_no_native_retain_counter() {
         let tk_stream = quote! {
             #[diplomat::bridge]

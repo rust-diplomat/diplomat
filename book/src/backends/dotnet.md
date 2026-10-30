@@ -129,6 +129,29 @@ impl Source {
 }
 ```
 
+An argument can also be kept by another argument instead of by the return value. The signature
+allows that when one of the argument's lifetimes outlives a lifetime the other argument's type
+is generic over, so the generator treats every such pair as stored:
+
+```rust
+#[diplomat::opaque]
+pub struct Holder<'a>(RefCell<&'a Target>);
+
+impl<'a> Holder<'a> {
+    pub fn store(&self, target: &'a Target) { *self.0.borrow_mut() = target; }
+}
+```
+
+`holder.Store(target)` adds an edge from `holder` to `target` before the native call, so
+`target` stays reachable while `holder` is. A shared `&'a Target` becomes a read view as above;
+an `&'a mut Target` keeps its borrow, so the holder's type must be `manually_disposable`. When
+only a lifetime inside the argument's type matches (`&Banana<'a>` into `Apple<'a>`), the holder
+can only receive data the argument already borrows, and the edge only keeps the argument
+reachable. Stored arguments cannot be `manually_disposable`, and stored slices, strings and
+structs are rejected. At run time, storing into a borrowed view or creating a cycle of
+reference edges throws `InvalidOperationException`. A stored argument stays reachable until the
+holder is released, even after Rust replaces it.
+
 A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
 instead of invalidating that pointer. Every handle is a `SafeHandle`; a scoped operation guard
 protects the directly invoked value during its native call. Source edges validate borrow state

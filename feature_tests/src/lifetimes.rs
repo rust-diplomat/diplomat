@@ -858,7 +858,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct StoredBorrowTarget(super::DropRecord);
 
     impl StoredBorrowTarget {
@@ -888,6 +888,60 @@ pub mod ffi {
     impl<'a> StoredBorrowHolder<'a> {
         pub fn store(&'a self, target: &'a StoredBorrowTarget) {
             *self.0.borrow_mut() = target;
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    pub struct StoredBorrowExclusiveHolder<'a>(
+        core::cell::RefCell<Option<&'a mut StoredBorrowTarget>>,
+    );
+
+    impl<'a> StoredBorrowExclusiveHolder<'a> {
+        pub fn create() -> Box<StoredBorrowExclusiveHolder<'a>> {
+            Box::new(Self(core::cell::RefCell::new(None)))
+        }
+
+        pub fn store(&self, target: &'a mut StoredBorrowTarget) {
+            *self.0.borrow_mut() = Some(target);
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct StoredBorrowNode<'a>(
+        core::cell::Cell<Option<&'a StoredBorrowNode<'a>>>,
+        super::DropRecord,
+    );
+
+    impl<'a> StoredBorrowNode<'a> {
+        pub fn create() -> Box<StoredBorrowNode<'a>> {
+            Box::new(Self(
+                core::cell::Cell::new(None),
+                super::DropRecord::counted(&super::STORED_BORROW_NODE_DROPS),
+            ))
+        }
+
+        pub fn link(&self, next: &'a StoredBorrowNode<'a>) {
+            self.0.set(Some(next));
+        }
+
+        /// Copies `other`'s link without borrowing `other` itself.
+        pub fn adopt_link(&self, other: &StoredBorrowNode<'a>) {
+            self.0.set(other.0.get());
+        }
+
+        pub fn view<'b>(&'b self) -> &'b StoredBorrowNode<'a> {
+            self
+        }
+
+        pub fn reset_drop_count() {
+            super::STORED_BORROW_NODE_DROPS.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::STORED_BORROW_NODE_DROPS.load(super::Ordering::SeqCst)
         }
     }
 }
@@ -920,6 +974,9 @@ pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 pub(crate) static STORED_BORROW_TARGET_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+pub(crate) static STORED_BORROW_NODE_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 #[derive(Copy, Clone)]
