@@ -856,6 +856,40 @@ pub mod ffi {
             self.0.value += delta;
         }
     }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct StoredBorrowTarget(super::DropRecord);
+
+    impl StoredBorrowTarget {
+        pub fn create() -> Box<Self> {
+            Box::new(Self(super::DropRecord::counted(
+                &super::STORED_BORROW_TARGET_DROPS,
+            )))
+        }
+
+        pub fn make_holder<'a>(&'a self) -> Box<StoredBorrowHolder<'a>> {
+            Box::new(StoredBorrowHolder(core::cell::RefCell::new(self)))
+        }
+
+        pub fn reset_drop_count() {
+            super::STORED_BORROW_TARGET_DROPS.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::STORED_BORROW_TARGET_DROPS.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct StoredBorrowHolder<'a>(core::cell::RefCell<&'a StoredBorrowTarget>);
+
+    impl<'a> StoredBorrowHolder<'a> {
+        pub fn store(&'a self, target: &'a StoredBorrowTarget) {
+            *self.0.borrow_mut() = target;
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
@@ -883,6 +917,9 @@ pub(crate) static PINNED_RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
 pub(crate) static PINNED_RC_SOURCE_DROP_CHECKSUM: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+pub(crate) static STORED_BORROW_TARGET_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 #[derive(Copy, Clone)]
