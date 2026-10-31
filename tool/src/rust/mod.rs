@@ -7,20 +7,27 @@ mod formatter;
 mod gen;
 
 use self::formatter::RustFormatter;
-use self::gen::ItemGenContext;
+use self::gen::{ItemGenContext, UsedSlices};
 use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
 
 pub(crate) fn attr_support() -> BackendAttrSupport {
-    // Nothing is supported yet; capabilities are turned on as they are implemented.
-    BackendAttrSupport::default()
+    // Capabilities are turned on as they are implemented.
+    let mut a = BackendAttrSupport::default();
+    // Both `&str` and `&[u16]` overloads are generated, as in C++.
+    a.utf8_strings = true;
+    a.utf16_strings = true;
+    a.mutable_slices = true;
+    a
 }
 
 #[derive(Template)]
 #[template(path = "rust/lib.rs.jinja", escape = "none")]
 struct LibTemplate {
     modules: Vec<(String, String)>,
+    slice: bool,
+    slice_mut: bool,
 }
 
 pub(crate) fn run<'tcx>(
@@ -30,6 +37,7 @@ pub(crate) fn run<'tcx>(
     let files = FileMap::default();
     let formatter = RustFormatter::new(tcx, docs_url_gen);
     let errors = ErrorStore::default();
+    let used_slices = UsedSlices::default();
 
     let mut modules = vec![];
 
@@ -43,6 +51,7 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
+            used_slices: &used_slices,
         };
 
         let body = match id {
@@ -59,7 +68,12 @@ pub(crate) fn run<'tcx>(
     }
 
     modules.sort();
-    files.add_file("lib.rs".into(), LibTemplate { modules }.to_string());
+    let lib = LibTemplate {
+        modules,
+        slice: used_slices.slice.get(),
+        slice_mut: used_slices.slice_mut.get(),
+    };
+    files.add_file("lib.rs".into(), lib.to_string());
 
     (files, errors)
 }
