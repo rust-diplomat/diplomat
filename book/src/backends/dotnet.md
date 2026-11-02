@@ -161,6 +161,10 @@ One case is not covered yet: a value can store data borrowed from itself inside 
 `&mut` call that frees that data. `&'a mut self` is also the usual iterator pattern
 (`fn next(&'a mut self)`), so it is left unchanged for now.
 
+Values that share interior state are not covered either. If `fork(&self) -> Box<Self>` hands out
+a second owner of the same `Rc`, `original.Fork().Store(target)` keeps `target` alive only from
+the fork, so once the fork is collected the original can point at freed memory.
+
 A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
 instead of invalidating that pointer. Every handle is a `SafeHandle`; a scoped operation guard
 protects the directly invoked value during its native call. Source edges validate borrow state
