@@ -142,25 +142,24 @@ impl<'a> Holder<'a> {
 }
 ```
 
-`holder.Store(target)` adds an edge from `holder` to `target` before the native call, so
-`target` stays reachable while `holder` is. A shared `&'a Target` becomes a read view as above;
-an `&'a mut Target` keeps its borrow, so the holder's type must be `manually_disposable`. When
-only a lifetime inside the argument's type matches (`&Banana<'a>` into `Apple<'a>`), the holder
-can only receive data the argument already borrows. The edge keeps the argument reachable and
-shares its read views, so mutating what the argument borrows invalidates the holder, while
-mutating the argument itself does not. Stored arguments cannot be `manually_disposable`, and stored slices, strings and
-structs are rejected, and so are `&'static` opaque arguments. A shared argument typed `&'a T<'a>`
-may be kept inside itself, so afterwards it stays borrowed by itself and `&mut` calls on it throw. At
-run time, passing a borrowed view where something may be stored, or creating a cycle of
-reference edges, throws `InvalidOperationException`. A stored argument stays reachable, and
-mutating it still invalidates the holder, until the holder is released, even after Rust replaces
-it.
+After the native call, `holder.Store(target)` adds an edge from `holder` to `target`, the same
+kind of edge a returned value gets, so `target` stays reachable while `holder` is. A shared
+`&'a Target` becomes a read view as above; an `&'a mut Target` keeps its borrow, so the holder's
+type must be `manually_disposable`. When only a lifetime inside the argument's type matches
+(`&Banana<'b>` into `Apple<'a>` with `'b: 'a`), the holder can only get data the argument already
+borrows, but it gets the same edge, so mutating the argument also invalidates the holder.
 
-One case is not covered yet: `&'a mut self` on a type generic over `'a` can store data borrowed
-from the receiver inside the receiver. Rust then forbids using the receiver again, but the
-generated API still allows it, so a later call that frees that data leaves the receiver pointing
-at freed memory. The same signature is the usual iterator pattern (`fn next(&'a mut self)`), so
-it is left unchanged for now.
+The generator rejects a stored argument that can't be kept alive this way: slices, strings and
+structs, `manually_disposable` types, `&'static` borrows, and data reached through an `&mut`
+argument. It also rejects any store that could close a loop of edges between types, including a
+type storing its own type, because every call walks those edges. At run time, calling such a
+method on a borrowed view throws `InvalidOperationException`, because a view can't keep anything
+alive for the value it points into.
+
+One case is not covered yet: a value can store data borrowed from itself inside itself, through
+`&'a self` or `&'a mut self` on a type generic over `'a`. The generated API does not stop a later
+`&mut` call that frees that data. `&'a mut self` is also the usual iterator pattern
+(`fn next(&'a mut self)`), so it is left unchanged for now.
 
 A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
 instead of invalidating that pointer. Every handle is a `SafeHandle`; a scoped operation guard

@@ -68,8 +68,9 @@ public partial class StoredBorrowHolder
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Shared);
-                LifetimeEdge.Store(StoredLink.SelfReference(selfLease), StoredLink.Shared(selfLease, targetLease));
+                LifetimeEdge.CheckHolder(selfLease);
                 Raw.StoredBorrowHolder.Store(selfLease!.Ptr, targetLease!.Ptr);
+                LifetimeEdge.Retain(selfLease, ref targetLease);
             }
             finally
             {
@@ -79,24 +80,27 @@ public partial class StoredBorrowHolder
         }
     }
 
-    public void Adopt(StoredBorrowHolder other)
+    /// <returns>
+    /// A <c>StoredBorrowHolder</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// Source handles stay reachable while the returned value exists.
+    /// </remarks>
+    public StoredBorrowHolder View()
     {
         unsafe
         {
-            if (other == null) throw new ArgumentNullException(nameof(other));
             BorrowLease<Raw.StoredBorrowHolder>? selfLease = null;
-            BorrowLease<Raw.StoredBorrowHolder>? otherLease = null;
             try
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
-                otherLease = other._diplomatHandle.Lease(BorrowKind.Shared);
-                LifetimeEdge.Store(StoredLink.Data(selfLease, otherLease), StoredLink.Data(otherLease, selfLease));
-                Raw.StoredBorrowHolder.Adopt(selfLease!.Ptr, otherLease!.Ptr);
+                Raw.StoredBorrowHolder* result = Raw.StoredBorrowHolder.View(selfLease!.Ptr);
+                return new StoredBorrowHolder(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
             }
             finally
             {
                 selfLease?.Release();
-                otherLease?.Release();
             }
         }
     }

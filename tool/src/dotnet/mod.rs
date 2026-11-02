@@ -406,6 +406,7 @@ pub(crate) fn run<'tcx>(
         result_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         option_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
+        store_graph: std::cell::OnceCell::new(),
     };
 
     /*
@@ -1511,83 +1512,7 @@ mod test {
     }
 
     #[test]
-    fn argument_stored_into_receiver_is_retained_before_the_call() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                pub struct Target;
-
-                #[diplomat::opaque]
-                pub struct Holder<'a>(core::cell::RefCell<&'a Target>);
-
-                impl<'a> Holder<'a> {
-                    pub fn store(&self, target: &'a Target) {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join("\n")
-        );
-        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
-        let retain = holder
-            .find("LifetimeEdge.Store(StoredLink.Shared(selfLease, targetLease));")
-            .expect("the stored argument should become an edge on the receiver");
-        let call = holder.find("Raw.Holder.Store(").expect("raw call");
-        assert!(
-            retain < call,
-            "the edge must be attached before Rust keeps the pointer:\n{holder}"
-        );
-    }
-
-    #[test]
-    fn lifetime_inside_argument_type_counts_as_stored() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                pub struct Other;
-
-                #[diplomat::opaque]
-                pub struct Banana<'z>(&'z Other);
-
-                #[diplomat::opaque_mut]
-                pub struct Apple<'x>(Option<&'x Other>);
-
-                impl<'x> Apple<'x> {
-                    pub fn take_other(&mut self, banana: &Banana<'x>) {
-                        unimplemented!()
-                    }
-
-                    pub fn look(&mut self, other: &Other) {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join("\n")
-        );
-        let apple = files.get("Apple.cs").expect("expected Apple.cs output");
-        assert!(
-            apple.contains("StoredLink.Data(selfLease, bananaLease)"),
-            "`Banana<'x>` can hand `'x` data to `Apple<'x>`, so Apple keeps Banana reachable \
-             without taking part in its borrows:\n{apple}"
-        );
-        assert!(
-            !apple.contains("otherLease);"),
-            "an elided borrow can't be stored, so it needs no edge:\n{apple}"
-        );
-    }
-
-    #[test]
-    fn stored_non_opaque_and_disposable_arguments_are_rejected() {
+    fn stored_arguments_that_cannot_be_kept_alive_are_rejected() {
         let cases = [
             (
                 "slice",
@@ -1673,7 +1598,30 @@ mod test {
                 "an exclusive borrow can have only one holder",
             ),
             (
-                "each stored in the other",
+                "data through an exclusive borrow",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Target;
+
+                        #[diplomat::opaque_mut]
+                        pub struct Banana<'a>(&'a Target);
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<Option<&'a Target>>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store<'b: 'a>(&self, banana: &mut Banana<'b>) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "data borrowed through mutably borrowed `banana`",
+            ),
+            (
+                "own type",
                 quote! {
                     #[diplomat::bridge]
                     mod ffi {
@@ -1681,13 +1629,63 @@ mod test {
                         pub struct Node<'a>(core::cell::Cell<Option<&'a Node<'a>>>);
 
                         impl<'a> Node<'a> {
-                            pub fn link(&'a self, next: &'a Node<'a>) {
+                            pub fn link(&self, next: &'a Node<'a>) {
                                 unimplemented!()
                             }
                         }
                     }
                 },
-                "may each be stored inside the other",
+                "a `Node` can already point back at a `Node`",
+            ),
+            (
+                "two types storing each other",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Apple<'a>(core::cell::Cell<Option<&'a Banana<'a>>>);
+
+                        #[diplomat::opaque]
+                        pub struct Banana<'a>(core::cell::Cell<Option<&'a Apple<'a>>>);
+
+                        impl<'a> Apple<'a> {
+                            pub fn keep(&self, banana: &'a Banana<'a>) {
+                                unimplemented!()
+                            }
+                        }
+
+                        impl<'a> Banana<'a> {
+                            pub fn keep(&self, apple: &'a Apple<'a>) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "can already point back",
+            ),
+            (
+                "returned view pointing back",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<&'a Target>, Box<Target>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&self, target: &'a Target) {
+                                unimplemented!()
+                            }
+
+                            pub fn inner<'b>(&'b self) -> &'b Target {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "a `Target` can already point back at a `Holder`",
             ),
             (
                 "static borrow",
@@ -1717,193 +1715,6 @@ mod test {
                 "{name}: expected `{expected}` in {errors:?}"
             );
         }
-    }
-
-    #[test]
-    fn exclusive_argument_stored_into_disposable_holder_moves_its_lease_after_the_call() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque_mut]
-                pub struct Target;
-
-                #[diplomat::opaque]
-                #[diplomat::attr(dotnet, manually_disposable)]
-                pub struct Holder<'a>(core::cell::RefCell<&'a mut Target>);
-
-                impl<'a> Holder<'a> {
-                    pub fn store(&self, target: &'a mut Target) {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join("\n")
-        );
-        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
-        let check = holder
-            .find("LifetimeEdge.Store(StoredLink.Exclusive(selfLease, targetLease));")
-            .expect("the holder is checked before the call");
-        let call = holder.find("Raw.Holder.Store(").expect("raw call");
-        let retain = holder
-            .find("LifetimeEdge.RetainLease(selfLease, ref targetLease);")
-            .expect("the exclusive lease moves into the holder");
-        assert!(
-            check < call && call < retain,
-            "check, call, then move:\n{holder}"
-        );
-    }
-
-    #[test]
-    fn exclusive_store_with_a_primitive_return_still_moves_its_lease() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque_mut]
-                pub struct Target;
-
-                #[diplomat::opaque]
-                #[diplomat::attr(dotnet, manually_disposable)]
-                pub struct Holder<'a>(core::cell::RefCell<Option<&'a mut Target>>);
-
-                impl<'a> Holder<'a> {
-                    pub fn store(&self, target: &'a mut Target) -> bool {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join("\n")
-        );
-        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
-        assert!(
-            holder.contains("LifetimeEdge.RetainLease(selfLease, ref targetLease);")
-                && !holder.contains("return Raw.Holder.Store("),
-            "a direct `return Raw...` would skip the lease move:\n{holder}"
-        );
-    }
-
-    #[test]
-    fn data_copied_from_an_exclusive_argument_does_not_compete_for_its_lease() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque]
-                pub struct Target;
-
-                #[diplomat::opaque_mut]
-                pub struct Banana<'a>(&'a Target);
-
-                #[diplomat::opaque]
-                pub struct Copier<'a>(core::cell::RefCell<Option<&'a Target>>);
-
-                #[diplomat::opaque]
-                #[diplomat::attr(dotnet, manually_disposable)]
-                pub struct Holder<'r>(core::cell::RefCell<Option<&'r mut u32>>);
-
-                impl<'r> Holder<'r> {
-                    pub fn store<'a: 'r>(&self, copier: &Copier<'a>, banana: &'r mut Banana<'a>) {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join(
-                "
-"
-            )
-        );
-        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
-        assert!(
-            holder.contains("StoredLink.Data(copierLease, bananaLease)")
-                && holder.contains("LifetimeEdge.RetainLease(selfLease, ref bananaLease);"),
-            "copying data out of `banana` leaves its lease to the one exclusive holder:
-{holder}"
-        );
-    }
-
-    #[test]
-    fn shared_self_borrow_for_the_type_lifetime_locks_the_receiver() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque_mut]
-                pub struct Node<'a>(core::cell::Cell<Option<&'a Node<'a>>>);
-
-                impl<'a> Node<'a> {
-                    pub fn pin_self(&'a self) {
-                        unimplemented!()
-                    }
-
-                    pub fn advance(&'a mut self) {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join(
-                "
-"
-            )
-        );
-        let node = files.get("Node.cs").expect("expected Node.cs output");
-        assert_eq!(
-            node.matches("StoredLink.SelfReference(selfLease)").count(),
-            1,
-            "only the shared `&'a self` may keep itself; `&'a mut self` ends its own use:
-{node}"
-        );
-    }
-
-    #[test]
-    fn exclusive_store_that_can_fail_moves_its_lease_before_throwing() {
-        let (files, errors) = run_dotnet(quote! {
-            #[diplomat::bridge]
-            mod ffi {
-                #[diplomat::opaque_mut]
-                pub struct Target;
-
-                #[diplomat::opaque]
-                #[diplomat::attr(dotnet, manually_disposable)]
-                pub struct Holder<'a>(core::cell::RefCell<Option<&'a mut Target>>);
-
-                impl<'a> Holder<'a> {
-                    pub fn store(&self, target: &'a mut Target) -> Result<(), ()> {
-                        unimplemented!()
-                    }
-                }
-            }
-        });
-        assert!(
-            errors.is_empty(),
-            "unexpected diagnostics: {}",
-            errors.join(
-                "
-"
-            )
-        );
-        let holder = files.get("Holder.cs").expect("expected Holder.cs output");
-        let retain = holder
-            .find("LifetimeEdge.RetainLease(selfLease, ref targetLease);")
-            .expect("the exclusive lease moves into the holder");
-        let throw = holder.find("if (!result.IsOk)").expect("error check");
-        assert!(
-            retain < throw,
-            "Rust may have kept the pointer even when it reports an error:
-{holder}"
-        );
     }
 
     #[test]

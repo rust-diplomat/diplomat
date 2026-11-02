@@ -18,6 +18,9 @@ internal partial struct StoredBorrowExclusiveHolder
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowExclusiveHolder_store_then_fail", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern DiplomatResultVoidUnit StoreThenFail(StoredBorrowExclusiveHolder* handle, StoredBorrowTarget* target);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowExclusiveHolder_store_and_count", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern uint StoreAndCount(StoredBorrowExclusiveHolder* handle, StoredBorrowTarget* target);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowExclusiveHolder_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(StoredBorrowExclusiveHolder* handle);
 }

@@ -94,6 +94,62 @@ public partial class StoredBorrowTarget
         }
     }
 
+    /// <returns>
+    /// A <c>StoredBorrowBanana</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// Source handles stay reachable while the returned value exists.
+    /// </remarks>
+    public StoredBorrowBanana MakeBanana()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.StoredBorrowTarget>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                Raw.StoredBorrowBanana* result = Raw.StoredBorrowTarget.MakeBanana(selfLease!.Ptr);
+                return new StoredBorrowBanana(result, LifetimeEdge.Move(ref selfLease));
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    /// <returns>
+    /// A <c>StoredBorrowBanana</c> allocated on Rust side.
+    /// </returns>
+    /// <remarks>
+    /// Lifetime: the returned native-backed value may borrow from the receiver or one or more inputs.
+    /// Source handles stay reachable while the returned value exists.
+    /// </remarks>
+    public StoredBorrowBanana LendTo(StoredBorrowHolder holder)
+    {
+        unsafe
+        {
+            if (holder == null) throw new ArgumentNullException(nameof(holder));
+            BorrowLease<Raw.StoredBorrowTarget>? selfLease = null;
+            BorrowLease<Raw.StoredBorrowHolder>? holderLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                holderLease = holder._diplomatHandle.Lease(BorrowKind.Shared);
+                LifetimeEdge.CheckHolder(holderLease);
+                Raw.StoredBorrowBanana* result = Raw.StoredBorrowTarget.LendTo(selfLease!.Ptr, holderLease!.Ptr);
+                LifetimeEdge.Retain(holderLease, ref selfLease);
+                return new StoredBorrowBanana(result, LifetimeEdge.Move(ref selfLease), LifetimeEdge.Move(ref holderLease));
+            }
+            finally
+            {
+                selfLease?.Release();
+                holderLease?.Release();
+            }
+        }
+    }
+
     public void Touch()
     {
         unsafe

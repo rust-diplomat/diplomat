@@ -14,15 +14,6 @@ internal interface ILifetimeEdge
     void Release();
 }
 
-internal interface ILifetimeSource
-{
-    bool IsOwned { get; }
-
-    void CollectFollowedSources(List<ILifetimeSource> sources);
-
-    void Retain(ILifetimeEdge edge, ILifetimeSource source);
-}
-
 internal static class LifetimeEdge
 {
     internal static ILifetimeEdge? Move<T>(ref BorrowLease<T>? lease) where T : unmanaged
@@ -32,43 +23,20 @@ internal static class LifetimeEdge
         return moved;
     }
 
-    // Checked as a whole and before the native call, so a failure never leaves half the edges
-    // attached or throws after Rust has kept a pointer.
-    internal static void Store(params StoredLink[][] planned)
+    // A view dies on its own while the Rust value it points into lives on, so whatever it
+    // was asked to keep alive would be freed under that value.
+    internal static void CheckHolder<T>(BorrowLease<T>? holder) where T : unmanaged
     {
-        foreach (StoredLink[] group in planned)
+        if (holder is not null && !holder.Owner.IsOwned)
         {
-            foreach (StoredLink link in group)
-            {
-                if (!link.Holder.IsOwned)
-                {
-                    throw new InvalidOperationException(
-                        "A borrowed view cannot keep another value alive; call this on the owning value.");
-                }
-
-                if (link.Followed && Reaches(link.Target, link.Holder, planned))
-                {
-                    throw new InvalidOperationException(
-                        "Storing this value would create a reference cycle.");
-                }
-            }
-        }
-
-        foreach (StoredLink[] group in planned)
-        {
-            foreach (StoredLink link in group)
-            {
-                if (link.Edge is not null)
-                {
-                    link.Holder.Retain(link.Edge, link.Target);
-                }
-            }
+            throw new InvalidOperationException(
+                "A borrowed view cannot keep another value alive; call this on the owning value.");
         }
     }
 
-    // The lease is still needed by the native call, so it moves only afterwards; `Store`
-    // already checked the link it creates.
-    internal static void RetainLease<THolder, TSource>(
+    // Rust may have kept `source` inside `holder`, which the return type doesn't show. It runs
+    // after the call, which still needs the lease, and cannot fail once Rust kept the pointer.
+    internal static void Retain<THolder, TSource>(
         BorrowLease<THolder>? holder,
         ref BorrowLease<TSource>? source)
         where THolder : unmanaged
@@ -80,166 +48,11 @@ internal static class LifetimeEdge
         }
 
         RustHandle<TSource> sourceHandle = source.Owner;
-        holder.Owner.Retain(Move(ref source)!, sourceHandle);
-    }
-
-    // `HoldDependenciesForCall` recurses through followed edges, so a cycle of them never ends.
-    private static bool Reaches(
-        ILifetimeSource from,
-        ILifetimeSource target,
-        StoredLink[][] planned)
-    {
-        HashSet<ILifetimeSource> visited = new HashSet<ILifetimeSource>();
-        Stack<ILifetimeSource> pending = new Stack<ILifetimeSource>();
-        List<ILifetimeSource> next = new List<ILifetimeSource>();
-        pending.Push(from);
-        while (pending.Count > 0)
-        {
-            ILifetimeSource current = pending.Pop();
-            if (ReferenceEquals(current, target))
-            {
-                return true;
-            }
-
-            if (!visited.Add(current))
-            {
-                continue;
-            }
-
-            next.Clear();
-            current.CollectFollowedSources(next);
-            foreach (StoredLink[] group in planned)
-            {
-                foreach (StoredLink link in group)
-                {
-                    if (link.Followed && ReferenceEquals(link.Holder, current))
-                    {
-                        next.Add(link.Target);
-                    }
-                }
-            }
-
-            foreach (ILifetimeSource source in next)
-            {
-                pending.Push(source);
-            }
-        }
-
-        return false;
-    }
-}
-
-internal sealed class StoredLink
-{
-    private static readonly StoredLink[] None = Array.Empty<StoredLink>();
-
-    private StoredLink(ILifetimeSource holder, ILifetimeSource target, ILifetimeEdge? edge, bool followed)
-    {
-        Holder = holder;
-        Target = target;
-        Edge = edge;
-        Followed = followed;
-    }
-
-    internal ILifetimeSource Holder { get; }
-
-    internal ILifetimeSource Target { get; }
-
-    internal ILifetimeEdge? Edge { get; }
-
-    internal bool Followed { get; }
-
-
-    internal static StoredLink[] Shared<THolder, TSource>(
-        BorrowLease<THolder>? holder,
-        BorrowLease<TSource>? source)
-        where THolder : unmanaged
-        where TSource : unmanaged
-    {
-        if (holder is null || source is null)
-        {
-            return None;
-        }
-
-        RustHandle<TSource> target = source.Owner;
-        return new[] { new StoredLink(holder.Owner, target, target.CurrentVersionEdge(), true) };
-    }
-
-    // `&'a T<'a>` lets Rust keep the reference inside the value itself, so the value stays
-    // borrowed by itself: a later `&mut` call on it must throw.
-    internal static StoredLink[] SelfReference<T>(BorrowLease<T>? lease) where T : unmanaged
-    {
-        if (lease is null)
-        {
-            return None;
-        }
-
-        RustHandle<T> handle = lease.Owner;
-        return new[] { new StoredLink(handle, handle, handle.CurrentVersionGuard(), false) };
-    }
-
-    internal static StoredLink[] Exclusive<THolder, TSource>(
-        BorrowLease<THolder>? holder,
-        BorrowLease<TSource>? source)
-        where THolder : unmanaged
-        where TSource : unmanaged
-    {
-        if (holder is null || source is null)
-        {
-            return None;
-        }
-
-        return new[] { new StoredLink(holder.Owner, source.Owner, null, true) };
-    }
-
-    // The holder may get data the source borrows, not the source itself, so it shares the
-    // source's read views: mutating what the source borrows from must invalidate it too.
-    internal static StoredLink[] Data<THolder, TSource>(
-        BorrowLease<THolder>? holder,
-        BorrowLease<TSource>? source)
-        where THolder : unmanaged
-        where TSource : unmanaged
-    {
-        if (holder is null || source is null)
-        {
-            return None;
-        }
-
-        RustHandle<THolder> holderHandle = holder.Owner;
-        RustHandle<TSource> target = source.Owner;
-        List<IVersionDependency> views = new List<IVersionDependency>();
-        target.CollectVersionedEdges(views);
-        List<StoredLink> links = new List<StoredLink>(views.Count + 1)
-        {
-            new StoredLink(holderHandle, target, new KeepAliveEdge(target), false),
-        };
-        foreach (IVersionDependency view in views)
-        {
-            // The holder may now keep data borrowed from itself. Following a view of itself would
-            // never end, so it only remembers its own version and is invalidated when mutated.
-            links.Add(ReferenceEquals(view.Source, holderHandle)
-                ? new StoredLink(holderHandle, holderHandle, view.CopyAsGuard(), false)
-                : new StoredLink(holderHandle, view.Source!, view.Copy(), true));
-        }
-
-        return links.ToArray();
-    }
-}
-
-internal sealed class KeepAliveEdge : ILifetimeEdge
-{
-    private ILifetimeSource? _source;
-
-    internal KeepAliveEdge(ILifetimeSource source)
-    {
-        _source = source;
-    }
-
-    internal ILifetimeSource? Source => Volatile.Read(ref _source);
-
-    public void Release()
-    {
-        Interlocked.Exchange(ref _source, null);
+        holder.Owner.AddEdge(
+            source.Kind == BorrowKind.Exclusive
+                ? Move(ref source)!
+                : sourceHandle.CurrentVersionEdge(),
+            sourceHandle);
     }
 }
 
@@ -301,7 +114,6 @@ internal struct LifetimeEdges
                 {
                     IVersionedReference versioned => versioned.LeaseForOperation(),
                     IBorrowLease borrow => borrow.HoldForCall(),
-                    IVersionGuard guard => guard.Check(),
                     _ => null,
                 };
                 if (operation is not null)
@@ -322,71 +134,31 @@ internal struct LifetimeEdges
         }
     }
 
-    internal void CollectFollowedSources(List<ILifetimeSource> sources)
+    internal void Add(WrapperKind kind, ILifetimeEdge edge, object source)
     {
-        foreach (ILifetimeEdge? edge in Volatile.Read(ref _edges))
+        ILifetimeEdge?[] edges = Volatile.Read(ref _edges);
+        foreach (ILifetimeEdge? existing in edges)
         {
-            ILifetimeSource? source = edge switch
+            // Storing the same value again would otherwise grow this list on every call.
+            if (edge is IVersionedReference
+                && existing is IVersionedReference versioned
+                && ReferenceEquals(versioned.Source, source))
             {
-                IVersionedReference versioned => versioned.Source,
-                IBorrowLease borrow => borrow.Source,
-                _ => null,
-            };
-            if (source is not null)
-            {
-                sources.Add(source);
-            }
-        }
-    }
-
-    internal void CollectVersioned(List<IVersionDependency> views)
-    {
-        foreach (ILifetimeEdge? edge in Volatile.Read(ref _edges))
-        {
-            if (edge is IVersionDependency dependency)
-            {
-                views.Add(dependency);
-            }
-        }
-    }
-
-    internal bool References(ILifetimeEdge candidate, ILifetimeSource source)
-    {
-        foreach (ILifetimeEdge? edge in Volatile.Read(ref _edges))
-        {
-            if (edge?.GetType() == candidate.GetType() && ReferenceEquals(SourceOf(edge), source))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // Callers hold a call lease on the owning handle, so `Release` cannot run concurrently.
-    internal void Add(ILifetimeEdge edge)
-    {
-        while (true)
-        {
-            ILifetimeEdge?[] current = Volatile.Read(ref _edges);
-            ILifetimeEdge?[] next = new ILifetimeEdge?[current.Length + 1];
-            Array.Copy(current, next, current.Length);
-            next[current.Length] = edge;
-            if (Interlocked.CompareExchange(ref _edges, next, current) == current)
-            {
+                edge.Release();
                 return;
             }
         }
-    }
 
-    private static ILifetimeSource? SourceOf(ILifetimeEdge? edge) => edge switch
-    {
-        IVersionedReference versioned => versioned.Source,
-        IBorrowLease borrow => borrow.Source,
-        IVersionGuard guard => guard.Source,
-        KeepAliveEdge keepAlive => keepAlive.Source,
-        _ => null,
-    };
+        if (edge is IBorrowLease lease && IsReadView(kind, lease))
+        {
+            edge = lease.IntoVersionedEdge();
+        }
+
+        ILifetimeEdge?[] added = new ILifetimeEdge?[edges.Length + 1];
+        Array.Copy(edges, added, edges.Length);
+        added[edges.Length] = edge;
+        Volatile.Write(ref _edges, added);
+    }
 
     internal void Release()
     {
@@ -437,8 +209,6 @@ internal struct BorrowLedger
 
     internal bool EndScope() => Interlocked.Exchange(ref _scopeEnded, 1) == 0;
 
-    internal MutationVersion CurrentVersion() => _mutations.Read();
-
     internal void Enter(BorrowKind kind)
     {
         if (kind == BorrowKind.Exclusive)
@@ -466,17 +236,7 @@ internal struct BorrowLedger
         }
     }
 
-    // A borrow that failed to start never mutated anything, so its readers stay valid.
-    internal void Abort(BorrowKind kind)
-    {
-        if (kind == BorrowKind.Shared)
-        {
-            Interlocked.Decrement(ref _state);
-            return;
-        }
-
-        Volatile.Write(ref _state, Free);
-    }
+    internal MutationVersion CurrentVersion() => _mutations.Read();
 
     internal MutationVersion Exit(BorrowKind kind)
     {
@@ -571,7 +331,7 @@ internal sealed unsafe class OperationLease<T> : ILifetimeEdge where T : unmanag
 
 // The SafeHandle count protects only a native call made directly on this value. Source edges
 // keep managed handles reachable and validate borrow state without taking SafeHandle claims.
-internal sealed unsafe class RustHandle<T> : SafeHandle, ILifetimeSource where T : unmanaged
+internal sealed unsafe class RustHandle<T> : SafeHandle where T : unmanaged
 {
     private readonly RustDestructor<T>? _destructor;
     private readonly WrapperKind _wrapperKind;
@@ -661,7 +421,7 @@ internal sealed unsafe class RustHandle<T> : SafeHandle, ILifetimeSource where T
         }
         catch
         {
-            _borrows.Abort(kind);
+            _borrows.Exit(kind);
             throw;
         }
     }
@@ -733,30 +493,12 @@ internal sealed unsafe class RustHandle<T> : SafeHandle, ILifetimeSource where T
             "The source of this borrowed value was disposed.");
     }
 
-    public bool IsOwned => _wrapperKind == WrapperKind.Owned;
+    internal bool IsOwned => _wrapperKind == WrapperKind.Owned;
 
-    public void CollectFollowedSources(List<ILifetimeSource> sources) =>
-        _edges.CollectFollowedSources(sources);
-
-    public void Retain(ILifetimeEdge edge, ILifetimeSource source)
-    {
-        if (_edges.References(edge, source))
-        {
-            edge.Release();
-            return;
-        }
-
-        _edges.Add(edge);
-    }
-
-    internal void CollectVersionedEdges(List<IVersionDependency> views) =>
-        _edges.CollectVersioned(views);
+    internal void AddEdge(ILifetimeEdge edge, object source) => _edges.Add(_wrapperKind, edge, source);
 
     internal ILifetimeEdge CurrentVersionEdge() =>
         BorrowLease<T>.VersionedEdge(this, _borrows.CurrentVersion());
-
-    internal ILifetimeEdge CurrentVersionGuard() =>
-        BorrowLease<T>.GuardEdge(this, _borrows.CurrentVersion());
 
     internal void ExitBorrow(BorrowKind kind) => _borrows.Exit(kind);
 

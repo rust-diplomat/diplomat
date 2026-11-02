@@ -80,9 +80,9 @@ public partial class StoredBorrowExclusiveHolder: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Exclusive);
-                LifetimeEdge.Store(StoredLink.Exclusive(selfLease, targetLease));
+                LifetimeEdge.CheckHolder(selfLease);
                 Raw.StoredBorrowExclusiveHolder.Store(selfLease!.Ptr, targetLease!.Ptr);
-                LifetimeEdge.RetainLease(selfLease, ref targetLease);
+                LifetimeEdge.Retain(selfLease, ref targetLease);
             }
             finally
             {
@@ -104,14 +104,38 @@ public partial class StoredBorrowExclusiveHolder: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Exclusive);
-                LifetimeEdge.Store(StoredLink.Exclusive(selfLease, targetLease));
+                LifetimeEdge.CheckHolder(selfLease);
                 var result = Raw.StoredBorrowExclusiveHolder.StoreThenFail(selfLease!.Ptr, targetLease!.Ptr);
-                LifetimeEdge.RetainLease(selfLease, ref targetLease);
+                LifetimeEdge.Retain(selfLease, ref targetLease);
                 if (!result.IsOk)
                 {
                     throw new InvalidOperationException("FFI function failed with unit error");
                 }
                 return;
+            }
+            finally
+            {
+                selfLease?.Release();
+                targetLease?.Release();
+            }
+        }
+    }
+
+    public uint StoreAndCount(StoredBorrowTarget target)
+    {
+        unsafe
+        {
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            BorrowLease<Raw.StoredBorrowExclusiveHolder>? selfLease = null;
+            BorrowLease<Raw.StoredBorrowTarget>? targetLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                targetLease = target._diplomatHandle.Lease(BorrowKind.Exclusive);
+                LifetimeEdge.CheckHolder(selfLease);
+                var result = Raw.StoredBorrowExclusiveHolder.StoreAndCount(selfLease!.Ptr, targetLease!.Ptr);
+                LifetimeEdge.Retain(selfLease, ref targetLease);
+                return result;
             }
             finally
             {

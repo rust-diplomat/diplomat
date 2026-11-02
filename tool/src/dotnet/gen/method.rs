@@ -609,20 +609,7 @@ struct OpaqueBorrowLease {
 struct StoredBorrow {
     holder: String,
     source: String,
-    kind: StoredBorrowKind,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum StoredBorrowKind {
-    /// The reference itself may be stored (`target: &'a Target` into `Holder<'a>`), so the
-    /// holder takes part in the source's borrow rules.
-    SharedReference,
-    ExclusiveReference,
-    /// Only data the source borrows may be copied out (`banana: &Banana<'a>` into
-    /// `Apple<'a>`), so the holder only has to keep the source reachable.
-    Data,
-    /// `&'a T<'a>` may be kept inside the value itself.
-    SelfReference,
+    exclusive: bool,
 }
 
 struct StoredBorrowInput {
@@ -632,12 +619,60 @@ struct StoredBorrowInput {
 }
 
 struct StoredBorrowOpaque {
+    id: hir::OpaqueId,
     type_name: String,
     type_lifetimes: Vec<hir::Lifetime>,
     reference_lifetime: Option<hir::Lifetime>,
     static_reference: bool,
     exclusive: bool,
     manually_disposable: bool,
+}
+
+/// Which opaque types may point at which others, through a stored argument or a returned
+/// value that borrows one.
+pub(super) type StoreGraph = BTreeMap<hir::OpaqueId, BTreeSet<hir::OpaqueId>>;
+
+fn storable(method: &Method, holder: &StoredBorrowOpaque) -> BTreeSet<hir::Lifetime> {
+    holder
+        .type_lifetimes
+        .iter()
+        .flat_map(|lt| method.lifetime_env.all_longer_lifetimes(lt))
+        .collect()
+}
+
+/// Rust can keep a borrowed argument inside another argument without saying so in the
+/// return type: `fn store(&'a self, target: &'a Target)` on `Holder<'a>`. The signature
+/// only allows it when one of the argument's lifetimes outlives a lifetime the holder's
+/// type is generic over, so that is the test. It can't tell whether the body really
+/// stores it, so it assumes it does. Returns `(holder, source)` index pairs.
+fn stored_pairs(method: &Method, inputs: &[StoredBorrowInput]) -> Vec<(usize, usize)> {
+    let mut pairs = Vec::new();
+    for (h, holder) in inputs.iter().enumerate() {
+        let Some(holder_opaque) = &holder.opaque else {
+            continue;
+        };
+        let storable = storable(method, holder_opaque);
+        for (s, source) in inputs.iter().enumerate() {
+            if s != h && source.lifetimes.iter().any(|lt| storable.contains(lt)) {
+                pairs.push((h, s));
+            }
+        }
+    }
+    pairs
+}
+
+fn reaches(graph: &StoreGraph, from: hir::OpaqueId, to: hir::OpaqueId) -> bool {
+    let mut visited = BTreeSet::new();
+    let mut pending = vec![from];
+    while let Some(current) = pending.pop() {
+        if current == to {
+            return true;
+        }
+        if visited.insert(current) {
+            pending.extend(graph.get(&current).into_iter().flatten().copied());
+        }
+    }
+    false
 }
 
 /// A borrowed slice param pinned for the returned wrapper's lifetime: the
@@ -1246,7 +1281,11 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             self.manually_disposable_borrow_sources(method, &param_borrows);
         let exclusive_sources = self.exclusive_borrow_sources(method, &param_borrows);
         let borrow_map = visitor.borrow_map();
-        let stored_inputs = self.stored_borrow_inputs(method, &param_borrows);
+        let param_names: Vec<String> = param_borrows
+            .iter()
+            .map(|(names, _)| names.local.clone())
+            .collect();
+        let stored_inputs = self.stored_borrow_inputs(method, &param_names);
 
         let mut inputs = self.lower_inputs(method_context, param_borrows)?;
 
@@ -1370,7 +1409,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     fn stored_borrow_inputs(
         &self,
         method: &'tcx Method,
-        param_borrows: &[(ParamNames, ParamBorrowInfo<'tcx>)],
+        names: &[String],
     ) -> Vec<StoredBorrowInput> {
         fn non_static(
             lifetimes: impl Iterator<Item = hir::MaybeStatic<hir::Lifetime>>,
@@ -1394,6 +1433,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             let ty: hir::Type = param_self.ty.clone().into();
             let opaque = match &param_self.ty {
                 hir::SelfType::Opaque(path) => Some(StoredBorrowOpaque {
+                    id: path.tcx_id,
                     type_name: self.opaque_name_borrowed(path),
                     type_lifetimes: non_static(path.lifetimes.lifetimes()),
                     reference_lifetime: non_static_one(path.owner.lifetime),
@@ -1410,9 +1450,10 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             });
         }
 
-        for (param, (names, _)) in method.params.iter().zip(param_borrows) {
+        for (param, name) in method.params.iter().zip(names) {
             let opaque = match &param.ty {
                 hir::Type::Opaque(path) => Some(StoredBorrowOpaque {
+                    id: path.tcx_id,
                     type_name: self.opaque_name_borrowed(path),
                     type_lifetimes: non_static(path.lifetimes.lifetimes()),
                     reference_lifetime: non_static_one(path.owner.lifetime),
@@ -1423,7 +1464,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 _ => None,
             };
             inputs.push(StoredBorrowInput {
-                name: names.local.clone(),
+                name: name.clone(),
                 lifetimes: non_static(param.ty.lifetimes()),
                 opaque,
             });
@@ -1432,22 +1473,80 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         inputs
     }
 
-    /// Rust can keep a borrowed argument inside another argument without saying so in
-    /// the return type: `fn store(&'a self, target: &'a Target)` on `Holder<'a>`. The
-    /// signature only allows it when one of the argument's lifetimes outlives a lifetime
-    /// the holder's type is generic over, so that is the test. It can't tell whether the
-    /// body really stores it, so it assumes it does.
-    ///
-    /// When only a lifetime inside the argument's type matches, the holder can only get
-    /// data the argument already borrows. Keeping the argument reachable keeps that data
-    /// alive, and mutating the argument later is fine in Rust, so that edge is plain.
+    /// Built once for the whole library, because a stored argument that can point back at
+    /// its holder, directly or through other values, would make a cycle of lifetime edges.
+    fn store_graph(&self) -> &StoreGraph {
+        self.store_graph.get_or_init(|| {
+            let mut graph = StoreGraph::new();
+            let methods = self
+                .tcx
+                .all_types()
+                .filter(|(_, ty)| !ty.attrs().disable)
+                .flat_map(|(_, ty)| ty.methods())
+                .chain(self.tcx.all_free_functions().map(|(_, f)| f));
+            for method in methods {
+                let names: Vec<String> = method
+                    .params
+                    .iter()
+                    .map(|param| param.name.as_str().to_string())
+                    .collect();
+                let inputs = self.stored_borrow_inputs(method, &names);
+                for (h, s) in stored_pairs(method, &inputs) {
+                    if let (Some(holder), Some(source)) = (&inputs[h].opaque, &inputs[s].opaque) {
+                        graph.entry(holder.id).or_default().insert(source.id);
+                    }
+                }
+
+                let (success, error) = match &method.output {
+                    hir::ReturnType::Infallible(success) | hir::ReturnType::Nullable(success) => {
+                        (success, None)
+                    }
+                    hir::ReturnType::Fallible(success, error) => (success, error.as_ref()),
+                };
+                let mut outputs = Vec::new();
+                if let hir::SuccessType::OutType(hir::Type::Opaque(path)) = success {
+                    outputs.push(path.tcx_id);
+                }
+                if let Some(hir::Type::Opaque(path)) = error {
+                    outputs.push(path.tcx_id);
+                }
+                if outputs.is_empty() {
+                    continue;
+                }
+                let mut visitor = method.borrowing_param_visitor(self.tcx, false);
+                let mut borrowed = Vec::new();
+                if let Some(param_self) = method.param_self.as_ref() {
+                    let info = visitor.visit_param(&param_self.ty.clone().into(), "this");
+                    if let (hir::SelfType::Opaque(path), ParamBorrowInfo::BorrowedOpaque) =
+                        (&param_self.ty, info)
+                    {
+                        borrowed.push(path.tcx_id);
+                    }
+                }
+                for param in &method.params {
+                    let info = visitor.visit_param(&param.ty, param.name.as_str());
+                    if let (hir::Type::Opaque(path), ParamBorrowInfo::BorrowedOpaque) =
+                        (&param.ty, info)
+                    {
+                        borrowed.push(path.tcx_id);
+                    }
+                }
+                for output in outputs {
+                    graph
+                        .entry(output)
+                        .or_default()
+                        .extend(borrowed.iter().copied());
+                }
+            }
+            graph
+        })
+    }
+
     fn stored_borrows(
         &self,
         method: &'tcx Method,
         inputs: &[StoredBorrowInput],
     ) -> Option<Vec<StoredBorrow>> {
-        let mut stored = Vec::new();
-
         if let Some(input) = inputs
             .iter()
             .find(|input| input.opaque.as_ref().is_some_and(|o| o.static_reference))
@@ -1460,70 +1559,60 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             return None;
         }
 
-        for holder in inputs {
+        let mut stored = Vec::new();
+        for (h, s) in stored_pairs(method, inputs) {
+            let (holder, source) = (&inputs[h], &inputs[s]);
             let Some(holder_opaque) = &holder.opaque else {
                 continue;
             };
-            let storable: BTreeSet<hir::Lifetime> = holder_opaque
-                .type_lifetimes
-                .iter()
-                .flat_map(|lt| method.lifetime_env.all_longer_lifetimes(lt))
-                .collect();
-            if storable.is_empty() {
-                continue;
+            let Some(source_opaque) = &source.opaque else {
+                self.errors.push_error(format!(
+                    "[.NET backend] `{}` may be stored inside `{}` (it shares a lifetime with \
+                     `{}`'s type), but only opaque arguments can be kept alive that way; \
+                     slices, strings and structs live only for the call",
+                    source.name, holder.name, holder_opaque.type_name
+                ));
+                return None;
+            };
+            if source_opaque.manually_disposable {
+                self.errors.push_error(format!(
+                    "[.NET backend] `{source}` of type `{ty}` may be stored inside \
+                     `{holder}`, but `{ty}` is manually disposable and disposing it would \
+                     free memory `{holder}` still points to; remove `manually_disposable` \
+                     from `{ty}` or don't store it",
+                    source = source.name,
+                    ty = source_opaque.type_name,
+                    holder = holder.name,
+                ));
+                return None;
             }
-            // An exclusive `&'a mut self` already ends the receiver's use in Rust, and its
-            // borrow ending would invalidate a guard taken here along with every returned view.
-            if !holder_opaque.exclusive
-                && holder_opaque
+            if reaches(self.store_graph(), source_opaque.id, holder_opaque.id) {
+                self.errors.push_error(format!(
+                    "[.NET backend] `{source}` may be stored inside `{holder}`, but a \
+                     `{source_ty}` can already point back at a `{holder_ty}`, directly or \
+                     through other values, so storing it could make a reference cycle",
+                    source = source.name,
+                    holder = holder.name,
+                    source_ty = source_opaque.type_name,
+                    holder_ty = holder_opaque.type_name,
+                ));
+                return None;
+            }
+            if source_opaque.exclusive {
+                let reference_stored = source_opaque
                     .reference_lifetime
-                    .is_some_and(|lt| storable.contains(&lt))
-            {
-                stored.push(StoredBorrow {
-                    holder: holder.name.clone(),
-                    source: holder.name.clone(),
-                    kind: StoredBorrowKind::SelfReference,
-                });
-            }
-
-            for source in inputs {
-                if source.name == holder.name
-                    || !source.lifetimes.iter().any(|lt| storable.contains(lt))
-                {
-                    continue;
-                }
-                let Some(source_opaque) = &source.opaque else {
+                    .is_some_and(|lt| storable(method, holder_opaque).contains(&lt));
+                if !reference_stored {
                     self.errors.push_error(format!(
-                        "[.NET backend] `{}` may be stored inside `{}` (it shares a lifetime with \
-                         `{}`'s type), but only opaque arguments can be kept alive that way; \
-                         slices, strings and structs live only for the call",
-                        source.name, holder.name, holder_opaque.type_name
-                    ));
-                    return None;
-                };
-                if source_opaque.manually_disposable {
-                    self.errors.push_error(format!(
-                        "[.NET backend] `{source}` of type `{ty}` may be stored inside \
-                         `{holder}`, but `{ty}` is manually disposable and disposing it would \
-                         free memory `{holder}` still points to; remove `manually_disposable` \
-                         from `{ty}` or don't store it",
+                        "[.NET backend] data borrowed through mutably borrowed `{source}` may be \
+                         stored inside `{holder}`; that isn't supported, because ending the \
+                         mutable borrow would invalidate `{holder}`",
                         source = source.name,
-                        ty = source_opaque.type_name,
                         holder = holder.name,
                     ));
                     return None;
                 }
-                let reference_stored = source_opaque
-                    .reference_lifetime
-                    .is_some_and(|lt| storable.contains(&lt));
-                let kind = match (reference_stored, source_opaque.exclusive) {
-                    (false, _) => StoredBorrowKind::Data,
-                    (true, false) => StoredBorrowKind::SharedReference,
-                    (true, true) => StoredBorrowKind::ExclusiveReference,
-                };
-                if kind == StoredBorrowKind::ExclusiveReference
-                    && !holder_opaque.manually_disposable
-                {
+                if !holder_opaque.manually_disposable {
                     self.errors.push_error(format!(
                         "[.NET backend] `{source}` is borrowed mutably and may be stored inside \
                          `{holder}`, which keeps it locked until `{holder}` is released; mark \
@@ -1535,12 +1624,12 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     ));
                     return None;
                 }
-                stored.push(StoredBorrow {
-                    holder: holder.name.clone(),
-                    source: source.name.clone(),
-                    kind,
-                });
             }
+            stored.push(StoredBorrow {
+                holder: holder.name.clone(),
+                source: source.name.clone(),
+                exclusive: source_opaque.exclusive,
+            });
         }
 
         Some(stored)
@@ -1553,9 +1642,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         ok_dependencies: &[String],
         err_dependencies: &[String],
     ) -> Option<Vec<String>> {
-        if stored.is_empty() {
-            return Some(Vec::new());
-        }
         let lease_of = |source: &str| {
             inputs
                 .borrow_leases
@@ -1564,7 +1650,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 .map(|lease| lease.lease_expr.clone())
         };
 
-        let mut links = Vec::new();
+        let mut checks = Vec::new();
         let mut after_call = Vec::new();
         for borrow in stored {
             let (Some(holder), Some(source)) = (lease_of(&borrow.holder), lease_of(&borrow.source))
@@ -1575,55 +1661,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 ));
                 return None;
             };
-            let mutual = matches!(
-                borrow.kind,
-                StoredBorrowKind::SharedReference | StoredBorrowKind::ExclusiveReference
-            ) && stored.iter().any(|other| {
-                matches!(
-                    other.kind,
-                    StoredBorrowKind::SharedReference | StoredBorrowKind::ExclusiveReference
-                ) && other.holder == borrow.source
-                    && other.source == borrow.holder
-            });
-            if mutual {
-                self.errors.push_error(format!(
-                    "[.NET backend] `{}` and `{}` may each be stored inside the other; that would \
-                     be a reference cycle, and the signature doesn't say which way it goes",
-                    borrow.source, borrow.holder
-                ));
-                return None;
-            }
-            match borrow.kind {
-                StoredBorrowKind::Data => {
-                    links.push(format!("StoredLink.Data({holder}, {source})"));
-                    continue;
-                }
-                StoredBorrowKind::SharedReference => {
-                    links.push(format!("StoredLink.Shared({holder}, {source})"));
-                    continue;
-                }
-                StoredBorrowKind::SelfReference => {
-                    links.push(format!("StoredLink.SelfReference({holder})"));
-                    continue;
-                }
-                StoredBorrowKind::ExclusiveReference => {}
-            }
-
             let kept_elsewhere = stored
                 .iter()
-                .filter(|other| {
-                    other.source == borrow.source
-                        && matches!(
-                            other.kind,
-                            StoredBorrowKind::SharedReference
-                                | StoredBorrowKind::ExclusiveReference
-                        )
-                })
+                .filter(|other| other.source == borrow.source)
                 .count()
                 > 1
                 || ok_dependencies.contains(&borrow.source)
                 || err_dependencies.contains(&borrow.source);
-            if kept_elsewhere {
+            if borrow.exclusive && kept_elsewhere {
                 self.errors.push_error(format!(
                     "[.NET backend] mutably borrowed `{}` may be kept by more than one value; an \
                      exclusive borrow can have only one holder",
@@ -1631,13 +1676,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 ));
                 return None;
             }
-            links.push(format!("StoredLink.Exclusive({holder}, {source})"));
-            after_call.push(format!("LifetimeEdge.RetainLease({holder}, ref {source});"));
+            let check = format!("LifetimeEdge.CheckHolder({holder});");
+            if !checks.contains(&check) {
+                checks.push(check);
+            }
+            after_call.push(format!("LifetimeEdge.Retain({holder}, ref {source});"));
         }
 
-        inputs
-            .borrow_statements
-            .push(format!("LifetimeEdge.Store({});", links.join(", ")));
+        inputs.borrow_statements.extend(checks);
         Some(after_call)
     }
 
