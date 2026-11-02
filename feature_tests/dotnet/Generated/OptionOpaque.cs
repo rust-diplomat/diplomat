@@ -187,6 +187,40 @@ public partial class OptionOpaque: IDisposable
         }
     }
 
+    public static nuint AcceptsOptionStr(string? arg, byte sentinel)
+    {
+        unsafe
+        {
+            byte[]? argBytes = arg == null ? null : Diplomat.Utf8.Clone(arg);
+            fixed (byte* argPtr = argBytes)
+            {
+                return Raw.OptionOpaque.AcceptsOptionStr(arg == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = argPtr, Len = (nuint)argBytes!.Length }), sentinel);
+            }
+        }
+    }
+
+    public static long AcceptsOptionPrimitive(uint[]? arg, byte sentinel)
+    {
+        unsafe
+        {
+            fixed (uint* argPtr = arg)
+            {
+                return Raw.OptionOpaque.AcceptsOptionPrimitive(arg == null ? DiplomatOptionSliceU32.None : DiplomatOptionSliceU32.Some(new DiplomatSliceU32 { Ptr = argPtr, Len = (nuint)arg.Length }), sentinel);
+            }
+        }
+    }
+
+    public static nuint AcceptsOptionDiplomatStr(byte[]? arg, byte sentinel)
+    {
+        unsafe
+        {
+            fixed (byte* argPtr = arg)
+            {
+                return Raw.OptionOpaque.AcceptsOptionDiplomatStr(arg == null ? DiplomatOptionSliceU8.None : DiplomatOptionSliceU8.Some(new DiplomatSliceU8 { Ptr = argPtr, Len = (nuint)arg.Length }), sentinel);
+            }
+        }
+    }
+
     private void Cleanup()
     {
         unsafe

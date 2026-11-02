@@ -34,6 +34,15 @@ internal partial struct OptionOpaque
     [return: MarshalAs(UnmanagedType.U1)]
     internal static unsafe extern bool OptionOpaqueArgument(OptionOpaque* arg);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionOpaque_accepts_option_str", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint AcceptsOptionStr(DiplomatOptionSliceU8 arg, byte sentinel);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionOpaque_accepts_option_primitive", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern long AcceptsOptionPrimitive(DiplomatOptionSliceU32 arg, byte sentinel);
+
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionOpaque_accepts_option_diplomat_str", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern nuint AcceptsOptionDiplomatStr(DiplomatOptionSliceU8 arg, byte sentinel);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "OptionOpaque_destroy", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void Destroy(OptionOpaque* handle);
 }

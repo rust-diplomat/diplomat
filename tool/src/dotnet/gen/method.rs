@@ -2336,233 +2336,16 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     ..Default::default()
                 }
             }
-            hir::Type::Slice(slice) => match slice {
-                hir::Slice::Str(maybe_static, string_encoding) => match maybe_static {
-                    Some(lifetime) => match lifetime {
-                        hir::MaybeStatic::Static => {
-                            self.errors.push_error(
-                                "[.NET backend] `&'static str` parameters not yet supported"
-                                    .to_string(),
-                            );
-                            return None;
-                        }
-                        hir::MaybeStatic::NonStatic(_) => match string_encoding {
-                            // `&str` requires the caller to *guarantee*
-                            // valid UTF-8 (UB on the Rust side otherwise —
-                            // see the doc comment on `StringEncoding::Utf8`),
-                            // so this can't be reshaped to a raw `byte[]`
-                            // like `UnvalidatedUtf8` below: a careless
-                            // caller could then hand Rust invalid UTF-8.
-                            // `Encoding.UTF8.GetBytes` on a real C# `string`
-                            // is the only thing that can make that
-                            // guarantee, so the transcode-copy stays —
-                            // routed through the explicitly-named
-                            // `Diplomat.Utf8.Clone` instead of inlining the
-                            // BCL call, so the allocation is visible.
-                            hir::StringEncoding::UnvalidatedUtf8 if !in_accessor => self
-                                .lower_immutable_element_slice(
-                                    &input_context,
-                                    borrow_info,
-                                    ImmutableElementShape {
-                                        element: BorrowedSpanElement::Byte,
-                                        ptr_type: "byte",
-                                        immutable_class: "DiplomatSliceU8",
-                                        mutable_class: "DiplomatSliceU8",
-                                    },
-                                    hir::Mutability::Immutable,
-                                )?,
-                            hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => {
-                                let base = input_context.local_base();
-                                let ptr = self.slice_local_name(base, "Ptr");
-                                let bytes = self.slice_local_name(base, "Bytes");
-                                InputLowering {
-                                    raw_param: format!("DiplomatSliceU8 {raw_name}"),
-                                    idiomatic_param: format!("string {arg_name}"),
-                                    raw_call_arg: format!(
-                                        "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}.Length }}"
-                                    ),
-                                    // `&str` is non-optional on the Rust
-                                    // side, so a null string is a contract
-                                    // violation. Surface `ArgumentNullException`
-                                    // naming the actual parameter — without this,
-                                    // `Utf8.Clone(null)` throws with its own
-                                    // internal param name (`"value"`). The
-                                    // template emits validation before to-bytes.
-                                    validation_statement: Some(format!(
-                                        "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                                    )),
-                                    borrow_declaration: None,
-                                    borrow_statement: None,
-                                    borrow_lease: None,
-                                    to_bytes_statement: Some(format!(
-                                        "byte[] {bytes} = Diplomat.Utf8.Clone({arg_name});"
-                                    )),
-                                    // FIXME: an empty string yields a zero-length
-                                    // `byte[]`, and `fixed` on an empty array binds
-                                    // a null pointer — so Rust receives
-                                    // `{ Ptr = null, Len = 0 }`. Diplomat's C ABI
-                                    // tolerates `(null, 0)` today (it only reads the
-                                    // pointer when `Len > 0`), but a strictly-correct
-                                    // binding would hand over a non-null dangling
-                                    // pointer for the empty case.
-                                    fix_statement: Some(format!(
-                                        "fixed (byte* {ptr} = {bytes})"
-                                    )),
-                                    accessor_value: Some(AccessorValue::plain(
-                                        match string_encoding {
-                                            hir::StringEncoding::Utf8 => {
-                                                AccessorMarshal::ValidatedUtf8Param
-                                            }
-                                            _ => AccessorMarshal::UnvalidatedUtf8Param,
-                                        },
-                                    )),
-                                    keep_alive_target: None,
-                                    borrowed_slice_pin: None,
-                                }
-                            }
-                            hir::StringEncoding::UnvalidatedUtf16 => {
-                                // A C# `string` is already a flat UTF-16
-                                // buffer — `fixed` pins it directly with no
-                                // allocation, unlike the UTF-8 arm above
-                                // which must transcode first. Bonus: `fixed`
-                                // on a C# string (even `""`) always yields a
-                                // valid pointer to its null terminator, so
-                                // the empty-string dangling-pointer FIXME
-                                // above doesn't apply here.
-                                let base = input_context.local_base();
-                                let ptr = self.slice_local_name(base, "Ptr");
-
-                                if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
-                                    let pin = self.slice_local_name(base, "Pin");
-                                    InputLowering {
-                                        raw_param: format!("DiplomatSliceU16 {raw_name}"),
-                                        idiomatic_param: format!(
-                                            "ReadOnlyMemory<char> {arg_name}"
-                                        ),
-                                        raw_call_arg: format!(
-                                            "new DiplomatSliceU16 {{ Ptr = (char*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
-                                        ),
-                                        borrowed_slice_pin: Some(SlicePin {
-                                            arg_name: arg_name.to_string(),
-                                            pin_local: pin,
-                                        }),
-                                        accessor_value: Some(AccessorValue::plain(
-                                            AccessorMarshal::PinnedMemoryParam(
-                                                BorrowedSpanElement::Char,
-                                            ),
-                                        )),
-                                        ..Default::default()
-                                    }
-                                } else {
-                                    InputLowering {
-                                        raw_param: format!("DiplomatSliceU16 {raw_name}"),
-                                        idiomatic_param: format!("string {arg_name}"),
-                                        raw_call_arg: format!(
-                                            "new DiplomatSliceU16 {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
-                                        ),
-                                        validation_statement: Some(format!(
-                                            "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
-                                        )),
-                                        fix_statement: Some(format!(
-                                            "fixed (char* {ptr} = {arg_name})"
-                                        )),
-                                        accessor_value: Some(AccessorValue::plain(
-                                            AccessorMarshal::Utf16Param,
-                                        )),
-                                        ..Default::default()
-                                    }
-                                }
-                            }
-                            other => {
-                                self.errors.push_error(format!(
-                                    "[.NET backend] string encoding not yet supported: {other:?}"
-                                ));
-                                return None;
-                            }
-                        },
-                    },
-                    None => {
-                        self.errors.push_error(
-                            "[.NET backend] `&str` parameter without a tracked lifetime is \
-                             not yet supported"
-                                .to_string(),
-                        );
-                        return None;
-                    }
-                },
-                hir::Slice::Primitive(maybe_own, primitive_type) => match primitive_type {
-                    hir::PrimitiveType::Byte
-                    | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::U32) => {
-                        let MaybeOwn::Borrow(borrow) = maybe_own else {
-                            self.errors.push_error(format!(
-                                "[.NET backend] owned primitive slice not yet supported: \
-                                 {primitive_type:?} : {maybe_own:?}"
-                            ));
-                            return None;
-                        };
-
-                        let (element, ptr_type, immutable_class, mutable_class) =
-                            match primitive_type {
-                                hir::PrimitiveType::Byte
-                                | hir::PrimitiveType::Int(hir::IntType::U8) => (
-                                    BorrowedSpanElement::Byte,
-                                    "byte",
-                                    "DiplomatSliceU8",
-                                    "DiplomatSliceMutU8",
-                                ),
-                                hir::PrimitiveType::Int(hir::IntType::U32) => (
-                                    BorrowedSpanElement::UInt32,
-                                    "uint",
-                                    "DiplomatSliceU32",
-                                    "DiplomatSliceMutU32",
-                                ),
-                                _ => unreachable!(),
-                            };
-
-                        self.lower_immutable_element_slice(
-                            &input_context,
-                            borrow_info,
-                            ImmutableElementShape {
-                                element,
-                                ptr_type,
-                                immutable_class,
-                                mutable_class,
-                            },
-                            borrow.mutability,
-                        )?
-                    }
-                    hir::PrimitiveType::Int(int_type) => {
-                        self.errors.push_error(format!(
-                            "[.NET backend] primitive slice not yet supported: \
-                             {int_type:?} : {maybe_own:?}"
-                        ));
-                        return None;
-                    }
-                    other => {
-                        self.errors.push_error(format!(
-                            "[.NET backend] primitive slice element type not yet supported: \
-                             {other:?} : {maybe_own:?}"
-                        ));
-                        return None;
-                    }
-                },
-                hir::Slice::Strs(enc) => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] string-slice parameter (`&[&str]`) not yet supported: \
-                         encoding {enc:?}"
-                    ));
-                    return None;
-                }
-                hir::Slice::Struct(maybe_own, _) => {
-                    self.errors.push_error(format!(
-                        "[.NET backend] struct-slice parameter not yet supported: \
-                         ownership {maybe_own:?}"
-                    ));
-                    return None;
+            hir::Type::Slice(slice) => {
+                self.lower_slice_input(input_context, slice, borrow_info, in_accessor, false)?
+            }
+            hir::Type::DiplomatOption(inner) => match &**inner {
+                hir::Type::Slice(slice) if !in_accessor => {
+                    self.lower_slice_input(input_context, slice, borrow_info, in_accessor, true)?
                 }
                 other => {
                     self.errors.push_error(format!(
-                        "[.NET backend] slice parameter shape not yet supported: {other:?}"
+                        "[.NET backend] optional input not yet supported: {other:?}"
                     ));
                     return None;
                 }
@@ -2605,6 +2388,297 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 return None;
             }
         })
+    }
+
+    fn lower_slice_input(
+        &self,
+        input_context: MethodInputContext<'tcx>,
+        slice: &hir::Slice<hir::InputOnly>,
+        borrow_info: ParamBorrowInfo<'tcx>,
+        in_accessor: bool,
+        is_optional: bool,
+    ) -> Option<InputLowering> {
+        let arg_name = input_context.local_name();
+        let raw_name = input_context.raw_name();
+        if is_optional && matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+            self.errors.push_error(format!(
+                "[.NET backend] optional slice parameter `{arg_name}` borrowed by the output is not yet supported"
+            ));
+            return None;
+        }
+        let lowering = match slice {
+            hir::Slice::Str(maybe_static, string_encoding) => match maybe_static {
+                Some(lifetime) => match lifetime {
+                    hir::MaybeStatic::Static => {
+                        self.errors.push_error(
+                            "[.NET backend] `&'static str` parameters not yet supported"
+                                .to_string(),
+                        );
+                        return None;
+                    }
+                    hir::MaybeStatic::NonStatic(_) => match string_encoding {
+                        hir::StringEncoding::UnvalidatedUtf8
+                            if !in_accessor
+                                && (!self.diplomat_str_as_string
+                                    || matches!(borrow_info, ParamBorrowInfo::BorrowedSlice)) =>
+                        {
+                            self.lower_immutable_element_slice(
+                                &input_context,
+                                borrow_info,
+                                ImmutableElementShape {
+                                    element: BorrowedSpanElement::Byte,
+                                    ptr_type: "byte",
+                                    immutable_class: "DiplomatSliceU8",
+                                    mutable_class: "DiplomatSliceU8",
+                                },
+                                hir::Mutability::Immutable,
+                            )?
+                        }
+                        // `&str` requires the caller to *guarantee*
+                        // valid UTF-8 (UB on the Rust side otherwise —
+                        // see the doc comment on `StringEncoding::Utf8`),
+                        // so this can't be reshaped to a raw `byte[]`
+                        // like `UnvalidatedUtf8` below: a careless
+                        // caller could then hand Rust invalid UTF-8.
+                        // `Encoding.UTF8.GetBytes` on a real C# `string`
+                        // is the only thing that can make that
+                        // guarantee, so the transcode-copy stays —
+                        // routed through the explicitly-named
+                        // `Diplomat.Utf8.Clone` instead of inlining the
+                        // BCL call, so the allocation is visible.
+                        hir::StringEncoding::Utf8 | hir::StringEncoding::UnvalidatedUtf8 => {
+                            let base = input_context.local_base();
+                            let ptr = self.slice_local_name(base, "Ptr");
+                            let bytes = self.slice_local_name(base, "Bytes");
+                            InputLowering {
+                                raw_param: format!("DiplomatSliceU8 {raw_name}"),
+                                idiomatic_param: format!("string {arg_name}"),
+                                raw_call_arg: format!(
+                                    "new DiplomatSliceU8 {{ Ptr = {ptr}, Len = (nuint){bytes}{}.Length }}",
+                                    if is_optional { "!" } else { "" }
+                                ),
+                                // `&str` is non-optional on the Rust
+                                // side, so a null string is a contract
+                                // violation. Surface `ArgumentNullException`
+                                // naming the actual parameter — without this,
+                                // `Utf8.Clone(null)` throws with its own
+                                // internal param name (`"value"`). The
+                                // template emits validation before to-bytes.
+                                validation_statement: Some(format!(
+                                    "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                )),
+                                borrow_declaration: None,
+                                borrow_statement: None,
+                                borrow_lease: None,
+                                to_bytes_statement: Some(if is_optional {
+                                    format!("byte[]? {bytes} = {arg_name} == null ? null : Diplomat.Utf8.Clone({arg_name});")
+                                } else {
+                                    format!("byte[] {bytes} = Diplomat.Utf8.Clone({arg_name});")
+                                }),
+                                // FIXME: an empty string yields a zero-length
+                                // `byte[]`, and `fixed` on an empty array binds
+                                // a null pointer — so Rust receives
+                                // `{ Ptr = null, Len = 0 }`. Diplomat's C ABI
+                                // tolerates `(null, 0)` today (it only reads the
+                                // pointer when `Len > 0`), but a strictly-correct
+                                // binding would hand over a non-null dangling
+                                // pointer for the empty case.
+                                fix_statement: Some(format!(
+                                    "fixed (byte* {ptr} = {bytes})"
+                                )),
+                                accessor_value: Some(AccessorValue::plain(
+                                    match string_encoding {
+                                        hir::StringEncoding::Utf8 => {
+                                            AccessorMarshal::ValidatedUtf8Param
+                                        }
+                                        _ => AccessorMarshal::UnvalidatedUtf8Param,
+                                    },
+                                )),
+                                keep_alive_target: None,
+                                borrowed_slice_pin: None,
+                            }
+                        }
+                        hir::StringEncoding::UnvalidatedUtf16 => {
+                            // A C# `string` is already a flat UTF-16
+                            // buffer — `fixed` pins it directly with no
+                            // allocation, unlike the UTF-8 arm above
+                            // which must transcode first. Bonus: `fixed`
+                            // on a C# string (even `""`) always yields a
+                            // valid pointer to its null terminator, so
+                            // the empty-string dangling-pointer FIXME
+                            // above doesn't apply here.
+                            let base = input_context.local_base();
+                            let ptr = self.slice_local_name(base, "Ptr");
+
+                            if matches!(borrow_info, ParamBorrowInfo::BorrowedSlice) {
+                                let pin = self.slice_local_name(base, "Pin");
+                                InputLowering {
+                                    raw_param: format!("DiplomatSliceU16 {raw_name}"),
+                                    idiomatic_param: format!(
+                                        "ReadOnlyMemory<char> {arg_name}"
+                                    ),
+                                    raw_call_arg: format!(
+                                        "new DiplomatSliceU16 {{ Ptr = (char*){pin}.Pointer, Len = (nuint){arg_name}.Length }}"
+                                    ),
+                                    borrowed_slice_pin: Some(SlicePin {
+                                        arg_name: arg_name.to_string(),
+                                        pin_local: pin,
+                                    }),
+                                    accessor_value: Some(AccessorValue::plain(
+                                        AccessorMarshal::PinnedMemoryParam(
+                                            BorrowedSpanElement::Char,
+                                        ),
+                                    )),
+                                    ..Default::default()
+                                }
+                            } else {
+                                InputLowering {
+                                    raw_param: format!("DiplomatSliceU16 {raw_name}"),
+                                    idiomatic_param: format!("string {arg_name}"),
+                                    raw_call_arg: format!(
+                                        "new DiplomatSliceU16 {{ Ptr = {ptr}, Len = (nuint){arg_name}.Length }}"
+                                    ),
+                                    validation_statement: Some(format!(
+                                        "if ({arg_name} == null) throw new ArgumentNullException(nameof({arg_name}));"
+                                    )),
+                                    fix_statement: Some(format!(
+                                        "fixed (char* {ptr} = {arg_name})"
+                                    )),
+                                    accessor_value: Some(AccessorValue::plain(
+                                        AccessorMarshal::Utf16Param,
+                                    )),
+                                    ..Default::default()
+                                }
+                            }
+                        }
+                        other => {
+                            self.errors.push_error(format!(
+                                "[.NET backend] string encoding not yet supported: {other:?}"
+                            ));
+                            return None;
+                        }
+                    },
+                },
+                None => {
+                    self.errors.push_error(
+                        "[.NET backend] `&str` parameter without a tracked lifetime is \
+                         not yet supported"
+                            .to_string(),
+                    );
+                    return None;
+                }
+            },
+            hir::Slice::Primitive(maybe_own, primitive_type) => match primitive_type {
+                hir::PrimitiveType::Byte
+                | hir::PrimitiveType::Int(hir::IntType::U8 | hir::IntType::U32) => {
+                    let MaybeOwn::Borrow(borrow) = maybe_own else {
+                        self.errors.push_error(format!(
+                            "[.NET backend] owned primitive slice not yet supported: \
+                             {primitive_type:?} : {maybe_own:?}"
+                        ));
+                        return None;
+                    };
+
+                    let (element, ptr_type, immutable_class, mutable_class) = match primitive_type {
+                        hir::PrimitiveType::Byte | hir::PrimitiveType::Int(hir::IntType::U8) => (
+                            BorrowedSpanElement::Byte,
+                            "byte",
+                            "DiplomatSliceU8",
+                            "DiplomatSliceMutU8",
+                        ),
+                        hir::PrimitiveType::Int(hir::IntType::U32) => (
+                            BorrowedSpanElement::UInt32,
+                            "uint",
+                            "DiplomatSliceU32",
+                            "DiplomatSliceMutU32",
+                        ),
+                        _ => unreachable!(),
+                    };
+
+                    self.lower_immutable_element_slice(
+                        &input_context,
+                        borrow_info,
+                        ImmutableElementShape {
+                            element,
+                            ptr_type,
+                            immutable_class,
+                            mutable_class,
+                        },
+                        borrow.mutability,
+                    )?
+                }
+                hir::PrimitiveType::Int(int_type) => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] primitive slice not yet supported: \
+                         {int_type:?} : {maybe_own:?}"
+                    ));
+                    return None;
+                }
+                other => {
+                    self.errors.push_error(format!(
+                        "[.NET backend] primitive slice element type not yet supported: \
+                         {other:?} : {maybe_own:?}"
+                    ));
+                    return None;
+                }
+            },
+            hir::Slice::Strs(enc) => {
+                self.errors.push_error(format!(
+                    "[.NET backend] string-slice parameter (`&[&str]`) not yet supported: \
+                     encoding {enc:?}"
+                ));
+                return None;
+            }
+            hir::Slice::Struct(maybe_own, _) => {
+                self.errors.push_error(format!(
+                    "[.NET backend] struct-slice parameter not yet supported: \
+                     ownership {maybe_own:?}"
+                ));
+                return None;
+            }
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] slice parameter shape not yet supported: {other:?}"
+                ));
+                return None;
+            }
+        };
+
+        Some(if is_optional {
+            self.optionalize(lowering, arg_name)?
+        } else {
+            lowering
+        })
+    }
+
+    fn optionalize(&self, mut l: InputLowering, arg_name: &str) -> Option<InputLowering> {
+        let (slice_class, raw_name) = l.raw_param.split_once(' ')?;
+        let slice_class: &'static str = match slice_class {
+            "DiplomatSliceU8" => "DiplomatSliceU8",
+            "DiplomatSliceMutU8" => "DiplomatSliceMutU8",
+            "DiplomatSliceU16" => "DiplomatSliceU16",
+            "DiplomatSliceU32" => "DiplomatSliceU32",
+            "DiplomatSliceMutU32" => "DiplomatSliceMutU32",
+            other => {
+                self.errors.push_error(format!(
+                    "[.NET backend] optional slice of `{other}` not yet supported"
+                ));
+                return None;
+            }
+        };
+        self.option_slice_registry.borrow_mut().insert(slice_class);
+        let option_class = format!("DiplomatOption{}", &slice_class["Diplomat".len()..]);
+
+        let (ty, name) = l.idiomatic_param.rsplit_once(' ')?;
+        l.raw_param = format!("{option_class} {raw_name}");
+        l.idiomatic_param = format!("{ty}? {name}");
+        l.raw_call_arg = format!(
+            "{arg_name} == null ? {option_class}.None : {option_class}.Some({})",
+            l.raw_call_arg
+        );
+        l.validation_statement = None; // null is allowed now
+        l.accessor_value = None; // setters are rejected before we get here
+        Some(l)
     }
 
     // -------------------------------------------------------------------
