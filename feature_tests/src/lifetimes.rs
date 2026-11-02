@@ -872,6 +872,8 @@ pub mod ffi {
             Box::new(StoredBorrowHolder(core::cell::RefCell::new(self)))
         }
 
+        pub fn touch(&mut self) {}
+
         pub fn reset_drop_count() {
             super::STORED_BORROW_TARGET_DROPS.store(0, super::Ordering::SeqCst);
         }
@@ -882,13 +884,19 @@ pub mod ffi {
     }
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct StoredBorrowHolder<'a>(core::cell::RefCell<&'a StoredBorrowTarget>);
 
     impl<'a> StoredBorrowHolder<'a> {
         pub fn store(&'a self, target: &'a StoredBorrowTarget) {
             *self.0.borrow_mut() = target;
         }
+
+        pub fn adopt(&self, other: &StoredBorrowHolder<'a>) {
+            *self.0.borrow_mut() = *other.0.borrow();
+        }
+
+        pub fn touch(&mut self) {}
     }
 
     #[diplomat::attr(not(dotnet), disable)]
@@ -906,10 +914,15 @@ pub mod ffi {
         pub fn store(&self, target: &'a mut StoredBorrowTarget) {
             *self.0.borrow_mut() = Some(target);
         }
+
+        pub fn store_then_fail(&self, target: &'a mut StoredBorrowTarget) -> Result<(), ()> {
+            *self.0.borrow_mut() = Some(target);
+            Err(())
+        }
     }
 
     #[diplomat::attr(not(dotnet), disable)]
-    #[diplomat::opaque]
+    #[diplomat::opaque_mut]
     pub struct StoredBorrowNode<'a>(
         core::cell::Cell<Option<&'a StoredBorrowNode<'a>>>,
         super::DropRecord,
@@ -935,6 +948,8 @@ pub mod ffi {
         pub fn view<'b>(&'b self) -> &'b StoredBorrowNode<'a> {
             self
         }
+
+        pub fn touch(&mut self) {}
 
         pub fn reset_drop_count() {
             super::STORED_BORROW_NODE_DROPS.store(0, super::Ordering::SeqCst);

@@ -80,9 +80,38 @@ public partial class StoredBorrowExclusiveHolder: IDisposable
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Exclusive);
-                LifetimeEdge.CheckRetain(selfLease, targetLease);
+                LifetimeEdge.Store(StoredLink.Exclusive(selfLease, targetLease));
                 Raw.StoredBorrowExclusiveHolder.Store(selfLease!.Ptr, targetLease!.Ptr);
                 LifetimeEdge.RetainLease(selfLease, ref targetLease);
+            }
+            finally
+            {
+                selfLease?.Release();
+                targetLease?.Release();
+            }
+        }
+    }
+
+    /// <exception cref="InvalidOperationException"></exception>
+    public void StoreThenFail(StoredBorrowTarget target)
+    {
+        unsafe
+        {
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            BorrowLease<Raw.StoredBorrowExclusiveHolder>? selfLease = null;
+            BorrowLease<Raw.StoredBorrowTarget>? targetLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                targetLease = target._diplomatHandle.Lease(BorrowKind.Exclusive);
+                LifetimeEdge.Store(StoredLink.Exclusive(selfLease, targetLease));
+                var result = Raw.StoredBorrowExclusiveHolder.StoreThenFail(selfLease!.Ptr, targetLease!.Ptr);
+                LifetimeEdge.RetainLease(selfLease, ref targetLease);
+                if (!result.IsOk)
+                {
+                    throw new InvalidOperationException("FFI function failed with unit error");
+                }
+                return;
             }
             finally
             {

@@ -68,13 +68,52 @@ public partial class StoredBorrowHolder
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 targetLease = target._diplomatHandle.Lease(BorrowKind.Shared);
-                LifetimeEdge.Retain(selfLease, targetLease);
+                LifetimeEdge.Store(StoredLink.SelfReference(selfLease), StoredLink.Shared(selfLease, targetLease));
                 Raw.StoredBorrowHolder.Store(selfLease!.Ptr, targetLease!.Ptr);
             }
             finally
             {
                 selfLease?.Release();
                 targetLease?.Release();
+            }
+        }
+    }
+
+    public void Adopt(StoredBorrowHolder other)
+    {
+        unsafe
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+            BorrowLease<Raw.StoredBorrowHolder>? selfLease = null;
+            BorrowLease<Raw.StoredBorrowHolder>? otherLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                otherLease = other._diplomatHandle.Lease(BorrowKind.Shared);
+                LifetimeEdge.Store(StoredLink.Data(selfLease, otherLease), StoredLink.Data(otherLease, selfLease));
+                Raw.StoredBorrowHolder.Adopt(selfLease!.Ptr, otherLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+                otherLease?.Release();
+            }
+        }
+    }
+
+    public void Touch()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.StoredBorrowHolder>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                Raw.StoredBorrowHolder.Touch(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
             }
         }
     }

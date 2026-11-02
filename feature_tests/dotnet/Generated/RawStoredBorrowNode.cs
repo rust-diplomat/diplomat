@@ -21,6 +21,9 @@ internal partial struct StoredBorrowNode
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowNode_view", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern StoredBorrowNode* View(StoredBorrowNode* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowNode_touch", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern void Touch(StoredBorrowNode* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowNode_reset_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void ResetDropCount();
 

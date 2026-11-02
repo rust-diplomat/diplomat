@@ -146,11 +146,21 @@ impl<'a> Holder<'a> {
 `target` stays reachable while `holder` is. A shared `&'a Target` becomes a read view as above;
 an `&'a mut Target` keeps its borrow, so the holder's type must be `manually_disposable`. When
 only a lifetime inside the argument's type matches (`&Banana<'a>` into `Apple<'a>`), the holder
-can only receive data the argument already borrows, and the edge only keeps the argument
-reachable. Stored arguments cannot be `manually_disposable`, and stored slices, strings and
-structs are rejected. At run time, storing into a borrowed view or creating a cycle of
-reference edges throws `InvalidOperationException`. A stored argument stays reachable until the
-holder is released, even after Rust replaces it.
+can only receive data the argument already borrows. The edge keeps the argument reachable and
+shares its read views, so mutating what the argument borrows invalidates the holder, while
+mutating the argument itself does not. Stored arguments cannot be `manually_disposable`, and stored slices, strings and
+structs are rejected, and so are `&'static` opaque arguments. A shared argument typed `&'a T<'a>`
+may be kept inside itself, so afterwards it stays borrowed by itself and `&mut` calls on it throw. At
+run time, passing a borrowed view where something may be stored, or creating a cycle of
+reference edges, throws `InvalidOperationException`. A stored argument stays reachable, and
+mutating it still invalidates the holder, until the holder is released, even after Rust replaces
+it.
+
+One case is not covered yet: `&'a mut self` on a type generic over `'a` can store data borrowed
+from the receiver inside the receiver. Rust then forbids using the receiver again, but the
+generated API still allows it, so a later call that frees that data leaves the receiver pointing
+at freed memory. The same signature is the usual iterator pattern (`fn next(&'a mut self)`), so
+it is left unchanged for now.
 
 A mutation attempt while an operation or `WithSpan` callback exposes a native pointer throws
 instead of invalidating that pointer. Every handle is a `SafeHandle`; a scoped operation guard

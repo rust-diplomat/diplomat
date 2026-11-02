@@ -94,6 +94,23 @@ public partial class StoredBorrowTarget
         }
     }
 
+    public void Touch()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.StoredBorrowTarget>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                Raw.StoredBorrowTarget.Touch(selfLease!.Ptr);
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
     public static void ResetDropCount()
     {
         unsafe

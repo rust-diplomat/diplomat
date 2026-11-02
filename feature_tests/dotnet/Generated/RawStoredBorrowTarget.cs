@@ -15,6 +15,9 @@ internal partial struct StoredBorrowTarget
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowTarget_make_holder", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern StoredBorrowHolder* MakeHolder(StoredBorrowTarget* handle);
 
+    [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowTarget_touch", CallingConvention = CallingConvention.Cdecl)]
+    internal static unsafe extern void Touch(StoredBorrowTarget* handle);
+
     [DllImport(DiplomatNativeLib.Name, EntryPoint = "StoredBorrowTarget_reset_drop_count", CallingConvention = CallingConvention.Cdecl)]
     internal static unsafe extern void ResetDropCount();
 

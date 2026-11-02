@@ -605,8 +605,6 @@ struct OpaqueBorrowLease {
     lease_expr: String,
 }
 
-/// An opaque argument that Rust may keep inside another opaque argument, named by
-/// the locals the idiomatic body uses (`"this"` for the receiver).
 #[derive(Debug)]
 struct StoredBorrow {
     holder: String,
@@ -623,22 +621,21 @@ enum StoredBorrowKind {
     /// Only data the source borrows may be copied out (`banana: &Banana<'a>` into
     /// `Apple<'a>`), so the holder only has to keep the source reachable.
     Data,
+    /// `&'a T<'a>` may be kept inside the value itself.
+    SelfReference,
 }
 
-/// One input's lifetimes, as seen when deciding what it may be stored into.
 struct StoredBorrowInput {
     name: String,
-    /// Every non-static lifetime anywhere in the input's type.
     lifetimes: Vec<hir::Lifetime>,
     opaque: Option<StoredBorrowOpaque>,
 }
 
 struct StoredBorrowOpaque {
     type_name: String,
-    /// The lifetimes the opaque type itself is generic over (`'a` in `Holder<'a>`),
-    /// not the lifetime of the reference to it.
     type_lifetimes: Vec<hir::Lifetime>,
     reference_lifetime: Option<hir::Lifetime>,
+    static_reference: bool,
     exclusive: bool,
     manually_disposable: bool,
 }
@@ -764,7 +761,7 @@ pub(super) struct MethodInfo<'ctx> {
     /// always a pure dependency list.
     pub(super) error_keep_alive_sources: Vec<String>,
     /// Statements that move an exclusively borrowed argument's lease into the
-    /// argument Rust may store it in. They run right after the raw call.
+    /// argument Rust may store it in.
     pub(super) retain_statements: Vec<String>,
     /// `Borrowed` for a borrowed opaque return — the wrapper is built
     /// non-owning so it never frees a pointer Rust still owns.
@@ -1000,7 +997,7 @@ impl MethodInfo<'_> {
     /// True if any opaque pointer crosses the raw call — then a direct
     /// `return Raw...(...)` must capture-then-return so the keep-alive runs.
     pub(super) fn has_keep_alive(&self) -> bool {
-        !self.inputs.keep_alive_targets.is_empty()
+        !self.inputs.keep_alive_targets.is_empty() || !self.retain_statements.is_empty()
     }
 
     /// `GC.KeepAlive(x);` lines to emit after the raw call, one per opaque
@@ -1400,6 +1397,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     type_name: self.opaque_name_borrowed(path),
                     type_lifetimes: non_static(path.lifetimes.lifetimes()),
                     reference_lifetime: non_static_one(path.owner.lifetime),
+                    static_reference: path.owner.lifetime == hir::MaybeStatic::Static,
                     exclusive: matches!(param_self.get_mutability(), hir::Mutability::Mutable),
                     manually_disposable: path.resolve(self.tcx).attrs.manually_disposable,
                 }),
@@ -1418,6 +1416,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                     type_name: self.opaque_name_borrowed(path),
                     type_lifetimes: non_static(path.lifetimes.lifetimes()),
                     reference_lifetime: non_static_one(path.owner.lifetime),
+                    static_reference: path.owner.lifetime == hir::MaybeStatic::Static,
                     exclusive: matches!(path.owner.mutability, hir::Mutability::Mutable),
                     manually_disposable: path.resolve(self.tcx).attrs.manually_disposable,
                 }),
@@ -1449,6 +1448,18 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     ) -> Option<Vec<StoredBorrow>> {
         let mut stored = Vec::new();
 
+        if let Some(input) = inputs
+            .iter()
+            .find(|input| input.opaque.as_ref().is_some_and(|o| o.static_reference))
+        {
+            self.errors.push_error(format!(
+                "[.NET backend] `{}` is borrowed for `'static`, so Rust may keep it anywhere; a \
+                 garbage-collected value can't promise to live that long",
+                input.name
+            ));
+            return None;
+        }
+
         for holder in inputs {
             let Some(holder_opaque) = &holder.opaque else {
                 continue;
@@ -1460,6 +1471,19 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 .collect();
             if storable.is_empty() {
                 continue;
+            }
+            // An exclusive `&'a mut self` already ends the receiver's use in Rust, and its
+            // borrow ending would invalidate a guard taken here along with every returned view.
+            if !holder_opaque.exclusive
+                && holder_opaque
+                    .reference_lifetime
+                    .is_some_and(|lt| storable.contains(&lt))
+            {
+                stored.push(StoredBorrow {
+                    holder: holder.name.clone(),
+                    source: holder.name.clone(),
+                    kind: StoredBorrowKind::SelfReference,
+                });
             }
 
             for source in inputs {
@@ -1522,9 +1546,6 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         Some(stored)
     }
 
-    /// Renders `stored` into the body: shared sources are attached before the raw call,
-    /// exclusive ones are checked before it and moved after it. Returns the after-call
-    /// statements.
     fn stored_borrow_statements(
         &self,
         inputs: &mut DotnetInputs,
@@ -1532,6 +1553,9 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
         ok_dependencies: &[String],
         err_dependencies: &[String],
     ) -> Option<Vec<String>> {
+        if stored.is_empty() {
+            return Some(Vec::new());
+        }
         let lease_of = |source: &str| {
             inputs
                 .borrow_leases
@@ -1540,7 +1564,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 .map(|lease| lease.lease_expr.clone())
         };
 
-        let mut before_call = Vec::new();
+        let mut links = Vec::new();
         let mut after_call = Vec::new();
         for borrow in stored {
             let (Some(holder), Some(source)) = (lease_of(&borrow.holder), lease_of(&borrow.source))
@@ -1551,13 +1575,35 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 ));
                 return None;
             };
+            let mutual = matches!(
+                borrow.kind,
+                StoredBorrowKind::SharedReference | StoredBorrowKind::ExclusiveReference
+            ) && stored.iter().any(|other| {
+                matches!(
+                    other.kind,
+                    StoredBorrowKind::SharedReference | StoredBorrowKind::ExclusiveReference
+                ) && other.holder == borrow.source
+                    && other.source == borrow.holder
+            });
+            if mutual {
+                self.errors.push_error(format!(
+                    "[.NET backend] `{}` and `{}` may each be stored inside the other; that would \
+                     be a reference cycle, and the signature doesn't say which way it goes",
+                    borrow.source, borrow.holder
+                ));
+                return None;
+            }
             match borrow.kind {
                 StoredBorrowKind::Data => {
-                    before_call.push(format!("LifetimeEdge.KeepAlive({holder}, {source});"));
+                    links.push(format!("StoredLink.Data({holder}, {source})"));
                     continue;
                 }
                 StoredBorrowKind::SharedReference => {
-                    before_call.push(format!("LifetimeEdge.Retain({holder}, {source});"));
+                    links.push(format!("StoredLink.Shared({holder}, {source})"));
+                    continue;
+                }
+                StoredBorrowKind::SelfReference => {
+                    links.push(format!("StoredLink.SelfReference({holder})"));
                     continue;
                 }
                 StoredBorrowKind::ExclusiveReference => {}
@@ -1565,7 +1611,14 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
 
             let kept_elsewhere = stored
                 .iter()
-                .filter(|other| other.source == borrow.source)
+                .filter(|other| {
+                    other.source == borrow.source
+                        && matches!(
+                            other.kind,
+                            StoredBorrowKind::SharedReference
+                                | StoredBorrowKind::ExclusiveReference
+                        )
+                })
                 .count()
                 > 1
                 || ok_dependencies.contains(&borrow.source)
@@ -1578,11 +1631,13 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
                 ));
                 return None;
             }
-            before_call.push(format!("LifetimeEdge.CheckRetain({holder}, {source});"));
+            links.push(format!("StoredLink.Exclusive({holder}, {source})"));
             after_call.push(format!("LifetimeEdge.RetainLease({holder}, ref {source});"));
         }
 
-        inputs.borrow_statements.extend(before_call);
+        inputs
+            .borrow_statements
+            .push(format!("LifetimeEdge.Store({});", links.join(", ")));
         Some(after_call)
     }
 

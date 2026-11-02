@@ -80,8 +80,7 @@ public partial class StoredBorrowNode
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 nextLease = next._diplomatHandle.Lease(BorrowKind.Shared);
-                LifetimeEdge.Retain(selfLease, nextLease);
-                LifetimeEdge.KeepAlive(nextLease, selfLease);
+                LifetimeEdge.Store(StoredLink.Shared(selfLease, nextLease), StoredLink.SelfReference(nextLease), StoredLink.Data(nextLease, selfLease));
                 Raw.StoredBorrowNode.Link(selfLease!.Ptr, nextLease!.Ptr);
             }
             finally
@@ -103,8 +102,7 @@ public partial class StoredBorrowNode
             {
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 otherLease = other._diplomatHandle.Lease(BorrowKind.Shared);
-                LifetimeEdge.KeepAlive(selfLease, otherLease);
-                LifetimeEdge.KeepAlive(otherLease, selfLease);
+                LifetimeEdge.Store(StoredLink.Data(selfLease, otherLease), StoredLink.Data(otherLease, selfLease));
                 Raw.StoredBorrowNode.AdoptLink(selfLease!.Ptr, otherLease!.Ptr);
             }
             finally
@@ -132,6 +130,23 @@ public partial class StoredBorrowNode
                 selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
                 Raw.StoredBorrowNode* result = Raw.StoredBorrowNode.View(selfLease!.Ptr);
                 return new StoredBorrowNode(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
+            }
+            finally
+            {
+                selfLease?.Release();
+            }
+        }
+    }
+
+    public void Touch()
+    {
+        unsafe
+        {
+            BorrowLease<Raw.StoredBorrowNode>? selfLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Exclusive);
+                Raw.StoredBorrowNode.Touch(selfLease!.Ptr);
             }
             finally
             {

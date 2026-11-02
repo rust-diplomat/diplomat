@@ -30,6 +30,7 @@ public partial class Bar
                 try
                 {
                     selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                    LifetimeEdge.Store(StoredLink.SelfReference(selfLease));
                     Raw.Foo* result = Raw.Bar.Foo(selfLease!.Ptr);
                     return new Foo(result, WrapperKind.SharedView, LifetimeEdge.Move(ref selfLease));
                 }

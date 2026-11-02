@@ -42,6 +42,17 @@ public class StoredBorrowTests
     }
 
     [Fact]
+    public void LinkingTheSamePairAgain_IsNotACycle()
+    {
+        StoredBorrowNode a = StoredBorrowNode.Create();
+        StoredBorrowNode b = StoredBorrowNode.Create();
+
+        a.Link(b);
+        a.Link(b);
+        a.AdoptLink(b);
+    }
+
+    [Fact]
     public void StoringIntoBorrowedView_IsRejected()
     {
         StoredBorrowNode owner = StoredBorrowNode.Create();
@@ -77,6 +88,57 @@ public class StoredBorrowTests
     }
 
     [Fact]
+    public void StoredReference_IsInvalidatedWhenItsSourceIsMutated()
+    {
+        StoredBorrowTarget parent = StoredBorrowTarget.Create();
+        StoredBorrowHolder holder = parent.MakeHolder();
+        StoredBorrowTarget target = StoredBorrowTarget.Create();
+        holder.Store(target);
+
+        target.Touch();
+
+        Assert.Throws<InvalidOperationException>(() => holder.Store(StoredBorrowTarget.Create()));
+    }
+
+    [Fact]
+    public void CopiedData_IsInvalidatedWhenWhatItBorrowsIsMutated()
+    {
+        StoredBorrowTarget parent = StoredBorrowTarget.Create();
+        StoredBorrowHolder source = parent.MakeHolder();
+        StoredBorrowHolder adopter = StoredBorrowTarget.Create().MakeHolder();
+        adopter.Adopt(source);
+
+        parent.Touch();
+
+        Assert.Throws<InvalidOperationException>(
+            () => adopter.Adopt(StoredBorrowTarget.Create().MakeHolder()));
+    }
+
+    [Fact]
+    public void CopiedData_SurvivesMutationOfTheArgumentItCameFrom()
+    {
+        StoredBorrowTarget parent = StoredBorrowTarget.Create();
+        StoredBorrowHolder source = parent.MakeHolder();
+        StoredBorrowHolder adopter = StoredBorrowTarget.Create().MakeHolder();
+        adopter.Adopt(source);
+
+        source.Touch();
+
+        adopter.Adopt(StoredBorrowTarget.Create().MakeHolder());
+        GC.KeepAlive(parent);
+    }
+
+    [Fact]
+    public void PassingAViewWhereDataMayBeCopied_IsRejected()
+    {
+        StoredBorrowNode owner = StoredBorrowNode.Create();
+        StoredBorrowNode other = StoredBorrowNode.Create();
+
+        Assert.Throws<InvalidOperationException>(() => owner.View().AdoptLink(StoredBorrowNode.Create()));
+        Assert.Throws<InvalidOperationException>(() => other.Link(owner.View()));
+    }
+
+    [Fact]
     public void ExclusiveArgumentStoredIntoHolder_StaysBorrowedUntilHolderIsDisposed()
     {
         StoredBorrowTarget target = StoredBorrowTarget.Create();
@@ -89,5 +151,44 @@ public class StoredBorrowTests
         holder.Dispose();
         other.Store(target);
         other.Dispose();
+    }
+
+    [Fact]
+    public void ExclusiveArgumentStoredBeforeAnError_StaysBorrowedUntilHolderIsDisposed()
+    {
+        StoredBorrowTarget target = StoredBorrowTarget.Create();
+        StoredBorrowExclusiveHolder holder = StoredBorrowExclusiveHolder.Create();
+        StoredBorrowExclusiveHolder other = StoredBorrowExclusiveHolder.Create();
+
+        Assert.ThrowsAny<Exception>(() => holder.StoreThenFail(target));
+        Assert.Throws<InvalidOperationException>(() => other.Store(target));
+
+        holder.Dispose();
+        other.Store(target);
+        other.Dispose();
+    }
+
+    [Fact]
+    public void ValueThatMayHoldItself_CannotBeMutated()
+    {
+        StoredBorrowNode a = StoredBorrowNode.Create();
+        StoredBorrowNode b = StoredBorrowNode.Create();
+        a.Link(b);
+
+        Assert.Throws<InvalidOperationException>(() => b.Touch());
+        a.Touch();
+    }
+
+    [Fact]
+    public void DataCopiedFromAValueThatMayHoldItself_KeepsThatValueLocked()
+    {
+        StoredBorrowNode a = StoredBorrowNode.Create();
+        StoredBorrowNode b = StoredBorrowNode.Create();
+        StoredBorrowNode c = StoredBorrowNode.Create();
+        a.Link(b);
+        c.AdoptLink(b);
+
+        Assert.Throws<InvalidOperationException>(() => b.Touch());
+        c.View();
     }
 }
