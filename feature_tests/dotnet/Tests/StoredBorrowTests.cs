@@ -226,6 +226,30 @@ public class StoredBorrowTests
         other.Dispose();
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void StoreFreshTargetInsideExclusiveApple(
+        StoredBorrowExclusiveHolder holder,
+        StoredBorrowApple apple)
+    {
+        holder.StoreChain(apple, StoredBorrowTarget.Create());
+    }
+
+    [Fact]
+    public void ExclusiveArgumentThatStoresAnother_KeepsItAfterItsHolderIsDisposed()
+    {
+        TestGc.DrainFinalizers();
+        StoredBorrowTarget.ResetDropCount();
+
+        StoredBorrowApple apple = StoredBorrowApple.Create();
+        StoredBorrowExclusiveHolder holder = StoredBorrowExclusiveHolder.Create();
+        StoreFreshTargetInsideExclusiveApple(holder, apple);
+        holder.Dispose();
+        TestGc.DrainFinalizers();
+
+        Assert.Equal(0ul, StoredBorrowTarget.DropCount());
+        GC.KeepAlive(apple);
+    }
+
     [Fact]
     public void ExclusiveArgumentStoredBeforeAnError_StaysBorrowedUntilHolderIsDisposed()
     {

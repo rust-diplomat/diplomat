@@ -948,6 +948,15 @@ pub mod ffi {
             *self.0.borrow_mut() = Some(target);
             1
         }
+
+        /// Stores `target` in `apple`, so `apple` must keep it even after `self` is gone.
+        pub fn store_chain<'b: 'a>(
+            &self,
+            apple: &'a mut StoredBorrowApple<'b>,
+            target: &'b StoredBorrowTarget,
+        ) {
+            apple.store_mut(target);
+        }
     }
 
     #[diplomat::attr(not(dotnet), disable)]

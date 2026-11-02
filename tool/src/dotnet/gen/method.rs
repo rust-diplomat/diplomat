@@ -1680,11 +1680,30 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
             if !checks.contains(&check) {
                 checks.push(check);
             }
-            after_call.push(format!("LifetimeEdge.Retain({holder}, ref {source});"));
+            after_call.push((
+                borrow,
+                format!("LifetimeEdge.Retain({holder}, ref {source});"),
+            ));
+        }
+
+        // Retaining an exclusive source moves its lease away, so everything that source holds
+        // must be retained first or it would find no lease and keep nothing.
+        let mut ordered = Vec::with_capacity(after_call.len());
+        while !after_call.is_empty() {
+            let next = after_call
+                .iter()
+                .position(|(borrow, _)| {
+                    !borrow.exclusive
+                        || !after_call
+                            .iter()
+                            .any(|(other, _)| other.holder == borrow.source)
+                })
+                .expect("store_graph rejects cycles, so some retain is always ready");
+            ordered.push(after_call.remove(next).1);
         }
 
         inputs.borrow_statements.extend(checks);
-        Some(after_call)
+        Some(ordered)
     }
 
     fn manually_disposable_borrow_sources(

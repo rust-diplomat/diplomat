@@ -145,6 +145,36 @@ public partial class StoredBorrowExclusiveHolder: IDisposable
         }
     }
 
+    public void StoreChain(StoredBorrowApple apple, StoredBorrowTarget target)
+    {
+        unsafe
+        {
+            if (apple == null) throw new ArgumentNullException(nameof(apple));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            BorrowLease<Raw.StoredBorrowExclusiveHolder>? selfLease = null;
+            BorrowLease<Raw.StoredBorrowApple>? appleLease = null;
+            BorrowLease<Raw.StoredBorrowTarget>? targetLease = null;
+            try
+            {
+                selfLease = _diplomatHandle.Lease(BorrowKind.Shared);
+                appleLease = apple._diplomatHandle.Lease(BorrowKind.Exclusive);
+                targetLease = target._diplomatHandle.Lease(BorrowKind.Shared);
+                LifetimeEdge.CheckHolder(selfLease);
+                LifetimeEdge.CheckHolder(appleLease);
+                Raw.StoredBorrowExclusiveHolder.StoreChain(selfLease!.Ptr, appleLease!.Ptr, targetLease!.Ptr);
+                LifetimeEdge.Retain(selfLease, ref targetLease);
+                LifetimeEdge.Retain(appleLease, ref targetLease);
+                LifetimeEdge.Retain(selfLease, ref appleLease);
+            }
+            finally
+            {
+                selfLease?.Release();
+                appleLease?.Release();
+                targetLease?.Release();
+            }
+        }
+    }
+
     private void Cleanup()
     {
         unsafe
