@@ -1,0 +1,17 @@
+using System.Runtime.InteropServices;
+
+namespace {{ namespace }}.Diplomat;
+
+// Mirrors Rust `DiplomatOption<DiplomatSlice<T>>` = `#[repr(C)] { union { ok: T, err: () }, is_ok: bool }`.
+// A union with a ZST arm has T's layout, so a sequential { slice, flag } matches.
+[StructLayout(LayoutKind.Sequential)]
+internal struct {{ option_name }}
+{
+    public {{ slice_name }} Value;
+    public DiplomatBool IsSome;
+
+    public static {{ option_name }} Some({{ slice_name }} value) =>
+        new {{ option_name }} { Value = value, IsSome = true };
+
+    public static {{ option_name }} None => default({{ option_name }});
+}
