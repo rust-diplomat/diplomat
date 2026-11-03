@@ -192,6 +192,7 @@ pub mod ffi {
         // Holds: [hold]
         #[allow(clippy::extra_unused_lifetimes)]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn transitivity<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'e: 'd, 'x>(
             hold: &'x One<'e>,
             nohold: &One<'x>,
@@ -203,6 +204,7 @@ pub mod ffi {
         // Holds: [hold]
         #[allow(clippy::extra_unused_lifetimes)]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn cycle<'a: 'b, 'b: 'c, 'c: 'a, 'x>(
             hold: &Two<'x, 'b>,
             nohold: &'x One<'x>,
@@ -213,6 +215,7 @@ pub mod ffi {
 
         // Holds: [a, b, c, d]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn many_dependents<'a, 'b: 'a, 'c: 'a, 'd: 'b + 'x, 'x, 'y>(
             a: &'x One<'a>,
             b: &'b One<'a>,
@@ -226,6 +229,7 @@ pub mod ffi {
 
         // Holds: [hold]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn return_outlives_param<'short, 'long: 'short>(
             hold: &Two<'long, 'short>,
             nohold: &'short One<'short>,
@@ -236,6 +240,7 @@ pub mod ffi {
 
         // Holds: [top, left, right, bottom]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn diamond_top<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -252,6 +257,7 @@ pub mod ffi {
 
         // Holds: [left, bottom]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn diamond_left<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -267,6 +273,7 @@ pub mod ffi {
 
         // Holds: [right, bottom]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn diamond_right<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -282,6 +289,7 @@ pub mod ffi {
 
         // Holds: [bottom]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn diamond_bottom<'top, 'left: 'top, 'right: 'top, 'bottom: 'left + 'right>(
             top: &One<'top>,
             left: &One<'left>,
@@ -294,6 +302,7 @@ pub mod ffi {
 
         // Holds: [a, b, c, d]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn diamond_and_nested_types<'a, 'b: 'a, 'c: 'b, 'd: 'b + 'c, 'x, 'y>(
             a: &One<'a>,
             b: &'y One<'b>,
@@ -313,6 +322,7 @@ pub mod ffi {
         // Holds: [implicit_hold, explicit_hold]
         #[allow(clippy::extra_unused_lifetimes)]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn implicit_bounds<'a, 'b: 'a, 'c: 'b, 'd: 'c, 'x, 'y>(
             explicit_hold: &'d One<'x>, // implies that 'x: 'd
             implicit_hold: &One<'x>,
@@ -328,6 +338,7 @@ pub mod ffi {
         // Holds: [a, b, c]
         #[allow(clippy::needless_lifetimes)]
         #[diplomat::attr(auto, named_constructor)]
+        #[diplomat::attr(dotnet, disable)]
         pub fn implicit_bounds_deep<'a, 'b, 'c, 'd, 'x>(
             explicit_: &'a One<'b>,
             implicit_1: &'b One<'c>,
@@ -856,6 +867,130 @@ pub mod ffi {
             self.0.value += delta;
         }
     }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque_mut]
+    pub struct StoredBorrowTarget(super::DropRecord);
+
+    impl StoredBorrowTarget {
+        pub fn create() -> Box<Self> {
+            Box::new(Self(super::DropRecord::counted(
+                &super::STORED_BORROW_TARGET_DROPS,
+            )))
+        }
+
+        pub fn make_holder<'a>(&'a self) -> Box<StoredBorrowHolder<'a>> {
+            Box::new(StoredBorrowHolder(core::cell::RefCell::new(self)))
+        }
+
+        pub fn make_banana<'y>(&'y self) -> Box<StoredBorrowBanana<'y>> {
+            Box::new(StoredBorrowBanana(self))
+        }
+
+        /// Stores `self` in `holder` and also returns a value borrowing it.
+        pub fn lend_to<'a>(
+            &'a self,
+            holder: &StoredBorrowHolder<'a>,
+        ) -> Box<StoredBorrowBanana<'a>> {
+            *holder.0.borrow_mut() = self;
+            Box::new(StoredBorrowBanana(self))
+        }
+
+        pub fn touch(&mut self) {}
+
+        pub fn reset_drop_count() {
+            super::STORED_BORROW_TARGET_DROPS.store(0, super::Ordering::SeqCst);
+        }
+
+        pub fn drop_count() -> u64 {
+            super::STORED_BORROW_TARGET_DROPS.load(super::Ordering::SeqCst)
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque_mut]
+    pub struct StoredBorrowHolder<'a>(core::cell::RefCell<&'a StoredBorrowTarget>);
+
+    impl<'a> StoredBorrowHolder<'a> {
+        pub fn store(&'a self, target: &'a StoredBorrowTarget) {
+            *self.0.borrow_mut() = target;
+        }
+
+        pub fn view<'b>(&'b self) -> &'b StoredBorrowHolder<'a> {
+            self
+        }
+
+        pub fn touch(&mut self) {}
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    #[diplomat::attr(dotnet, manually_disposable)]
+    pub struct StoredBorrowExclusiveHolder<'a>(
+        core::cell::RefCell<Option<&'a mut StoredBorrowTarget>>,
+    );
+
+    impl<'a> StoredBorrowExclusiveHolder<'a> {
+        pub fn create() -> Box<StoredBorrowExclusiveHolder<'a>> {
+            Box::new(Self(core::cell::RefCell::new(None)))
+        }
+
+        pub fn store(&self, target: &'a mut StoredBorrowTarget) {
+            *self.0.borrow_mut() = Some(target);
+        }
+
+        pub fn store_then_fail(&self, target: &'a mut StoredBorrowTarget) -> Result<(), ()> {
+            *self.0.borrow_mut() = Some(target);
+            Err(())
+        }
+
+        pub fn store_and_count(&self, target: &'a mut StoredBorrowTarget) -> u32 {
+            *self.0.borrow_mut() = Some(target);
+            1
+        }
+
+        /// Stores `target` in `apple`, so `apple` must keep it even after `self` is gone.
+        pub fn store_chain<'b: 'a>(
+            &self,
+            apple: &'a mut StoredBorrowApple<'b>,
+            target: &'b StoredBorrowTarget,
+        ) {
+            apple.store_mut(target);
+        }
+    }
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque]
+    pub struct StoredBorrowBanana<'y>(&'y StoredBorrowTarget);
+
+    #[diplomat::attr(not(dotnet), disable)]
+    #[diplomat::opaque_mut]
+    pub struct StoredBorrowApple<'x>(
+        core::cell::RefCell<Option<&'x StoredBorrowTarget>>,
+        core::cell::RefCell<Option<&'x StoredBorrowBanana<'x>>>,
+    );
+
+    impl<'x> StoredBorrowApple<'x> {
+        pub fn create() -> Box<StoredBorrowApple<'x>> {
+            Box::new(Self(
+                core::cell::RefCell::new(None),
+                core::cell::RefCell::new(None),
+            ))
+        }
+
+        /// Copies the target `banana` borrows, not `banana` itself.
+        pub fn take<'y: 'x>(&self, banana: &StoredBorrowBanana<'y>) {
+            *self.0.borrow_mut() = Some(banana.0);
+        }
+
+        pub fn keep<'y: 'x>(&self, banana: &'x StoredBorrowBanana<'y>) {
+            *self.1.borrow_mut() = Some(banana);
+        }
+
+        pub fn store_mut(&mut self, target: &'x StoredBorrowTarget) {
+            *self.0.get_mut() = Some(target);
+        }
+    }
 }
 
 // Bumped by GcRaceProbe's Drop. Outside the bridge so the macro doesn't see it.
@@ -883,6 +1018,9 @@ pub(crate) static PINNED_RC_SOURCE_DROPS: std::sync::atomic::AtomicU64 =
 pub(crate) static PINNED_RC_SOURCE_DROP_CHECKSUM: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 pub(crate) static PINNED_RC_DEPENDENT_DROPS: std::sync::atomic::AtomicU64 =
+    std::sync::atomic::AtomicU64::new(0);
+
+pub(crate) static STORED_BORROW_TARGET_DROPS: std::sync::atomic::AtomicU64 =
     std::sync::atomic::AtomicU64::new(0);
 
 #[derive(Copy, Clone)]

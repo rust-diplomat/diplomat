@@ -73,6 +73,7 @@ pub(super) struct ItemGenContext<'ctx, 'tcx> {
     pub option_slice_registry: RefCell<HashSet<&'static str>>,
     pub option_struct_registry: RefCell<HashMap<String, fillable::DotnetOption>>,
     pub callback_struct_registry: RefCell<HashMap<String, DotnetCallback>>,
+    pub store_graph: std::cell::OnceCell<method::StoreGraph>,
 }
 
 #[derive(Template)]

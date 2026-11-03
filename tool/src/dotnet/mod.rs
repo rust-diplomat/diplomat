@@ -415,6 +415,7 @@ pub(crate) fn run<'tcx>(
         option_slice_registry: std::cell::RefCell::new(std::collections::HashSet::new()),
         option_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
         callback_struct_registry: std::cell::RefCell::new(std::collections::HashMap::new()),
+        store_graph: std::cell::OnceCell::new(),
     };
 
     /*
@@ -1536,6 +1537,212 @@ mod test {
             source.contains("new Writer(result, LifetimeEdge.Move(ref selfLease))"),
             "the exclusive child takes over the receiver lease:\n{source}"
         );
+    }
+
+    #[test]
+    fn stored_arguments_that_cannot_be_kept_alive_are_rejected() {
+        let cases = [
+            (
+                "slice",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque_mut]
+                        pub struct Holder<'a>(&'a [u8]);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&mut self, bytes: &'a [u8]) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "only opaque arguments can be kept alive",
+            ),
+            (
+                "manually disposable",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        #[diplomat::attr(dotnet, manually_disposable)]
+                        pub struct Target;
+
+                        #[diplomat::opaque_mut]
+                        pub struct Holder<'a>(&'a Target);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&mut self, target: &'a Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "is manually disposable",
+            ),
+            (
+                "exclusive into undisposable holder",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque_mut]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<&'a mut Target>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&self, target: &'a mut Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "is borrowed mutably and may be stored",
+            ),
+            (
+                "exclusive with two holders",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque_mut]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        #[diplomat::attr(dotnet, manually_disposable)]
+                        pub struct Other<'b>(core::cell::RefCell<Option<&'b Target>>);
+
+                        #[diplomat::opaque]
+                        #[diplomat::attr(dotnet, manually_disposable)]
+                        pub struct Holder<'a>(core::cell::RefCell<Option<&'a mut Target>>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store<'b, 'c: 'a + 'b>(&self, other: &Other<'b>, target: &'c mut Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "an exclusive borrow can have only one holder",
+            ),
+            (
+                "data through an exclusive borrow",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Target;
+
+                        #[diplomat::opaque_mut]
+                        pub struct Banana<'a>(&'a Target);
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<Option<&'a Target>>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store<'b: 'a>(&self, banana: &mut Banana<'b>) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "data borrowed through mutably borrowed `banana`",
+            ),
+            (
+                "own type",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Node<'a>(core::cell::Cell<Option<&'a Node<'a>>>);
+
+                        impl<'a> Node<'a> {
+                            pub fn link(&self, next: &'a Node<'a>) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "a `Node` can already point back at a `Node`",
+            ),
+            (
+                "two types storing each other",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Apple<'a>(core::cell::Cell<Option<&'a Banana<'a>>>);
+
+                        #[diplomat::opaque]
+                        pub struct Banana<'a>(core::cell::Cell<Option<&'a Apple<'a>>>);
+
+                        impl<'a> Apple<'a> {
+                            pub fn keep(&self, banana: &'a Banana<'a>) {
+                                unimplemented!()
+                            }
+                        }
+
+                        impl<'a> Banana<'a> {
+                            pub fn keep(&self, apple: &'a Apple<'a>) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "can already point back",
+            ),
+            (
+                "returned view pointing back",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<&'a Target>, Box<Target>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&self, target: &'a Target) {
+                                unimplemented!()
+                            }
+
+                            pub fn inner<'b>(&'b self) -> &'b Target {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "a `Target` can already point back at a `Holder`",
+            ),
+            (
+                "static borrow",
+                quote! {
+                    #[diplomat::bridge]
+                    mod ffi {
+                        #[diplomat::opaque]
+                        pub struct Target;
+
+                        #[diplomat::opaque]
+                        pub struct Holder<'a>(core::cell::RefCell<&'a Target>);
+
+                        impl<'a> Holder<'a> {
+                            pub fn store(&self, target: &'static Target) {
+                                unimplemented!()
+                            }
+                        }
+                    }
+                },
+                "is borrowed for `'static`",
+            ),
+        ];
+        for (name, tokens, expected) in cases {
+            let (_, errors) = run_dotnet(tokens);
+            assert!(
+                errors.iter().any(|e| e.contains(expected)),
+                "{name}: expected `{expected}` in {errors:?}"
+            );
+        }
     }
 
     #[test]
