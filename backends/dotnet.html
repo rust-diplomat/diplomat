@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e1ccec87.js";
+            window.path_to_searchindex_js = "../searchindex-ca29546b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-548185b0.js"></script>
@@ -288,6 +288,37 @@ impl Source {
     pub fn view_mut(&amp;mut self) -&gt; &amp;mut View { &amp;mut self.0 } // `View` must be disposable
 }
 <span class="boring">}</span></code></pre>
+<p>An argument can also be kept by another argument instead of by the return value. The signature
+allows that when one of the argument’s lifetimes outlives a lifetime the other argument’s type
+is generic over, so the generator treats every such pair as stored:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[diplomat::opaque]
+pub struct Holder&lt;'a&gt;(RefCell&lt;&amp;'a Target&gt;);
+
+impl&lt;'a&gt; Holder&lt;'a&gt; {
+    pub fn store(&amp;self, target: &amp;'a Target) { *self.0.borrow_mut() = target; }
+}
+<span class="boring">}</span></code></pre>
+<p>After the native call, <code>holder.Store(target)</code> adds an edge from <code>holder</code> to <code>target</code>, the same
+kind of edge a returned value gets, so <code>target</code> stays reachable while <code>holder</code> is. A shared
+<code>&amp;'a Target</code> becomes a read view as above; an <code>&amp;'a mut Target</code> keeps its borrow, so the holder’s
+type must be <code>manually_disposable</code>. When only a lifetime inside the argument’s type matches
+(<code>&amp;Banana&lt;'b&gt;</code> into <code>Apple&lt;'a&gt;</code> with <code>'b: 'a</code>), the holder can only get data the argument already
+borrows, but it gets the same edge, so mutating the argument also invalidates the holder.</p>
+<p>The generator rejects a stored argument that can’t be kept alive this way: slices, strings and
+structs, <code>manually_disposable</code> types, <code>&amp;'static</code> borrows, and data reached through an <code>&amp;mut</code>
+argument. It also rejects any store that could close a loop of edges between types, including a
+type storing its own type, because every call walks those edges. At run time, calling such a
+method on a borrowed view throws <code>InvalidOperationException</code>, because a view can’t keep anything
+alive for the value it points into.</p>
+<p>One case is not covered yet: a value can store data borrowed from itself inside itself, through
+<code>&amp;'a self</code> or <code>&amp;'a mut self</code> on a type generic over <code>'a</code>. The generated API does not stop a later
+<code>&amp;mut</code> call that frees that data. <code>&amp;'a mut self</code> is also the usual iterator pattern
+(<code>fn next(&amp;'a mut self)</code>), so it is left unchanged for now.</p>
+<p>Values that share interior state are not covered either. If <code>fork(&amp;self) -&gt; Box&lt;Self&gt;</code> hands out
+a second owner of the same <code>Rc</code>, <code>original.Fork().Store(target)</code> keeps <code>target</code> alive only from
+the fork, so once the fork is collected the original can point at freed memory.</p>
 <p>A mutation attempt while an operation or <code>WithSpan</code> callback exposes a native pointer throws
 instead of invalidating that pointer. Every handle is a <code>SafeHandle</code>; a scoped operation guard
 protects the directly invoked value during its native call. Source edges validate borrow state
