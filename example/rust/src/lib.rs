@@ -15,3 +15,19 @@ mod fixed_decimal_grouping_strategy;
 pub use fixed_decimal_grouping_strategy::FixedDecimalGroupingStrategy;
 mod locale;
 pub use locale::Locale;
+
+/// A `&[T]` as it crosses the ABI. Only lives for the duration of a call.
+#[repr(C)]
+pub(crate) struct DiplomatSlice<T> {
+    ptr: *const T,
+    len: usize,
+}
+
+impl<T> DiplomatSlice<T> {
+    pub(crate) fn new(slice: &[T]) -> Self {
+        Self {
+            ptr: slice.as_ptr(),
+            len: slice.len(),
+        }
+    }
+}

@@ -2,7 +2,7 @@
 use diplomat_example as _;
 
 use diplomat_example_rust::{
-    DataProvider, FixedDecimal, FixedDecimalFormatterOptions, FixedDecimalGroupingStrategy,
+    DataProvider, FixedDecimal, FixedDecimalFormatterOptions, FixedDecimalGroupingStrategy, Locale,
 };
 
 #[test]
@@ -24,4 +24,9 @@ fn struct_returned_by_value() {
             some_other_config: false,
         }
     );
+}
+
+#[test]
+fn string_param() {
+    let _locale = Locale::new(b"en-US");
 }

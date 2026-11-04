@@ -10,16 +10,35 @@ use super::formatter::RustFormatter;
 use crate::ErrorStore;
 use askama::Template;
 use diplomat_core::hir::{
-    self, Mutability, PrimitiveType, ReturnType, SelfType, StructPathLike, SuccessType, TyPosition,
-    Type, TypeContext, TypeId,
+    self, Lifetime, MaybeOwn, MaybeStatic, Mutability, PrimitiveType, ReturnType, SelfType, Slice,
+    StringEncoding, StructPathLike, SuccessType, TyPosition, Type, TypeContext, TypeId,
 };
 use std::borrow::Cow;
+use std::cell::Cell;
+use std::collections::BTreeSet;
 
 /// The context used for generating a particular type
 pub(super) struct ItemGenContext<'cx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'cx RustFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
+    pub used_slices: &'cx UsedSlices,
+}
+
+/// Which of the slice types defined in `lib.rs` the generated methods use
+#[derive(Default)]
+pub(super) struct UsedSlices {
+    pub slice: Cell<bool>,
+    pub slice_mut: Cell<bool>,
+}
+
+impl UsedSlices {
+    fn mark(&self, kind: SliceKind) {
+        match kind {
+            SliceKind::Slice => self.slice.set(true),
+            SliceKind::SliceMut => self.slice_mut.set(true),
+        }
+    }
 }
 
 impl ItemGenContext<'_, '_> {
@@ -152,11 +171,14 @@ impl ItemGenContext<'_, '_> {
             }
         }
 
+        let storable = storable_lifetimes(method);
+        let mut slices = vec![];
         for param in &method.params {
-            let ty = self.gen_value_type(&param.ty)?;
-            params.push(format!("{}: {ty}", param.name));
-            abi_params.push(format!("{}: {ty}", param.name));
-            args.push(param.name.to_string());
+            let param = self.gen_param(param, &storable)?;
+            params.push(param.decl);
+            abi_params.push(param.abi_decl);
+            args.push(param.arg);
+            slices.extend(param.slice);
         }
 
         let (ret, abi_ret, opaque_ret) = match &method.output {
@@ -182,6 +204,11 @@ impl ItemGenContext<'_, '_> {
             _ => return None,
         };
 
+        // Only record the slice types once the method is known to be generated
+        for kind in slices {
+            self.used_slices.mark(kind);
+        }
+
         Some(MethodInfo {
             docs: self.formatter.fmt_docs(&method.docs, "    "),
             name: method.name.to_string(),
@@ -194,12 +221,127 @@ impl ItemGenContext<'_, '_> {
             opaque_ret,
         })
     }
+
+    /// Lowers a parameter of the safe method. Borrowed parameters are only supported
+    /// when the borrow cannot outlive the call, i.e. when its lifetime is not in
+    /// `storable` (see [`storable_lifetimes`]) and is not `'static`.
+    fn gen_param(&self, param: &hir::Param, storable: &BTreeSet<Lifetime>) -> Option<ParamInfo> {
+        let call_only = |lifetime: &MaybeStatic<Lifetime>| match lifetime {
+            MaybeStatic::Static => false,
+            MaybeStatic::NonStatic(lifetime) => !storable.contains(lifetime),
+        };
+        let name = &param.name;
+        let (ty, abi_ty, arg, slice) = match &param.ty {
+            Type::Opaque(path)
+                if !path.is_optional()
+                    && path.lifetimes.lifetimes().len() == 0
+                    && call_only(&path.owner.lifetime) =>
+            {
+                let id = path.tcx_id.into();
+                let (reference, ptr) = match path.owner.mutability {
+                    Mutability::Mutable => ("&mut ", "*mut"),
+                    Mutability::Immutable => ("&", "*const"),
+                };
+                (
+                    format!("{reference}{}", self.fmt_type_path(id)),
+                    format!("{ptr} {}", self.fmt_opaque_raw(id)),
+                    format!("{name}.0.as_ptr()"),
+                    None,
+                )
+            }
+            Type::Slice(Slice::Str(Some(lifetime), encoding)) if call_only(lifetime) => {
+                let (ty, elem, bytes) = match encoding {
+                    StringEncoding::Utf8 => ("&str", "u8", ".as_bytes()"),
+                    StringEncoding::UnvalidatedUtf8 => ("&[u8]", "u8", ""),
+                    StringEncoding::UnvalidatedUtf16 => ("&[u16]", "u16", ""),
+                    _ => return None,
+                };
+                (
+                    ty.to_string(),
+                    format!("crate::DiplomatSlice<{elem}>"),
+                    format!("crate::DiplomatSlice::new({name}{bytes})"),
+                    Some(SliceKind::Slice),
+                )
+            }
+            Type::Slice(Slice::Primitive(MaybeOwn::Borrow(borrow), prim))
+                if call_only(&borrow.lifetime) =>
+            {
+                let elem = Self::gen_primitive(prim)?;
+                let (reference, kind) = match borrow.mutability {
+                    Mutability::Mutable => ("&mut ", SliceKind::SliceMut),
+                    Mutability::Immutable => ("&", SliceKind::Slice),
+                };
+                let slice = kind.type_name();
+                (
+                    format!("{reference}[{elem}]"),
+                    format!("crate::{slice}<{elem}>"),
+                    format!("crate::{slice}::new({name})"),
+                    Some(kind),
+                )
+            }
+            ty => {
+                let ty = self.gen_value_type(ty)?;
+                (ty.clone(), ty, name.to_string(), None)
+            }
+        };
+        Some(ParamInfo {
+            decl: format!("{name}: {ty}"),
+            abi_decl: format!("{name}: {abi_ty}"),
+            arg,
+            slice,
+        })
+    }
+}
+
+/// Lifetimes under which the library could keep a borrowed parameter after the call
+/// returns: those of `self`'s type, and every lifetime that outlives one of them.
+fn storable_lifetimes(method: &hir::Method) -> BTreeSet<Lifetime> {
+    let self_lifetimes = match method.param_self.as_ref().map(|p| &p.ty) {
+        Some(SelfType::Opaque(path)) => path.lifetimes.lifetimes(),
+        Some(SelfType::Struct(path)) => path.lifetimes.lifetimes(),
+        _ => return BTreeSet::new(),
+    };
+    self_lifetimes
+        .filter_map(|lifetime| match lifetime {
+            MaybeStatic::NonStatic(lifetime) => Some(lifetime),
+            MaybeStatic::Static => None,
+        })
+        .flat_map(|lifetime| method.lifetime_env.all_longer_lifetimes(lifetime))
+        .collect()
+}
+
+/// A slice type defined in `lib.rs`
+#[derive(Clone, Copy)]
+enum SliceKind {
+    Slice,
+    SliceMut,
+}
+
+impl SliceKind {
+    fn type_name(self) -> &'static str {
+        match self {
+            SliceKind::Slice => "DiplomatSlice",
+            SliceKind::SliceMut => "DiplomatSliceMut",
+        }
+    }
+}
+
+/// A parameter of a [`MethodInfo`]
+struct ParamInfo {
+    /// The parameter of the safe method
+    decl: String,
+    /// The parameter of the `extern "C"` declaration
+    abi_decl: String,
+    /// The argument passed to the `extern "C"` function
+    arg: String,
+    /// The slice type in `lib.rs` that the argument is passed as, if any
+    slice: Option<SliceKind>,
 }
 
 /// A method that can be called through the safe wrapper.
 ///
-/// Parameters cross the ABI as-is, so the safe signature and the `extern` declaration
-/// only differ in how `self` and opaque returns are spelled.
+/// The safe signature and the `extern` declaration differ in how `self`, opaques and
+/// slices are spelled; value types cross the ABI as-is.
 struct MethodInfo {
     docs: String,
     name: String,
@@ -260,7 +402,7 @@ struct OpaqueTemplate<'a> {
 #[cfg(test)]
 mod test {
     use super::super::formatter::RustFormatter;
-    use super::ItemGenContext;
+    use super::{ItemGenContext, UsedSlices};
     use crate::ErrorStore;
     use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext};
     use proc_macro2::TokenStream;
@@ -283,10 +425,12 @@ mod test {
         let docs_url_gen = DocsUrlGenerator::default();
         let formatter = RustFormatter::new(&tcx, &docs_url_gen);
         let errors = ErrorStore::default();
+        let used_slices = UsedSlices::default();
         let context = ItemGenContext {
             tcx: &tcx,
             formatter: &formatter,
             errors: &errors,
+            used_slices: &used_slices,
         };
 
         let (id, _) = tcx
@@ -329,11 +473,6 @@ mod test {
                             unimplemented!()
                         }
 
-                        /// Skipped: strings are not supported yet
-                        pub fn from_str(s: &DiplomatStr) -> Box<MyOpaque> {
-                            unimplemented!()
-                        }
-
                         /// Skipped: the returned opaque borrows from `self`
                         pub fn view<'a>(&'a self) -> Box<MyView<'a>> {
                             unimplemented!()
@@ -343,6 +482,82 @@ mod test {
             },
             "MyOpaque"
         ));
+    }
+
+    #[test]
+    fn test_borrowed_params() {
+        let module = quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque_mut]
+                    struct Other(i32);
+
+                    #[diplomat::opaque_mut]
+                    struct MyOpaque(i32);
+
+                    #[diplomat::opaque]
+                    struct MyView<'a>(&'a i32);
+
+                    impl MyOpaque {
+                        pub fn strs(
+                            a: &DiplomatStr,
+                            b: &str,
+                            c: &DiplomatStr16,
+                        ) -> Box<MyOpaque> {
+                            unimplemented!()
+                        }
+
+                        pub fn slices(&self, a: &[f64], b: &mut [u8]) {
+                            unimplemented!()
+                        }
+
+                        pub fn opaques(&mut self, a: &Other, b: &mut Other) -> i32 {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: the library may keep a `'static` borrow
+                        pub fn static_opaque(a: &'static Other) {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: optional opaques are not supported yet
+                        pub fn optional(a: Option<&Other>) {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: the opaque parameter has lifetimes
+                        pub fn view<'a>(v: &MyView<'a>) {
+                            unimplemented!()
+                        }
+                    }
+
+                    impl<'a> MyView<'a> {
+                        /// Skipped: the library may keep `s` in `self`
+                        pub fn keep(&self, s: &'a DiplomatStr) {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: `'b` outlives `'a`, so the library may keep `s` in `self`
+                        pub fn keep_longer<'b: 'a>(&self, s: &'b DiplomatStr) {
+                            unimplemented!()
+                        }
+
+                        pub fn read(&self, s: &DiplomatStr) -> i32 {
+                            unimplemented!()
+                        }
+
+                        /// `'b` may be shorter than `'a`, so `s` cannot be kept in `self`
+                        pub fn read_shorter<'b>(&'b self, s: &'b DiplomatStr) -> i32
+                        where
+                            'a: 'b,
+                        {
+                            unimplemented!()
+                        }
+                    }
+                }
+        };
+        insta::assert_snapshot!(gen_type(module.clone(), "MyOpaque"));
+        insta::assert_snapshot!("borrowed_params_view", gen_type(module, "MyView"));
     }
 
     #[test]

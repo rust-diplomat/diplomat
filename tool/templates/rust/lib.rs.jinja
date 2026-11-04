@@ -6,4 +6,40 @@
 mod {{ module }};
 pub use {{ module }}::{{ ty_name }};
 {%- endfor %}
+{%- if slice %}
+
+/// A `&[T]` as it crosses the ABI. Only lives for the duration of a call.
+#[repr(C)]
+pub(crate) struct DiplomatSlice<T> {
+    ptr: *const T,
+    len: usize,
+}
+
+impl<T> DiplomatSlice<T> {
+    pub(crate) fn new(slice: &[T]) -> Self {
+        Self {
+            ptr: slice.as_ptr(),
+            len: slice.len(),
+        }
+    }
+}
+{%- endif %}
+{%- if slice_mut %}
+
+/// A `&mut [T]` as it crosses the ABI. Only lives for the duration of a call.
+#[repr(C)]
+pub(crate) struct DiplomatSliceMut<T> {
+    ptr: *mut T,
+    len: usize,
+}
+
+impl<T> DiplomatSliceMut<T> {
+    pub(crate) fn new(slice: &mut [T]) -> Self {
+        Self {
+            ptr: slice.as_mut_ptr(),
+            len: slice.len(),
+        }
+    }
+}
+{%- endif %}
 

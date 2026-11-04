@@ -1,0 +1,46 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(module.clone(), \"MyOpaque\")"
+---
+/// The type behind `MyOpaque` pointers at the ABI level.
+#[repr(C)]
+pub(crate) struct MyOpaqueRaw {
+    _private: [u8; 0],
+}
+
+pub struct MyOpaque(pub(crate) core::ptr::NonNull<MyOpaqueRaw>);
+
+impl MyOpaque {
+    pub fn strs(a: &[u8], b: &str, c: &[u16]) -> crate::MyOpaque {
+        // Safety: `Box` returns are never null, and the wrapper takes ownership.
+        unsafe {
+            crate::MyOpaque(core::ptr::NonNull::new_unchecked(
+                MyOpaque_strs(crate::DiplomatSlice::new(a), crate::DiplomatSlice::new(b.as_bytes()), crate::DiplomatSlice::new(c)),
+            ))
+        }
+    }
+
+    pub fn slices(&self, a: &[f64], b: &mut [u8]) {
+        unsafe { MyOpaque_slices(self.0.as_ptr(), crate::DiplomatSlice::new(a), crate::DiplomatSliceMut::new(b)) }
+    }
+
+    pub fn opaques(&mut self, a: &crate::Other, b: &mut crate::Other) -> i32 {
+        unsafe { MyOpaque_opaques(self.0.as_ptr(), a.0.as_ptr(), b.0.as_ptr()) }
+    }
+}
+
+extern "C" {
+    fn MyOpaque_strs(a: crate::DiplomatSlice<u8>, b: crate::DiplomatSlice<u8>, c: crate::DiplomatSlice<u16>) -> *mut crate::my_opaque::MyOpaqueRaw;
+    fn MyOpaque_slices(this: *const MyOpaqueRaw, a: crate::DiplomatSlice<f64>, b: crate::DiplomatSliceMut<u8>);
+    fn MyOpaque_opaques(this: *mut MyOpaqueRaw, a: *const crate::other::OtherRaw, b: *mut crate::other::OtherRaw) -> i32;
+}
+
+impl Drop for MyOpaque {
+    fn drop(&mut self) {
+        unsafe { MyOpaque_destroy(self.0.as_ptr()) }
+    }
+}
+
+extern "C" {
+    fn MyOpaque_destroy(this: *mut MyOpaqueRaw);
+}
