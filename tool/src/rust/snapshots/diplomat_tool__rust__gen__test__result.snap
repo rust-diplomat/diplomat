@@ -1,0 +1,48 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        #[diplomat::opaque] struct MyError(i32); #[diplomat::opaque] struct\n        MyView<'a>(&'a i32); enum ErrorKind { A, B, } #[diplomat::opaque]\n        struct MyOpaque(i32); impl MyOpaque\n        {\n            pub fn try_new(value: i32) -> Result<Box<MyOpaque>, ()>\n            { unimplemented!() } pub fn check(&self) -> Result<(), ErrorKind>\n            { unimplemented!() } pub fn get(&self) -> Result<i32,\n            Box<MyError>> { unimplemented!() }\n            #[doc = r\" Skipped: the returned opaque borrows from `self`\"] pub\n            fn view<'a>(&'a self) -> Result<Box<MyView<'a>>, ()>\n            { unimplemented!() }\n            #[doc = r\" Skipped: optional returns are not supported yet\"] pub\n            fn maybe(&self) -> Option<i32> { unimplemented!() }\n        }\n    }\n}, \"MyOpaque\")"
+---
+/// The type behind `MyOpaque` pointers at the ABI level.
+#[repr(C)]
+pub(crate) struct MyOpaqueRaw {
+    _private: [u8; 0],
+}
+
+pub struct MyOpaque(pub(crate) core::ptr::NonNull<MyOpaqueRaw>);
+
+impl MyOpaque {
+    pub fn try_new(value: i32) -> Result<crate::MyOpaque, ()> {
+        // Safety: `Box` returns are never null, and the wrapper takes ownership.
+        unsafe { MyOpaque_try_new(value) }
+            .into_result()
+            .map(|ok| unsafe { crate::MyOpaque(core::ptr::NonNull::new_unchecked(ok)) })
+    }
+
+    pub fn check(&self) -> Result<(), crate::ErrorKind> {
+        unsafe { MyOpaque_check(self.0.as_ptr()) }
+            .into_result()
+    }
+
+    pub fn get(&self) -> Result<i32, crate::MyError> {
+        // Safety: `Box` returns are never null, and the wrapper takes ownership.
+        unsafe { MyOpaque_get(self.0.as_ptr()) }
+            .into_result()
+            .map_err(|err| unsafe { crate::MyError(core::ptr::NonNull::new_unchecked(err)) })
+    }
+}
+
+extern "C" {
+    fn MyOpaque_try_new(value: i32) -> crate::DiplomatResult<*mut crate::my_opaque::MyOpaqueRaw, ()>;
+    fn MyOpaque_check(this: *const MyOpaqueRaw) -> crate::DiplomatResult<(), crate::ErrorKind>;
+    fn MyOpaque_get(this: *const MyOpaqueRaw) -> crate::DiplomatResult<i32, *mut crate::my_error::MyErrorRaw>;
+}
+
+impl Drop for MyOpaque {
+    fn drop(&mut self) {
+        unsafe { MyOpaque_destroy(self.0.as_ptr()) }
+    }
+}
+
+extern "C" {
+    fn MyOpaque_destroy(this: *mut MyOpaqueRaw);
+}

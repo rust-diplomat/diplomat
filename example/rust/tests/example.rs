@@ -2,7 +2,8 @@
 use diplomat_example as _;
 
 use diplomat_example_rust::{
-    DataProvider, FixedDecimal, FixedDecimalFormatterOptions, FixedDecimalGroupingStrategy,
+    DataProvider, FixedDecimal, FixedDecimalFormatter, FixedDecimalFormatterOptions,
+    FixedDecimalGroupingStrategy, Locale,
 };
 
 #[test]
@@ -24,4 +25,21 @@ fn struct_returned_by_value() {
             some_other_config: false,
         }
     );
+}
+
+#[test]
+fn string_param() {
+    let _locale = Locale::new(b"en-US");
+}
+
+#[test]
+fn result_returned() {
+    assert_eq!(DataProvider::returns_result(), Ok(()));
+
+    let formatter = FixedDecimalFormatter::try_new(
+        &Locale::new(b"en-US"),
+        &DataProvider::new_static(),
+        FixedDecimalFormatterOptions::default(),
+    );
+    assert!(formatter.is_ok());
 }
