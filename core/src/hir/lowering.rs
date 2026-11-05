@@ -62,7 +62,9 @@ impl LoweringError {
         suggestion: Option<String>,
     ) -> Self {
         LoweringError {
-            error_type: LoweringErrorType::InvalidType { type_name: Box::new(type_name) },
+            error_type: LoweringErrorType::InvalidType {
+                type_name: Box::new(type_name),
+            },
             reason,
             suggestion,
         }
