@@ -156,7 +156,7 @@ pub fn write_report(
 ) -> Result<(), String> {
     let span = report.primary_loc.as_ref();
     let src = if let Some(sp) = &span {
-        get_span_src(*sp)
+        get_span_src(sp)
     } else {
         "<No associated span>".into()
     };

@@ -4,8 +4,7 @@ use syn::{spanned::Spanned, ItemFn};
 use crate::ast::{
     idents::{FromWithSpan, IntoWithSpan},
     logging::{create_report, AstReport, ContextLocation},
-    Attrs, Docs, Ident, LifetimeEnv, OwnedSpannedTypeName, Param, PathType, SpanLocation,
-    SpannedTypeName, TypeName,
+    Attrs, Docs, Ident, LifetimeEnv, OwnedSpannedTypeName, Param, PathType, SpanLocation, TypeName,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]

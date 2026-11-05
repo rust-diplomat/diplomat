@@ -4,8 +4,7 @@ use syn::spanned::Spanned;
 
 use crate::ast::idents::IntoWithSpan;
 use crate::ast::logging::{create_report, AstReport};
-use crate::ast::types::SpannedTypeName;
-use crate::ast::{OwnedSpannedTypeName, Span, SpanLocation};
+use crate::ast::{OwnedSpannedTypeName, SpanLocation};
 
 use super::docs::Docs;
 use super::{Attrs, Ident, Lifetime, LifetimeEnv, Mutability, PathType, TypeName};

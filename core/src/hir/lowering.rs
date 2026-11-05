@@ -76,7 +76,7 @@ impl fmt::Display for LoweringError {
                 write!(
                     f,
                     "Could not evaluate {}: {}",
-                    type_name.ty.to_string(),
+                    type_name.ty,
                     self.reason
                 )
             }
@@ -1088,7 +1088,7 @@ impl<'ast> LoweringContext<'ast> {
                             unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
                         }
                     }
-                    ast::CustomType::Opaque(op) => {
+                    ast::CustomType::Opaque(_op) => {
                         self.errors.push(LoweringError::invalid_type(
                         "Opaque passed by value".to_string(),
                         ty.into(),
@@ -1187,9 +1187,9 @@ impl<'ast> LoweringContext<'ast> {
                                     Err(())
                                 }
                             }
-                            custom_type => {
+                            _custom_type => {
                                 self.errors.push(LoweringError::invalid_type(
-                                format!("found &T in input where T is a custom type, but not opaque"),
+                                "found &T in input where T is a custom type, but not opaque".to_string(),
                                 ty.into(),
                                 Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
                             ));
@@ -1286,7 +1286,7 @@ impl<'ast> LoweringContext<'ast> {
                     },
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(op) => {
+                            ast::CustomType::Opaque(_op) => {
                                 self.errors.push(LoweringError::invalid_type(
                                     "found Option<T> where T is opaque, opaque types must be behind a reference".to_string(),
                                     ty.into(),
@@ -1486,14 +1486,14 @@ impl<'ast> LoweringContext<'ast> {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
                                 self.errors.push(LoweringError::invalid_type(
-                                    format!("Mutable slices of opaques are currently unsupported in Diplomat."),
+                                    "Mutable slices of opaques are currently unsupported in Diplomat.".to_string(),
                                     ty.into(),
                                     None,
                                 ));
                             }
                             if matches!(lt.lifetime, super::MaybeStatic::Static) {
                                 self.errors.push(LoweringError::invalid_type(
-                                    format!("&'static slices of opaques are currently unsupported in Diplomat."),
+                                    "&'static slices of opaques are currently unsupported in Diplomat.".to_string(),
                                     ty.into(),
                                     None,
                                 ));
@@ -1502,14 +1502,14 @@ impl<'ast> LoweringContext<'ast> {
 
                         if matches!(op.borrowed().mutability, Mutability::Mutable) {
                             self.errors.push(LoweringError::invalid_type(
-                                format!("Slices of mutable opaques are currently unsupported in Diplomat."),
+                                "Slices of mutable opaques are currently unsupported in Diplomat.".to_string(),
                                 ty.into(),
                                 None,
                             ));
                         }
                         if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
                             self.errors.push(LoweringError::invalid_type(
-                                format!("Slices of &'static opaques are currently unsupported in Diplomat."),
+                                "Slices of &'static opaques are currently unsupported in Diplomat.".to_string(),
                                 ty.into(),
                                 None
                             ));
@@ -1527,7 +1527,7 @@ impl<'ast> LoweringContext<'ast> {
                     }
                     _ => {
                         self.errors.push(LoweringError::invalid_type(
-                            format!("Cannot have custom type in a slice. Only abi_compatible structs or borrowed opaques are allowed."),
+                            "Cannot have custom type in a slice. Only abi_compatible structs or borrowed opaques are allowed.".to_string(),
                             ty.into(),
                             Some("See https://rust-diplomat.github.io/diplomat/types/slices.html".into()),
                         ));
