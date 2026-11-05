@@ -40,68 +40,92 @@ params:
           end: 0
         span_location: None
     ty:
-      Reference:
-        - Named:
-            - a
-            - start:
-                line: 1
-                col: 0
-              end:
-                line: 1
-                col: 0
-              range:
-                start: 0
-                end: 0
-              span_location: None
-        - Immutable
-        - Named:
-            path:
-              elements:
-                - - SomeType
-                  - start:
-                      line: 1
-                      col: 0
-                    end:
-                      line: 1
-                      col: 0
-                    range:
-                      start: 0
-                      end: 0
-                    span_location: None
-            lifetimes: []
+      ty:
+        Reference:
+          - Named:
+              - a
+              - start:
+                  line: 1
+                  col: 0
+                end:
+                  line: 1
+                  col: 0
+                range:
+                  start: 0
+                  end: 0
+                span_location: None
+          - Immutable
+          - Named:
+              path:
+                elements:
+                  - - SomeType
+                    - start:
+                        line: 1
+                        col: 0
+                      end:
+                        line: 1
+                        col: 0
+                      range:
+                        start: 0
+                        end: 0
+                      span_location: None
+              lifetimes: []
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
 output_type:
-  Option:
-    - Reference:
-        - Named:
-            - a
-            - start:
-                line: 1
-                col: 0
-              end:
-                line: 1
-                col: 0
-              range:
-                start: 0
-                end: 0
-              span_location: None
-        - Immutable
-        - Named:
-            path:
-              elements:
-                - - SomeType
-                  - start:
-                      line: 1
-                      col: 0
-                    end:
-                      line: 1
-                      col: 0
-                    range:
-                      start: 0
-                      end: 0
-                    span_location: None
-            lifetimes: []
-    - Stdlib
+  ty:
+    Option:
+      - Reference:
+          - Named:
+              - a
+              - start:
+                  line: 1
+                  col: 0
+                end:
+                  line: 1
+                  col: 0
+                range:
+                  start: 0
+                  end: 0
+                span_location: None
+          - Immutable
+          - Named:
+              path:
+                elements:
+                  - - SomeType
+                    - start:
+                        line: 1
+                        col: 0
+                      end:
+                        line: 1
+                        col: 0
+                      range:
+                        start: 0
+                        end: 0
+                      span_location: None
+              lifetimes: []
+      - Stdlib
+  location:
+    start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 lifetimes:
   ? - a
     - start:

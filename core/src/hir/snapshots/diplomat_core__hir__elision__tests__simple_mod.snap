@@ -32,7 +32,23 @@ TypeContext {
                         lines: "",
                         rust_links: [],
                     },
-                    name: "inner",
+                    name: Ident(
+                        "inner",
+                        Some(
+                            Span {
+                                start: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                end: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                range: 0..0,
+                                span_location: None,
+                            },
+                        ),
+                    ),
                     ty: Opaque(
                         OpaquePath {
                             lifetimes: Lifetimes {
@@ -126,7 +142,23 @@ TypeContext {
                     param_self: None,
                     params: [
                         Param {
-                            name: "s",
+                            name: Ident(
+                                "s",
+                                Some(
+                                    Span {
+                                        start: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        end: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        range: 0..0,
+                                        span_location: None,
+                                    },
+                                ),
+                            ),
                             ty: Slice(
                                 Str(
                                     Some(
@@ -320,7 +352,23 @@ TypeContext {
                         lines: "",
                         rust_links: [],
                     },
-                    name: "s",
+                    name: Ident(
+                        "s",
+                        Some(
+                            Span {
+                                start: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                end: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                range: 0..0,
+                                span_location: None,
+                            },
+                        ),
+                    ),
                     ty: Slice(
                         Str(
                             Some(
@@ -460,7 +508,23 @@ TypeContext {
                     ),
                     params: [
                         Param {
-                            name: "s",
+                            name: Ident(
+                                "s",
+                                Some(
+                                    Span {
+                                        start: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        end: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        range: 0..0,
+                                        span_location: None,
+                                    },
+                                ),
+                            ),
                             ty: Slice(
                                 Str(
                                     Some(

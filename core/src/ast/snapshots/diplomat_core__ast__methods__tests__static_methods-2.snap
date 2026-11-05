@@ -90,7 +90,19 @@ params:
           end: 0
         span_location: None
     ty:
-      Primitive: u64
+      ty:
+        Primitive: u64
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
   - name:
       - y
@@ -105,23 +117,47 @@ params:
           end: 0
         span_location: None
     ty:
-      Named:
-        path:
-          elements:
-            - - MyCustomStruct
-              - start:
-                  line: 1
-                  col: 0
-                end:
-                  line: 1
-                  col: 0
-                range:
-                  start: 0
-                  end: 0
-                span_location: None
-        lifetimes: []
+      ty:
+        Named:
+          path:
+            elements:
+              - - MyCustomStruct
+                - start:
+                    line: 1
+                    col: 0
+                  end:
+                    line: 1
+                    col: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
+          lifetimes: []
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
 return_type:
-  Primitive: u64
+  ty:
+    Primitive: u64
+  location:
+    start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 lifetime_env: {}
 attrs: {}

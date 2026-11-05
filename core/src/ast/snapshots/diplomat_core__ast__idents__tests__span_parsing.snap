@@ -109,7 +109,20 @@ declared_functions:
             span_location:
               FilePath: "./snapshots/span_testing.txt"
         ty:
-          Primitive: i32
+          ty:
+            Primitive: i32
+          location:
+            start:
+              line: 9
+              col: 8
+            end:
+              line: 9
+              col: 15
+            range:
+              start: 150
+              end: 157
+            span_location:
+              FilePath: "./snapshots/span_testing.txt"
         attrs: {}
       - name:
           - b
@@ -125,7 +138,20 @@ declared_functions:
             span_location:
               FilePath: "./snapshots/span_testing.txt"
         ty:
-          Primitive: usize
+          ty:
+            Primitive: usize
+          location:
+            start:
+              line: 10
+              col: 10
+            end:
+              line: 10
+              col: 18
+            range:
+              start: 170
+              end: 178
+            span_location:
+              FilePath: "./snapshots/span_testing.txt"
         attrs: {}
       - name:
           - c
@@ -141,22 +167,35 @@ declared_functions:
             span_location:
               FilePath: "./snapshots/span_testing.txt"
         ty:
-          Named:
-            path:
-              elements:
-                - - Whitespacingtest
-                  - start:
-                      line: 11
-                      col: 12
-                    end:
-                      line: 11
-                      col: 28
-                    range:
-                      start: 192
-                      end: 208
-                    span_location:
-                      FilePath: "./snapshots/span_testing.txt"
-            lifetimes: []
+          ty:
+            Named:
+              path:
+                elements:
+                  - - Whitespacingtest
+                    - start:
+                        line: 11
+                        col: 12
+                      end:
+                        line: 11
+                        col: 28
+                      range:
+                        start: 192
+                        end: 208
+                      span_location:
+                        FilePath: "./snapshots/span_testing.txt"
+              lifetimes: []
+          location:
+            start:
+              line: 11
+              col: 8
+            end:
+              line: 11
+              col: 28
+            range:
+              start: 188
+              end: 208
+            span_location:
+              FilePath: "./snapshots/span_testing.txt"
         attrs: {}
     output_type: ~
     lifetimes: {}

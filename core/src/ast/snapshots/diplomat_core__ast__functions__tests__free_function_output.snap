@@ -40,26 +40,50 @@ params:
           end: 0
         span_location: None
     ty:
-      Named:
-        path:
-          elements:
-            - - SomeType
-              - start:
-                  line: 1
-                  col: 0
-                end:
-                  line: 1
-                  col: 0
-                range:
-                  start: 0
-                  end: 0
-                span_location: None
-        lifetimes: []
+      ty:
+        Named:
+          path:
+            elements:
+              - - SomeType
+                - start:
+                    line: 1
+                    col: 0
+                  end:
+                    line: 1
+                    col: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
+          lifetimes: []
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
 output_type:
-  Option:
-    - Unit
-    - Stdlib
+  ty:
+    Option:
+      - Unit
+      - Stdlib
+  location:
+    start:
+      line: 1
+      col: 0
+    end:
+      line: 1
+      col: 0
+    range:
+      start: 0
+      end: 0
+    span_location: None
 lifetimes: {}
 attrs: {}
 docs:

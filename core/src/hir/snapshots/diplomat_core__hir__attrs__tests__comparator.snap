@@ -25,11 +25,11 @@ Diplomat error: Lowering error in Opaque::comparator_othertype
 Diplomat error: Lowering error in Opaque::comparator_badreturn
 > Cannot define two comparators on the same type
 Diplomat error: Lowering error in Opaque::comparator_badreturn
-> Found comparison method that does not return cmp::Ordering or Optional<cmp::Ordering>
+> Could not evaluate u8: Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>
 Diplomat error: Lowering error in Opaque::comparison_correct
 > Cannot define two comparators on the same type
 Diplomat error: Lowering error in Opaque::ordering_wrong
-> Found cmp::Ordering in parameter or struct field, it is only allowed in return types
+> Could not evaluate Ordering: Found cmp::Ordering in input, it is only allowed in return types
 Diplomat error: Lowering error in Opaque::comparison_mut
 > Cannot define two comparators on the same type
 Diplomat error: Lowering error in Opaque::comparison_mut

@@ -152,24 +152,48 @@ declared_types:
                     end: 0
                   span_location: None
               ty:
-                Primitive: i32
+                ty:
+                  Primitive: i32
+                location:
+                  start:
+                    line: 1
+                    col: 0
+                  end:
+                    line: 1
+                    col: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
               attrs: {}
           return_type:
-            Named:
-              path:
-                elements:
-                  - - NonOpaqueStruct
-                    - start:
-                        line: 1
-                        col: 0
-                      end:
-                        line: 1
-                        col: 0
-                      range:
-                        start: 0
-                        end: 0
-                      span_location: None
-              lifetimes: []
+            ty:
+              Named:
+                path:
+                  elements:
+                    - - NonOpaqueStruct
+                      - start:
+                          line: 1
+                          col: 0
+                        end:
+                          line: 1
+                          col: 0
+                        range:
+                          start: 0
+                          end: 0
+                        span_location: None
+                lifetimes: []
+            location:
+              start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
+              range:
+                start: 0
+                end: 0
+              span_location: None
           lifetime_env: {}
           attrs: {}
         - name:
@@ -249,7 +273,19 @@ declared_types:
                     end: 0
                   span_location: None
               ty:
-                Primitive: i32
+                ty:
+                  Primitive: i32
+                location:
+                  start:
+                    line: 1
+                    col: 0
+                  end:
+                    line: 1
+                    col: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
               attrs: {}
           return_type: ~
           lifetime_env: {}
@@ -332,22 +368,34 @@ declared_types:
             lifetimes: []
           params: []
           return_type:
-            Box:
-              Named:
-                path:
-                  elements:
-                    - - OpaqueStruct
-                      - start:
-                          line: 1
-                          col: 0
-                        end:
-                          line: 1
-                          col: 0
-                        range:
-                          start: 0
-                          end: 0
-                        span_location: None
-                lifetimes: []
+            ty:
+              Box:
+                Named:
+                  path:
+                    elements:
+                      - - OpaqueStruct
+                        - start:
+                            line: 1
+                            col: 0
+                          end:
+                            line: 1
+                            col: 0
+                          range:
+                            start: 0
+                            end: 0
+                          span_location: None
+                  lifetimes: []
+            location:
+              start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
+              range:
+                start: 0
+                end: 0
+              span_location: None
           lifetime_env: {}
           attrs: {}
         - name:
@@ -415,21 +463,33 @@ declared_types:
             lifetimes: []
           params: []
           return_type:
-            Named:
-              path:
-                elements:
-                  - - String
-                    - start:
-                        line: 1
-                        col: 0
-                      end:
-                        line: 1
-                        col: 0
-                      range:
-                        start: 0
-                        end: 0
-                      span_location: None
-              lifetimes: []
+            ty:
+              Named:
+                path:
+                  elements:
+                    - - String
+                      - start:
+                          line: 1
+                          col: 0
+                        end:
+                          line: 1
+                          col: 0
+                        range:
+                          start: 0
+                          end: 0
+                        span_location: None
+                lifetimes: []
+            location:
+              start:
+                line: 1
+                col: 0
+              end:
+                line: 1
+                col: 0
+              range:
+                start: 0
+                end: 0
+              span_location: None
           lifetime_env: {}
           attrs: {}
       mutability: Immutable
@@ -488,24 +548,48 @@ declared_functions:
               end: 0
             span_location: None
         ty:
-          Primitive: i32
+          ty:
+            Primitive: i32
+          location:
+            start:
+              line: 1
+              col: 0
+            end:
+              line: 1
+              col: 0
+            range:
+              start: 0
+              end: 0
+            span_location: None
         attrs: {}
     output_type:
-      Named:
-        path:
-          elements:
-            - - NonOpaqueStruct
-              - start:
-                  line: 1
-                  col: 0
-                end:
-                  line: 1
-                  col: 0
-                range:
-                  start: 0
-                  end: 0
-                span_location: None
-        lifetimes: []
+      ty:
+        Named:
+          path:
+            elements:
+              - - NonOpaqueStruct
+                - start:
+                    line: 1
+                    col: 0
+                  end:
+                    line: 1
+                    col: 0
+                  range:
+                    start: 0
+                    end: 0
+                  span_location: None
+          lifetimes: []
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     lifetimes: {}
     attrs: {}
     docs:
