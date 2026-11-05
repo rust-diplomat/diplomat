@@ -20,6 +20,7 @@ use strck::IntoCk;
 
 #[non_exhaustive]
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum LoweringErrorType {
     /// The provided type is incorrect.
     InvalidType {
