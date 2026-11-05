@@ -108,11 +108,9 @@ impl Trait {
                     abi_name: (&extern_ident).spanned_into(module_location),
                     self_param,
                     params: all_params,
-                    output_type: output_type.map(|ty| {
-                        OwnedSpannedTypeName {
-                            ty,
-                            location: Some(fct.sig.output.span().spanned_into(module_location)),
-                        }
+                    output_type: output_type.map(|ty| OwnedSpannedTypeName {
+                        ty,
+                        location: Some(fct.sig.output.span().spanned_into(module_location)),
                     }),
                     lifetimes,
                     attrs: fct_attrs,

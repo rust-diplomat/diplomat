@@ -8,9 +8,9 @@ use super::{
     StructField, StructPath, SuccessType, TraitDef, TraitParamSelf, TraitPath, TyPosition, Type,
     TypeDef, TypeId, WriteType,
 };
-use crate::ast::{OwnedSpannedTypeName, SpannedTypeName};
 use crate::ast::attrs::AttrInheritContext;
-use crate::ast::logging::{ContextLocation, write_report};
+use crate::ast::logging::{write_report, ContextLocation};
+use crate::ast::{OwnedSpannedTypeName, SpannedTypeName};
 use crate::hir::{Docs, LocIdent, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
@@ -24,7 +24,7 @@ pub enum LoweringErrorType {
     /// The provided type is incorrect.
     InvalidType {
         /// The name of the type, plus its definition location.
-        type_name : OwnedSpannedTypeName,
+        type_name: OwnedSpannedTypeName,
     },
     /// The purpose of having this is that translating to the HIR has enormous
     /// potential for really detailed error handling and giving suggestions.
@@ -42,18 +42,30 @@ pub enum LoweringErrorType {
 #[derive(Debug)]
 #[non_exhaustive]
 pub struct LoweringError {
-    pub error_type : LoweringErrorType,
-    pub reason : String,
-    pub suggestion : Option<String>,
+    pub error_type: LoweringErrorType,
+    pub reason: String,
+    pub suggestion: Option<String>,
 }
 
 impl LoweringError {
-    pub fn other(reason : String) -> Self {
-        LoweringError { error_type: LoweringErrorType::Other, reason, suggestion: None }
+    pub fn other(reason: String) -> Self {
+        LoweringError {
+            error_type: LoweringErrorType::Other,
+            reason,
+            suggestion: None,
+        }
     }
 
-    pub fn invalid_type(reason : String, type_name : OwnedSpannedTypeName, suggestion : Option<String>) -> Self {
-        LoweringError { error_type: LoweringErrorType::InvalidType { type_name }, reason, suggestion }
+    pub fn invalid_type(
+        reason: String,
+        type_name: OwnedSpannedTypeName,
+        suggestion: Option<String>,
+    ) -> Self {
+        LoweringError {
+            error_type: LoweringErrorType::InvalidType { type_name },
+            reason,
+            suggestion,
+        }
     }
 }
 
@@ -61,7 +73,12 @@ impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.error_type {
             LoweringErrorType::InvalidType { ref type_name } => {
-                write!(f, "Could not evaluate {}: {}", type_name.ty.to_string(), self.reason)
+                write!(
+                    f,
+                    "Could not evaluate {}: {}",
+                    type_name.ty.to_string(),
+                    self.reason
+                )
             }
             LoweringErrorType::Other => self.reason.fmt(f),
         }
@@ -116,10 +133,15 @@ impl LoweringReport {
             self.context.location.clone(),
             format!("{}", self.error),
             match &self.error.error_type {
-                LoweringErrorType::InvalidType { type_name } if let Some(sp) = &type_name.location => {
-                    vec![ContextLocation::new(sp.clone(), self.error.suggestion.clone().unwrap_or_default())]
+                LoweringErrorType::InvalidType { type_name }
+                    if let Some(sp) = &type_name.location =>
+                {
+                    vec![ContextLocation::new(
+                        sp.clone(),
+                        self.error.suggestion.clone().unwrap_or_default(),
+                    )]
                 }
-                _ => vec![]
+                _ => vec![],
             },
         )
     }
@@ -459,7 +481,10 @@ impl<'ast> LoweringContext<'ast> {
                     )));
                 }
                 let ty = self.lower_type::<Everywhere>(
-                    &SpannedTypeName { ty: Cow::Borrowed(ty), location: field_name.span() },
+                    &SpannedTypeName {
+                        ty: Cow::Borrowed(ty),
+                        location: field_name.span(),
+                    },
                     &mut &ast_struct.lifetimes,
                     TypeLoweringContext::Struct,
                     item.in_path,
@@ -614,7 +639,11 @@ impl<'ast> LoweringContext<'ast> {
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
         let return_type = self.lower_callback_return_type(
-            ast_trait_method.output_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(),
+            ast_trait_method
+                .output_type
+                .as_ref()
+                .map(Into::<SpannedTypeName>::into)
+                .as_ref(),
             &mut param_ltl,
             in_path,
         )?;
@@ -677,7 +706,12 @@ impl<'ast> LoweringContext<'ast> {
                 self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
 
             let (return_type, lifetime_env) = self.lower_return_type(
-                ast_function.item.output_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(),
+                ast_function
+                    .item
+                    .output_type
+                    .as_ref()
+                    .map(Into::<SpannedTypeName>::into)
+                    .as_ref(),
                 write_type,
                 return_ltl,
                 ast_function.in_path,
@@ -829,8 +863,16 @@ impl<'ast> LoweringContext<'ast> {
 
         let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
-        let (output, lifetime_env) =
-            self.lower_return_type(method.return_type.as_ref().map(Into::<SpannedTypeName>::into).as_ref(), write_type, return_ltl, in_path)?;
+        let (output, lifetime_env) = self.lower_return_type(
+            method
+                .return_type
+                .as_ref()
+                .map(Into::<SpannedTypeName>::into)
+                .as_ref(),
+            write_type,
+            return_ltl,
+            in_path,
+        )?;
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
@@ -859,7 +901,9 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if is_comparison {
-            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) = &method.return_type.as_ref().map(|t| &t.ty) {
+            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) =
+                &method.return_type.as_ref().map(|t| &t.ty)
+            {
                 if matches!(t.as_ref(), &ast::TypeName::Ordering) {
                     if !self.attr_validator.attrs_supported().partial_comparators {
                         self.errors.push(LoweringError::other("Comparators that return `Option` are not supported by this backend (Filter with #[diplomat::cfg(supports=partial_comparators)]).".into()));
@@ -873,9 +917,16 @@ impl<'ast> LoweringContext<'ast> {
                 false
             };
 
-            if !(method.return_type.as_ref().map(|t: &OwnedSpannedTypeName| &t.ty) == Some(&ast::TypeName::Ordering) || is_optional_ord) {
+            if !(method
+                .return_type
+                .as_ref()
+                .map(|t: &OwnedSpannedTypeName| &t.ty)
+                == Some(&ast::TypeName::Ordering)
+                || is_optional_ord)
+            {
                 self.errors.push(LoweringError::invalid_type(
-                    "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>".into(),
+                    "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>"
+                        .into(),
                     method.return_type.as_ref().unwrap().clone(),
                     Some("Suggestion: change this to cmp::Ordering".to_string()),
                 ));
@@ -983,11 +1034,8 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Type<P>, ()> {
         let mut disallow_in_callbacks = |msg: &str| {
             if context == TypeLoweringContext::Callback {
-                self.errors.push(LoweringError::invalid_type(
-                    msg.into(),
-                    ty.into(),
-                    None,
-                ));
+                self.errors
+                    .push(LoweringError::invalid_type(msg.into(), ty.into(), None));
                 Err(())
             } else {
                 Ok(())
@@ -1003,55 +1051,60 @@ impl<'ast> LoweringContext<'ast> {
                 ));
                 Err(())
             }
-            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
-                .resolve(in_path, self.env)
-            {
-                ast::CustomType::Struct(strct) => {
-                    if strct.fields.is_empty() {
-                        self.errors.push(LoweringError::invalid_type(
-                            "zero-size types are not allowed as method arguments".to_string(),
-                            ty.into(),
-                            None,
-                        ));
-                        return Err(());
-                    }
-                    if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                        let lifetimes =
-                            ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.ty.is_self());
+            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                match path.resolve(in_path, self.env) {
+                    ast::CustomType::Struct(strct) => {
+                        if strct.fields.is_empty() {
+                            self.errors.push(LoweringError::invalid_type(
+                                "zero-size types are not allowed as method arguments".to_string(),
+                                ty.into(),
+                                None,
+                            ));
+                            return Err(());
+                        }
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes[..],
+                                &strct.lifetimes,
+                                ty.ty.is_self(),
+                            );
 
-                        Ok(Type::Struct(StructPath::new(
-                            lifetimes,
-                            tcx_id,
-                            MaybeOwn::Own,
-                        )))
-                    } else if self.lookup_id.resolve_out_struct(strct).is_some() {
-                        self.errors.push(LoweringError::invalid_type(
-                            format!("{} is marked with #[diplomat::out], but found in input", ty.ty),
-                            ty.into(),
-                            None,
-                        ));
-                        Err(())
-                    } else {
-                        unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
+                            Ok(Type::Struct(StructPath::new(
+                                lifetimes,
+                                tcx_id,
+                                MaybeOwn::Own,
+                            )))
+                        } else if self.lookup_id.resolve_out_struct(strct).is_some() {
+                            self.errors.push(LoweringError::invalid_type(
+                                format!(
+                                    "{} is marked with #[diplomat::out], but found in input",
+                                    ty.ty
+                                ),
+                                ty.into(),
+                                None,
+                            ));
+                            Err(())
+                        } else {
+                            unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
+                        }
                     }
-                }
-                ast::CustomType::Opaque(op) => {
-                    self.errors.push(LoweringError::invalid_type(
+                    ast::CustomType::Opaque(op) => {
+                        self.errors.push(LoweringError::invalid_type(
                         "Opaque passed by value".to_string(),
                         ty.into(),
                         Some("#[diplomat::opaque] types can only be passed by reference in input".to_string()),
                     ));
-                    Err(())
-                }
-                ast::CustomType::Enum(enm) => {
-                    let tcx_id = self
-                        .lookup_id
-                        .resolve_enum(enm)
-                        .expect("can't find enum in lookup map, which contains all enums from env");
+                        Err(())
+                    }
+                    ast::CustomType::Enum(enm) => {
+                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
+                            "can't find enum in lookup map, which contains all enums from env",
+                        );
 
-                    Ok(Type::Enum(EnumPath::new(tcx_id)))
+                        Ok(Type::Enum(EnumPath::new(tcx_id)))
+                    }
                 }
-            },
+            }
             ast::TypeName::ImplTrait(path) => {
                 if !self.attr_validator.attrs_supported().traits {
                     self.errors.push(LoweringError::other(
@@ -1070,87 +1123,90 @@ impl<'ast> LoweringContext<'ast> {
                     lifetimes, tcx_id,
                 ))))
             }
-            ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
-                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                    match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(opaque) => {
-                            if *mutability == Mutability::Mutable
-                                && opaque.mutability != Mutability::Mutable
-                            {
-                                self.errors.push(LoweringError::invalid_type(
+            ast::TypeName::Reference(lifetime, mutability, ref_ty) => {
+                match ref_ty.as_ref() {
+                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                        match path.resolve(in_path, self.env) {
+                            ast::CustomType::Opaque(opaque) => {
+                                if *mutability == Mutability::Mutable
+                                    && opaque.mutability != Mutability::Mutable
+                                {
+                                    self.errors.push(LoweringError::invalid_type(
                                     format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
                                     ty.into(),
                                     Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
                                 ));
-                            }
-                            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                            let lifetimes = ltl.lower_generics(
-                                &path.lifetimes[..],
-                                &opaque.lifetimes,
-                                ref_ty.is_self(),
-                            );
-                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
-                            "can't find opaque in lookup map, which contains all opaques from env",
-                        );
-
-                            Ok(Type::Opaque(OpaquePath::new(
-                                lifetimes,
-                                Optional(false),
-                                borrow,
-                                tcx_id,
-                            )))
-                        }
-                        ast::CustomType::Struct(st) => {
-                            disallow_in_callbacks(
-                                "Cannot return references to structs from callbacks",
-                            )?;
-                            if (mutability.is_immutable()
-                                && self.attr_validator.attrs_supported().struct_refs)
-                                || (mutability.is_mutable()
-                                    && self.attr_validator.attrs_supported().mut_struct_refs)
-                            {
+                                }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                                 let lifetimes = ltl.lower_generics(
                                     &path.lifetimes[..],
-                                    &st.lifetimes,
+                                    &opaque.lifetimes,
                                     ref_ty.is_self(),
                                 );
-                                let tcx_id = self.lookup_id.resolve_struct(st).expect(
+                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            "can't find opaque in lookup map, which contains all opaques from env",
+                        );
+
+                                Ok(Type::Opaque(OpaquePath::new(
+                                    lifetimes,
+                                    Optional(false),
+                                    borrow,
+                                    tcx_id,
+                                )))
+                            }
+                            ast::CustomType::Struct(st) => {
+                                disallow_in_callbacks(
+                                    "Cannot return references to structs from callbacks",
+                                )?;
+                                if (mutability.is_immutable()
+                                    && self.attr_validator.attrs_supported().struct_refs)
+                                    || (mutability.is_mutable()
+                                        && self.attr_validator.attrs_supported().mut_struct_refs)
+                                {
+                                    let borrow =
+                                        Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                    let lifetimes = ltl.lower_generics(
+                                        &path.lifetimes[..],
+                                        &st.lifetimes,
+                                        ref_ty.is_self(),
+                                    );
+                                    let tcx_id = self.lookup_id.resolve_struct(st).expect(
                                     "Can't find struct in lookup map, which contains all structs from env"
                                 );
-                                Ok(Type::Struct(StructPath::new(
-                                    lifetimes,
-                                    tcx_id,
-                                    MaybeOwn::Borrow(borrow),
-                                )))
-                            } else {
-                                let (ref_type, support_type) = match mutability {
-                                    Mutability::Mutable => ("&mut ", "mut_struct_refs"),
-                                    Mutability::Immutable => ("&", "struct_refs"),
-                                };
-                                self.errors.push(LoweringError::other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
-                                Err(())
+                                    Ok(Type::Struct(StructPath::new(
+                                        lifetimes,
+                                        tcx_id,
+                                        MaybeOwn::Borrow(borrow),
+                                    )))
+                                } else {
+                                    let (ref_type, support_type) = match mutability {
+                                        Mutability::Mutable => ("&mut ", "mut_struct_refs"),
+                                        Mutability::Immutable => ("&", "struct_refs"),
+                                    };
+                                    self.errors.push(LoweringError::other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
+                                    Err(())
+                                }
                             }
-                        }
-                        custom_type => {
-                            self.errors.push(LoweringError::invalid_type(
+                            custom_type => {
+                                self.errors.push(LoweringError::invalid_type(
                                 format!("found &T in input where T is a custom type, but not opaque"),
                                 ty.into(),
                                 Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
                             ));
-                            Err(())
+                                Err(())
+                            }
                         }
                     }
-                }
-                _ => {
-                    self.errors.push(LoweringError::invalid_type(
+                    _ => {
+                        self.errors.push(LoweringError::invalid_type(
                         "found &T in input where T isn't a custom type and therefore not opaque".to_string(),
                         ty.into(),
                         None,
                     ));
-                    Err(())
+                        Err(())
+                    }
                 }
-            },
+            }
             ast::TypeName::Box(box_ty) => {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
@@ -1252,10 +1308,15 @@ impl<'ast> LoweringContext<'ast> {
                                 if !self.attr_validator.attrs_supported().option {
                                     self.errors.push(LoweringError::other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
-                                let inner = self.lower_type(&ast::SpannedTypeName {
-                                    ty: Cow::Borrowed(opt_ty),
-                                    location: ty.location.clone(),
-                                }, ltl, context, in_path)?;
+                                let inner = self.lower_type(
+                                    &ast::SpannedTypeName {
+                                        ty: Cow::Borrowed(opt_ty),
+                                        location: ty.location.clone(),
+                                    },
+                                    ltl,
+                                    context,
+                                    in_path,
+                                )?;
                                 if let Some(i) = inner.id() {
                                     self.usage_get_or_insert(i.into()).optioned = true;
                                 }
@@ -1289,7 +1350,10 @@ impl<'ast> LoweringContext<'ast> {
                     )),
                     ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
                         // Currently we just use locations for debug, so the span for options can remain the same:
-                        let opt_ty = SpannedTypeName { ty: Cow::Borrowed(opt_ty), location: ty.location.clone() };
+                        let opt_ty = SpannedTypeName {
+                            ty: Cow::Borrowed(opt_ty),
+                            location: ty.location.clone(),
+                        };
                         let inner = self.lower_type(&opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
@@ -1316,7 +1380,7 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(LoweringError::invalid_type(
                     "Results can only appear as the top-level return type of methods".into(),
                     ty.into(),
-                    None
+                    None,
                 ));
                 Err(())
             }
@@ -1498,7 +1562,10 @@ impl<'ast> LoweringContext<'ast> {
                     param_self: None,
                     params,
                     output: Box::new(self.lower_callback_return_type(
-                        Some(&SpannedTypeName { ty: Cow::Borrowed(out_type), location: ty.location.clone() }),
+                        Some(&SpannedTypeName {
+                            ty: Cow::Borrowed(out_type),
+                            location: ty.location.clone(),
+                        }),
                         ltl,
                         in_path,
                     )?),
@@ -2095,7 +2162,12 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&((&param.ty).into()), ltl, TypeLoweringContext::Method, in_path);
+        let ty = self.lower_type::<InputOnly>(
+            &((&param.ty).into()),
+            ltl,
+            TypeLoweringContext::Method,
+            in_path,
+        );
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -2105,7 +2177,11 @@ impl<'ast> LoweringContext<'ast> {
         self.attr_validator
             .validate(&attrs, AttributeContext::Param, &mut self.errors);
 
-        Ok(Param::new(LocIdent::new(name?, param.name.span()), ty?, attrs))
+        Ok(Param::new(
+            LocIdent::new(name?, param.name.span()),
+            ty?,
+            attrs,
+        ))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.
@@ -2252,7 +2328,9 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             SuccessType::Unit
         };
-        let return_type_name = return_type.map(|t| t.ty.as_ref()).unwrap_or(&ast::TypeName::Unit);
+        let return_type_name = return_type
+            .map(|t| t.ty.as_ref())
+            .unwrap_or(&ast::TypeName::Unit);
         match return_type_name {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 self.maybe_error_on_option_result(return_type_name)?;
@@ -2361,20 +2439,39 @@ impl<'ast> LoweringContext<'ast> {
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<ReturnType<InputOnly>, ()> {
-        let return_type = return_type.unwrap_or(&SpannedTypeName { ty: Cow::Owned(ast::TypeName::Unit), location: None });
+        let return_type = return_type.unwrap_or(&SpannedTypeName {
+            ty: Cow::Owned(ast::TypeName::Unit),
+            location: None,
+        });
         match &return_type.ty.as_ref() {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
                 self.maybe_error_on_option_result(&return_type.ty)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(
+                            &SpannedTypeName {
+                                ty: Cow::Borrowed(ty),
+                                location: return_type.location.clone(),
+                            },
+                            ltl,
+                            TypeLoweringContext::Callback,
+                            in_path,
+                        )
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(
+                            &SpannedTypeName {
+                                ty: Cow::Borrowed(ty),
+                                location: return_type.location.clone(),
+                            },
+                            ltl,
+                            TypeLoweringContext::Callback,
+                            in_path,
+                        )
                         .map(Some),
                 };
 
@@ -2418,13 +2515,29 @@ impl<'ast> LoweringContext<'ast> {
                         }
                         _ => {}
                     }
-                    self.lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
-                        .map(SuccessType::OutType)
-                        .map(ReturnType::Infallible)
+                    self.lower_type(
+                        &SpannedTypeName {
+                            ty: Cow::Borrowed(ty),
+                            location: return_type.location.clone(),
+                        },
+                        ltl,
+                        TypeLoweringContext::Callback,
+                        in_path,
+                    )
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(&SpannedTypeName { ty: Cow::Borrowed(value_ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path);
+                    let t = self.lower_type(
+                        &SpannedTypeName {
+                            ty: Cow::Borrowed(value_ty),
+                            location: return_type.location.clone(),
+                        },
+                        ltl,
+                        TypeLoweringContext::Callback,
+                        in_path,
+                    );
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2435,7 +2548,15 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(&SpannedTypeName { ty: Cow::Borrowed(ty), location: return_type.location.clone() }, ltl, TypeLoweringContext::Callback, in_path)
+                .lower_type(
+                    &SpannedTypeName {
+                        ty: Cow::Borrowed(ty),
+                        location: return_type.location.clone(),
+                    },
+                    ltl,
+                    TypeLoweringContext::Callback,
+                    in_path,
+                )
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }

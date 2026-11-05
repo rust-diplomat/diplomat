@@ -144,7 +144,8 @@ fn gen_custom_vtable(custom_trait: &ast::Trait, custom_trait_vtable_type: &Ident
         pub alignment: usize,
     ));
     for m in &custom_trait.methods {
-        let mut param_types: Vec<syn::Type> = m.params.iter().map(|p| param_ty(&p.ty.ty())).collect();
+        let mut param_types: Vec<syn::Type> =
+            m.params.iter().map(|p| param_ty(&p.ty.ty())).collect();
         let method_name = Ident::new(&format!("run_{}_callback", m.name), Span::call_site());
         let return_tokens = match &m.output_type {
             Some(ret_ty) => {
@@ -189,7 +190,8 @@ fn gen_custom_trait_impl(custom_trait: &ast::Trait, custom_trait_struct_name: &I
             .map(|p| {
                 let orig_type = p.ty.ty().to_syn();
                 let p_ty = param_ty(&p.ty.ty());
-                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty.ty(), Some(&p_ty)) {
+                if let Some(conversion) = param_conversion(&p.name.clone(), &p.ty.ty(), Some(&p_ty))
+                {
                     all_params_conversion.push(conversion);
                 }
                 let p_name = &p.name;

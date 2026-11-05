@@ -28,7 +28,7 @@ pub struct Span {
     pub span_location: SpanLocation,
 }
 
-#[derive(Hash, Eq, PartialEq, Serialize, Deserialize,  Clone, Debug)]
+#[derive(Hash, Eq, PartialEq, Serialize, Deserialize, Clone, Debug)]
 #[non_exhaustive]
 pub enum SpanLocation {
     /// For testing or when accessing SpanLocation is not possible.

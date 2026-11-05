@@ -133,7 +133,7 @@ pub enum PrettyPrint {
     ForceUgly,
 }
 
-fn get_span_src(sp : &Span) -> String {
+fn get_span_src(sp: &Span) -> String {
     match &sp.span_location {
         SpanLocation::FilePath(f) => {
             let st = std::fs::read_to_string(f);
@@ -187,7 +187,7 @@ pub fn write_report(
             use annotate_snippets::{Annotation, AnnotationKind};
 
             // Additional info in a separate file.
-            let mut elements : Vec<annotate_snippets::Element> = Vec::new();
+            let mut elements: Vec<annotate_snippets::Element> = Vec::new();
             // Additional info in the same file.
             let mut annotations = Vec::new();
 
@@ -199,35 +199,33 @@ pub fn write_report(
                 } else {
                     let local_src = get_span_src(&l.location);
                     let bytes = evaluate_bytes(&l.location, &local_src);
-                    elements.push(
-                        annotate_snippets::Element::Cause(
-                            Snippet::<Annotation>::source(local_src)
-                            .annotation(
-                                AnnotationKind::Context.span(bytes)
-                                .label(&l.label)
-                            )
+                    elements.push(annotate_snippets::Element::Cause(
+                        Snippet::<Annotation>::source(local_src)
+                            .annotation(AnnotationKind::Context.span(bytes).label(&l.label))
                             .path(match &l.location.span_location {
                                 SpanLocation::FilePath(f) => Some(f),
-                                _ => None
-                            })
-                        )
-                    );
+                                _ => None,
+                            }),
+                    ));
                 }
             });
 
-            [Level::ERROR.primary_title(&report.title).element(
-                Snippet::<Annotation>::source(&src)
-                    .path(match &sp.span_location {
-                        SpanLocation::FilePath(f) => Some(f),
-                        _ => None,
-                    })
-                    .annotation(
-                        AnnotationKind::Primary
-                            .span(bytes_range.clone().unwrap())
-                            .label(&report.primary_label),
-                    )
-                    .annotations(annotations)
-            ).elements(elements)]
+            [Level::ERROR
+                .primary_title(&report.title)
+                .element(
+                    Snippet::<Annotation>::source(&src)
+                        .path(match &sp.span_location {
+                            SpanLocation::FilePath(f) => Some(f),
+                            _ => None,
+                        })
+                        .annotation(
+                            AnnotationKind::Primary
+                                .span(bytes_range.clone().unwrap())
+                                .label(&report.primary_label),
+                        )
+                        .annotations(annotations),
+                )
+                .elements(elements)]
         } else {
             [Level::ERROR
                 .primary_title(&report.title)

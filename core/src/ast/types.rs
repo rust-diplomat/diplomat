@@ -3,18 +3,21 @@ use quote::{ToTokens, TokenStreamExt};
 use serde::{Deserialize, Serialize};
 use syn::{spanned::Spanned, Token};
 
-use std::{borrow::Cow, fmt};
 use std::ops::ControlFlow;
 use std::str::FromStr;
+use std::{borrow::Cow, fmt};
 
 use super::{
     Attrs, Docs, Enum, Ident, Lifetime, LifetimeEnv, LifetimeTransitivity, Method, NamedLifetime,
     OpaqueType, Path, RustLink, Struct, Trait,
 };
 use crate::{
-    Env, ast::{
-        Function, idents::{FromWithSpan, IntoWithSpan, SpanLocation}, logging::{AstReport, ContextLocation, create_report, create_simple_report},
-    }
+    ast::{
+        idents::{FromWithSpan, IntoWithSpan, SpanLocation},
+        logging::{create_report, create_simple_report, AstReport, ContextLocation},
+        Function,
+    },
+    Env,
 };
 
 /// A type declared inside a Diplomat-annotated module.
@@ -591,15 +594,15 @@ pub enum TypeName {
 /// [`TypeName`] that was evaluated at a paritcular location.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct SpannedTypeName<'a> {
-    pub(crate) ty : Cow<'a, TypeName>,
-    pub(crate) location : Option<super::Span>,
+    pub(crate) ty: Cow<'a, TypeName>,
+    pub(crate) location: Option<super::Span>,
 }
 
 /// A clear distinction of ownership from [`SpannedTypeName`], so we don't have to worry about lifetimes.
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug)]
 pub struct OwnedSpannedTypeName {
-    pub(crate) ty : TypeName,
-    pub(crate) location : Option<super::Span>,
+    pub(crate) ty: TypeName,
+    pub(crate) location: Option<super::Span>,
 }
 
 impl From<&SpannedTypeName<'_>> for OwnedSpannedTypeName {
@@ -631,7 +634,6 @@ impl<'a> SpannedTypeName<'a> {
         self.ty.clone()
     }
 }
-
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Debug, Copy)]
 #[non_exhaustive]

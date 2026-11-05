@@ -1,8 +1,11 @@
 use serde::Serialize;
-use syn::{ItemFn, spanned::Spanned};
+use syn::{spanned::Spanned, ItemFn};
 
 use crate::ast::{
-    Attrs, Docs, Ident, LifetimeEnv, OwnedSpannedTypeName, Param, PathType, SpanLocation, SpannedTypeName, TypeName, idents::{FromWithSpan, IntoWithSpan}, logging::{AstReport, ContextLocation, create_report},
+    idents::{FromWithSpan, IntoWithSpan},
+    logging::{create_report, AstReport, ContextLocation},
+    Attrs, Docs, Ident, LifetimeEnv, OwnedSpannedTypeName, Param, PathType, SpanLocation,
+    SpannedTypeName, TypeName,
 };
 
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
@@ -84,8 +87,9 @@ impl Function {
             name: ident,
             abi_name: (&extern_ident).spanned_into(module_location),
             params: all_params,
-            output_type: output_type.map(|t| {
-                OwnedSpannedTypeName { ty: t, location: Some(f.sig.output.span().spanned_into(module_location)) }
+            output_type: output_type.map(|t| OwnedSpannedTypeName {
+                ty: t,
+                location: Some(f.sig.output.span().spanned_into(module_location)),
             }),
             lifetimes,
             attrs,

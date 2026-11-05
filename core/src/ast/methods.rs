@@ -113,11 +113,9 @@ impl Method {
             self_param,
             self_type: Some(self_path_type),
             params: all_params,
-            return_type: return_ty.map(|ty| {
-                OwnedSpannedTypeName {
-                    ty,
-                    location: Some(m.sig.output.span().spanned_into(module_location)),
-                }
+            return_type: return_ty.map(|ty| OwnedSpannedTypeName {
+                ty,
+                location: Some(m.sig.output.span().spanned_into(module_location)),
             }),
             lifetime_env,
             attrs,
@@ -175,7 +173,8 @@ impl Method {
                 .filter_map(|param| {
                     let mut lt_kind = LifetimeKind::ReturnValue;
                     param
-                        .ty.ty
+                        .ty
+                        .ty
                         .visit_lifetimes(&mut |lt, _| {
                             // Thanks to `TypeName::visit_lifetimes`, we can
                             // traverse the lifetimes without allocations and
