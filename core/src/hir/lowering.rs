@@ -1303,14 +1303,20 @@ impl<'ast> LoweringContext<'ast> {
                         Err(())
                     }
                     _ => {
-                        self.errors.push(LoweringError::other(format!("found Option<T> in input, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                        self.errors.push(LoweringError::invalid_type(
+                            "found Option<T> in input, where T is not a reference. Option<T> requires that T be a reference to an opaque".to_string(),
+                            ty.into(),
+                            None,
+                        ));
                         Err(())
                     }
                 }
             }
             ast::TypeName::Result(_, _, _) => {
-                self.errors.push(LoweringError::other(
+                self.errors.push(LoweringError::invalid_type(
                     "Results can only appear as the top-level return type of methods".into(),
+                    ty.into(),
+                    None
                 ));
                 Err(())
             }
@@ -1415,18 +1421,34 @@ impl<'ast> LoweringContext<'ast> {
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
-                                self.errors.push(LoweringError::other(format!("Mutable slices of opaques (&mut [{type_name}]) are currently unsupported in Diplomat.")));
+                                self.errors.push(LoweringError::invalid_type(
+                                    format!("Mutable slices of opaques are currently unsupported in Diplomat."),
+                                    ty.into(),
+                                    None,
+                                ));
                             }
                             if matches!(lt.lifetime, super::MaybeStatic::Static) {
-                                self.errors.push(LoweringError::other(format!("&'static slices of opaques (&'static [{type_name}]) are currently unsupported in Diplomat.")));
+                                self.errors.push(LoweringError::invalid_type(
+                                    format!("&'static slices of opaques are currently unsupported in Diplomat."),
+                                    ty.into(),
+                                    None,
+                                ));
                             }
                         }
 
                         if matches!(op.borrowed().mutability, Mutability::Mutable) {
-                            self.errors.push(LoweringError::other(format!("Slices of mutable opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                            self.errors.push(LoweringError::invalid_type(
+                                format!("Slices of mutable opaques are currently unsupported in Diplomat."),
+                                ty.into(),
+                                None,
+                            ));
                         }
                         if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
-                            self.errors.push(LoweringError::other(format!("Slices of &'static opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                            self.errors.push(LoweringError::invalid_type(
+                                format!("Slices of &'static opaques are currently unsupported in Diplomat."),
+                                ty.into(),
+                                None
+                            ));
                         }
                         if !self.attr_validator.attrs_supported().opaque_slices {
                             self.errors.push(LoweringError::other(format!(
@@ -1440,9 +1462,10 @@ impl<'ast> LoweringContext<'ast> {
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
                     }
                     _ => {
-                        self.errors.push(LoweringError::other(
-                            format!("Cannot have custom type {type_name} in a slice. Only abi_compatible structs or borrowed opaques are allowed."
-                        )
+                        self.errors.push(LoweringError::invalid_type(
+                            format!("Cannot have custom type in a slice. Only abi_compatible structs or borrowed opaques are allowed."),
+                            ty.into(),
+                            Some("See https://rust-diplomat.github.io/diplomat/types/slices.html".into()),
                         ));
                         Err(())
                     }
@@ -1456,8 +1479,10 @@ impl<'ast> LoweringContext<'ast> {
                     ));
                 }
                 if context == TypeLoweringContext::Struct {
-                    self.errors.push(LoweringError::other(
+                    self.errors.push(LoweringError::invalid_type(
                         "Callbacks currently unsupported in structs".into(),
+                        ty.into(),
+                        None,
                     ));
                     return Err(());
                 }
@@ -1483,7 +1508,11 @@ impl<'ast> LoweringContext<'ast> {
                 })))
             }
             ast::TypeName::Unit => {
-                self.errors.push(LoweringError::other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                self.errors.push(LoweringError::invalid_type(
+                    "Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into(),
+                    ty.into(),
+                    None
+                ));
                 Err(())
             }
         }
