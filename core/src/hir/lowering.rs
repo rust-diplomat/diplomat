@@ -20,12 +20,11 @@ use strck::IntoCk;
 
 #[non_exhaustive]
 #[derive(Debug)]
-#[allow(clippy::large_enum_variant)]
 pub enum LoweringErrorType {
     /// The provided type is incorrect.
     InvalidType {
         /// The name of the type, plus its definition location.
-        type_name: OwnedSpannedTypeName,
+        type_name: Box<OwnedSpannedTypeName>,
     },
     /// The purpose of having this is that translating to the HIR has enormous
     /// potential for really detailed error handling and giving suggestions.
@@ -63,7 +62,7 @@ impl LoweringError {
         suggestion: Option<String>,
     ) -> Self {
         LoweringError {
-            error_type: LoweringErrorType::InvalidType { type_name },
+            error_type: LoweringErrorType::InvalidType { type_name: Box::new(type_name) },
             reason,
             suggestion,
         }
