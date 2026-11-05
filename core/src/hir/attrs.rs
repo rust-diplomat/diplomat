@@ -181,7 +181,7 @@ impl IncludeLocation {
             Ok(())
         });
         if let Err(e) = res {
-            errors.push(LoweringError::Other(format!(
+            errors.push(LoweringError::other(format!(
                 "Error parsing `{}`: {e}",
                 meta.to_token_stream()
             )));
@@ -199,7 +199,7 @@ impl IncludeLocation {
             "pre_init_block" => Some(IncludeLocation::PreInitializationBlock),
             "init_block" => Some(IncludeLocation::InitializationBlock),
             _ => {
-                errors.push(LoweringError::Other(format!(
+                errors.push(LoweringError::other(format!(
                     "Include location `{assigned}` unsupported."
                 )));
                 None
@@ -312,7 +312,7 @@ impl SpecialMethod {
         let parse_meta = |meta| match StandardAttribute::from_meta(meta) {
             Ok(StandardAttribute::String(s)) => Ok(Some(s)),
             Ok(StandardAttribute::Empty) => Ok(None),
-            Ok(_) | Err(_) => Err(LoweringError::Other(format!(
+            Ok(_) | Err(_) => Err(LoweringError::other(format!(
                 "`{path}` must have a single string parameter or no parameter"
             ))),
         };
@@ -391,7 +391,7 @@ impl DefaultArgValue {
                     if let Ok(f) = float_64 {
                         DefaultArgValue::Float(f)
                     } else {
-                        return Err(LoweringError::Other(
+                        return Err(LoweringError::other(
                             format!(
                                 "Could not convert float to f64: {}",
                                 float_64.unwrap_err()
@@ -404,7 +404,7 @@ impl DefaultArgValue {
                     if let Ok(i) = int_128 {
                         DefaultArgValue::Integer(i)
                     } else {
-                        return Err(LoweringError::Other(
+                        return Err(LoweringError::other(
                             format!(
                                 "Could not convert int to i128: {}",
                                 int_128.unwrap_err()
@@ -412,9 +412,9 @@ impl DefaultArgValue {
                         ));
                     }
                 }
-                _ => return Err(LoweringError::Other(format!("Default arguments does not support value {}. Try a bool, char, integer, or float.", l.lit.to_token_stream()))),
+                _ => return Err(LoweringError::other(format!("Default arguments does not support value {}. Try a bool, char, integer, or float.", l.lit.to_token_stream()))),
             },
-            _ => return Err(LoweringError::Other("Expected literal.".into())),
+            _ => return Err(LoweringError::other("Expected literal.".into())),
         };
 
         Ok(value_repr)
@@ -444,7 +444,7 @@ fn maybe_error_unsupported(
     errors: &mut ErrorStore,
 ) {
     if !auto_found {
-        errors.push(LoweringError::Other(format!(
+        errors.push(LoweringError::other(format!(
             "`{attribute}` not supported in backend {backend}"
         )));
     }
@@ -484,7 +484,7 @@ impl Attrs {
 
                 let warn_auto = |errors: &mut ErrorStore| {
                     if auto_found {
-                        errors.push(LoweringError::Other(format!(
+                        errors.push(LoweringError::other(format!(
                             "Diplomat attribute {path:?} gated on 'auto' but is not one that works with 'auto'"
                         )));
                     }
@@ -499,7 +499,7 @@ impl Attrs {
                 match SpecialMethod::from_path_and_meta(&path, &attr.meta) {
                     Ok(Some(kind)) => {
                         if let Some(ref existing) = this.special_method {
-                            errors.push(LoweringError::Other(format!(
+                            errors.push(LoweringError::other(format!(
                                     "Multiple special method markers found on the same method, found {path} and {existing:?}"
                                 )));
                         } else {
@@ -512,14 +512,14 @@ impl Attrs {
                         "disable" => {
                             if let Meta::Path(_) = attr.meta {
                                 if this.disable {
-                                    errors.push(LoweringError::Other(
+                                    errors.push(LoweringError::other(
                                         "Duplicate `disable` attribute".into(),
                                     ));
                                 } else {
                                     this.disable = true;
                                 }
                             } else {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "`disable` must be a simple path".into(),
                                 ))
                             }
@@ -528,14 +528,14 @@ impl Attrs {
                         "default" => {
                             if let Meta::Path(_) = attr.meta {
                                 if this.default {
-                                    errors.push(LoweringError::Other(
+                                    errors.push(LoweringError::other(
                                         "Duplicate `default` attribute".into(),
                                     ));
                                 } else {
                                     this.default = true;
                                 }
                             } else {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "`default` must be a simple path".into(),
                                 ))
                             }
@@ -548,7 +548,7 @@ impl Attrs {
                                     // to the end; so a later attribute in the list is more pertinent.
                                     this.rename.extend(&rename);
                                 }
-                                Err(e) => errors.push(LoweringError::Other(format!(
+                                Err(e) => errors.push(LoweringError::other(format!(
                                     "`rename` attr failed to parse: {e:?}"
                                 ))),
                             }
@@ -560,7 +560,7 @@ impl Attrs {
                             }
                             Ok(StandardAttribute::String(s)) => this.namespace = Some(s),
                             Ok(_) | Err(_) => {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "`namespace` must have a single string parameter".to_string(),
                                 ));
                             }
@@ -583,14 +583,14 @@ impl Attrs {
                         "manually_disposable" => {
                             if let Meta::Path(_) = attr.meta {
                                 if this.manually_disposable {
-                                    errors.push(LoweringError::Other(
+                                    errors.push(LoweringError::other(
                                         "Duplicate `manually_disposable` attribute".into(),
                                     ));
                                 } else {
                                     this.manually_disposable = true;
                                 }
                             } else {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "`manually_disposable` must be a simple path".into(),
                                 ));
                             }
@@ -644,13 +644,13 @@ impl Attrs {
                             match (&location, &source) {
                                 (Some(l), Some(s)) => {
                                     if let Some(s) = this.custom_extra_code.get(l) {
-                                        errors.push(LoweringError::Other(format!("Found existing location-source pair: {l:?} = {s:?}. Duplicates not allowed.")));
+                                        errors.push(LoweringError::other(format!("Found existing location-source pair: {l:?} = {s:?}. Duplicates not allowed.")));
                                     } else {
                                         this.custom_extra_code.insert(l.clone(), s.clone());
                                     }
                                 }
                                 _ => {
-                                    errors.push(LoweringError::Other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
+                                    errors.push(LoweringError::other(format!("Expected `source=`, `file=`, `location=`. Got: Source: {source:?} Location: {location:?}")));
                                 }
                             }
                         }
@@ -669,7 +669,7 @@ impl Attrs {
                             let val = attr.meta.require_name_value();
                             let res = val
                                 .map_err(|e| {
-                                    LoweringError::Other(format!(
+                                    LoweringError::other(format!(
                                         "default_value must be name value: {e}"
                                     ))
                                 })
@@ -682,7 +682,7 @@ impl Attrs {
                             }
                         }
                         _ => {
-                            errors.push(LoweringError::Other(format!(
+                            errors.push(LoweringError::other(format!(
                                 "Unknown diplomat attribute {path}: expected one of: `disable, rename, namespace, constructor, stringifier, comparison, named_constructor, getter, setter, custom_extra_code, indexer, error, default_value, manually_disposable`"
                             )));
                         }
@@ -744,22 +744,22 @@ impl Attrs {
                         if let syn::Lit::Str(string) = &s.lit {
                             this.demo_attrs.custom_func = Some(string.value());
                         } else {
-                            errors.push(LoweringError::Other(format!(
+                            errors.push(LoweringError::other(format!(
                                 "#[diplomat::demo(custom_func={s:?}) must be a literal string."
                             )));
                         }
                     } else {
-                        errors.push(LoweringError::Other(format!(
+                        errors.push(LoweringError::other(format!(
                             "#[diplomat::demo(custom_func={v:?}) must be a literal string."
                         )));
                     }
                 } else {
-                    errors.push(LoweringError::Other(format!(
+                    errors.push(LoweringError::other(format!(
                         "Unknown demo_attr: {path_ident:?}"
                     )));
                 }
             } else {
-                errors.push(LoweringError::Other(format!("Unknown demo_attr: {path:?}")));
+                errors.push(LoweringError::other(format!("Unknown demo_attr: {path:?}")));
             }
         }
 
@@ -797,7 +797,7 @@ impl Attrs {
         } = &self;
 
         if *disable && matches!(context, AttributeContext::EnumVariant(..)) {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`disable` cannot be used on enum variants".into(),
             ))
         }
@@ -808,7 +808,7 @@ impl Attrs {
             {
                 let check_param_count = |name: &str, count: usize, errors: &mut ErrorStore| {
                     if method.params.len() != count {
-                        errors.push(LoweringError::Other(format!(
+                        errors.push(LoweringError::other(format!(
                             "{name} must have exactly {count} parameter{}",
                             if count == 1 { "" } else { "s" }
                         )))
@@ -816,7 +816,7 @@ impl Attrs {
                 };
                 let check_self_param = |name: &str, need_self: bool, errors: &mut ErrorStore| {
                     if method.param_self.is_some() != need_self {
-                        errors.push(LoweringError::Other(format!(
+                        errors.push(LoweringError::other(format!(
                             "{name} must{} accept a self parameter",
                             if need_self { "" } else { " not" }
                         )));
@@ -833,25 +833,25 @@ impl Attrs {
                                 if validator.attrs_supported().constructors
                                     && !validator.attrs_supported().fallible_constructors
                                 {
-                                    errors.push(LoweringError::Other(
+                                    errors.push(LoweringError::other(
                                         "This backend doesn't support fallible constructors"
                                             .to_string(),
                                     ))
                                 }
                             }
                             ReturnType::Nullable(..) => {
-                                errors.push(LoweringError::Other("Diplomat doesn't support turning nullable methods into constructors".to_string()));
+                                errors.push(LoweringError::other("Diplomat doesn't support turning nullable methods into constructors".to_string()));
                             }
                         }
 
                         if let SuccessType::OutType(t) = &output {
                             if t.id() != self_id || self_id.is_none() {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "Constructors must return Self!".to_string(),
                                 ));
                             }
                         } else {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Constructors must return Self!".to_string(),
                             ));
                         }
@@ -859,12 +859,12 @@ impl Attrs {
                     SpecialMethod::Getter(_) => {
                         if !method.params.is_empty() {
                             errors
-                                .push(LoweringError::Other("Getter cannot have parameters".into()));
+                                .push(LoweringError::other("Getter cannot have parameters".into()));
                         }
                         if method.param_self.is_none()
                             && !validator.attrs_supported().static_accessors
                         {
-                            errors.push(LoweringError::Other(format!("No self parameter on Getter {} but static_acessors are not supported",method.name.as_str())));
+                            errors.push(LoweringError::other(format!("No self parameter on Getter {} but static_acessors are not supported",method.name.as_str())));
                         }
 
                         // Currently does not forbid nullable getters, could if desired
@@ -872,12 +872,12 @@ impl Attrs {
 
                     SpecialMethod::Setter(_) => {
                         if !matches!(method.output.success_type(), SuccessType::Unit) {
-                            errors.push(LoweringError::Other("Setters must return unit".into()));
+                            errors.push(LoweringError::other("Setters must return unit".into()));
                         }
                         if method.param_self.is_none()
                             && !validator.attrs_supported().static_accessors
                         {
-                            errors.push(LoweringError::Other(format!("No self parameter on Setter {} but static_acessors are not supported",method.name.as_str())));
+                            errors.push(LoweringError::other(format!("No self parameter on Setter {} but static_acessors are not supported",method.name.as_str())));
                         }
                         check_param_count("Setter", 1, errors);
                         // Currently does not forbid fallible setters, could if desired
@@ -885,13 +885,13 @@ impl Attrs {
                     SpecialMethod::Stringifier => {
                         if !method.params.is_empty() {
                             errors
-                                .push(LoweringError::Other("Getter cannot have parameters".into()));
+                                .push(LoweringError::other("Getter cannot have parameters".into()));
                         }
                         if !matches!(
                             method.output.success_type(),
                             SuccessType::Write(super::WriteType::Str | super::WriteType::Str16)
                         ) {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Stringifier must return string (contain &mut DiplomatWrite or &mut DiplomatWrite16)"
                                     .into(),
                             ));
@@ -900,7 +900,7 @@ impl Attrs {
                     SpecialMethod::Comparison(optional) => {
                         check_param_count("Comparator", 1, errors);
                         if special_method_presence.comparator {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Cannot define two comparators on the same type".into(),
                             ));
                         }
@@ -916,7 +916,7 @@ impl Attrs {
                                 match (&selfty.ty, &param.ty) {
                                     (SelfType::Opaque(p), Type::Opaque(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
@@ -924,14 +924,14 @@ impl Attrs {
                                         if p.owner.mutability != Mutability::Immutable
                                             || p2.owner.mutability != Mutability::Immutable
                                         {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 "comparators must accept immutable parameters"
                                                     .into(),
                                             ));
                                         }
 
                                         if p2.optional.0 {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 "comparators must accept non-optional parameters"
                                                     .into(),
                                             ));
@@ -939,7 +939,7 @@ impl Attrs {
                                     }
                                     (SelfType::Struct(p), Type::Struct(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
@@ -954,7 +954,7 @@ impl Attrs {
                                                 .map(|o| !o.mutability.is_immutable())
                                                 .unwrap_or(false)
                                         {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 "comparators must accept immutable parameters"
                                                     .into(),
                                             ));
@@ -962,13 +962,13 @@ impl Attrs {
                                     }
                                     (SelfType::Enum(p), Type::Enum(p2)) => {
                                         if p.tcx_id != p2.tcx_id {
-                                            errors.push(LoweringError::Other(
+                                            errors.push(LoweringError::other(
                                                 COMPARATOR_ERROR.into(),
                                             ));
                                         }
                                     }
                                     _ => {
-                                        errors.push(LoweringError::Other(COMPARATOR_ERROR.into()));
+                                        errors.push(LoweringError::other(COMPARATOR_ERROR.into()));
                                     }
                                 }
                             }
@@ -976,7 +976,7 @@ impl Attrs {
                     }
                     SpecialMethod::Iterator => {
                         if special_method_presence.iterator.is_some() {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Cannot mark type as iterator twice".into(),
                             ));
                         }
@@ -992,7 +992,7 @@ impl Attrs {
                         check_self_param("Iterator", true, errors);
                         if let Some(this) = &method.param_self {
                             if !matches!(this.ty, SelfType::Opaque(..)) {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "Iterators only allowed on opaques".into(),
                                 ))
                             }
@@ -1000,7 +1000,7 @@ impl Attrs {
 
                         if let ReturnType::Nullable(ref o) = method.output {
                             if let SuccessType::Unit = o {
-                                errors.push(LoweringError::Other(
+                                errors.push(LoweringError::other(
                                     "Iterator method must return something".into(),
                                 ));
                             }
@@ -1020,14 +1020,14 @@ impl Attrs {
                             special_method_presence.iterator =
                                 Some(SuccessType::OutType(crate::hir::OutType::Opaque(o)));
                         } else {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Iterator method must return nullable value".into(),
                             ));
                         }
                     }
                     SpecialMethod::Iterable => {
                         if special_method_presence.iterable.is_some() {
-                            errors.push(LoweringError::Other(
+                            errors.push(LoweringError::other(
                                 "Cannot mark type as iterable twice".into(),
                             ));
                         }
@@ -1039,12 +1039,12 @@ impl Attrs {
                                 if let Some(TypeId::Opaque(id)) = ty.id() {
                                     special_method_presence.iterable = Some(id);
                                 } else {
-                                    errors.push(LoweringError::Other(
+                                    errors.push(LoweringError::other(
                                         "Iterables must return a custom opaque type".into(),
                                     ))
                                 }
                             }
-                            _ => errors.push(LoweringError::Other(
+                            _ => errors.push(LoweringError::other(
                                 "Iterables must return a custom type".into(),
                             )),
                         }
@@ -1054,7 +1054,7 @@ impl Attrs {
                         check_self_param("Indexer", true, errors);
 
                         if method.output.success_type().is_unit() {
-                            errors.push(LoweringError::Other("Indexer must return a value".into()));
+                            errors.push(LoweringError::other("Indexer must return a value".into()));
                         }
                     }
                     e @ (SpecialMethod::Add
@@ -1074,7 +1074,7 @@ impl Attrs {
 
                         if method.output.success_type().is_unit() {
                             errors
-                                .push(LoweringError::Other(format!("{name} must return a value")));
+                                .push(LoweringError::other(format!("{name} must return a value")));
                         }
                     }
                     e @ (SpecialMethod::AddAssign
@@ -1092,23 +1092,23 @@ impl Attrs {
                         check_self_param(name, true, errors);
                         if let Some(self_param) = &method.param_self {
                             if matches!(self_param.ty, SelfType::Struct(_) | SelfType::Enum(_)) {
-                                errors.push(LoweringError::Other("*Assign arithmetic operations not allowed on non-opaque types. \
+                                errors.push(LoweringError::other("*Assign arithmetic operations not allowed on non-opaque types. \
                                      Use the non-mutating arithmetic operators instead".to_string()));
                             } else if self_param.ty.is_immutably_borrowed() {
-                                errors.push(LoweringError::Other(format!(
+                                errors.push(LoweringError::other(format!(
                                     "{name} must take self by mutable reference"
                                 )));
                             }
                         }
                         if !method.output.success_type().is_unit() {
-                            errors.push(LoweringError::Other(format!(
+                            errors.push(LoweringError::other(format!(
                                 "{name} must not return a value"
                             )));
                         }
                     }
                 }
             } else {
-                errors.push(LoweringError::Other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
+                errors.push(LoweringError::other(format!("Special method (type {special:?}) not allowed on non-method context {context:?}")))
             }
         }
 
@@ -1118,12 +1118,12 @@ impl Attrs {
                 AttributeContext::Method(..) | AttributeContext::EnumVariant(..)
             )
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`namespace` can only be used on types".to_string(),
             ));
         }
         if *default && !matches!(context, AttributeContext::EnumVariant(..)) {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`default` can only be used on types and enum variants".to_string(),
             ));
         }
@@ -1132,25 +1132,25 @@ impl Attrs {
             AttributeContext::Param | AttributeContext::SelfParam | AttributeContext::Field
         ) {
             if *disable {
-                errors.push(LoweringError::Other(format!(
+                errors.push(LoweringError::other(format!(
                     "`disable`s cannot be used on an {context:?}."
                 )));
             }
 
             if namespace.is_some() {
-                errors.push(LoweringError::Other(format!(
+                errors.push(LoweringError::other(format!(
                     "`namespace` cannot be used on an {context:?}."
                 )));
             }
 
             if !rename.is_empty() || !abi_rename.is_empty() {
-                errors.push(LoweringError::Other(format!(
+                errors.push(LoweringError::other(format!(
                     "`rename`s cannot be used on an {context:?}."
                 )));
             }
 
             if special_method.is_some() {
-                errors.push(LoweringError::Other(format!(
+                errors.push(LoweringError::other(format!(
                     "{context:?} cannot be special methods."
                 )));
             }
@@ -1164,20 +1164,20 @@ impl Attrs {
                     | AttributeContext::Function(..)
             )
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`error` can only be used on types".to_string(),
             ));
         }
         if *generate_mocking_interface
             && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..)))
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`generate_mocking_interface` can only be used on opaque types".to_string(),
             ));
         }
 
         if *manually_disposable && !matches!(context, AttributeContext::Type(TypeDef::Opaque(..))) {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`manually_disposable` can only be used on opaque types".to_string(),
             ));
         }
@@ -1188,7 +1188,7 @@ impl Attrs {
                 AttributeContext::Type(TypeDef::Struct(..) | TypeDef::Enum(..))
             )
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`abi_compatible` can only be used on non-output-only struct or enum types.".into(),
             ));
         }
@@ -1199,13 +1199,13 @@ impl Attrs {
                 AttributeContext::Field | AttributeContext::EnumVariant(..)
             )
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`ffi_error` is only supported on struct fields or enum variants.".into(),
             ));
         }
 
         if *mut_struct_ref && !matches!(context, AttributeContext::Type(TypeDef::Struct(..))) {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`mut_struct_ref` can only be used on input structs.".into(),
             ));
         }
@@ -1216,7 +1216,7 @@ impl Attrs {
                 AttributeContext::Type(TypeDef::Struct(..) | TypeDef::OutStruct(..))
             )
         {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "`tuple` can only be used on structs.".into(),
             ));
         }
@@ -1225,7 +1225,7 @@ impl Attrs {
             if !validator.attrs_supported().custom_bindings {
                 // We only validate that the language supports the bindings. We don't validate
                 // anything else, since this is an advanced feature (you have to know what you are doing).
-                errors.push(LoweringError::Other(
+                errors.push(LoweringError::other(
                     "Custom bindings not supported by this language.".into(),
                 ));
             }
@@ -1235,7 +1235,7 @@ impl Attrs {
             if !(matches!(context, AttributeContext::Type(..))
                 || matches!(context, AttributeContext::Function(..)))
             {
-                errors.push(LoweringError::Other(
+                errors.push(LoweringError::other(
                     "`custom_extra_code` only supported on type declarations or free functions."
                         .into(),
                 ));
@@ -1243,7 +1243,7 @@ impl Attrs {
         }
 
         if default_value.is_some() && !matches!(context, AttributeContext::Param) {
-            errors.push(LoweringError::Other(
+            errors.push(LoweringError::other(
                 "default_value can only be placed above parameters.".into(),
             ));
         }
@@ -1254,7 +1254,7 @@ impl Attrs {
                 if p.attrs.default_value.is_some() {
                     in_defaults = true;
                 } else if in_defaults {
-                    errors.push(LoweringError::Other(format!(
+                    errors.push(LoweringError::other(format!(
                         "Found required arg {} after default arguments.",
                         p.name
                     )))
@@ -1598,7 +1598,7 @@ pub trait AttributeValidator {
                     *found = true;
                     return Ok(true);
                 } else {
-                    return Err(LoweringError::Other("auto in diplomat::attr() is only allowed at the top level and within `any`".into()));
+                    return Err(LoweringError::other("auto in diplomat::attr() is only allowed at the top level and within `any`".into()));
                 }
             }
             DiplomatBackendAttrCfg::Star => true,
@@ -1754,7 +1754,7 @@ impl AttributeValidator for BasicAttributeValidator {
                 "generic_writeables" => generic_writeables,
                 "utf16_writeables" => utf16_writeables,
                 _ => {
-                    return Err(LoweringError::Other(format!(
+                    return Err(LoweringError::other(format!(
                         "Unknown supports = value found: {value}"
                     )))
                 }

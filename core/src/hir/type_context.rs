@@ -453,7 +453,7 @@ impl TypeContext {
                     for lt in out_ty.lifetimes() {
                         if let MaybeStatic::NonStatic(lt) = lt {
                             if method.lifetime_env.get_bounds(lt).is_none() {
-                                ctx.errors.push(LoweringError::Other(
+                                ctx.errors.push(LoweringError::other(
                                     "Found elided lifetime in return type, please explicitly specify".into(),
                                 ));
 
@@ -502,7 +502,7 @@ impl TypeContext {
                 let lts = method.output.used_method_lifetimes();
                 let mut intersection = lts.intersection(&struct_ref_lifetimes).peekable();
                 if intersection.peek().is_some() {
-                    ctx.errors.push(LoweringError::Other(
+                    ctx.errors.push(LoweringError::other(
                         format!("Found lifetimes used in struct references also used in the return type: {}", intersection.map(|lt| {
                             format!("'{} ", method.lifetime_env.fmt_lifetime(lt))
                         }).collect::<String>())
@@ -560,7 +560,7 @@ impl TypeContext {
                 match st {
                     TypeDef::Struct(st) => {
                         if !st.attrs.abi_compatible {
-                            ctx.errors.push(LoweringError::Other(format!(
+                            ctx.errors.push(LoweringError::other(format!(
                                 "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                                 st.name
                             )));
@@ -572,7 +572,7 @@ impl TypeContext {
             hir::Type::Slice(hir::Slice::Enum(_, enm)) => {
                 let enm = self.resolve_enum(enm.tcx_id);
                 if !enm.attrs.abi_compatible {
-                    ctx.errors.push(LoweringError::Other(format!(
+                    ctx.errors.push(LoweringError::other(format!(
                         "Cannot construct a slice of {:?}. Try marking with `#[diplomat::attr(auto, abi_compatible)]`",
                         enm.name
                     )));
@@ -587,7 +587,7 @@ impl TypeContext {
                         MaybeOwn::Borrow(b)
                             if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
                         {
-                            ctx.errors.push(LoweringError::Other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
+                            ctx.errors.push(LoweringError::other(format!("Found a mutable struct ref &mut {}. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`", st_d.name)));
                         }
                         _ => {}
                     },
@@ -603,7 +603,7 @@ impl TypeContext {
                 };
 
                 if can_tuple && !matches!(st.owner(), MaybeOwn::Own) {
-                    ctx.errors.push(LoweringError::Other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat. See https://github.com/rust-diplomat/diplomat/issues/1143".to_string()));
+                    ctx.errors.push(LoweringError::other("Tuple structs cannot be passed by reference, this is currently unsupported in Diplomat. See https://github.com/rust-diplomat/diplomat/issues/1143".to_string()));
                 }
             }
             hir::Type::Callback(cb) => {
@@ -624,7 +624,7 @@ impl TypeContext {
                     MaybeOwn::Borrow(b)
                         if b.mutability.is_mutable() && !st_d.attrs.mut_struct_ref =>
                     {
-                        errors.push(LoweringError::Other("Found a mutable struct ref &mut self. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`".into()));
+                        errors.push(LoweringError::other("Found a mutable struct ref &mut self. Try marking the struct def with `#[diplomat::attr(auto, mut_struct_ref)]`".into()));
                     }
                     _ => {}
                 },
@@ -638,7 +638,7 @@ impl TypeContext {
                 _ => unreachable!(),
             };
             if can_tuple {
-                errors.push(LoweringError::Other(
+                errors.push(LoweringError::other(
                     "Tuple structs cannot have non-static methods.".to_string(),
                 ));
             }
@@ -667,7 +667,7 @@ impl TypeContext {
                     match l {
                         MaybeStatic::NonStatic(ns) if out.contains(&ns) => {
                             let lt_name = method.lifetime_env.fmt_lifetime(ns);
-                            ctx.errors.push(LoweringError::Other(format!("Opaque slices ({param}) cannot be borrowed from. Suggestion: remove &'{lt_name} from method output.")));
+                            ctx.errors.push(LoweringError::other(format!("Opaque slices ({param}) cannot be borrowed from. Suggestion: remove &'{lt_name} from method output.")));
                         }
                         _ => {}
                     }
@@ -719,7 +719,7 @@ impl TypeContext {
                         // This case is technically already handled in the lifetime lowerer, we're being careful
                         "comes from &-ref's lifetime in parameter".into()
                     };
-                    ctx.errors.push(LoweringError::Other(format!("Method should explicitly include this \
+                    ctx.errors.push(LoweringError::other(format!("Method should explicitly include this \
                                         lifetime bound from {param}: '{use_longer_name}: '{use_name} ({def_cause})")))
                 }
             }
@@ -734,7 +734,7 @@ impl TypeContext {
 
     fn validate_struct<P: hir::TyPosition>(&self, ctx: &mut LoweringContext, st: &StructDef<P>) {
         if st.attrs.abi_compatible && st.lifetimes.num_lifetimes() > 0 {
-            ctx.errors.push(LoweringError::Other(format!(
+            ctx.errors.push(LoweringError::other(format!(
                 "Struct {:?} cannot have any lifetimes if it is marked as ABI compatible.",
                 st.name
             )));
@@ -746,7 +746,7 @@ impl TypeContext {
             if matches!(f.ty, hir::Type::Struct(..))
                 && (f.ty.is_immutably_borrowed() || f.ty.is_mutably_borrowed())
             {
-                ctx.errors.push(LoweringError::Other(format!(
+                ctx.errors.push(LoweringError::other(format!(
                     "Struct {:?} field {:?} cannot be borrowed. Structs cannot be borrowed inside of other structs, try removing the borrow and storing the struct directly.",
                      st.name, f.name
                 )));
@@ -759,14 +759,14 @@ impl TypeContext {
                         match ty {
                             TypeDef::Struct(f_st) => {
                                 if !f_st.attrs.abi_compatible {
-                                    ctx.errors.push(LoweringError::Other(format!(
+                                    ctx.errors.push(LoweringError::other(format!(
                                         "Struct {:?} field {:?} type {:?} must be marked with `#[diplomat::attr(auto, abi_compatible)]`.",
                                         st.name, f.name, f_st.name
                                     )));
                                 }
                             }
                             TypeDef::OutStruct(out) => {
-                                ctx.errors.push(LoweringError::Other(
+                                ctx.errors.push(LoweringError::other(
                                     format!("Out struct {out:?} cannot be included in structs marked with #[diplomat::attr(auto, abi_compatible)].")
                                 ));
                             }
@@ -774,7 +774,7 @@ impl TypeContext {
                         }
                     }
                     _ => {
-                        ctx.errors.push(LoweringError::Other(format!(
+                        ctx.errors.push(LoweringError::other(format!(
                             "Cannot construct a slice of {:?} with non-primitive, non-enum, non-struct field {:?}",
                             st.name, f.name
                         )));
@@ -805,11 +805,11 @@ impl TypeContext {
                     };
 
                     if !is_valid {
-                        ctx.errors.push(LoweringError::Other("Found non #[diplomat::attr(*, ffi_error)] marked error type in trait return. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
+                        ctx.errors.push(LoweringError::other("Found non #[diplomat::attr(*, ffi_error)] marked error type in trait return. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
                     }
                 }
                 _ => {
-                    ctx.errors.push(LoweringError::Other("Backend callback return types are fallible. Return type must be a `-> Result<T, E>`. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
+                    ctx.errors.push(LoweringError::other("Backend callback return types are fallible. Return type must be a `-> Result<T, E>`. See https://rust-diplomat.github.io/diplomat/attrs/fallible_callback_returns.html for more.".to_string()));
                 }
             }
         }
