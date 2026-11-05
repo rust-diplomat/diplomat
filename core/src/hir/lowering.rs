@@ -74,12 +74,7 @@ impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.error_type {
             LoweringErrorType::InvalidType { ref type_name } => {
-                write!(
-                    f,
-                    "Could not evaluate {}: {}",
-                    type_name.ty,
-                    self.reason
-                )
+                write!(f, "Could not evaluate {}: {}", type_name.ty, self.reason)
             }
             LoweringErrorType::Other => self.reason.fmt(f),
         }
@@ -1124,90 +1119,89 @@ impl<'ast> LoweringContext<'ast> {
                     lifetimes, tcx_id,
                 ))))
             }
-            ast::TypeName::Reference(lifetime, mutability, ref_ty) => {
-                match ref_ty.as_ref() {
-                    ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
-                        match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(opaque) => {
-                                if *mutability == Mutability::Mutable
-                                    && opaque.mutability != Mutability::Mutable
-                                {
-                                    self.errors.push(LoweringError::invalid_type(
+            ast::TypeName::Reference(lifetime, mutability, ref_ty) => match ref_ty.as_ref() {
+                ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                    match path.resolve(in_path, self.env) {
+                        ast::CustomType::Opaque(opaque) => {
+                            if *mutability == Mutability::Mutable
+                                && opaque.mutability != Mutability::Mutable
+                            {
+                                self.errors.push(LoweringError::invalid_type(
                                     format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
                                     ty.into(),
                                     Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
                                 ));
-                                }
-                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                                let lifetimes = ltl.lower_generics(
-                                    &path.lifetimes[..],
-                                    &opaque.lifetimes,
-                                    ref_ty.is_self(),
-                                );
-                                let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
+                            }
+                            let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes[..],
+                                &opaque.lifetimes,
+                                ref_ty.is_self(),
+                            );
+                            let tcx_id = self.lookup_id.resolve_opaque(opaque).expect(
                             "can't find opaque in lookup map, which contains all opaques from env",
                         );
 
-                                Ok(Type::Opaque(OpaquePath::new(
-                                    lifetimes,
-                                    Optional(false),
-                                    borrow,
-                                    tcx_id,
-                                )))
-                            }
-                            ast::CustomType::Struct(st) => {
-                                disallow_in_callbacks(
-                                    "Cannot return references to structs from callbacks",
-                                )?;
-                                if (mutability.is_immutable()
-                                    && self.attr_validator.attrs_supported().struct_refs)
-                                    || (mutability.is_mutable()
-                                        && self.attr_validator.attrs_supported().mut_struct_refs)
-                                {
-                                    let borrow =
-                                        Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
-                                    let lifetimes = ltl.lower_generics(
-                                        &path.lifetimes[..],
-                                        &st.lifetimes,
-                                        ref_ty.is_self(),
-                                    );
-                                    let tcx_id = self.lookup_id.resolve_struct(st).expect(
+                            Ok(Type::Opaque(OpaquePath::new(
+                                lifetimes,
+                                Optional(false),
+                                borrow,
+                                tcx_id,
+                            )))
+                        }
+                        ast::CustomType::Struct(st) => {
+                            disallow_in_callbacks(
+                                "Cannot return references to structs from callbacks",
+                            )?;
+                            if (mutability.is_immutable()
+                                && self.attr_validator.attrs_supported().struct_refs)
+                                || (mutability.is_mutable()
+                                    && self.attr_validator.attrs_supported().mut_struct_refs)
+                            {
+                                let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
+                                let lifetimes = ltl.lower_generics(
+                                    &path.lifetimes[..],
+                                    &st.lifetimes,
+                                    ref_ty.is_self(),
+                                );
+                                let tcx_id = self.lookup_id.resolve_struct(st).expect(
                                     "Can't find struct in lookup map, which contains all structs from env"
                                 );
-                                    Ok(Type::Struct(StructPath::new(
-                                        lifetimes,
-                                        tcx_id,
-                                        MaybeOwn::Borrow(borrow),
-                                    )))
-                                } else {
-                                    let (ref_type, support_type) = match mutability {
-                                        Mutability::Mutable => ("&mut ", "mut_struct_refs"),
-                                        Mutability::Immutable => ("&", "struct_refs"),
-                                    };
-                                    self.errors.push(LoweringError::other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
-                                    Err(())
-                                }
-                            }
-                            _custom_type => {
-                                self.errors.push(LoweringError::invalid_type(
-                                "found &T in input where T is a custom type, but not opaque".to_string(),
-                                ty.into(),
-                                Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
-                            ));
+                                Ok(Type::Struct(StructPath::new(
+                                    lifetimes,
+                                    tcx_id,
+                                    MaybeOwn::Borrow(borrow),
+                                )))
+                            } else {
+                                let (ref_type, support_type) = match mutability {
+                                    Mutability::Mutable => ("&mut ", "mut_struct_refs"),
+                                    Mutability::Immutable => ("&", "struct_refs"),
+                                };
+                                self.errors.push(LoweringError::other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
                                 Err(())
                             }
                         }
+                        _custom_type => {
+                            self.errors.push(LoweringError::invalid_type(
+                                "found &T in input where T is a custom type, but not opaque"
+                                    .to_string(),
+                                ty.into(),
+                                Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
+                            ));
+                            Err(())
+                        }
                     }
-                    _ => {
-                        self.errors.push(LoweringError::invalid_type(
-                        "found &T in input where T isn't a custom type and therefore not opaque".to_string(),
+                }
+                _ => {
+                    self.errors.push(LoweringError::invalid_type(
+                        "found &T in input where T isn't a custom type and therefore not opaque"
+                            .to_string(),
                         ty.into(),
                         None,
                     ));
-                        Err(())
-                    }
+                    Err(())
                 }
-            }
+            },
             ast::TypeName::Box(box_ty) => {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
@@ -1503,16 +1497,18 @@ impl<'ast> LoweringContext<'ast> {
 
                         if matches!(op.borrowed().mutability, Mutability::Mutable) {
                             self.errors.push(LoweringError::invalid_type(
-                                "Slices of mutable opaques are currently unsupported in Diplomat.".to_string(),
+                                "Slices of mutable opaques are currently unsupported in Diplomat."
+                                    .to_string(),
                                 ty.into(),
                                 None,
                             ));
                         }
                         if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
                             self.errors.push(LoweringError::invalid_type(
-                                "Slices of &'static opaques are currently unsupported in Diplomat.".to_string(),
+                                "Slices of &'static opaques are currently unsupported in Diplomat."
+                                    .to_string(),
                                 ty.into(),
-                                None
+                                None,
                             ));
                         }
                         if !self.attr_validator.attrs_supported().opaque_slices {
