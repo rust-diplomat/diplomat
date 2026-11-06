@@ -160,7 +160,6 @@ impl fmt::Display for LoweringReport {
 pub type ErrorAndContext = LoweringReport;
 
 /// Where a type was found
-// TODO: For errors, this can be used as a context setter.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub enum TypeLoweringContext {
     /// Stores the name of the field currently being evaluated.
