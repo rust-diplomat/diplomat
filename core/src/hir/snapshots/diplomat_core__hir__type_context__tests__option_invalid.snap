@@ -5,8 +5,8 @@ expression: output
 Diplomat error: Lowering error in Foo
 > Option<u8> is FFI-unsafe, consider using DiplomatOption<u8>
 Diplomat error: Lowering error in Foo
-> Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>
+> Could not evaluate Option<u8>: found Option<T> for primitive T in a struct field, please use DiplomatOption<T>
 Diplomat error: Lowering error in Foo::do_thing
-> found Option<T> in input, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = Option<u16>
+> Could not evaluate Option<Option<u16>>: found Option<T> in input, where T is not a reference. Option<T> requires that T be a reference to an opaque
 Diplomat error: Lowering error in Foo::do_thing2
-> Results can only appear as the top-level return type of methods
+> Could not evaluate Result<Option<char>, u8>: Results can only appear as the top-level return type of methods

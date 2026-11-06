@@ -40,7 +40,19 @@ params:
           end: 0
         span_location: None
     ty:
-      Primitive: f32
+      ty:
+        Primitive: f32
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
   - name:
       - b
@@ -55,7 +67,19 @@ params:
           end: 0
         span_location: None
     ty:
-      Primitive: f64
+      ty:
+        Primitive: f64
+      location:
+        start:
+          line: 1
+          col: 0
+        end:
+          line: 1
+          col: 0
+        range:
+          start: 0
+          end: 0
+        span_location: None
     attrs: {}
 output_type: ~
 lifetimes: {}

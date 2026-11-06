@@ -33,7 +33,23 @@ TypeContext {
                         lines: "",
                         rust_links: [],
                     },
-                    name: "a",
+                    name: Ident(
+                        "a",
+                        Some(
+                            Span {
+                                start: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                end: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                range: 0..0,
+                                span_location: None,
+                            },
+                        ),
+                    ),
                     ty: Primitive(
                         Int(
                             I32,
@@ -154,7 +170,23 @@ TypeContext {
                         lines: "",
                         rust_links: [],
                     },
-                    name: "a",
+                    name: Ident(
+                        "a",
+                        Some(
+                            Span {
+                                start: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                end: LineColumn {
+                                    line: 1,
+                                    col: 0,
+                                },
+                                range: 0..0,
+                                span_location: None,
+                            },
+                        ),
+                    ),
                     ty: Primitive(
                         Int(
                             I32,
@@ -404,7 +436,23 @@ TypeContext {
                     param_self: None,
                     params: [
                         Param {
-                            name: "u",
+                            name: Ident(
+                                "u",
+                                Some(
+                                    Span {
+                                        start: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        end: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        range: 0..0,
+                                        span_location: None,
+                                    },
+                                ),
+                            ),
                             ty: Opaque(
                                 OpaquePath {
                                     lifetimes: Lifetimes {
@@ -551,7 +599,23 @@ TypeContext {
                     param_self: None,
                     params: [
                         Param {
-                            name: "op",
+                            name: Ident(
+                                "op",
+                                Some(
+                                    Span {
+                                        start: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        end: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        range: 0..0,
+                                        span_location: None,
+                                    },
+                                ),
+                            ),
                             ty: Slice(
                                 Opaque(
                                     Borrow(
@@ -981,7 +1045,23 @@ TypeContext {
                     param_self: None,
                     params: [
                         Param {
-                            name: "f",
+                            name: Ident(
+                                "f",
+                                Some(
+                                    Span {
+                                        start: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        end: LineColumn {
+                                            line: 1,
+                                            col: 0,
+                                        },
+                                        range: 0..0,
+                                        span_location: None,
+                                    },
+                                ),
+                            ),
                             ty: Callback(
                                 Callback {
                                     param_self: None,

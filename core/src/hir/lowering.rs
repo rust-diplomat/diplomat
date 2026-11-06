@@ -9,18 +9,23 @@ use super::{
     TypeDef, TypeId, WriteType,
 };
 use crate::ast::attrs::AttrInheritContext;
-use crate::ast::logging::write_report;
-use crate::hir::{Docs, StructPathLike, SymbolId, TypingUseInfo};
+use crate::ast::logging::{write_report, ContextLocation};
+use crate::ast::{OwnedSpannedTypeName, SpannedTypeName};
+use crate::hir::{Docs, LocIdent, StructPathLike, SymbolId, TypingUseInfo};
 use crate::{ast, Env};
 use core::fmt;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use strck::IntoCk;
 
-/// An error from lowering the AST to the HIR.
-/// This provides location information.
-#[derive(Debug)]
 #[non_exhaustive]
-pub enum LoweringError {
+#[derive(Debug)]
+pub enum LoweringErrorType {
+    /// The provided type is incorrect.
+    InvalidType {
+        /// The name of the type, plus its definition location.
+        type_name: Box<OwnedSpannedTypeName>,
+    },
     /// The purpose of having this is that translating to the HIR has enormous
     /// potential for really detailed error handling and giving suggestions.
     ///
@@ -29,13 +34,50 @@ pub enum LoweringError {
     /// written, we ctrl+F for `"LoweringError::Other"` in the lowering code, and turn every
     /// instance into an specialized enum variant, generalizing where possible
     /// without losing any information.
-    Other(String),
+    Other,
+}
+
+/// An error from lowering the AST to the HIR.
+/// This provides location information.
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct LoweringError {
+    pub error_type: LoweringErrorType,
+    pub reason: String,
+    pub suggestion: Option<String>,
+}
+
+impl LoweringError {
+    pub fn other(reason: String) -> Self {
+        LoweringError {
+            error_type: LoweringErrorType::Other,
+            reason,
+            suggestion: None,
+        }
+    }
+
+    pub fn invalid_type(
+        reason: String,
+        type_name: OwnedSpannedTypeName,
+        suggestion: Option<String>,
+    ) -> Self {
+        LoweringError {
+            error_type: LoweringErrorType::InvalidType {
+                type_name: Box::new(type_name),
+            },
+            reason,
+            suggestion,
+        }
+    }
 }
 
 impl fmt::Display for LoweringError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Self::Other(ref s) => s.fmt(f),
+        match self.error_type {
+            LoweringErrorType::InvalidType { ref type_name } => {
+                write!(f, "Could not evaluate {}: {}", type_name.ty, self.reason)
+            }
+            LoweringErrorType::Other => self.reason.fmt(f),
         }
     }
 }
@@ -87,7 +129,17 @@ impl LoweringReport {
             format!("Lowering error in {location}"),
             self.context.location.clone(),
             format!("{}", self.error),
-            vec![],
+            match &self.error.error_type {
+                LoweringErrorType::InvalidType { type_name }
+                    if let Some(sp) = &type_name.location =>
+                {
+                    vec![ContextLocation::new(
+                        sp.clone(),
+                        self.error.suggestion.clone().unwrap_or_default(),
+                    )]
+                }
+                _ => vec![],
+            },
         )
     }
 }
@@ -108,8 +160,9 @@ impl fmt::Display for LoweringReport {
 pub type ErrorAndContext = LoweringReport;
 
 /// Where a type was found
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-enum TypeLoweringContext {
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub enum TypeLoweringContext {
+    /// Stores the name of the field currently being evaluated.
     Struct,
     Callback,
     Method,
@@ -189,7 +242,7 @@ pub(crate) struct ItemAndInfo<'ast, Ast> {
 }
 
 impl<'ast> LoweringContext<'ast> {
-    /// Lowers an [`ast::Ident`]s into an [`hir::IdentBuf`].
+    /// Lowers an [`ast::Ident`]s into an [`IdentBuf`].
     ///
     /// If there are any errors, they're pushed to `errors` and `Err` is returned.
     pub(super) fn lower_ident(
@@ -200,7 +253,7 @@ impl<'ast> LoweringContext<'ast> {
         match ident.as_str().ck() {
             Ok(name) => Ok(name.to_owned()),
             Err(e) => {
-                self.errors.push(LoweringError::Other(format!(
+                self.errors.push(LoweringError::other(format!(
                     "Ident `{ident}` from {context} could not be turned into a Rust ident: {e}"
                 )));
                 Err(())
@@ -305,7 +358,7 @@ impl<'ast> LoweringContext<'ast> {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
                         docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
-                        name,
+                        name: LocIdent::new(name, ident.span()),
                         discriminant: *discriminant,
                         attrs,
                     };
@@ -419,12 +472,15 @@ impl<'ast> LoweringContext<'ast> {
                 let name = self.lower_ident(field_name, "struct field name")?;
                 if !ty.is_ffi_safe() {
                     let ffisafe = ty.ffi_safe_version();
-                    self.errors.push(LoweringError::Other(format!(
+                    self.errors.push(LoweringError::other(format!(
                         "{ty} is FFI-unsafe, consider using {ffisafe}"
                     )));
                 }
                 let ty = self.lower_type::<Everywhere>(
-                    ty,
+                    &SpannedTypeName {
+                        ty: Cow::Borrowed(ty),
+                        location: field_name.span(),
+                    },
                     &mut &ast_struct.lifetimes,
                     TypeLoweringContext::Struct,
                     item.in_path,
@@ -443,7 +499,7 @@ impl<'ast> LoweringContext<'ast> {
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
                         docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
-                        name,
+                        name: LocIdent::new(name, field_name.span()),
                         ty,
                         attrs: field_attrs,
                     }),
@@ -458,7 +514,7 @@ impl<'ast> LoweringContext<'ast> {
             Vec::new()
         } else if ast_struct.fields.is_empty() {
             if !ast_struct.methods.is_empty() {
-                self.errors.push(LoweringError::Other(format!(
+                self.errors.push(LoweringError::other(format!(
                     "Methods on ZST structs are not yet implemented: {}",
                     ast_struct.name
                 )));
@@ -509,12 +565,12 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if ast_trait.is_send && !self.attr_validator.attrs_supported().traits_are_send {
-            self.errors.push(LoweringError::Other(
+            self.errors.push(LoweringError::other(
                 "Traits are not safe to std::marker::Send in this backend".into(),
             ));
         }
         if ast_trait.is_sync && !self.attr_validator.attrs_supported().traits_are_sync {
-            self.errors.push(LoweringError::Other(
+            self.errors.push(LoweringError::other(
                 "Traits are not safe to std::marker::Send in this backend".into(),
             ));
         }
@@ -579,7 +635,11 @@ impl<'ast> LoweringContext<'ast> {
             self.lower_many_callback_params(&ast_trait_method.params, &mut param_ltl, in_path)?;
 
         let return_type = self.lower_callback_return_type(
-            ast_trait_method.output_type.as_ref(),
+            ast_trait_method
+                .output_type
+                .as_ref()
+                .map(Into::<SpannedTypeName>::into)
+                .as_ref(),
             &mut param_ltl,
             in_path,
         )?;
@@ -631,7 +691,7 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if !attrs.disable && !self.attr_validator.attrs_supported().free_functions {
-            self.errors.push(LoweringError::Other(
+            self.errors.push(LoweringError::other(
                 format!("Could not lower public function {}, backend does not support free functions. Try #[diplomat::cfg(supports = free_functions)].", ast_function.item.name.as_str())
             ));
             return Err(());
@@ -642,7 +702,12 @@ impl<'ast> LoweringContext<'ast> {
                 self.lower_many_params(ast_params, param_ltl, ast_function.in_path)?;
 
             let (return_type, lifetime_env) = self.lower_return_type(
-                ast_function.item.output_type.as_ref(),
+                ast_function
+                    .item
+                    .output_type
+                    .as_ref()
+                    .map(Into::<SpannedTypeName>::into)
+                    .as_ref(),
                 write_type,
                 return_ltl,
                 ast_function.in_path,
@@ -698,8 +763,8 @@ impl<'ast> LoweringContext<'ast> {
             let mut fields = Ok(Vec::with_capacity(ast_out_struct.fields.len()));
             // Only compute fields if the type isn't disabled, otherwise we may encounter forbidden types
             if !attrs.disable {
-                for (name, ty, docs, attrs) in ast_out_struct.fields.iter() {
-                    let name = self.lower_ident(name, "out-struct field name");
+                for (field_name, ty, docs, attrs) in ast_out_struct.fields.iter() {
+                    let name = self.lower_ident(field_name, "out-struct field name");
                     let ty = self.lower_out_type(
                         ty,
                         &mut &ast_out_struct.lifetimes,
@@ -715,7 +780,7 @@ impl<'ast> LoweringContext<'ast> {
                                 self.attr_validator.as_ref(),
                                 &mut self.errors,
                             ),
-                            name,
+                            name: LocIdent::new(name, field_name.span()),
                             ty,
                             attrs: self.attr_validator.attr_from_ast(
                                 attrs,
@@ -794,8 +859,16 @@ impl<'ast> LoweringContext<'ast> {
 
         let (params, return_ltl) = self.lower_many_params(ast_params, param_ltl, in_path)?;
 
-        let (output, lifetime_env) =
-            self.lower_return_type(method.return_type.as_ref(), write_type, return_ltl, in_path)?;
+        let (output, lifetime_env) = self.lower_return_type(
+            method
+                .return_type
+                .as_ref()
+                .map(Into::<SpannedTypeName>::into)
+                .as_ref(),
+            write_type,
+            return_ltl,
+            in_path,
+        )?;
 
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
@@ -824,10 +897,12 @@ impl<'ast> LoweringContext<'ast> {
         );
 
         if is_comparison {
-            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) = &method.return_type {
-                if matches!(**t, ast::TypeName::Ordering) {
+            let is_optional_ord = if let Some(ast::TypeName::Option(t, _)) =
+                &method.return_type.as_ref().map(|t| &t.ty)
+            {
+                if matches!(t.as_ref(), &ast::TypeName::Ordering) {
                     if !self.attr_validator.attrs_supported().partial_comparators {
-                        self.errors.push(LoweringError::Other("Comparators that return `Option` are not supported by this backend (Filter with #[diplomat::cfg(supports=partial_comparators)]).".into()));
+                        self.errors.push(LoweringError::other("Comparators that return `Option` are not supported by this backend (Filter with #[diplomat::cfg(supports=partial_comparators)]).".into()));
                     }
                     hir_method.attrs.special_method = Some(SpecialMethod::Comparison(true));
                     true
@@ -838,9 +913,18 @@ impl<'ast> LoweringContext<'ast> {
                 false
             };
 
-            if !(method.return_type == Some(ast::TypeName::Ordering) || is_optional_ord) {
-                self.errors.push(LoweringError::Other(
-                    "Found comparison method that does not return cmp::Ordering or Optional<cmp::Ordering>".into(),
+            if !(method
+                .return_type
+                .as_ref()
+                .map(|t: &OwnedSpannedTypeName| &t.ty)
+                == Some(&ast::TypeName::Ordering)
+                || is_optional_ord)
+            {
+                self.errors.push(LoweringError::invalid_type(
+                    "Comparison methods must return cmp::Ordering or Optional<cmp::Ordering>"
+                        .into(),
+                    method.return_type.as_ref().unwrap().clone(),
+                    Some("Suggestion: change this to cmp::Ordering".to_string()),
                 ));
                 return Err(());
             }
@@ -918,7 +1002,7 @@ impl<'ast> LoweringContext<'ast> {
                             has_unnamed_constructor = true;
                             methods.push(method);
                         } else {
-                            self.errors.push(LoweringError::Other(format!(
+                            self.errors.push(LoweringError::other(format!(
                                 "At most one unnamed constructor is allowed, see https://github.com/rust-diplomat/diplomat/issues/234 if you need overloading (extra abi_name: {})",
                                 method.abi_name.as_str()
                             )));
@@ -939,69 +1023,87 @@ impl<'ast> LoweringContext<'ast> {
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     fn lower_type<P: TyPosition<StructPath = StructPath, OpaqueOwnership = Borrow>>(
         &mut self,
-        ty: &ast::TypeName,
+        ty: &ast::SpannedTypeName,
         ltl: &mut impl LifetimeLowerer,
         context: TypeLoweringContext,
         in_path: &ast::Path,
     ) -> Result<Type<P>, ()> {
         let mut disallow_in_callbacks = |msg: &str| {
             if context == TypeLoweringContext::Callback {
-                self.errors.push(LoweringError::Other(msg.into()));
+                self.errors
+                    .push(LoweringError::invalid_type(msg.into(), ty.into(), None));
                 Err(())
             } else {
                 Ok(())
             }
         };
-        match ty {
+        match &ty.ty.as_ref() {
             ast::TypeName::Primitive(prim) => Ok(Type::Primitive(PrimitiveType::from_ast(*prim))),
             ast::TypeName::Ordering => {
-                self.errors.push(LoweringError::Other("Found cmp::Ordering in parameter or struct field, it is only allowed in return types".to_string()));
+                self.errors.push(LoweringError::invalid_type(
+                    "Found cmp::Ordering in input, it is only allowed in return types".to_string(),
+                    ty.into(),
+                    None,
+                ));
                 Err(())
             }
-            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => match path
-                .resolve(in_path, self.env)
-            {
-                ast::CustomType::Struct(strct) => {
-                    if strct.fields.is_empty() {
-                        self.errors.push(LoweringError::Other(format!(
-                            "zero-size types are not allowed as method arguments: {ty} in {path}"
-                        )));
-                        return Err(());
-                    }
-                    if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
-                        let lifetimes =
-                            ltl.lower_generics(&path.lifetimes[..], &strct.lifetimes, ty.is_self());
+            ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
+                match path.resolve(in_path, self.env) {
+                    ast::CustomType::Struct(strct) => {
+                        if strct.fields.is_empty() {
+                            self.errors.push(LoweringError::invalid_type(
+                                "zero-size types are not allowed as method arguments".to_string(),
+                                ty.into(),
+                                None,
+                            ));
+                            return Err(());
+                        }
+                        if let Some(tcx_id) = self.lookup_id.resolve_struct(strct) {
+                            let lifetimes = ltl.lower_generics(
+                                &path.lifetimes[..],
+                                &strct.lifetimes,
+                                ty.ty.is_self(),
+                            );
 
-                        Ok(Type::Struct(StructPath::new(
-                            lifetimes,
-                            tcx_id,
-                            MaybeOwn::Own,
-                        )))
-                    } else if self.lookup_id.resolve_out_struct(strct).is_some() {
-                        self.errors.push(LoweringError::Other(format!("found struct in input that is marked with #[diplomat::out]: {ty} in {path}")));
+                            Ok(Type::Struct(StructPath::new(
+                                lifetimes,
+                                tcx_id,
+                                MaybeOwn::Own,
+                            )))
+                        } else if self.lookup_id.resolve_out_struct(strct).is_some() {
+                            self.errors.push(LoweringError::invalid_type(
+                                format!(
+                                    "{} is marked with #[diplomat::out], but found in input",
+                                    ty.ty
+                                ),
+                                ty.into(),
+                                None,
+                            ));
+                            Err(())
+                        } else {
+                            unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
+                        }
+                    }
+                    ast::CustomType::Opaque(_op) => {
+                        self.errors.push(LoweringError::invalid_type(
+                        "Opaque passed by value".to_string(),
+                        ty.into(),
+                        Some("#[diplomat::opaque] types can only be passed by reference in input".to_string()),
+                    ));
                         Err(())
-                    } else {
-                        unreachable!("struct `{}` wasn't found in the set of structs or out-structs, this is a bug.", strct.name);
+                    }
+                    ast::CustomType::Enum(enm) => {
+                        let tcx_id = self.lookup_id.resolve_enum(enm).expect(
+                            "can't find enum in lookup map, which contains all enums from env",
+                        );
+
+                        Ok(Type::Enum(EnumPath::new(tcx_id)))
                     }
                 }
-                ast::CustomType::Opaque(_) => {
-                    self.errors.push(LoweringError::Other(format!(
-                        "Opaque passed by value: {path}"
-                    )));
-                    Err(())
-                }
-                ast::CustomType::Enum(enm) => {
-                    let tcx_id = self
-                        .lookup_id
-                        .resolve_enum(enm)
-                        .expect("can't find enum in lookup map, which contains all enums from env");
-
-                    Ok(Type::Enum(EnumPath::new(tcx_id)))
-                }
-            },
+            }
             ast::TypeName::ImplTrait(path) => {
                 if !self.attr_validator.attrs_supported().traits {
-                    self.errors.push(LoweringError::Other(
+                    self.errors.push(LoweringError::other(
                         "Traits are not supported by this backend".into(),
                     ));
                 }
@@ -1011,7 +1113,7 @@ impl<'ast> LoweringContext<'ast> {
                     .resolve_trait(&trt)
                     .expect("can't find trait in lookup map, which contains all traits from env");
                 let lifetimes =
-                    ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.is_self());
+                    ltl.lower_generics(&path.lifetimes[..], &trt.lifetimes, ty.ty.is_self());
 
                 Ok(Type::ImplTrait(P::build_trait_path(TraitPath::new(
                     lifetimes, tcx_id,
@@ -1024,7 +1126,11 @@ impl<'ast> LoweringContext<'ast> {
                             if *mutability == Mutability::Mutable
                                 && opaque.mutability != Mutability::Mutable
                             {
-                                self.errors.push(LoweringError::Other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
+                                self.errors.push(LoweringError::invalid_type(
+                                    format!("opaque type {} is passed as &mut without being marked as #[diplomat::opaque_mut]", opaque.name),
+                                    ty.into(),
+                                    Some("Suggestion: mark with #[diplomat::opaque_mut]".to_string()),
+                                ));
                             }
                             let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
                             let lifetimes = ltl.lower_generics(
@@ -1071,18 +1177,28 @@ impl<'ast> LoweringContext<'ast> {
                                     Mutability::Mutable => ("&mut ", "mut_struct_refs"),
                                     Mutability::Immutable => ("&", "struct_refs"),
                                 };
-                                self.errors.push(LoweringError::Other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
+                                self.errors.push(LoweringError::other(format!("found {ref_type}T in input where T is a struct. The backend must support {support_type}.")));
                                 Err(())
                             }
                         }
-                        _ => {
-                            self.errors.push(LoweringError::Other(format!("found &T in input where T is a custom type, but not opaque. T = {ref_ty}")));
+                        _custom_type => {
+                            self.errors.push(LoweringError::invalid_type(
+                                "found &T in input where T is a custom type, but not opaque"
+                                    .to_string(),
+                                ty.into(),
+                                Some("Suggestion: mark with #[diplomat::opaque]".to_string()),
+                            ));
                             Err(())
                         }
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in input where T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                    self.errors.push(LoweringError::invalid_type(
+                        "found &T in input where T isn't a custom type and therefore not opaque"
+                            .to_string(),
+                        ty.into(),
+                        None,
+                    ));
                     Err(())
                 }
             },
@@ -1090,11 +1206,23 @@ impl<'ast> LoweringContext<'ast> {
                 self.errors.push(match box_ty.as_ref() {
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
-                        ast::CustomType::Opaque(_) => LoweringError::Other(format!("found Box<T> in input where T is an opaque, but owned opaques aren't allowed in inputs. try &T instead? T = {path}")),
-                        _ => LoweringError::Other(format!("found Box<T> in input where T is a custom type but not opaque. non-opaques can't be behind pointers, and opaques in inputs can't be owned. T = {path}")),
+                        ast::CustomType::Opaque(_) => LoweringError::invalid_type(
+                            "found Box<T> in input, where T is an opaque; owned opaques aren't allowed in inputs. Try referencing the opaque (&T) instead".to_string(),
+                            ty.into(),
+                            None,
+                        ),
+                        _ => LoweringError::invalid_type(
+                            "found Box<T> in input, where T is non-opaque; non-opaques can't be behind pointers".into(),
+                            ty.into(),
+                            None,
+                        )
                     }
                 }
-                _ => LoweringError::Other(format!("found Box<T> in input where T isn't a custom type. T = {box_ty}")),
+                _ => LoweringError::invalid_type(
+                    "found Box<T> in input, were T isn't a custom type".into(),
+                    ty.into(),
+                    None,
+                )
             });
                 Err(())
             }
@@ -1107,7 +1235,11 @@ impl<'ast> LoweringContext<'ast> {
                         {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    self.errors.push(LoweringError::invalid_type(
+                                        "found DiplomatOption<&T>, please use Option<&T>".to_string(),
+                                        ty.into(),
+                                        Some("Opaques cannot be referenced behind DiplomatOption<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()),
+                                    ));
                                     return Err(());
                                 }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
@@ -1130,32 +1262,56 @@ impl<'ast> LoweringContext<'ast> {
                                 )))
                             }
                             _ => {
-                                self.errors.push(LoweringError::Other(format!("found Option<&T> in input where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                                self.errors.push(LoweringError::invalid_type(
+                                    "found Option<&T> in input, where T is not opaque".into(),
+                                    ty.into(),
+                                    Some("Type must be marked #[diplomat::opaque] to be passed as Option<&T>".to_string()),
+                                ));
                                 Err(())
                             }
                         },
                         _ => {
-                            self.errors.push(LoweringError::Other(format!("found Option<&T> in input, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                            self.errors.push(LoweringError::invalid_type(
+                                "found Option<&T> in input, but T is not an opaque type".into(),
+                                ty.into(),
+                                None,
+                            ));
                             Err(())
                         }
                     },
                     ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                         match path.resolve(in_path, self.env) {
-                            ast::CustomType::Opaque(_) => {
-                                self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                            ast::CustomType::Opaque(_op) => {
+                                self.errors.push(LoweringError::invalid_type(
+                                    "found Option<T> where T is opaque, opaque types must be behind a reference".to_string(),
+                                    ty.into(),
+                                    Some("opaque types are passed through FFI as pointers".to_string()),
+                                ));
                                 Err(())
                             }
                             _ => {
                                 if context == TypeLoweringContext::Struct
                                     && *stdlib == ast::StdlibOrDiplomat::Stdlib
                                 {
-                                    self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                    self.errors.push(LoweringError::invalid_type(
+                                        "found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into(),
+                                        ty.into(),
+                                        Some("Struct and enum options must be stored in the C-ABI friendly DiplomatOption type".to_string()),
+                                    ));
                                     return Err(());
                                 }
                                 if !self.attr_validator.attrs_supported().option {
-                                    self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
+                                    self.errors.push(LoweringError::other("Options of structs/enums/primitives not supported by this backend".into()));
                                 }
-                                let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                                let inner = self.lower_type(
+                                    &ast::SpannedTypeName {
+                                        ty: Cow::Borrowed(opt_ty),
+                                        location: ty.location.clone(),
+                                    },
+                                    ltl,
+                                    context,
+                                    in_path,
+                                )?;
                                 if let Some(i) = inner.id() {
                                     self.usage_get_or_insert(i.into()).optioned = true;
                                 }
@@ -1167,11 +1323,15 @@ impl<'ast> LoweringContext<'ast> {
                         if context == TypeLoweringContext::Struct
                             && *stdlib == ast::StdlibOrDiplomat::Stdlib
                         {
-                            self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                            self.errors.push(LoweringError::invalid_type(
+                                "found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into(),
+                                ty.into(),
+                                None,
+                            ));
                             return Err(());
                         }
                         if !self.attr_validator.attrs_supported().option {
-                            self.errors.push(LoweringError::Other(
+                            self.errors.push(LoweringError::other(
                                 "Options of structs/enums/primitives not supported by this backend"
                                     .into(),
                             ));
@@ -1184,28 +1344,43 @@ impl<'ast> LoweringContext<'ast> {
                         Box::new(Type::Slice(Slice::Strs(*encoding))),
                     )),
                     ast::TypeName::StrReference(..) | ast::TypeName::PrimitiveSlice(..) => {
-                        let inner = self.lower_type(opt_ty, ltl, context, in_path)?;
+                        // Currently we just use locations for debug, so the span for options can remain the same:
+                        let opt_ty = SpannedTypeName {
+                            ty: Cow::Borrowed(opt_ty),
+                            location: ty.location.clone(),
+                        };
+                        let inner = self.lower_type(&opt_ty, ltl, context, in_path)?;
                         Ok(Type::DiplomatOption(Box::new(inner)))
                     }
-                    ast::TypeName::Box(box_ty) => {
+                    ast::TypeName::Box(..) => {
                         // we could see whats in the box here too
-                        self.errors.push(LoweringError::Other(format!("found Option<Box<T>> in input, but box isn't allowed in inputs. T = {box_ty}")));
+                        self.errors.push(LoweringError::invalid_type(
+                            "found Option<Box<T>>, Box<T> is not allowed in inputs".to_string(),
+                            ty.into(),
+                            None,
+                        ));
                         Err(())
                     }
                     _ => {
-                        self.errors.push(LoweringError::Other(format!("found Option<T> in input, where T isn't a reference but Option<T> in inputs requires that T is a reference to an opaque. T = {opt_ty}")));
+                        self.errors.push(LoweringError::invalid_type(
+                            "found Option<T> in input, where T is not a reference. Option<T> requires that T be a reference to an opaque".to_string(),
+                            ty.into(),
+                            None,
+                        ));
                         Err(())
                     }
                 }
             }
             ast::TypeName::Result(_, _, _) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::invalid_type(
                     "Results can only appear as the top-level return type of methods".into(),
+                    ty.into(),
+                    None,
                 ));
                 Err(())
             }
             ast::TypeName::Write(..) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
                 Err(())
@@ -1214,7 +1389,7 @@ impl<'ast> LoweringContext<'ast> {
                 if lifetime.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
                     if !self.attr_validator.attrs_supported().owned_slices {
-                        self.errors.push(LoweringError::Other(
+                        self.errors.push(LoweringError::other(
                             "Owned slices are not supported in this backend.".into(),
                         ));
                     }
@@ -1222,7 +1397,7 @@ impl<'ast> LoweringContext<'ast> {
                 let new_lifetime = lifetime.as_ref().map(|lt| ltl.lower_lifetime(lt));
                 if let Some(super::MaybeStatic::Static) = new_lifetime {
                     if !self.attr_validator.attrs_supported().static_slices {
-                        self.errors.push(LoweringError::Other(
+                        self.errors.push(LoweringError::other(
                             "'static string slice types are not supported. Try #[diplomat::cfg(supports = static_slices)]".into()
                         ));
                     }
@@ -1234,7 +1409,7 @@ impl<'ast> LoweringContext<'ast> {
                 if lm.is_none() {
                     disallow_in_callbacks("Cannot return owned slices from callbacks")?;
                     if !self.attr_validator.attrs_supported().owned_slices {
-                        self.errors.push(LoweringError::Other(
+                        self.errors.push(LoweringError::other(
                             "Owned slices are not supported in this backend.".into(),
                         ));
                     }
@@ -1246,7 +1421,7 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(b) = new_lifetime {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
-                            self.errors.push(LoweringError::Other(
+                            self.errors.push(LoweringError::other(
                                 format!("'static {prim:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
@@ -1258,7 +1433,7 @@ impl<'ast> LoweringContext<'ast> {
                     .unwrap_or(false)
                     && !self.attr_validator.attrs_supported().mutable_slices
                 {
-                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
+                    self.errors.push(LoweringError::other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
                 Ok(Type::Slice(Slice::Primitive(
@@ -1274,7 +1449,7 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(b) = new_lifetime {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
-                            self.errors.push(LoweringError::Other(
+                            self.errors.push(LoweringError::other(
                                 format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
@@ -1285,10 +1460,14 @@ impl<'ast> LoweringContext<'ast> {
                     .unwrap_or(false)
                     && !self.attr_validator.attrs_supported().mutable_slices
                 {
-                    self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
+                    self.errors.push(LoweringError::other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
 
-                let inner = self.lower_type::<P>(type_name, ltl, context, in_path)?;
+                let slice_ty = SpannedTypeName {
+                    ty: Cow::Borrowed(type_name),
+                    location: ty.location.clone(),
+                };
+                let inner = self.lower_type::<P>(&slice_ty, ltl, context, in_path)?;
                 match inner {
                     Type::Struct(st) => {
                         self.usage_get_or_insert(st.tcx_id.into()).sliced = true;
@@ -1301,21 +1480,39 @@ impl<'ast> LoweringContext<'ast> {
                     Type::Opaque(op) => {
                         if let Some(lt) = new_lifetime {
                             if lt.mutability.is_mutable() {
-                                self.errors.push(LoweringError::Other(format!("Mutable slices of opaques (&mut [{type_name}]) are currently unsupported in Diplomat.")));
+                                self.errors.push(LoweringError::invalid_type(
+                                    "Mutable slices of opaques are currently unsupported in Diplomat.".to_string(),
+                                    ty.into(),
+                                    None,
+                                ));
                             }
                             if matches!(lt.lifetime, super::MaybeStatic::Static) {
-                                self.errors.push(LoweringError::Other(format!("&'static slices of opaques (&'static [{type_name}]) are currently unsupported in Diplomat.")));
+                                self.errors.push(LoweringError::invalid_type(
+                                    "&'static slices of opaques are currently unsupported in Diplomat.".to_string(),
+                                    ty.into(),
+                                    None,
+                                ));
                             }
                         }
 
                         if matches!(op.borrowed().mutability, Mutability::Mutable) {
-                            self.errors.push(LoweringError::Other(format!("Slices of mutable opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                            self.errors.push(LoweringError::invalid_type(
+                                "Slices of mutable opaques are currently unsupported in Diplomat."
+                                    .to_string(),
+                                ty.into(),
+                                None,
+                            ));
                         }
                         if matches!(op.owner.lifetime, super::MaybeStatic::Static) {
-                            self.errors.push(LoweringError::Other(format!("Slices of &'static opaques (&[{type_name}]) are currently unsupported in Diplomat.")));
+                            self.errors.push(LoweringError::invalid_type(
+                                "Slices of &'static opaques are currently unsupported in Diplomat."
+                                    .to_string(),
+                                ty.into(),
+                                None,
+                            ));
                         }
                         if !self.attr_validator.attrs_supported().opaque_slices {
-                            self.errors.push(LoweringError::Other(format!(
+                            self.errors.push(LoweringError::other(format!(
                                 "Slice of opaque &[{type_name}] is unsupported by this backend."
                             )));
                         }
@@ -1326,9 +1523,10 @@ impl<'ast> LoweringContext<'ast> {
                         Ok(Type::Slice(Slice::Opaque(new_lifetime.into(), op)))
                     }
                     _ => {
-                        self.errors.push(LoweringError::Other(
-                            format!("Cannot have custom type {type_name} in a slice. Only abi_compatible structs or borrowed opaques are allowed."
-                        )
+                        self.errors.push(LoweringError::invalid_type(
+                            "Cannot have custom type in a slice. Only abi_compatible structs or borrowed opaques are allowed.".to_string(),
+                            ty.into(),
+                            Some("See https://rust-diplomat.github.io/diplomat/types/slices.html".into()),
                         ));
                         Err(())
                     }
@@ -1337,13 +1535,15 @@ impl<'ast> LoweringContext<'ast> {
             ast::TypeName::Function(input_types, out_type, _mutability) => {
                 disallow_in_callbacks("Cannot nest callbacks")?;
                 if !self.attr_validator.attrs_supported().callbacks {
-                    self.errors.push(LoweringError::Other(
+                    self.errors.push(LoweringError::other(
                         "Callback arguments are not supported by this backend".into(),
                     ));
                 }
                 if context == TypeLoweringContext::Struct {
-                    self.errors.push(LoweringError::Other(
+                    self.errors.push(LoweringError::invalid_type(
                         "Callbacks currently unsupported in structs".into(),
+                        ty.into(),
+                        None,
                     ));
                     return Err(());
                 }
@@ -1359,7 +1559,10 @@ impl<'ast> LoweringContext<'ast> {
                     param_self: None,
                     params,
                     output: Box::new(self.lower_callback_return_type(
-                        Some(out_type),
+                        Some(&SpannedTypeName {
+                            ty: Cow::Borrowed(out_type),
+                            location: ty.location.clone(),
+                        }),
                         ltl,
                         in_path,
                     )?),
@@ -1369,7 +1572,11 @@ impl<'ast> LoweringContext<'ast> {
                 })))
             }
             ast::TypeName::Unit => {
-                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                self.errors.push(LoweringError::invalid_type(
+                    "Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into(),
+                    ty.into(),
+                    None
+                ));
                 Err(())
             }
         }
@@ -1392,7 +1599,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::Ordering => {
                 if context == TypeLoweringContext::Struct {
-                    self.errors.push(LoweringError::Other(
+                    self.errors.push(LoweringError::other(
                         "Found cmp::Ordering in struct field, it is only allowed in return types"
                             .to_string(),
                     ));
@@ -1405,7 +1612,7 @@ impl<'ast> LoweringContext<'ast> {
                 match path.resolve(in_path, self.env) {
                     ast::CustomType::Struct(strct) => {
                         if !in_result_option && strct.fields.is_empty() {
-                            self.errors.push(LoweringError::Other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
+                            self.errors.push(LoweringError::other(format!("Found zero-size struct outside a `Result` or `Option`: {ty} in {in_path}")));
                             return Err(());
                         }
                         let lifetimes =
@@ -1424,7 +1631,7 @@ impl<'ast> LoweringContext<'ast> {
                         }
                     }
                     ast::CustomType::Opaque(_) => {
-                        self.errors.push(LoweringError::Other(format!(
+                        self.errors.push(LoweringError::other(format!(
                             "Opaque passed by value in input: {path}"
                         )));
                         Err(())
@@ -1460,13 +1667,13 @@ impl<'ast> LoweringContext<'ast> {
                             )))
                         }
                         _ => {
-                            self.errors.push(LoweringError::Other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}")));
+                            self.errors.push(LoweringError::other(format!("found &T in output where T is a custom type, but not opaque. T = {ref_ty}")));
                             Err(())
                         }
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {in_path:?}")));
+                    self.errors.push(LoweringError::other(format!("found &T in output where T isn't a custom type and therefore not opaque. T = {ref_ty}, path = {in_path:?}")));
                     Err(())
                 }
             },
@@ -1491,13 +1698,13 @@ impl<'ast> LoweringContext<'ast> {
                             )))
                         }
                         _ => {
-                            self.errors.push(LoweringError::Other(format!("found Box<T> in output where T is a custom type but not opaque. non-opaques can't be behind pointers. T = {path}")));
+                            self.errors.push(LoweringError::other(format!("found Box<T> in output where T is a custom type but not opaque. non-opaques can't be behind pointers. T = {path}")));
                             Err(())
                         }
                     }
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!(
+                    self.errors.push(LoweringError::other(format!(
                         "found Box<T> in output where T isn't a custom type. T = {box_ty}"
                     )));
                     Err(())
@@ -1509,7 +1716,7 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    self.errors.push(LoweringError::other("found DiplomatOption<&T>, please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                                 let borrow = Borrow::new(ltl.lower_lifetime(lifetime), *mutability);
@@ -1530,13 +1737,13 @@ impl<'ast> LoweringContext<'ast> {
                                 )))
                             }
                             _ => {
-                                self.errors.push(LoweringError::Other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
+                                self.errors.push(LoweringError::other(format!("found Option<&T> where T is a custom type, but it's not opaque. T = {ref_ty}")));
                                 Err(())
                             }
                         }
                     }
                     _ => {
-                        self.errors.push(LoweringError::Other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
+                        self.errors.push(LoweringError::other(format!("found Option<&T>, but T isn't a custom type and therefore not opaque. T = {ref_ty}")));
                         Err(())
                     }
                 },
@@ -1545,7 +1752,7 @@ impl<'ast> LoweringContext<'ast> {
                         match path.resolve(in_path, self.env) {
                             ast::CustomType::Opaque(opaque) => {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other("found DiplomatOption<Box<T>>, please use Option<Box<T>> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    self.errors.push(LoweringError::other("found DiplomatOption<Box<T>>, please use Option<Box<T>> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                                 let lifetimes = ltl.lower_generics(
@@ -1567,31 +1774,31 @@ impl<'ast> LoweringContext<'ast> {
                                 )))
                             }
                             _ => {
-                                self.errors.push(LoweringError::Other(format!("found Option<Box<T>> where T is a custom type, but it's not opaque. T = {box_ty}")));
+                                self.errors.push(LoweringError::other(format!("found Option<Box<T>> where T is a custom type, but it's not opaque. T = {box_ty}")));
                                 Err(())
                             }
                         }
                     }
                     _ => {
-                        self.errors.push(LoweringError::Other(format!("found Option<Box<T>>, but T isn't a custom type and therefore not opaque. T = {box_ty}")));
+                        self.errors.push(LoweringError::other(format!("found Option<Box<T>>, but T isn't a custom type and therefore not opaque. T = {box_ty}")));
                         Err(())
                     }
                 },
                 ast::TypeName::Named(path) | ast::TypeName::SelfType(path) => {
                     match path.resolve(in_path, self.env) {
                         ast::CustomType::Opaque(_) => {
-                            self.errors.push(LoweringError::Other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
+                            self.errors.push(LoweringError::other("Found Option<T> where T is opaque, opaque types must be behind a reference".into()));
                             Err(())
                         }
                         _ => {
                             if context == TypeLoweringContext::Struct
                                 && *stdlib == ast::StdlibOrDiplomat::Stdlib
                             {
-                                self.errors.push(LoweringError::Other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
+                                self.errors.push(LoweringError::other("Found Option<T> for struct/enum T in a struct field, please use DiplomatOption<T>".into()));
                                 return Err(());
                             }
                             if !self.attr_validator.attrs_supported().option {
-                                self.errors.push(LoweringError::Other("Options of structs/enums/primitives not supported by this backend".into()));
+                                self.errors.push(LoweringError::other("Options of structs/enums/primitives not supported by this backend".into()));
                             }
                             let inner = self.lower_out_type(opt_ty, ltl, in_path, context, true)?;
                             if let Some(i) = inner.id() {
@@ -1605,11 +1812,11 @@ impl<'ast> LoweringContext<'ast> {
                     if context == TypeLoweringContext::Struct
                         && *stdlib == ast::StdlibOrDiplomat::Stdlib
                     {
-                        self.errors.push(LoweringError::Other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
+                        self.errors.push(LoweringError::other("Found Option<T> for primitive T in a struct field, please use DiplomatOption<T>".into()));
                         return Err(());
                     }
                     if !self.attr_validator.attrs_supported().option {
-                        self.errors.push(LoweringError::Other(
+                        self.errors.push(LoweringError::other(
                             "Options of structs/enums/primitives not supported by this backend"
                                 .into(),
                         ));
@@ -1619,18 +1826,18 @@ impl<'ast> LoweringContext<'ast> {
                     ))))
                 }
                 _ => {
-                    self.errors.push(LoweringError::Other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
+                    self.errors.push(LoweringError::other(format!("found Option<T>, where T isn't a reference but Option<T> requires that T is a reference to an opaque. T = {opt_ty}")));
                     Err(())
                 }
             },
             ast::TypeName::Result(_, _, _) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "Results can only appear as the top-level return type of methods".into(),
                 ));
                 Err(())
             }
             ast::TypeName::Write(..) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "DiplomatWrite can only appear as the last parameter of a method".into(),
                 ));
                 Err(())
@@ -1649,7 +1856,7 @@ impl<'ast> LoweringContext<'ast> {
                     .attrs_supported()
                     .owned_byte_slice_returns
                 {
-                    self.errors.push(LoweringError::Other(
+                    self.errors.push(LoweringError::other(
                         "`Box<[u8]>` returns are not supported in this backend. Try #[diplomat::cfg(supports = owned_byte_slice_returns)] to restrict this API to supporting backends."
                             .into(),
                     ));
@@ -1662,7 +1869,7 @@ impl<'ast> LoweringContext<'ast> {
             }
             ast::TypeName::PrimitiveSlice(None, _, _stdlib)
             | ast::TypeName::StrReference(None, _, _stdlib) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "Owned slices cannot be returned, except for top-level method-return `Box<[u8]>` (including as a `Result`/`Option` payload) on backends supporting `owned_byte_slice_returns`.".into(),
                 ));
                 Err(())
@@ -1671,14 +1878,14 @@ impl<'ast> LoweringContext<'ast> {
                 Slice::Str(Some(ltl.lower_lifetime(l)), *encoding),
             )),
             ast::TypeName::StrSlice(.., _stdlib) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "String slices can only be an input type".into(),
                 ));
                 Err(())
             }
             ast::TypeName::PrimitiveSlice(Some((lt, m)), prim, _stdlib) => {
                 if m.is_mutable() && !self.attr_validator.attrs_supported().mutable_slices {
-                    self.errors.push(LoweringError::Other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
+                    self.errors.push(LoweringError::other(format!("&mut [{prim}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                 }
                 Ok(OutType::Slice(Slice::Primitive(
                     MaybeOwn::Borrow(Borrow::new(ltl.lower_lifetime(lt), *m)),
@@ -1693,7 +1900,7 @@ impl<'ast> LoweringContext<'ast> {
                 if let Some(b) = new_lifetime {
                     if let super::MaybeStatic::Static = b.lifetime {
                         if !self.attr_validator.attrs_supported().static_slices {
-                            self.errors.push(LoweringError::Other(
+                            self.errors.push(LoweringError::other(
                                 format!("'static {type_name:?} slice types not supported. Try #[diplomat::cfg(supports = static_slices)]")
                             ));
                         }
@@ -1702,7 +1909,7 @@ impl<'ast> LoweringContext<'ast> {
                     if b.mutability.is_mutable()
                         && !self.attr_validator.attrs_supported().mutable_slices
                     {
-                        self.errors.push(LoweringError::Other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
+                        self.errors.push(LoweringError::other(format!("&mut [{type_name}] not supported in this backend. Try #[diplomat::cfg(supports=mutable_slices)] to restrict this API only to backends which support mutable slices.")));
                     }
                 }
 
@@ -1718,13 +1925,13 @@ impl<'ast> LoweringContext<'ast> {
                         Ok(Type::Slice(Slice::Enum(new_lifetime.into(), enm)))
                     }
                     Type::Opaque(..) => {
-                        self.errors.push(LoweringError::Other(
+                        self.errors.push(LoweringError::other(
                             "Opaque slices are currently disallowed as an output type.".to_string(),
                         ));
                         Err(())
                     }
                     _ => {
-                        self.errors.push(LoweringError::Other(format!(
+                        self.errors.push(LoweringError::other(format!(
                             "Cannot make a slice from type {type_name}. Only abi_compatible structs, borrowed opaques, and enums are allowed."
                         )));
                         Err(())
@@ -1732,17 +1939,17 @@ impl<'ast> LoweringContext<'ast> {
                 }
             }
             ast::TypeName::Unit => {
-                self.errors.push(LoweringError::Other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
+                self.errors.push(LoweringError::other("Unit types can only appear as the return value of a method, or as the Ok/Err variants of a returned result".into()));
                 Err(())
             }
             ast::TypeName::Function(..) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "Function types can only be an input type".into(),
                 ));
                 Err(())
             }
             ast::TypeName::ImplTrait(_) => {
-                self.errors.push(LoweringError::Other(
+                self.errors.push(LoweringError::other(
                     "Trait impls can only be an input type".into(),
                 ));
                 Err(())
@@ -1777,7 +1984,7 @@ impl<'ast> LoweringContext<'ast> {
                                 Mutability::Immutable => ("reference", "struct_refs"),
                                 Mutability::Mutable => ("mutable reference", "mut_struct_refs"),
                             };
-                            self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes a {ref_type} to a struct as a self parameter, which isn't allowed. Backend must support {support_type}.")));
+                            self.errors.push(LoweringError::other(format!("Method `{method_full_path}` takes a {ref_type} to a struct as a self parameter, which isn't allowed. Backend must support {support_type}.")));
                             return Err(());
                         }
                     } else {
@@ -1814,10 +2021,10 @@ impl<'ast> LoweringContext<'ast> {
                     ))
                 } else if self.lookup_id.resolve_out_struct(strct).is_some() {
                     if let Some((lifetime, _)) = &self_param.reference {
-                        self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
+                        self.errors.push(LoweringError::other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed. Also, it's behind a reference, `{lifetime}`, but only opaques can be behind references")));
                         Err(())
                     } else {
-                        self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed")));
+                        self.errors.push(LoweringError::other(format!("Method `{method_full_path}` takes an out-struct as the self parameter, which isn't allowed")));
                         Err(())
                     }
                 } else {
@@ -1837,7 +2044,7 @@ impl<'ast> LoweringContext<'ast> {
                     if *mutability == Mutability::Mutable
                         && opaque.mutability != Mutability::Mutable
                     {
-                        self.errors.push(LoweringError::Other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
+                        self.errors.push(LoweringError::other(format!("found opaque type {} being passed around as &mut without #[diplomat::opaque_mut] annotation", opaque.name)));
                     }
                     let (borrow_lifetime, mut param_ltl) = self_param_ltl.lower_self_ref(lifetime);
                     let borrow = Borrow::new(borrow_lifetime, *mutability);
@@ -1872,7 +2079,7 @@ impl<'ast> LoweringContext<'ast> {
                         param_ltl,
                     ))
                 } else {
-                    self.errors.push(LoweringError::Other(format!("Method `{method_full_path}` takes an opaque by value as the self parameter, but opaques as inputs must be behind refs")));
+                    self.errors.push(LoweringError::other(format!("Method `{method_full_path}` takes an opaque by value as the self parameter, but opaques as inputs must be behind refs")));
                     Err(())
                 }
             }
@@ -1952,7 +2159,12 @@ impl<'ast> LoweringContext<'ast> {
         in_path: &ast::Path,
     ) -> Result<Param, ()> {
         let name = self.lower_ident(&param.name, "param name");
-        let ty = self.lower_type::<InputOnly>(&param.ty, ltl, TypeLoweringContext::Method, in_path);
+        let ty = self.lower_type::<InputOnly>(
+            &((&param.ty).into()),
+            ltl,
+            TypeLoweringContext::Method,
+            in_path,
+        );
 
         // No parent attrs because parameters do not have a strictly clear parent.
         let attrs =
@@ -1962,7 +2174,11 @@ impl<'ast> LoweringContext<'ast> {
         self.attr_validator
             .validate(&attrs, AttributeContext::Param, &mut self.errors);
 
-        Ok(Param::new(name?, ty?, attrs))
+        Ok(Param::new(
+            LocIdent::new(name?, param.name.span()),
+            ty?,
+            attrs,
+        ))
     }
 
     /// Lowers many [`ast::Param`]s into a vector of [`hir::Param`]s.
@@ -1980,7 +2196,7 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<(Vec<Param>, ReturnLifetimeLowerer<'ast>), ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for param in ast_params {
+        for param in ast_params.iter() {
             let param = self.lower_param(param, &mut param_ltl, in_path);
 
             match (param, &mut params) {
@@ -2016,7 +2232,7 @@ impl<'ast> LoweringContext<'ast> {
         {
             // Slices are copied in non-memory sharing backends
             if !matches!(ty, Type::Slice(_)) {
-                self.errors.push(LoweringError::Other("Callbacks cannot take references since they can be unsafely persisted, set `unsafe_references_in_callbacks` config to override.".into() ));
+                self.errors.push(LoweringError::other("Callbacks cannot take references since they can be unsafely persisted, set `unsafe_references_in_callbacks` config to override.".into() ));
             }
         }
 
@@ -2031,9 +2247,9 @@ impl<'ast> LoweringContext<'ast> {
     ) -> Result<Vec<CallbackParam>, ()> {
         let mut params = Ok(Vec::with_capacity(ast_params.len()));
 
-        for param in ast_params {
+        for param in ast_params.iter() {
             let name = self.lower_ident(&param.name, "param name")?;
-            let param = self.lower_callback_param(Some(name), &param.ty, param_ltl, in_path);
+            let param = self.lower_callback_param(Some(name), &param.ty.ty, param_ltl, in_path);
 
             match (param, &mut params) {
                 (Ok(param), Ok(params)) => {
@@ -2055,7 +2271,7 @@ impl<'ast> LoweringContext<'ast> {
                             ast::TypeName::Box(..) | ast::TypeName::Reference(..)
                         ) =>
                     {
-                        self.errors.push(LoweringError::Other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
+                        self.errors.push(LoweringError::other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
                         return Err(());
                     }
                     _ => {}
@@ -2068,7 +2284,7 @@ impl<'ast> LoweringContext<'ast> {
                             ast::TypeName::Box(..) | ast::TypeName::Reference(..)
                         ) =>
                     {
-                        self.errors.push(LoweringError::Other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
+                        self.errors.push(LoweringError::other(format!("{result_type} wraps Option<{inner}>; {inner} is not an opaque. Please use DiplomatOption<{inner}> instead.")));
                         return Err(());
                     }
                     _ => {}
@@ -2085,7 +2301,7 @@ impl<'ast> LoweringContext<'ast> {
     /// If there are any errors, they're pushed to `errors` and `None` is returned.
     fn lower_return_type(
         &mut self,
-        return_type: Option<&ast::TypeName>,
+        return_type: Option<&ast::SpannedTypeName>,
         write_type: Option<ast::WriteType>,
         mut return_ltl: ReturnLifetimeLowerer<'_>,
         in_path: &ast::Path,
@@ -2093,14 +2309,14 @@ impl<'ast> LoweringContext<'ast> {
         if matches!(write_type, Some(ast::WriteType::Primitive(_)))
             && !self.attr_validator.attrs_supported().generic_writeables
         {
-            self.errors.push(LoweringError::Other(
+            self.errors.push(LoweringError::other(
                 "DiplomatWriteGeneric is not supported in this backend. Try #[diplomat::cfg(supports = generic_writeables)]".into(),
             ));
         }
         if matches!(write_type, Some(ast::WriteType::Str16))
             && !self.attr_validator.attrs_supported().utf16_writeables
         {
-            self.errors.push(LoweringError::Other(
+            self.errors.push(LoweringError::other(
                 "DiplomatWrite16 is not supported in this backend. Try #[diplomat::cfg(supports = utf16_writeables)]".into(),
             ));
         }
@@ -2109,9 +2325,12 @@ impl<'ast> LoweringContext<'ast> {
         } else {
             SuccessType::Unit
         };
-        match return_type.unwrap_or(&ast::TypeName::Unit) {
+        let return_type_name = return_type
+            .map(|t| t.ty.as_ref())
+            .unwrap_or(&ast::TypeName::Unit);
+        match return_type_name {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
+                self.maybe_error_on_option_result(return_type_name)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(write_or_unit),
                     ty => self
@@ -2213,23 +2432,43 @@ impl<'ast> LoweringContext<'ast> {
 
     fn lower_callback_return_type(
         &mut self,
-        return_type: Option<&ast::TypeName>,
+        return_type: Option<&ast::SpannedTypeName>,
         ltl: &mut impl LifetimeLowerer,
         in_path: &ast::Path,
     ) -> Result<ReturnType<InputOnly>, ()> {
-        match return_type.unwrap_or(&ast::TypeName::Unit) {
+        let return_type = return_type.unwrap_or(&SpannedTypeName {
+            ty: Cow::Owned(ast::TypeName::Unit),
+            location: None,
+        });
+        match &return_type.ty.as_ref() {
             ast::TypeName::Result(ok_ty, err_ty, _) => {
-                self.maybe_error_on_option_result(return_type.unwrap_or(&ast::TypeName::Unit))?;
+                self.maybe_error_on_option_result(&return_type.ty)?;
                 let ok_ty = match ok_ty.as_ref() {
                     ast::TypeName::Unit => Ok(SuccessType::Unit),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(
+                            &SpannedTypeName {
+                                ty: Cow::Borrowed(ty),
+                                location: return_type.location.clone(),
+                            },
+                            ltl,
+                            TypeLoweringContext::Callback,
+                            in_path,
+                        )
                         .map(SuccessType::OutType),
                 };
                 let err_ty = match err_ty.as_ref() {
                     ast::TypeName::Unit => Ok(None),
                     ty => self
-                        .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                        .lower_type(
+                            &SpannedTypeName {
+                                ty: Cow::Borrowed(ty),
+                                location: return_type.location.clone(),
+                            },
+                            ltl,
+                            TypeLoweringContext::Callback,
+                            in_path,
+                        )
                         .map(Some),
                 };
 
@@ -2266,20 +2505,36 @@ impl<'ast> LoweringContext<'ast> {
                             let ty = t.resolve(in_path, self.env);
                             if let ast::CustomType::Opaque(..) = ty {
                                 if *stdlib == ast::StdlibOrDiplomat::Diplomat {
-                                    self.errors.push(LoweringError::Other("found DiplomatOption<T>, where T is opaque. Please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
+                                    self.errors.push(LoweringError::other("found DiplomatOption<T>, where T is opaque. Please use Option<&T> (DiplomatOption is for primitives, structs, and enums)".to_string()));
                                     return Err(());
                                 }
                             }
                         }
                         _ => {}
                     }
-                    self.lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
-                        .map(SuccessType::OutType)
-                        .map(ReturnType::Infallible)
+                    self.lower_type(
+                        &SpannedTypeName {
+                            ty: Cow::Borrowed(ty),
+                            location: return_type.location.clone(),
+                        },
+                        ltl,
+                        TypeLoweringContext::Callback,
+                        in_path,
+                    )
+                    .map(SuccessType::OutType)
+                    .map(ReturnType::Infallible)
                 }
                 ast::TypeName::Unit => Ok(ReturnType::Nullable(SuccessType::Unit)),
                 _ => {
-                    let t = self.lower_type(value_ty, ltl, TypeLoweringContext::Callback, in_path);
+                    let t = self.lower_type(
+                        &SpannedTypeName {
+                            ty: Cow::Borrowed(value_ty),
+                            location: return_type.location.clone(),
+                        },
+                        ltl,
+                        TypeLoweringContext::Callback,
+                        in_path,
+                    );
                     if let Ok(t) = &t {
                         if let Some(i) = t.id() {
                             self.usage_get_or_insert(i.into()).optioned = true;
@@ -2290,7 +2545,15 @@ impl<'ast> LoweringContext<'ast> {
             },
             ast::TypeName::Unit => Ok(ReturnType::Infallible(SuccessType::Unit)),
             ty => self
-                .lower_type(ty, ltl, TypeLoweringContext::Callback, in_path)
+                .lower_type(
+                    &SpannedTypeName {
+                        ty: Cow::Borrowed(ty),
+                        location: return_type.location.clone(),
+                    },
+                    ltl,
+                    TypeLoweringContext::Callback,
+                    in_path,
+                )
                 .map(|ty| ReturnType::Infallible(SuccessType::OutType(ty))),
         }
     }

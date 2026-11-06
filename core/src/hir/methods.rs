@@ -152,7 +152,7 @@ pub struct TraitParamSelf {
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub struct Param {
-    pub name: IdentBuf,
+    pub name: super::LocIdent,
     pub ty: Type<InputOnly>,
     pub attrs: Attrs,
 }
@@ -311,7 +311,7 @@ impl TraitParamSelf {
 }
 
 impl Param {
-    pub(super) fn new(name: IdentBuf, ty: Type<InputOnly>, attrs: Attrs) -> Self {
+    pub(super) fn new(name: super::LocIdent, ty: Type<InputOnly>, attrs: Attrs) -> Self {
         Self { name, ty, attrs }
     }
 
