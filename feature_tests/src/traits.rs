@@ -24,7 +24,7 @@ mod ffi {
         fn test_result_of_optional(&self, is_ok: bool) -> Result<u32, DiplomatOption<u32>>;
     }
 
-    #[diplomat::cfg(supports="traits")]
+    #[diplomat::cfg(supports = "traits")]
     #[diplomat::attr(supports = "callback_returns_must_be_fallible", disable)]
     pub struct TraitWrapper {
         cant_be_empty: bool,
