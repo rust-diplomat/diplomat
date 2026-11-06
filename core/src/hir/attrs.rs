@@ -511,13 +511,7 @@ impl Attrs {
                         // No match found in the special methods, check the other keywords
                         "disable" => {
                             if let Meta::Path(_) = attr.meta {
-                                if this.disable {
-                                    errors.push(LoweringError::other(
-                                        "Duplicate `disable` attribute".into(),
-                                    ));
-                                } else {
-                                    this.disable = true;
-                                }
+                                this.disable = true;
                             } else {
                                 errors.push(LoweringError::other(
                                     "`disable` must be a simple path".into(),
