@@ -24,6 +24,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
     private readonly T* _ptr;
     private readonly int _len;
     private ILifetimeEdge?[] _edges = Array.Empty<ILifetimeEdge?>();
+    private readonly object _gate = new object();
     private int _activeCallbacks;
     private int _disposed;
 
@@ -69,7 +70,6 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
             throw new ArgumentNullException(nameof(action));
         }
         ILifetimeEdge[] held = HoldDependenciesForAccess();
-        Interlocked.Increment(ref _activeCallbacks);
         try
         {
             action(new ReadOnlySpan<T>(_ptr, _len));
@@ -82,7 +82,7 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
             }
             finally
             {
-                Interlocked.Decrement(ref _activeCallbacks);
+                lock (_gate) { _activeCallbacks--; }
                 GC.KeepAlive(this);
             }
         }
@@ -98,19 +98,17 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
         }
         finally
         {
-            LifetimeEdges.ReleaseLeases(held);
-            GC.KeepAlive(this);
+            try { LifetimeEdges.ReleaseLeases(held); }
+            finally
+            {
+                lock (_gate) { _activeCallbacks--; }
+                GC.KeepAlive(this);
+            }
         }
     }
 
     public void Dispose()
     {
-        if (Volatile.Read(ref _activeCallbacks) != 0)
-        {
-            throw new InvalidOperationException(
-                "Cannot dispose DiplomatBorrowedSpan during a WithSpan callback");
-        }
-
         Cleanup();
         GC.SuppressFinalize(this);
     }
@@ -128,25 +126,29 @@ public sealed unsafe class DiplomatBorrowedSpan<T> : IDisposable where T : unman
 
     private ILifetimeEdge[] HoldDependenciesForAccess()
     {
-        if (Volatile.Read(ref _disposed) != 0)
+        lock (_gate)
         {
-            throw new ObjectDisposedException(nameof(DiplomatBorrowedSpan<T>));
+            if (_disposed != 0)
+                throw new ObjectDisposedException(nameof(DiplomatBorrowedSpan<T>));
+            var held = new LifetimeEdges(WrapperKind.SharedView, _edges)
+                .HoldDependenciesForCall();
+            _activeCallbacks++;
+            return held;
         }
-
-        return new LifetimeEdges(WrapperKind.SharedView, Volatile.Read(ref _edges))
-            .HoldDependenciesForCall();
     }
 
     private void Cleanup()
     {
-        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+        ILifetimeEdge?[] edges;
+        lock (_gate)
         {
-            return;
+            if (_disposed != 0) return;
+            if (_activeCallbacks != 0)
+                throw new InvalidOperationException("Cannot dispose DiplomatBorrowedSpan during access");
+            _disposed = 1;
+            edges = _edges;
+            _edges = Array.Empty<ILifetimeEdge?>();
         }
-
-        ILifetimeEdge?[] edges = Interlocked.Exchange(
-            ref _edges,
-            Array.Empty<ILifetimeEdge?>());
         LifetimeEdges.ReleaseNoThrow(edges);
     }
 }
