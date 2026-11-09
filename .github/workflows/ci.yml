@@ -152,7 +152,7 @@ jobs:
       uses: taiki-e/install-action@cargo-make
 
     - name: clang
-      run: CXX=clang++-16 cargo make test-cpp
+      run: CXX=clang++ cargo make test-cpp
 
     - name: gcc
       run: CXX=g++ cargo make test-cpp
@@ -312,7 +312,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.8"
+        python-version: "3.10"
         cache: 'pip'
     - name: Install uv
       uses: astral-sh/setup-uv@v5

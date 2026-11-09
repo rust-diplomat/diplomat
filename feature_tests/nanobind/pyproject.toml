@@ -6,7 +6,7 @@ build-backend = "scikit_build_core.build"
 name = "somelib"
 version = "0.0.1"
 description = "A brief description of what this project does"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 classifiers = ["License :: Apache2.0"]
 dependencies = ["numpy"]
 
