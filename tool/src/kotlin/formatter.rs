@@ -408,7 +408,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 format!("{ty_name}.fromNative({field_val}{lt_list})").into()
             }
             Type::Enum(enum_path) => {
-                let field_type_name: &str = self.tcx.resolve_enum(enum_path.tcx_id).name.as_ref();
+                let field_type_name = self.fmt_type_name(enum_path.id());
                 format!("{field_type_name}.fromNative({field_val})").into()
             }
             Type::Slice(Slice::Primitive(_, prim)) => format!(
@@ -492,9 +492,7 @@ impl<'tcx> KotlinFormatter<'tcx> {
                 let optional = if op.is_optional() { "?" } else { "" };
                 format!("Pointer{optional}").into()
             }
-            Type::Struct(s) => {
-                format!("{}Native", self.tcx.resolve_type(s.id()).name().as_str()).into()
-            }
+            Type::Struct(s) => format!("{}Native", self.fmt_type_name(s.id())).into(),
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
             Type::DiplomatOption(t) => {

@@ -446,6 +446,25 @@ pub mod ffi {
         pub fn deprecated(self) {}
     }
 
+    #[diplomat::attr(not(kotlin), disable)]
+    pub struct StructWithRenamedFields {
+        inner: StructWithAttrs,
+        opt_inner: DiplomatOption<StructWithAttrs>,
+        attr_enum: AttrEnum,
+        opt_attr_enum: DiplomatOption<AttrEnum>,
+    }
+
+    impl StructWithRenamedFields {
+        pub fn with_opt_inner(self, opt_inner: Option<StructWithAttrs>) -> Self {
+            Self {
+                inner: self.inner,
+                opt_inner: opt_inner.into(),
+                attr_enum: self.attr_enum,
+                opt_attr_enum: self.opt_attr_enum,
+            }
+        }
+    }
+
     #[deprecated(note = "use Foo")]
     pub struct DeprecatedStruct;
 
