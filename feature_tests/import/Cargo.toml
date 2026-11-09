@@ -1,0 +1,20 @@
+[package]
+name = "diplomat-feature-tests-import"
+publish = false
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+categories.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+keywords.workspace = true
+readme = "../../README.md"
+
+
+[lib]
+crate-type = ["staticlib", "rlib", "cdylib"]
+
+[dependencies]
+diplomat.workspace = true
+diplomat-runtime = { workspace = true, features = ["log", "jvm-callback-support"] }

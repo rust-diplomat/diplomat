@@ -749,4 +749,8 @@ pub mod ffi {
             }
         }
     }
+
+    pub fn test_import(t : diplomat_feature_tests_import::ffi::TestStruct, x : i32) {
+        assert_eq!(t.x, x)
+    }
 }
