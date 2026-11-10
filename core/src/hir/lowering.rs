@@ -225,7 +225,7 @@ pub(super) struct LoweringContext<'ast> {
     pub lookup_id: LookupId<'ast>,
     pub errors: ErrorStore<'ast>,
     pub env: &'ast Env,
-    pub attr_validator: Box<dyn AttributeValidator>,
+    pub attr_validator: &'ast dyn AttributeValidator,
     pub cfg: super::LoweringConfig,
     pub type_usage: HashMap<SymbolId, TypingUseInfo>,
 }
@@ -357,7 +357,7 @@ impl<'ast> LoweringContext<'ast> {
             match (name, &mut variants) {
                 (Ok(name), Ok(variants)) => {
                     let variant = EnumVariant {
-                        docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
+                        docs: Docs::from_ast(docs, self.attr_validator, &mut self.errors),
                         name: LocIdent::new(name, ident.span()),
                         discriminant: *discriminant,
                         attrs,
@@ -388,7 +388,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = EnumDef::new(
             Docs::from_ast(
                 &ast_enum.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             super::defs::Ident::new(name?, ast_enum.name.span()),
@@ -435,7 +435,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = OpaqueDef::new(
             Docs::from_ast(
                 &ast_opaque.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             super::defs::Ident::new(name?, ast_opaque.name.span()),
@@ -498,7 +498,7 @@ impl<'ast> LoweringContext<'ast> {
 
                 match (ty, &mut fields) {
                     (Ok(ty), Ok(fields)) => fields.push(StructField {
-                        docs: Docs::from_ast(docs, self.attr_validator.as_ref(), &mut self.errors),
+                        docs: Docs::from_ast(docs, self.attr_validator, &mut self.errors),
                         name: LocIdent::new(name, field_name.span()),
                         ty,
                         attrs: field_attrs,
@@ -533,7 +533,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = StructDef::new(
             Docs::from_ast(
                 &ast_struct.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             super::defs::Ident::new(struct_name, ast_struct.name.span()),
@@ -598,7 +598,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = TraitDef::new(
             Docs::from_ast(
                 &ast_trait.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             super::defs::Ident::new(trait_name, ast_trait.name.span()),
@@ -661,7 +661,7 @@ impl<'ast> LoweringContext<'ast> {
             attrs: Some(attrs),
             docs: Some(Docs::from_ast(
                 &ast_trait_method.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             )),
         })
@@ -724,7 +724,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = Method {
             docs: Docs::from_ast(
                 &ast_function.item.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             name: super::defs::Ident::new(
@@ -777,7 +777,7 @@ impl<'ast> LoweringContext<'ast> {
                         (Ok(name), Ok(ty), Ok(fields)) => fields.push(OutStructField {
                             docs: Docs::from_ast(
                                 docs,
-                                self.attr_validator.as_ref(),
+                                self.attr_validator,
                                 &mut self.errors,
                             ),
                             name: LocIdent::new(name, field_name.span()),
@@ -811,7 +811,7 @@ impl<'ast> LoweringContext<'ast> {
         let def = OutStructDef::new(
             Docs::from_ast(
                 &ast_out_struct.docs,
-                self.attr_validator.as_ref(),
+                self.attr_validator,
                 &mut self.errors,
             ),
             super::defs::Ident::new(name?, ast_out_struct.name.span()),
@@ -873,7 +873,7 @@ impl<'ast> LoweringContext<'ast> {
         let abi_name = self.lower_ident(&method.abi_name, "method abi name")?;
 
         let mut hir_method = Method {
-            docs: Docs::from_ast(&method.docs, self.attr_validator.as_ref(), &mut self.errors),
+            docs: Docs::from_ast(&method.docs, self.attr_validator, &mut self.errors),
             name: super::defs::Ident::new(name?, method.name.span()),
             abi_name,
             lifetime_env,

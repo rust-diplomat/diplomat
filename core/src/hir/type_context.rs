@@ -93,6 +93,16 @@ impl Display for Param<'_> {
     }
 }
 
+#[derive(Default)]
+struct TypeContextASTStore<'ast> {
+    ast_out_structs: SmallVec<[ItemAndInfo<'ast, ast::Struct>; 16]>,
+    ast_structs: SmallVec<[ItemAndInfo<'ast, ast::Struct>; 16]>,
+    ast_opaques: SmallVec<[ItemAndInfo<'ast, ast::OpaqueType>; 16]>,
+    ast_enums: SmallVec<[ItemAndInfo<'ast, ast::Enum>; 16]>,
+    ast_traits: SmallVec<[ItemAndInfo<'ast, ast::Trait>; 16]>,
+    ast_functions : SmallVec<[ItemAndInfo<'ast, ast::Function>; 16]>,
+}
+
 impl TypeContext {
     pub fn all_types<'tcx>(&'tcx self) -> impl Iterator<Item = (TypeId, TypeDef<'tcx>)> {
         self.structs
@@ -229,7 +239,7 @@ impl TypeContext {
 
         let types = ast::File::from_syn(s, include_info, entry_location).all_types_with_imports(import_types);
 
-        let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
+        let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, &attr_validator)?;
         ctx.errors.set_item("(validation)", &None);
         hir.validate(&mut ctx);
         if !ctx.errors.is_empty() {
@@ -238,21 +248,13 @@ impl TypeContext {
         Ok(hir)
     }
 
-    /// Lower the AST to the HIR, without validation. For testing
-    pub(super) fn from_ast_without_validation<'ast>(
-        env: &'ast Env,
-        cfg: LoweringConfig,
-        attr_validator: impl AttributeValidator + 'static,
-    ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
-        let mut ast_out_structs = SmallVec::<[_; 16]>::new();
-        let mut ast_structs = SmallVec::<[_; 16]>::new();
-        let mut ast_opaques = SmallVec::<[_; 16]>::new();
-        let mut ast_enums = SmallVec::<[_; 16]>::new();
-        let mut ast_traits = SmallVec::<[_; 16]>::new();
-        let mut ast_functions = SmallVec::<[_; 16]>::new();
-
-        let mut errors = ErrorStore::default();
-
+    fn create_lookup_id<'a, 'ast>(
+        env : &'ast Env, 
+        attr_validator: &dyn AttributeValidator,
+        errors : &mut ErrorStore<'ast>,
+        store : &mut TypeContextASTStore<'ast>,
+        imports : HashMap<String, LookupId<'ast>>,
+    ) -> LookupId<'ast> {
         // Sort modules such that children come after their parents in the list
         let mut modules = env.iter_modules().collect::<Vec<_>>();
         modules.sort_by_key(|(p, ..)| p.elements.len());
@@ -270,7 +272,7 @@ impl TypeContext {
             );
             let mod_attrs = Attrs::from_ast(
                 &mod_env.attrs,
-                &attr_validator,
+                attr_validator,
                 module_attrs
                     .get(
                         &path
@@ -281,7 +283,7 @@ impl TypeContext {
                     )
                     .cloned()
                     .unwrap_or_default(),
-                &mut errors,
+                errors,
             );
             let ty_attrs = mod_attrs.for_inheritance(AttrInheritContext::Type);
             let method_attrs =
@@ -300,9 +302,9 @@ impl TypeContext {
                                 method_parent_attrs: method_attrs.clone(),
                             };
                             if strct.output_only {
-                                ast_out_structs.push(item);
+                                store.ast_out_structs.push(item);
                             } else {
-                                ast_structs.push(item);
+                                store.ast_structs.push(item);
                             }
                         }
                         ast::CustomType::Opaque(opaque) => {
@@ -312,7 +314,7 @@ impl TypeContext {
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
                             };
-                            ast_opaques.push(item)
+                            store.ast_opaques.push(item)
                         }
                         ast::CustomType::Enum(enm) => {
                             let item = ItemAndInfo {
@@ -321,7 +323,7 @@ impl TypeContext {
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
                             };
-                            ast_enums.push(item)
+                            store.ast_enums.push(item)
                         }
                     },
                     ast::ModSymbol::Trait(trt) => {
@@ -331,7 +333,7 @@ impl TypeContext {
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
                         };
-                        ast_traits.push(item)
+                        store.ast_traits.push(item)
                     }
                     ast::ModSymbol::Function(f) => {
                         let item = ItemAndInfo {
@@ -340,21 +342,49 @@ impl TypeContext {
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
                         };
-                        ast_functions.push(item)
+                        store.ast_functions.push(item)
                     }
                     _ => {}
                 }
             }
         }
 
-        let lookup_id = LookupId::new(
-            &ast_out_structs[..],
-            &ast_structs[..],
-            &ast_opaques[..],
-            &ast_enums[..],
-            &ast_traits[..],
-        );
-        let attr_validator = Box::new(attr_validator);
+        LookupId::new(
+            &store.ast_out_structs[..],
+            &store.ast_structs[..],
+            &store.ast_opaques[..],
+            &store.ast_enums[..],
+            &store.ast_traits[..],
+            imports,
+        )
+    }
+
+    /// Lower the AST to the HIR, without validation. For testing
+    pub(super) fn from_ast_without_validation<'ast>(
+        env: &'ast Env,
+        cfg: LoweringConfig,
+        attr_validator: &'ast dyn AttributeValidator,
+    ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
+        let mut errors = ErrorStore::default();
+        let mut import_tcx = HashMap::new();
+
+        let mut import_lookup = HashMap::new();
+        for (crate_name, crate_env) in &env.import_map {
+            let (lowering_ctx, import) = Self::from_ast_without_validation(&crate_env, cfg, attr_validator)?;
+            import_tcx.insert(crate_name, import);
+
+            let mut store = TypeContextASTStore {
+                ..Default::default()
+            };
+            let lookup_id = Self::create_lookup_id(crate_env, attr_validator, &mut errors, &mut store, Default::default());
+            import_lookup.insert(crate_name.clone(), lookup_id);
+        }
+
+        let mut store = TypeContextASTStore {
+            ..Default::default()
+        };
+
+        let lookup_id = Self::create_lookup_id(env, attr_validator, &mut errors, &mut store, import_lookup);
 
         let mut ctx = LoweringContext {
             lookup_id,
@@ -365,12 +395,12 @@ impl TypeContext {
             type_usage: HashMap::new(),
         };
 
-        let out_structs = ctx.lower_all_out_structs(ast_out_structs.into_iter());
-        let structs = ctx.lower_all_structs(ast_structs.into_iter());
-        let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
-        let enums = ctx.lower_all_enums(ast_enums.into_iter());
-        let traits = ctx.lower_all_traits(ast_traits.into_iter());
-        let functions = ctx.lower_all_functions(ast_functions.into_iter());
+        let out_structs = ctx.lower_all_out_structs(store.ast_out_structs.into_iter());
+        let structs = ctx.lower_all_structs(store.ast_structs.into_iter());
+        let opaques = ctx.lower_all_opaques(store.ast_opaques.into_iter());
+        let enums = ctx.lower_all_enums(store.ast_enums.into_iter());
+        let traits = ctx.lower_all_traits(store.ast_traits.into_iter());
+        let functions = ctx.lower_all_functions(store.ast_functions.into_iter());
 
         match (out_structs, structs, opaques, enums, functions, traits) {
             (
@@ -834,6 +864,7 @@ pub(super) struct LookupId<'ast> {
     opaque_map: HashMap<&'ast ast::OpaqueType, OpaqueId>,
     enum_map: HashMap<&'ast ast::Enum, EnumId>,
     trait_map: HashMap<&'ast ast::Trait, TraitId>,
+    imports : HashMap<String, LookupId<'ast>>,
 }
 
 impl<'ast> LookupId<'ast> {
@@ -844,6 +875,7 @@ impl<'ast> LookupId<'ast> {
         opaques: &[ItemAndInfo<'ast, ast::OpaqueType>],
         enums: &[ItemAndInfo<'ast, ast::Enum>],
         traits: &[ItemAndInfo<'ast, ast::Trait>],
+        imports : HashMap<String, LookupId<'ast>>,
     ) -> Self {
         Self {
             out_struct_map: out_structs
@@ -871,6 +903,7 @@ impl<'ast> LookupId<'ast> {
                 .enumerate()
                 .map(|(index, item)| (item.item, TraitId(index)))
                 .collect(),
+            imports,
         }
     }
 
@@ -2049,7 +2082,7 @@ mod tests {
         backend.support.opaque_slices = true;
 
         let (_, tcx) =
-            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), &backend)
                 .unwrap();
 
         insta::assert_debug_snapshot!(tcx);
@@ -2259,7 +2292,7 @@ mod tests {
         backend.support.generic_writeables = true;
 
         let (mut ctx, tcx) =
-            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), &backend)
                 .unwrap();
         tcx.validate(&mut ctx);
         assert!(ctx.errors.is_empty());
