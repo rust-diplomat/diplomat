@@ -27,6 +27,7 @@ pub struct TypeContext {
     enums: Vec<EnumDef>,
     traits: Vec<TraitDef>,
     functions: Vec<hir::Method>,
+    imports : Vec<TypeContext>,
 }
 
 /// Additional features/config to support while lowering
@@ -39,11 +40,11 @@ pub struct LoweringConfig {
 
 /// Key used to index into a [`TypeContext`] representing a struct.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct StructId(usize);
+pub struct StructId(usize, Option<usize>);
 
 /// Key used to index into a [`TypeContext`] representing an out struct.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct OutStructId(usize);
+pub struct OutStructId(usize, Option<usize>);
 
 /// Key used to index into a [`TypeContext`] representing a opaque.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -108,12 +109,12 @@ impl TypeContext {
         self.structs
             .iter()
             .enumerate()
-            .map(|(i, ty)| (TypeId::Struct(StructId(i)), TypeDef::Struct(ty)))
+            .map(|(i, ty)| (TypeId::Struct(StructId(i, None)), TypeDef::Struct(ty)))
             .chain(
                 self.out_structs
                     .iter()
                     .enumerate()
-                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i)), TypeDef::OutStruct(ty))),
+                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i, None)), TypeDef::OutStruct(ty))),
             )
             .chain(
                 self.opaques
@@ -185,7 +186,11 @@ impl TypeContext {
     ///
     /// Prefer using `resolve_type()` for simplicity.
     pub fn resolve_struct(&self, id: StructId) -> &StructDef {
-        self.structs.index(id.0)
+        if let Some(crate_id) = id.1 {
+            self.imports[crate_id].resolve_struct(StructId(id.0, None))
+        } else {
+            self.structs.index(id.0)
+        }
     }
 
     /// Helper methods for resolving different IDs.
@@ -248,12 +253,16 @@ impl TypeContext {
         Ok(hir)
     }
 
+    /// Create a [`LookupId`] for a given [`Env`].
+    /// `crate_id` specifies if the lookup is being generated for a dependency,
+    /// and if so, where in the array of crate imports to look
     fn create_lookup_id<'a, 'ast>(
         env : &'ast Env, 
         attr_validator: &dyn AttributeValidator,
+        crate_id : Option<usize>,
         errors : &mut ErrorStore<'ast>,
         store : &mut TypeContextASTStore<'ast>,
-        imports : HashMap<String, LookupId<'ast>>,
+        imports : Vec<LookupId<'ast>>,
     ) -> LookupId<'ast> {
         // Sort modules such that children come after their parents in the list
         let mut modules = env.iter_modules().collect::<Vec<_>>();
@@ -350,6 +359,7 @@ impl TypeContext {
         }
 
         LookupId::new(
+            crate_id,
             &store.ast_out_structs[..],
             &store.ast_structs[..],
             &store.ast_opaques[..],
@@ -366,25 +376,25 @@ impl TypeContext {
         attr_validator: &'ast dyn AttributeValidator,
     ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
         let mut errors = ErrorStore::default();
-        let mut import_tcx = HashMap::new();
+        let mut import_tcx = Vec::new();
 
-        let mut import_lookup = HashMap::new();
-        for (crate_name, crate_env) in &env.import_map {
-            let (lowering_ctx, import) = Self::from_ast_without_validation(&crate_env, cfg, attr_validator)?;
-            import_tcx.insert(crate_name, import);
+        let mut import_lookup = Vec::new();
+        for (id, (_, crate_env)) in env.import_map.iter().enumerate() {
+            let (_, import) = Self::from_ast_without_validation(&crate_env, cfg, attr_validator)?;
+            import_tcx.push(import);
 
             let mut store = TypeContextASTStore {
                 ..Default::default()
             };
-            let lookup_id = Self::create_lookup_id(crate_env, attr_validator, &mut errors, &mut store, Default::default());
-            import_lookup.insert(crate_name.clone(), lookup_id);
+            let lookup_id = Self::create_lookup_id(crate_env, attr_validator, Some(id), &mut errors, &mut store, Default::default());
+            import_lookup.push(lookup_id);
         }
 
         let mut store = TypeContextASTStore {
             ..Default::default()
         };
 
-        let lookup_id = Self::create_lookup_id(env, attr_validator, &mut errors, &mut store, import_lookup);
+        let lookup_id = Self::create_lookup_id(env, attr_validator, None, &mut errors, &mut store, import_lookup);
 
         let mut ctx = LoweringContext {
             lookup_id,
@@ -416,13 +426,13 @@ impl TypeContext {
                     out_structs
                         .iter_mut()
                         .enumerate()
-                        .map(|s| (OutStructId(s.0).into(), s.1)),
+                        .map(|s| (OutStructId(s.0, None).into(), s.1)),
                 );
                 ctx.update_usage(
                     structs
                         .iter_mut()
                         .enumerate()
-                        .map(|s| (StructId(s.0).into(), s.1)),
+                        .map(|s| (StructId(s.0, None).into(), s.1)),
                 );
                 ctx.update_usage(
                     opaques
@@ -450,6 +460,7 @@ impl TypeContext {
                     enums,
                     traits,
                     functions,
+                    imports: import_tcx,
                 };
 
                 if !ctx.errors.is_empty() {
@@ -864,29 +875,30 @@ pub(super) struct LookupId<'ast> {
     opaque_map: HashMap<&'ast ast::OpaqueType, OpaqueId>,
     enum_map: HashMap<&'ast ast::Enum, EnumId>,
     trait_map: HashMap<&'ast ast::Trait, TraitId>,
-    imports : HashMap<String, LookupId<'ast>>,
+    imports : Vec<LookupId<'ast>>,
 }
 
 impl<'ast> LookupId<'ast> {
     /// Returns a new [`LookupId`].
     fn new(
+        crate_id : Option<usize>,
         out_structs: &[ItemAndInfo<'ast, ast::Struct>],
         structs: &[ItemAndInfo<'ast, ast::Struct>],
         opaques: &[ItemAndInfo<'ast, ast::OpaqueType>],
         enums: &[ItemAndInfo<'ast, ast::Enum>],
         traits: &[ItemAndInfo<'ast, ast::Trait>],
-        imports : HashMap<String, LookupId<'ast>>,
+        imports : Vec<LookupId<'ast>>,
     ) -> Self {
         Self {
             out_struct_map: out_structs
                 .iter()
                 .enumerate()
-                .map(|(index, item)| (item.item, OutStructId(index)))
+                .map(|(index, item)| (item.item, OutStructId(index, crate_id)))
                 .collect(),
             struct_map: structs
                 .iter()
                 .enumerate()
-                .map(|(index, item)| (item.item, StructId(index)))
+                .map(|(index, item)| (item.item, StructId(index, crate_id)))
                 .collect(),
             opaque_map: opaques
                 .iter()
@@ -908,11 +920,19 @@ impl<'ast> LookupId<'ast> {
     }
 
     pub(super) fn resolve_out_struct(&self, strct: &ast::Struct) -> Option<OutStructId> {
-        self.out_struct_map.get(strct).copied()
+        self.out_struct_map.get(strct).copied().or_else(|| {
+            self.imports.iter().find_map(|l| {
+                l.resolve_out_struct(strct)
+            })
+        })
     }
 
     pub(super) fn resolve_struct(&self, strct: &ast::Struct) -> Option<StructId> {
-        self.struct_map.get(strct).copied()
+        self.struct_map.get(strct).copied().or_else(|| {
+            self.imports.iter().find_map(|l| {
+                l.resolve_struct(strct)
+            })
+        })
     }
 
     pub(super) fn resolve_opaque(&self, opaque: &ast::OpaqueType) -> Option<OpaqueId> {
