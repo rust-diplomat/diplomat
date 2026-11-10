@@ -8,6 +8,7 @@ use std::ops::Index;
 #[derive(Default, Clone)]
 pub struct Env {
     pub(crate) env: BTreeMap<Path, ModuleEnv>,
+    pub(crate) import_map : BTreeMap<String, Env>,
 }
 
 /// The type resolution environment within a specific module
@@ -26,6 +27,10 @@ impl Env {
     /// Given a path to a module and a name, get the item, if any
     pub fn get(&self, path: &Path, name: &str) -> Option<&ModSymbol> {
         self.env.get(path).and_then(|m| m.module.get(name))
+    }
+
+    pub fn get_import(&self, crate_name : &str) -> Option<&Env> {
+        self.import_map.get(crate_name)
     }
 
     /// Iterate over all items in the environment

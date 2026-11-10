@@ -219,10 +219,16 @@ impl TypeContext {
         s: &'ast syn::File,
         cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
+        import_map : HashMap<String, (syn::File, SpanLocation)>,
         include_info: Option<ast::ModuleIncludeInfo<'ast>>,
         entry_location: &SpanLocation,
     ) -> Result<Self, Vec<ErrorAndContext>> {
-        let types = ast::File::from_syn(s, include_info, entry_location).all_types();
+        let import_types = import_map.iter().map(|(crate_name, file_and_loc)| {
+            (crate_name.clone(), ast::File::from_syn(&file_and_loc.0, include_info.clone(), &file_and_loc.1).all_types())
+        }).collect();
+
+        let types = ast::File::from_syn(s, include_info, entry_location).all_types_with_imports(import_types);
+
         let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
         ctx.errors.set_item("(validation)", &None);
         hir.validate(&mut ctx);
@@ -990,7 +996,7 @@ mod tests {
             attr_validator.support.option = true;
             attr_validator.support.abi_compatibles = true;
             attr_validator.support.free_functions = true;
-            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None, &SpanLocation::None) {
+            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, Default::default(), None, &SpanLocation::None) {
                 Ok(_context) => (),
                 Err(e) => {
                     for err in e {
@@ -1021,6 +1027,7 @@ mod tests {
                 &parsed,
                 Default::default(),
                 attr_validator,
+                Default::default(),
                 None,
                 &SpanLocation::FilePath(format!("{}/{}", folder_pth_name, $file_name)),
             ) {
@@ -1454,6 +1461,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1499,6 +1507,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1546,6 +1555,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1589,6 +1599,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1640,7 +1651,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1685,7 +1696,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1736,7 +1747,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1780,7 +1791,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1915,7 +1926,7 @@ mod tests {
         attr_validator.support.struct_refs = true;
         attr_validator.support.mut_struct_refs = true;
         let config = super::LoweringConfig::default();
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1957,7 +1968,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -2091,6 +2102,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -2151,6 +2163,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         );
@@ -2180,6 +2193,7 @@ mod tests {
             &parsed_invalid,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         );

@@ -180,6 +180,8 @@ impl PathType {
     pub fn resolve_with_path<'a>(&self, in_path: &Path, env: &'a Env) -> (Path, &'a CustomType) {
         let local_path = &self.path;
         let mut cur_path = in_path.clone();
+
+        let mut current_env = env;
         for (i, elem) in local_path.elements.iter().enumerate() {
             match elem.as_str() {
                 "crate" => {
@@ -189,14 +191,14 @@ impl PathType {
 
                 "super" => cur_path = cur_path.get_super(),
 
-                o => match env.get(&cur_path, o) {
+                o => match current_env.get(&cur_path, o) {
                     Some(ModSymbol::Alias(p)) => {
                         let mut remaining_elements: Vec<Ident> =
                             local_path.elements.iter().skip(i + 1).cloned().collect();
                         let mut new_path = p.elements.clone();
                         new_path.append(&mut remaining_elements);
                         return PathType::new(Path { elements: new_path })
-                            .resolve_with_path(&cur_path.clone(), env);
+                            .resolve_with_path(&cur_path.clone(), current_env);
                     }
                     Some(ModSymbol::SubModule(name)) => {
                         cur_path.elements.push(name.clone());
@@ -227,11 +229,16 @@ impl PathType {
                         );
                     }
                     None => {
-                        create_simple_report(
-                            elem.clone(),
-                            "Could not resolve symbol".into(),
-                            format!("Could not resolve {o}"),
-                        );
+                        if let Some(e) = current_env.get_import(o) {
+                            current_env = e;
+                            cur_path = Path::empty();
+                        } else {
+                            create_simple_report(
+                                elem.clone(),
+                                "Could not resolve symbol".into(),
+                                format!("Could not resolve {o}"),
+                            );
+                        }
                     }
                 },
             }

@@ -111,6 +111,17 @@ pub fn gen(
 
     let config = config.get_overridden(target_language);
 
+    let import_map = config.shared_config.import_map.iter().map(|(crate_name, path)| {
+        let import_entry = std::path::Path::new(path);
+        if !import_entry.exists() {
+            panic!("Could not find import crate: {import_entry:?}");
+        }
+        let new_file = syn_inline_mod::parse_and_inline_modules(import_entry);
+        let location = diplomat_core::ast::SpanLocation::FilePath(path.clone());
+
+        (crate_name.clone(), (new_file, location))
+    }).collect();
+
     let lowering_config = config.shared_config.lowering_config();
 
     attr_validator.features_enabled = config.shared_config.features_enabled.clone();
@@ -133,6 +144,7 @@ pub fn gen(
         &module,
         lowering_config,
         attr_validator,
+        import_map,
         Some(ModuleIncludeInfo::new(manifest_path, cache)),
         &diplomat_core::ast::SpanLocation::FilePath(entry_parent.to_string_lossy().into()),
     )
