@@ -49,6 +49,7 @@ impl SharedConfig {
                 | "custom_extra_code_location"
                 | "features_enabled"
                 | "semver_unstable_features"
+                | "import_map"
         )
     }
 
@@ -131,7 +132,21 @@ impl SharedConfig {
                 };
                 self.semver_unstable_features = hash_set;
             }
+            "import_map" => {
+                if let Some(t) = value.as_table() {
+                    for (k, v) in t {
+                        if let Some(v) = v.as_str() {
+                            self.import_map.insert(k.clone(), v.to_string());
+                        } else {
+                            panic!("`import_map` entries must be strings");
+                        }
+                    }
+                } else {
+                    panic!("Expected table value for `import_map`");
+                }
+            }
             _ => {
+                // Account for auto-splitting of `import_map` into a dictionary:
                 if key.starts_with("import_map.") {
                     let import_mapping = key.replace("import_map.", "");
                     if let Some(v) = value.as_str() {
@@ -208,6 +223,12 @@ impl Config {
                 self.language_overrides.insert(key.to_string(), value);
             } else {
                 self.dotnet_config.set(&key.replace("dotnet.", ""), value);
+            }
+        } else if key.starts_with("c.") {
+            if SharedConfig::overrides_shared(key) {
+                self.language_overrides.insert(key.to_string(), value);
+            } else {
+                panic!("C does not have a config");
             }
         } else {
             self.shared_config.set(key, value)

@@ -2,6 +2,7 @@
 lib-name = "This Will Be Ignored For Testing Purposes (Check src/lib.rs)"
 unsafe_references_in_callbacks = true
 
+[c]
 import_map = { diplomat_feature_tests_import = "./import/src/lib.rs" }
 
 [kotlin]
