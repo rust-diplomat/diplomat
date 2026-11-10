@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include "diplomat_runtime.h"
 
+#include "TestStruct.d.h"
 
 
 
@@ -23,6 +24,8 @@ typedef struct DiplomatCallback_diplomat_external_free_callback_holder_f {
 int32_t namespace_free_func_test(int32_t x);
 
 bool namespace_nested_ns_fn(bool x);
+
+void namespace_test_import(TestStruct t, int32_t x);
 
 void diplomat_external_free_callback_holder(DiplomatCallback_diplomat_external_free_callback_holder_f f_cb_wrap);
 
