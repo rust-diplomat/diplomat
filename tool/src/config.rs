@@ -33,6 +33,8 @@ pub struct SharedConfig {
     /// Used to detect relative include locations for `#[diplomat::include()]`.
     /// By default, is set to the parent of the parent of the given entry file.
     pub manifest_dir: Option<String>,
+    /// Other Diplomat crates that the current Diplomat library depends on.
+    pub import_map : HashMap<String, String>,
 }
 
 impl SharedConfig {
@@ -129,7 +131,16 @@ impl SharedConfig {
                 };
                 self.semver_unstable_features = hash_set;
             }
-            _ => (),
+            _ => {
+                if key.starts_with("import_map.") {
+                    let import_mapping = key.replace("import_map.", "");
+                    if let Some(v) = value.as_str() {
+                        self.import_map.insert(import_mapping, v.to_string());
+                    } else {
+                        panic!("Config key `import_map.{key}` must have a string value. Got: {value}");
+                    }
+                }
+            },
         }
     }
 
