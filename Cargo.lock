@@ -395,6 +395,15 @@ name = "diplomat-feature-tests"
 version = "0.17.0"
 dependencies = [
  "diplomat",
+ "diplomat-feature-tests-import",
+ "diplomat-runtime",
+]
+
+[[package]]
+name = "diplomat-feature-tests-import"
+version = "0.17.0"
+dependencies = [
+ "diplomat",
  "diplomat-runtime",
 ]
 

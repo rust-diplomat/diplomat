@@ -598,6 +598,12 @@ impl File {
         out
     }
 
+    pub fn all_types_with_imports(&self, import_map : BTreeMap<String, Env>) -> Env {
+        let mut out = self.all_types();
+        out.import_map = import_map;
+        out
+    }
+
     pub fn all_rust_links(&self) -> HashSet<&RustLink> {
         self.modules
             .values()

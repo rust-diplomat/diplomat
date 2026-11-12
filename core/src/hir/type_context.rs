@@ -27,6 +27,7 @@ pub struct TypeContext {
     enums: Vec<EnumDef>,
     traits: Vec<TraitDef>,
     functions: Vec<hir::Method>,
+    imports : Vec<TypeContext>,
 }
 
 /// Additional features/config to support while lowering
@@ -39,11 +40,11 @@ pub struct LoweringConfig {
 
 /// Key used to index into a [`TypeContext`] representing a struct.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct StructId(usize);
+pub struct StructId(usize, Option<usize>);
 
 /// Key used to index into a [`TypeContext`] representing an out struct.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct OutStructId(usize);
+pub struct OutStructId(usize, Option<usize>);
 
 /// Key used to index into a [`TypeContext`] representing a opaque.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -93,17 +94,27 @@ impl Display for Param<'_> {
     }
 }
 
+#[derive(Default)]
+struct TypeContextASTStore<'ast> {
+    ast_out_structs: SmallVec<[ItemAndInfo<'ast, ast::Struct>; 16]>,
+    ast_structs: SmallVec<[ItemAndInfo<'ast, ast::Struct>; 16]>,
+    ast_opaques: SmallVec<[ItemAndInfo<'ast, ast::OpaqueType>; 16]>,
+    ast_enums: SmallVec<[ItemAndInfo<'ast, ast::Enum>; 16]>,
+    ast_traits: SmallVec<[ItemAndInfo<'ast, ast::Trait>; 16]>,
+    ast_functions : SmallVec<[ItemAndInfo<'ast, ast::Function>; 16]>,
+}
+
 impl TypeContext {
     pub fn all_types<'tcx>(&'tcx self) -> impl Iterator<Item = (TypeId, TypeDef<'tcx>)> {
         self.structs
             .iter()
             .enumerate()
-            .map(|(i, ty)| (TypeId::Struct(StructId(i)), TypeDef::Struct(ty)))
+            .map(|(i, ty)| (TypeId::Struct(StructId(i, None)), TypeDef::Struct(ty)))
             .chain(
                 self.out_structs
                     .iter()
                     .enumerate()
-                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i)), TypeDef::OutStruct(ty))),
+                    .map(|(i, ty)| (TypeId::OutStruct(OutStructId(i, None)), TypeDef::OutStruct(ty))),
             )
             .chain(
                 self.opaques
@@ -175,7 +186,11 @@ impl TypeContext {
     ///
     /// Prefer using `resolve_type()` for simplicity.
     pub fn resolve_struct(&self, id: StructId) -> &StructDef {
-        self.structs.index(id.0)
+        if let Some(crate_id) = id.1 {
+            self.imports[crate_id].resolve_struct(StructId(id.0, None))
+        } else {
+            self.structs.index(id.0)
+        }
     }
 
     /// Helper methods for resolving different IDs.
@@ -219,11 +234,17 @@ impl TypeContext {
         s: &'ast syn::File,
         cfg: LoweringConfig,
         attr_validator: impl AttributeValidator + 'static,
+        import_map : HashMap<String, (syn::File, SpanLocation)>,
         include_info: Option<ast::ModuleIncludeInfo<'ast>>,
         entry_location: &SpanLocation,
     ) -> Result<Self, Vec<ErrorAndContext>> {
-        let types = ast::File::from_syn(s, include_info, entry_location).all_types();
-        let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, attr_validator)?;
+        let import_types = import_map.iter().map(|(crate_name, file_and_loc)| {
+            (crate_name.clone(), ast::File::from_syn(&file_and_loc.0, include_info.clone(), &file_and_loc.1).all_types())
+        }).collect();
+
+        let types = ast::File::from_syn(s, include_info, entry_location).all_types_with_imports(import_types);
+
+        let (mut ctx, hir) = Self::from_ast_without_validation(&types, cfg, &attr_validator)?;
         ctx.errors.set_item("(validation)", &None);
         hir.validate(&mut ctx);
         if !ctx.errors.is_empty() {
@@ -232,21 +253,17 @@ impl TypeContext {
         Ok(hir)
     }
 
-    /// Lower the AST to the HIR, without validation. For testing
-    pub(super) fn from_ast_without_validation<'ast>(
-        env: &'ast Env,
-        cfg: LoweringConfig,
-        attr_validator: impl AttributeValidator + 'static,
-    ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
-        let mut ast_out_structs = SmallVec::<[_; 16]>::new();
-        let mut ast_structs = SmallVec::<[_; 16]>::new();
-        let mut ast_opaques = SmallVec::<[_; 16]>::new();
-        let mut ast_enums = SmallVec::<[_; 16]>::new();
-        let mut ast_traits = SmallVec::<[_; 16]>::new();
-        let mut ast_functions = SmallVec::<[_; 16]>::new();
-
-        let mut errors = ErrorStore::default();
-
+    /// Create a [`LookupId`] for a given [`Env`].
+    /// `crate_id` specifies if the lookup is being generated for a dependency,
+    /// and if so, where in the array of crate imports to look
+    fn create_lookup_id<'a, 'ast>(
+        env : &'ast Env, 
+        attr_validator: &dyn AttributeValidator,
+        crate_id : Option<usize>,
+        errors : &mut ErrorStore<'ast>,
+        store : &mut TypeContextASTStore<'ast>,
+        imports : Vec<LookupId<'ast>>,
+    ) -> LookupId<'ast> {
         // Sort modules such that children come after their parents in the list
         let mut modules = env.iter_modules().collect::<Vec<_>>();
         modules.sort_by_key(|(p, ..)| p.elements.len());
@@ -264,7 +281,7 @@ impl TypeContext {
             );
             let mod_attrs = Attrs::from_ast(
                 &mod_env.attrs,
-                &attr_validator,
+                attr_validator,
                 module_attrs
                     .get(
                         &path
@@ -275,7 +292,7 @@ impl TypeContext {
                     )
                     .cloned()
                     .unwrap_or_default(),
-                &mut errors,
+                errors,
             );
             let ty_attrs = mod_attrs.for_inheritance(AttrInheritContext::Type);
             let method_attrs =
@@ -294,9 +311,9 @@ impl TypeContext {
                                 method_parent_attrs: method_attrs.clone(),
                             };
                             if strct.output_only {
-                                ast_out_structs.push(item);
+                                store.ast_out_structs.push(item);
                             } else {
-                                ast_structs.push(item);
+                                store.ast_structs.push(item);
                             }
                         }
                         ast::CustomType::Opaque(opaque) => {
@@ -306,7 +323,7 @@ impl TypeContext {
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
                             };
-                            ast_opaques.push(item)
+                            store.ast_opaques.push(item)
                         }
                         ast::CustomType::Enum(enm) => {
                             let item = ItemAndInfo {
@@ -315,7 +332,7 @@ impl TypeContext {
                                 ty_parent_attrs: ty_attrs.clone(),
                                 method_parent_attrs: method_attrs.clone(),
                             };
-                            ast_enums.push(item)
+                            store.ast_enums.push(item)
                         }
                     },
                     ast::ModSymbol::Trait(trt) => {
@@ -325,7 +342,7 @@ impl TypeContext {
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
                         };
-                        ast_traits.push(item)
+                        store.ast_traits.push(item)
                     }
                     ast::ModSymbol::Function(f) => {
                         let item = ItemAndInfo {
@@ -334,21 +351,50 @@ impl TypeContext {
                             ty_parent_attrs: ty_attrs.clone(),
                             method_parent_attrs: method_attrs.clone(),
                         };
-                        ast_functions.push(item)
+                        store.ast_functions.push(item)
                     }
                     _ => {}
                 }
             }
         }
 
-        let lookup_id = LookupId::new(
-            &ast_out_structs[..],
-            &ast_structs[..],
-            &ast_opaques[..],
-            &ast_enums[..],
-            &ast_traits[..],
-        );
-        let attr_validator = Box::new(attr_validator);
+        LookupId::new(
+            crate_id,
+            &store.ast_out_structs[..],
+            &store.ast_structs[..],
+            &store.ast_opaques[..],
+            &store.ast_enums[..],
+            &store.ast_traits[..],
+            imports,
+        )
+    }
+
+    /// Lower the AST to the HIR, without validation. For testing
+    pub(super) fn from_ast_without_validation<'ast>(
+        env: &'ast Env,
+        cfg: LoweringConfig,
+        attr_validator: &'ast dyn AttributeValidator,
+    ) -> Result<(LoweringContext<'ast>, Self), Vec<ErrorAndContext>> {
+        let mut errors = ErrorStore::default();
+        let mut import_tcx = Vec::new();
+
+        let mut import_lookup = Vec::new();
+        for (id, (_, crate_env)) in env.import_map.iter().enumerate() {
+            let (_, import) = Self::from_ast_without_validation(&crate_env, cfg, attr_validator)?;
+            import_tcx.push(import);
+
+            let mut store = TypeContextASTStore {
+                ..Default::default()
+            };
+            let lookup_id = Self::create_lookup_id(crate_env, attr_validator, Some(id), &mut errors, &mut store, Default::default());
+            import_lookup.push(lookup_id);
+        }
+
+        let mut store = TypeContextASTStore {
+            ..Default::default()
+        };
+
+        let lookup_id = Self::create_lookup_id(env, attr_validator, None, &mut errors, &mut store, import_lookup);
 
         let mut ctx = LoweringContext {
             lookup_id,
@@ -359,12 +405,12 @@ impl TypeContext {
             type_usage: HashMap::new(),
         };
 
-        let out_structs = ctx.lower_all_out_structs(ast_out_structs.into_iter());
-        let structs = ctx.lower_all_structs(ast_structs.into_iter());
-        let opaques = ctx.lower_all_opaques(ast_opaques.into_iter());
-        let enums = ctx.lower_all_enums(ast_enums.into_iter());
-        let traits = ctx.lower_all_traits(ast_traits.into_iter());
-        let functions = ctx.lower_all_functions(ast_functions.into_iter());
+        let out_structs = ctx.lower_all_out_structs(store.ast_out_structs.into_iter());
+        let structs = ctx.lower_all_structs(store.ast_structs.into_iter());
+        let opaques = ctx.lower_all_opaques(store.ast_opaques.into_iter());
+        let enums = ctx.lower_all_enums(store.ast_enums.into_iter());
+        let traits = ctx.lower_all_traits(store.ast_traits.into_iter());
+        let functions = ctx.lower_all_functions(store.ast_functions.into_iter());
 
         match (out_structs, structs, opaques, enums, functions, traits) {
             (
@@ -380,13 +426,13 @@ impl TypeContext {
                     out_structs
                         .iter_mut()
                         .enumerate()
-                        .map(|s| (OutStructId(s.0).into(), s.1)),
+                        .map(|s| (OutStructId(s.0, None).into(), s.1)),
                 );
                 ctx.update_usage(
                     structs
                         .iter_mut()
                         .enumerate()
-                        .map(|s| (StructId(s.0).into(), s.1)),
+                        .map(|s| (StructId(s.0, None).into(), s.1)),
                 );
                 ctx.update_usage(
                     opaques
@@ -414,6 +460,7 @@ impl TypeContext {
                     enums,
                     traits,
                     functions,
+                    imports: import_tcx,
                 };
 
                 if !ctx.errors.is_empty() {
@@ -828,27 +875,30 @@ pub(super) struct LookupId<'ast> {
     opaque_map: HashMap<&'ast ast::OpaqueType, OpaqueId>,
     enum_map: HashMap<&'ast ast::Enum, EnumId>,
     trait_map: HashMap<&'ast ast::Trait, TraitId>,
+    imports : Vec<LookupId<'ast>>,
 }
 
 impl<'ast> LookupId<'ast> {
     /// Returns a new [`LookupId`].
     fn new(
+        crate_id : Option<usize>,
         out_structs: &[ItemAndInfo<'ast, ast::Struct>],
         structs: &[ItemAndInfo<'ast, ast::Struct>],
         opaques: &[ItemAndInfo<'ast, ast::OpaqueType>],
         enums: &[ItemAndInfo<'ast, ast::Enum>],
         traits: &[ItemAndInfo<'ast, ast::Trait>],
+        imports : Vec<LookupId<'ast>>,
     ) -> Self {
         Self {
             out_struct_map: out_structs
                 .iter()
                 .enumerate()
-                .map(|(index, item)| (item.item, OutStructId(index)))
+                .map(|(index, item)| (item.item, OutStructId(index, crate_id)))
                 .collect(),
             struct_map: structs
                 .iter()
                 .enumerate()
-                .map(|(index, item)| (item.item, StructId(index)))
+                .map(|(index, item)| (item.item, StructId(index, crate_id)))
                 .collect(),
             opaque_map: opaques
                 .iter()
@@ -865,15 +915,24 @@ impl<'ast> LookupId<'ast> {
                 .enumerate()
                 .map(|(index, item)| (item.item, TraitId(index)))
                 .collect(),
+            imports,
         }
     }
 
     pub(super) fn resolve_out_struct(&self, strct: &ast::Struct) -> Option<OutStructId> {
-        self.out_struct_map.get(strct).copied()
+        self.out_struct_map.get(strct).copied().or_else(|| {
+            self.imports.iter().find_map(|l| {
+                l.resolve_out_struct(strct)
+            })
+        })
     }
 
     pub(super) fn resolve_struct(&self, strct: &ast::Struct) -> Option<StructId> {
-        self.struct_map.get(strct).copied()
+        self.struct_map.get(strct).copied().or_else(|| {
+            self.imports.iter().find_map(|l| {
+                l.resolve_struct(strct)
+            })
+        })
     }
 
     pub(super) fn resolve_opaque(&self, opaque: &ast::OpaqueType) -> Option<OpaqueId> {
@@ -990,7 +1049,7 @@ mod tests {
             attr_validator.support.option = true;
             attr_validator.support.abi_compatibles = true;
             attr_validator.support.free_functions = true;
-            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, None, &SpanLocation::None) {
+            match hir::TypeContext::from_syn(&parsed, Default::default(), attr_validator, Default::default(), None, &SpanLocation::None) {
                 Ok(_context) => (),
                 Err(e) => {
                     for err in e {
@@ -1021,6 +1080,7 @@ mod tests {
                 &parsed,
                 Default::default(),
                 attr_validator,
+                Default::default(),
                 None,
                 &SpanLocation::FilePath(format!("{}/{}", folder_pth_name, $file_name)),
             ) {
@@ -1454,6 +1514,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1499,6 +1560,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1546,6 +1608,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1589,6 +1652,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -1640,7 +1704,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1685,7 +1749,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1736,7 +1800,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1780,7 +1844,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1915,7 +1979,7 @@ mod tests {
         attr_validator.support.struct_refs = true;
         attr_validator.support.mut_struct_refs = true;
         let config = super::LoweringConfig::default();
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -1957,7 +2021,7 @@ mod tests {
         let config = super::LoweringConfig {
             unsafe_references_in_callbacks: true,
         };
-        match hir::TypeContext::from_syn(&parsed, config, attr_validator, None, &SpanLocation::None)
+        match hir::TypeContext::from_syn(&parsed, config, attr_validator, Default::default(), None, &SpanLocation::None)
         {
             Ok(_context) => (),
             Err(e) => {
@@ -2038,7 +2102,7 @@ mod tests {
         backend.support.opaque_slices = true;
 
         let (_, tcx) =
-            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), &backend)
                 .unwrap();
 
         insta::assert_debug_snapshot!(tcx);
@@ -2091,6 +2155,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         ) {
@@ -2151,6 +2216,7 @@ mod tests {
             &parsed,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         );
@@ -2180,6 +2246,7 @@ mod tests {
             &parsed_invalid,
             Default::default(),
             attr_validator,
+            Default::default(),
             None,
             &SpanLocation::None,
         );
@@ -2245,7 +2312,7 @@ mod tests {
         backend.support.generic_writeables = true;
 
         let (mut ctx, tcx) =
-            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), backend)
+            crate::hir::TypeContext::from_ast_without_validation(&env, Default::default(), &backend)
                 .unwrap();
         tcx.validate(&mut ctx);
         assert!(ctx.errors.is_empty());
