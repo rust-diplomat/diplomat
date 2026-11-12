@@ -670,7 +670,7 @@ impl StringEncoding {
                     syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedStr16Slice)
                 }
                 Self::Utf8 => {
-                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedUTF8StrSlice)
+                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedUtf8StrSlice)
                 }
             }
         }
@@ -911,7 +911,7 @@ impl TypeName {
                 // Convert the return type to something FFI-friendly:
                 let output_type = output_type.ffi_safe_version().to_syn();
                 // should be DiplomatCallback<function_output_type>
-                syn::parse_quote_spanned!(Span::call_site() => DiplomatCallback<#output_type>)
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::support::DiplomatCallback<#output_type>)
             }
             TypeName::ImplTrait(trt_path) => {
                 let trait_name =
@@ -1154,7 +1154,9 @@ impl TypeName {
                     }
                 } else if is_runtime_type(p, "DiplomatOwnedStrSlice")
                     || is_runtime_type(p, "DiplomatOwnedStr16Slice")
+                    || is_runtime_type(p, "DiplomatOwnedUtf8StrSlice")
                     || is_runtime_type(p, "DiplomatOwnedUTF8StrSlice")
+                // legacy name
                 {
                     let encoding = if is_runtime_type(p, "DiplomatOwnedStrSlice") {
                         StringEncoding::UnvalidatedUtf8

@@ -13,7 +13,7 @@
 //! - **String input**: These all map to appropriate string types across FFI.
 //!    - Unvalidated UTF-8: [`DiplomatStrSlice<'a>`] (`&'a [u8]`), [`DiplomatOwnedStrSlice`] (`Box<[u8]>`)
 //!    - Unvalidated UTF-16: [`DiplomatStr16Slice<'a>`] (`&'a [u16]`), [`DiplomatOwnedStr16Slice`]  (`Box<[u16]>`)
-//!    - Validated UTF-8: [`DiplomatUtf8StrSlice<'a>`] (`&'a str`), [`DiplomatOwnedUTF8StrSlice`] (`Box<str>`)
+//!    - Validated UTF-8: [`DiplomatUtf8StrSlice<'a>`] (`&'a str`), [`DiplomatOwnedUtf8StrSlice`] (`Box<str>`)
 //!    - Unvalidated stringy DSTs: [`DiplomatStr`] (`[u8]`), [`DiplomatStr16`] (`[u16]`), for convenient use with `&` and `Box` as function parameters.
 //! - **String output**: [`DiplomatWrite`] and [`DiplomatWrite16`]
 //! - **Primitive buffer output**: [`DiplomatWriteGeneric<T>`]
@@ -45,12 +45,27 @@ pub use write::{
 };
 mod slices;
 pub use slices::{
-    DiplomatOwnedSlice, DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
+    DiplomatOwnedSlice, DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUtf8StrSlice,
     DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice,
 };
 
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use DiplomatOwnedUtf8StrSlice instead")]
+pub use DiplomatOwnedUtf8StrSlice as DiplomatOwnedUTF8StrSlice;
 mod callback;
-pub use callback::DiplomatCallback;
+
+/// Types that Diplomat uses internally
+///
+/// Users should not need to reference these directly.
+pub mod support {
+    pub use crate::callback::DiplomatCallback;
+}
+
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use support::DiplomatCallback instead")]
+pub use support::DiplomatCallback;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
