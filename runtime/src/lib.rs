@@ -50,7 +50,18 @@ pub use slices::{
 };
 
 mod callback;
-pub use callback::DiplomatCallback;
+
+/// Types that Diplomat uses internally
+///
+/// Users should not need to reference these directly.
+pub mod support {
+    pub use crate::callback::DiplomatCallback;
+}
+
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use support::DiplomatCallback instead")]
+pub use support::DiplomatCallback;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
