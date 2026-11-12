@@ -286,7 +286,7 @@ mod sealed {
 /// directly into a [`DiplomatWriteGeneric`].
 ///
 /// This trait is currently sealed and implemented only for scalar primitive types. More types
-/// will likely be added in the future.
+/// will likely be added in the future ([#900](https://github.com/rust-diplomat/diplomat/issues/900)).
 ///
 // # Safety
 //
@@ -298,6 +298,7 @@ mod sealed {
 // - Be `Copy` and Plain Old Data (POD).
 // - Have a fixed, shared layout across the FFI boundary.
 // - Contain no pointers, references, or custom `Drop` glue.
+#[expect(clippy::missing_safety_doc, reason = "sealed trait")]
 pub unsafe trait DiplomatAbiCompatible: Copy + sealed::Sealed {}
 
 macro_rules! impl_abi_compatible {
@@ -314,6 +315,10 @@ macro_rules! impl_abi_compatible {
 impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, usize, f32, f64);
 
 /// An object that can write a sequence of primitive values of type `T` across FFI.
+///
+/// `T` must be [`DiplomatAbiCompatible`], which is currently all scalar primitives except `bool`,
+/// but will likely be expanded in the future to support a subset of
+/// structs and potentially references ([#900](https://github.com/rust-diplomat/diplomat/issues/900)).
 ///
 /// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
 /// writing slices, and extending from iterators.
