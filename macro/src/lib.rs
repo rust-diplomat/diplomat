@@ -876,7 +876,7 @@ mod tests {
             gen_bridge(parse_quote! {
                 mod ffi {
                     use diplomat_runtime::{DiplomatStr, DiplomatStr16, DiplomatByte, DiplomatOwnedSlice,
-                                           DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUTF8StrSlice,
+                                           DiplomatOwnedStr16Slice, DiplomatOwnedStrSlice, DiplomatOwnedUtf8StrSlice,
                                            DiplomatSlice, DiplomatSliceMut, DiplomatStr16Slice, DiplomatStrSlice, DiplomatUtf8StrSlice};
                     struct Foo<'a> {
                         a: DiplomatSlice<'a, u8>,
@@ -906,7 +906,7 @@ mod tests {
                         pub fn boxes(a: Box<[u8]>, b: Box<[u16]>, c: Box<str>, d: Box<DiplomatStr>, e: Box<DiplomatStr16>, f: Box<[DiplomatByte]>) -> Self {
                             unimplemented!()
                         }
-                        pub fn boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b: DiplomatOwnedSlice<u16>, c: DiplomatOwnedUTF8StrSlice, d: DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f: DiplomatOwnedSlice<DiplomatByte>) -> Self {
+                        pub fn boxes_runtime_types(a: DiplomatOwnedSlice<u8>, b: DiplomatOwnedSlice<u16>, c: DiplomatOwnedUtf8StrSlice, d: DiplomatOwnedStrSlice, e: DiplomatOwnedStr16Slice, f: DiplomatOwnedSlice<DiplomatByte>) -> Self {
                             unimplemented!()
                         }
                         pub fn a(self) -> &[u8] {

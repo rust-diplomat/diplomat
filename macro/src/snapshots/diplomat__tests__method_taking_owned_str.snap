@@ -15,7 +15,7 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Foo_something_with_str(
-        s: diplomat_runtime::DiplomatOwnedUTF8StrSlice,
+        s: diplomat_runtime::DiplomatOwnedUtf8StrSlice,
     ) {
         let s = s.into();
         Foo::something_with_str(s)

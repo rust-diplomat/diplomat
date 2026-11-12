@@ -670,7 +670,7 @@ impl StringEncoding {
                     syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedStr16Slice)
                 }
                 Self::Utf8 => {
-                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedUTF8StrSlice)
+                    syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::DiplomatOwnedUtf8StrSlice)
                 }
             }
         }
@@ -1154,7 +1154,9 @@ impl TypeName {
                     }
                 } else if is_runtime_type(p, "DiplomatOwnedStrSlice")
                     || is_runtime_type(p, "DiplomatOwnedStr16Slice")
+                    || is_runtime_type(p, "DiplomatOwnedUtf8StrSlice")
                     || is_runtime_type(p, "DiplomatOwnedUTF8StrSlice")
+                // legacy name
                 {
                     let encoding = if is_runtime_type(p, "DiplomatOwnedStrSlice") {
                         StringEncoding::UnvalidatedUtf8

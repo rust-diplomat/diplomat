@@ -226,17 +226,17 @@ impl Deref for DiplomatUtf8StrSlice<'_> {
 /// This is equivalent to `Box<str>`, except it has a stable `repr(C)` layout
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
-pub struct DiplomatOwnedUTF8StrSlice(DiplomatOwnedSlice<u8>);
+pub struct DiplomatOwnedUtf8StrSlice(DiplomatOwnedSlice<u8>);
 
-impl From<Box<str>> for DiplomatOwnedUTF8StrSlice {
+impl From<Box<str>> for DiplomatOwnedUtf8StrSlice {
     fn from(x: Box<str>) -> Self {
         // Safety: invariant upheld; obtained from `str`
         Self(Box::<[u8]>::from(x).into())
     }
 }
 
-impl From<DiplomatOwnedUTF8StrSlice> for Box<str> {
-    fn from(x: DiplomatOwnedUTF8StrSlice) -> Self {
+impl From<DiplomatOwnedUtf8StrSlice> for Box<str> {
+    fn from(x: DiplomatOwnedUtf8StrSlice) -> Self {
         let buf = Box::<[u8]>::from(x.0);
         let len = buf.len();
         let raw = Box::into_raw(buf);
@@ -251,19 +251,19 @@ impl From<DiplomatOwnedUTF8StrSlice> for Box<str> {
             // We're technically making an &mut [u8] here, because there isn't an easy route to construct
             // string types that are owned
             let slice = core::slice::from_raw_parts_mut(raw, len);
-            // We can assume this because of the invariant on DiplomatOwnedUTF8StrSlice
+            // We can assume this because of the invariant on DiplomatOwnedUtf8StrSlice
             let strslice = core::str::from_utf8_unchecked_mut(slice);
             Box::from_raw(strslice as *mut str)
         }
     }
 }
 
-impl Deref for DiplomatOwnedUTF8StrSlice {
+impl Deref for DiplomatOwnedUtf8StrSlice {
     type Target = str;
     fn deref(&self) -> &str {
         let slice = &self.0;
         unsafe {
-            // We can assume this because of the invariant on DiplomatOwnedUTF8StrSlice
+            // We can assume this because of the invariant on DiplomatOwnedUtf8StrSlice
             core::str::from_utf8_unchecked(slice)
         }
     }
