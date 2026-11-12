@@ -285,13 +285,19 @@ mod sealed {
 /// Marker trait for types that have a stable, shared C ABI layout and can be written
 /// directly into a [`DiplomatWriteGeneric`].
 ///
-/// This trait is currently sealed and implemented only for scalar primitive types.
+/// This trait is currently sealed and implemented only for scalar primitive types. More types
+/// will likely be added in the future.
 ///
-/// # Safety
-/// Implementors must:
-/// - Be `Copy` and Plain Old Data (POD).
-/// - Have a fixed, shared layout across the FFI boundary.
-/// - Contain no pointers, references, or custom `Drop` glue.
+// # Safety
+//
+// These safety invariants are based on current assumptions and are deliberately expansive
+// and redundant. Many of them can be removed with minor design work, but make sure to check
+// users of this trait first.
+//
+// Implementors must:
+// - Be `Copy` and Plain Old Data (POD).
+// - Have a fixed, shared layout across the FFI boundary.
+// - Contain no pointers, references, or custom `Drop` glue.
 pub unsafe trait DiplomatAbiCompatible: Copy + sealed::Sealed {}
 
 macro_rules! impl_abi_compatible {
@@ -311,15 +317,14 @@ impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, us
 ///
 /// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
 /// writing slices, and extending from iterators.
-///
-/// # Safety invariants
-/// - All safety invariants of [`DiplomatWrite`] hold on `self.raw`.
-/// - `self.raw.len` and `self.raw.cap` are measured in bytes, and `self.raw.len` is always
-///   a multiple of `size_of::<T>()`.
-/// - `self.raw.buf` points to `self.raw.len / size_of::<T>()` consecutive properly initialized
-///   values of `T`.
 #[repr(transparent)]
 pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
+    /// # Safety invariants
+    /// - All safety invariants of [`DiplomatWrite`] hold on `self.raw`.
+    /// - `self.raw.len` and `self.raw.cap` are measured in bytes, and `self.raw.len` is always
+    ///   a multiple of `size_of::<T>()`.
+    /// - `self.raw.buf` points to `self.raw.len / size_of::<T>()` consecutive properly initialized
+    ///   values of `T`.
     pub(crate) raw: DiplomatWrite,
     pub(crate) _marker: core::marker::PhantomData<T>,
 }
