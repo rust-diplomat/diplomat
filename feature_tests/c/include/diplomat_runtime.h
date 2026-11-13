@@ -30,7 +30,7 @@ typedef struct DiplomatWrite {
     bool (*grow)(struct DiplomatWrite*, size_t);
 } DiplomatWrite;
 
-bool diplomat_is_str(const char* buf, size_t len);
+bool diplomat_is_utf8_str(const char* buf, size_t len);
 
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \
@@ -72,7 +72,7 @@ MAKE_SLICES_AND_OPTIONS(String16, char16_t)
 MAKE_SLICES_AND_OPTIONS(Strings, DiplomatStringView)
 MAKE_SLICES_AND_OPTIONS(Strings16, DiplomatString16View)
 
-DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+DiplomatWrite diplomat_array_write_create(char* buf, size_t buf_size);
 
 DiplomatWrite* diplomat_buffer_write_create(size_t cap);
 char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);

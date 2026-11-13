@@ -53,7 +53,7 @@ inline somelib::diplomat::maybe_null<std::unique_ptr<somelib::Opaque>> somelib::
 }
 
 inline somelib::diplomat::result<std::unique_ptr<somelib::Opaque>, somelib::diplomat::Utf8Error> somelib::Opaque::from_str(std::string_view input) {
-    if (!somelib::diplomat::capi::diplomat_is_str(input.data(), input.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(input.data(), input.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::Opaque_from_str({input.data(), input.size()});

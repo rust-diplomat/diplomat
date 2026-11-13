@@ -19,7 +19,7 @@ mod ffi {
         to: &mut diplomat_runtime::DiplomatWrite,
     ) -> diplomat_runtime::DiplomatResult<(), ()> {
         let ret = this.to_string(to);
-        to.flush();
+        to.internal_flush();
         ret.into()
     }
 }

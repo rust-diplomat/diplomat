@@ -26,7 +26,7 @@ namespace capi {
 } // namespace
 
 inline somelib::diplomat::result<somelib::BorrowedFieldsWithBounds, somelib::diplomat::Utf8Error> somelib::BorrowedFieldsWithBounds::from_foo_and_strings(const somelib::Foo& foo DIPLOMAT_LIFETIME_BOUND, std::u16string_view dstr16_x DIPLOMAT_LIFETIME_BOUND, std::string_view utf8_str_z DIPLOMAT_LIFETIME_BOUND) {
-    if (!somelib::diplomat::capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(utf8_str_z.data(), utf8_str_z.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::BorrowedFieldsWithBounds_from_foo_and_strings(foo.AsFFI(),

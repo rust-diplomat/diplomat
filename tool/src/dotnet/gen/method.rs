@@ -3066,7 +3066,7 @@ impl<'ctx, 'tcx> ItemGenContext<'ctx, 'tcx> {
     // -------------------------------------------------------------------
     // Callback lowering — INCOMPLETE WIP
     //
-    // The DiplomatCallback wire and the C# delegate plumbing are sketched
+    // The Callback wire and the C# delegate plumbing are sketched
     // out (see callback.rs, callback.cs.jinja) but not finished. The
     // backend's `attr_support.callbacks` is set to `false`, so the HIR
     // validator rejects any bridge that uses `impl Fn`/`impl FnMut`

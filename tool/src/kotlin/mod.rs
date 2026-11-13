@@ -579,9 +579,7 @@ impl<'cx> ItemGenContext<'_, 'cx> {
             }
             Type::Enum(_) => "Int".into(),
             Type::Slice(_) => "Slice".into(),
-            Type::Callback(_) => {
-                format!("DiplomatCallback_{}_Native", additional_name.unwrap()).into()
-            }
+            Type::Callback(_) => format!("Callback_{}_Native", additional_name.unwrap()).into(),
             Type::ImplTrait(ref trt) => {
                 let trait_id = trt.id();
                 format!(
@@ -1241,7 +1239,7 @@ returnVal.option() ?: return null
                     };
 
                     self.callback_params.push(CallbackParamInfo {
-                        name: "DiplomatCallback_".to_owned() + &additional_name.clone().unwrap(),
+                        name: "Callback_".to_owned() + &additional_name.clone().unwrap(),
                         input_types: param_input_types.join(", "),
                         output_type: match &**output {
                             ReturnType::Infallible(success) => match success {
@@ -2118,7 +2116,7 @@ returnVal.option() ?: return null
             Type::Slice(hir::Slice::Primitive(_, ty)) => {
                 self.formatter.fmt_primitive_slice(ty).into()
             }
-            Type::Callback(_) => format!("DiplomatCallback_{}", additional_name.unwrap()).into(),
+            Type::Callback(_) => format!("Callback_{}", additional_name.unwrap()).into(),
             Type::DiplomatOption(ref inner) => {
                 assert!(additional_name.is_none());
                 format!("{}?", self.gen_type_name(inner, None)).into()
@@ -2129,7 +2127,7 @@ returnVal.option() ?: return null
     }
 
     /// Generate the non-diplomat name for a type -- this only applies to
-    /// callback and trait types. So: for a callback, instead of returning `DiplomatCallback_...`
+    /// callback and trait types. So: for a callback, instead of returning `Callback_...`
     /// it returns `(input types)->output type`.
     /// And for traits instead of returning `DiplomatTrait_<TraitName>...` it returns TraitName
     /// For all non-callback types it returns the same result as `gen_type_name`.

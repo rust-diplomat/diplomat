@@ -9,7 +9,7 @@
 
 void print_decimal(FixedDecimal* fd) {
     char output[40];
-    DiplomatWrite out = diplomat_simple_write(output, 40);
+    DiplomatWrite out = diplomat_array_write_create(output, 40);
     assert(icu4x_FixedDecimal_to_string_mv1(fd, &out).is_ok == true);
     output[out.len] = '\0';
     printf("%s\n", output);
@@ -17,7 +17,7 @@ void print_decimal(FixedDecimal* fd) {
 
 void format_decimal(FixedDecimalFormatter* fdf, FixedDecimal* fd) {
     char output[40];
-    DiplomatWrite out = diplomat_simple_write(output, 40);
+    DiplomatWrite out = diplomat_array_write_create(output, 40);
     icu4x_FixedDecimalFormatter_format_write_mv1(fdf, fd, &out);
     output[out.len] = '\0';
     printf("%s\n", output);

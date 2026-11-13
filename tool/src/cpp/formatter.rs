@@ -369,12 +369,12 @@ impl<'tcx> Cpp2Formatter<'tcx> {
     ) -> Cow<'a, str> {
         let lib_prefix = &self.lib_name_ns_prefix;
         if let Some(ns) = namespace {
-            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result").into()
+            format!("{lib_prefix}{ns}::{CAPI_NAMESPACE}::Callback_{method_name}_{cpp_name}_result")
+                .into()
         } else {
             // When there is no library name, capi stuff gets stuffed under the diplomat namespace
             let prefix = self.lib_name.as_deref().unwrap_or("diplomat");
-            format!("{prefix}::{CAPI_NAMESPACE}::DiplomatCallback_{method_name}_{cpp_name}_result")
-                .into()
+            format!("{prefix}::{CAPI_NAMESPACE}::Callback_{method_name}_{cpp_name}_result").into()
         }
     }
 

@@ -55,7 +55,7 @@ inline std::unique_ptr<somelib::MyString> somelib::MyString::new_(std::string_vi
 }
 
 inline somelib::diplomat::result<std::unique_ptr<somelib::MyString>, somelib::diplomat::Utf8Error> somelib::MyString::new_unsafe(std::string_view v) {
-    if (!somelib::diplomat::capi::diplomat_is_str(v.data(), v.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(v.data(), v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::MyString_new_unsafe({v.data(), v.size()});
@@ -97,7 +97,7 @@ inline std::string_view somelib::MyString::get_static_str() {
 }
 
 inline somelib::diplomat::result<std::string, somelib::diplomat::Utf8Error> somelib::MyString::string_transform(std::string_view foo) {
-    if (!somelib::diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(foo.data(), foo.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     std::string output;
@@ -108,7 +108,7 @@ inline somelib::diplomat::result<std::string, somelib::diplomat::Utf8Error> some
 }
 template<typename W>
 inline somelib::diplomat::result<std::monostate, somelib::diplomat::Utf8Error> somelib::MyString::string_transform_write(std::string_view foo, W& writeable) {
-    if (!somelib::diplomat::capi::diplomat_is_str(foo.data(), foo.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(foo.data(), foo.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     somelib::diplomat::capi::DiplomatWrite write = somelib::diplomat::WriteTrait<W>::Construct(writeable);

@@ -464,10 +464,8 @@ impl<'tcx> ItemGenContext<'_, 'tcx, '_> {
         let param_name = self.formatter.fmt_param_name(ident);
         match ty {
             Type::Callback(some_cb) => {
-                let cb_wrapper_type = "DiplomatCallback_".to_owned()
-                    + method_abi_name.unwrap().as_str()
-                    + "_"
-                    + ident;
+                let cb_wrapper_type =
+                    "Callback_".to_owned() + method_abi_name.unwrap().as_str() + "_" + ident;
                 let params = some_cb.get_inputs().unwrap();
                 let output_type = Box::new(some_cb.get_output_type().unwrap().clone());
                 // this call generates any imports needed for param + output type(s)

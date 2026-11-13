@@ -106,7 +106,7 @@ inline somelib::diplomat::result<std::monostate, const somelib::ResultOpaque&> s
 }
 
 inline somelib::diplomat::result<somelib::ResultOpaque&, somelib::diplomat::Utf8Error> somelib::ResultOpaque::takes_str(std::string_view _v) DIPLOMAT_LIFETIME_BOUND {
-    if (!somelib::diplomat::capi::diplomat_is_str(_v.data(), _v.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(_v.data(), _v.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::ResultOpaque_takes_str(this->AsFFI(),

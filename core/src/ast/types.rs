@@ -910,8 +910,8 @@ impl TypeName {
             TypeName::Function(_input_types, output_type, _mutability) => {
                 // Convert the return type to something FFI-friendly:
                 let output_type = output_type.ffi_safe_version().to_syn();
-                // should be DiplomatCallback<function_output_type>
-                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::support::DiplomatCallback<#output_type>)
+                // should be Callback<function_output_type>
+                syn::parse_quote_spanned!(Span::call_site() => diplomat_runtime::support::Callback<#output_type>)
             }
             TypeName::ImplTrait(trt_path) => {
                 let trait_name =

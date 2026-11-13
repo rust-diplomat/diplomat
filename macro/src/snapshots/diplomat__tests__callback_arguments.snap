@@ -43,7 +43,7 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Wrapper_test_multi_arg_callback(
-        f: diplomat_runtime::support::DiplomatCallback<i32>,
+        f: diplomat_runtime::support::Callback<i32>,
         x: i32,
     ) -> i32 {
         let f = move |arg0: i32| unsafe {
@@ -58,7 +58,7 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Wrapper_test_multiarg_void_callback(
-        f: diplomat_runtime::support::DiplomatCallback<()>,
+        f: diplomat_runtime::support::Callback<()>,
     ) {
         let f = move |arg0: i32, arg1: &str| unsafe {
             let arg1: diplomat_runtime::DiplomatUtf8StrSlice = arg1.into();
@@ -77,9 +77,7 @@ mod ffi {
     }
     #[no_mangle]
     #[allow(deprecated)]
-    extern "C" fn Wrapper_test_mod_array(
-        g: diplomat_runtime::support::DiplomatCallback<()>,
-    ) {
+    extern "C" fn Wrapper_test_mod_array(g: diplomat_runtime::support::Callback<()>) {
         let g = move |arg0: &[u8]| unsafe {
             let arg0: diplomat_runtime::DiplomatSlice<u8> = arg0.into();
             let _ = &g;
@@ -97,7 +95,7 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Wrapper_test_no_args(
-        h: diplomat_runtime::support::DiplomatCallback<()>,
+        h: diplomat_runtime::support::Callback<()>,
     ) -> i32 {
         let h = move || unsafe {
             let _ = &h;
@@ -112,7 +110,7 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Wrapper_test_cb_with_struct(
-        f: diplomat_runtime::support::DiplomatCallback<i32>,
+        f: diplomat_runtime::support::Callback<i32>,
     ) -> i32 {
         let f = move |arg0: TestingStruct| unsafe {
             let _ = &f;
@@ -126,8 +124,8 @@ mod ffi {
     #[no_mangle]
     #[allow(deprecated)]
     extern "C" fn Wrapper_test_multiple_cb_args(
-        f: diplomat_runtime::support::DiplomatCallback<i32>,
-        g: diplomat_runtime::support::DiplomatCallback<i32>,
+        f: diplomat_runtime::support::Callback<i32>,
+        g: diplomat_runtime::support::Callback<i32>,
     ) -> i32 {
         let f = move || unsafe {
             let _ = &f;

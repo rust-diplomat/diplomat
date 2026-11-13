@@ -1,7 +1,7 @@
 // ───────────────────────────────────────────────────────────────────────
 // WIP — .NET callback support is incomplete.
 //
-// This module sketches out the C#-side `DiplomatCallback_*` wire struct
+// This module sketches out the C#-side `Callback_*` wire struct
 // + delegate plumbing for `impl Fn` / `impl FnMut` bridge parameters,
 // but the implementation is unfinished. The backend's
 // `attr_support.callbacks` flag is currently set to `false`, so HIR
@@ -52,7 +52,7 @@ impl DotnetCallback {
         } else {
             input_context.rust_ident().to_string()
         };
-        let name = format!("DiplomatCallback_{method_abi_name}_{param_name}");
+        let name = format!("Callback_{method_abi_name}_{param_name}");
 
         Self {
             namespace,

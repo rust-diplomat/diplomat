@@ -7,11 +7,11 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 internal interface CallbackWrapperLib: Library {
-    fun CallbackWrapper_test_multi_arg_callback(f: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native, x: Int): Int
-    fun CallbackWrapper_test_no_args(h: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native): Int
-    fun CallbackWrapper_test_cb_with_struct(f: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native): Int
-    fun CallbackWrapper_test_multiple_cb_args(f: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native, g: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native): Int
-    fun CallbackWrapper_test_slice_cb_arg(arg: Slice, f: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native): Unit
+    fun CallbackWrapper_test_multi_arg_callback(f: Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native, x: Int): Int
+    fun CallbackWrapper_test_no_args(h: Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native): Int
+    fun CallbackWrapper_test_cb_with_struct(f: Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native): Int
+    fun CallbackWrapper_test_multiple_cb_args(f: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native, g: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native): Int
+    fun CallbackWrapper_test_slice_cb_arg(arg: Slice, f: Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native): Unit
 }
 
 internal class CallbackWrapperNative: Structure(), Structure.ByValue {
@@ -66,16 +66,16 @@ internal class OptionCallbackWrapperNative constructor(): Structure(), Structure
 }
 
 
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f
+        = object :  Runner_Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -96,42 +96,42 @@ internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomat
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {}
+internal class Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {
+internal class Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native::class.java).toLong()
 
-        fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
+        fun fromCallback(cb: (Int)->Int): Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
+            val callback: Runner_Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f = object :  Runner_Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     return cb(arg0);
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
+            return Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f(cb_wrap)
         }
     }
 }
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_no_args_diplomatCallback_h: Callback {
     fun invoke(lang_specific_context: Pointer?): Unit
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_no_args_diplomatCallback_h
+        = object :  Runner_Callback_CallbackWrapper_test_no_args_diplomatCallback_h {
                 override fun invoke(lang_specific_context: Pointer?): Unit {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -152,42 +152,42 @@ internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {}
+internal class Callback_CallbackWrapper_test_no_args_diplomatCallback_h_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {
+internal class Callback_CallbackWrapper_test_no_args_diplomatCallback_h internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native::class.java).toLong()
 
-        fun fromCallback(cb: ()->Unit): DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h = object :  Runner_DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h {
+        fun fromCallback(cb: ()->Unit): Callback_CallbackWrapper_test_no_args_diplomatCallback_h {
+            val callback: Runner_Callback_CallbackWrapper_test_no_args_diplomatCallback_h = object :  Runner_Callback_CallbackWrapper_test_no_args_diplomatCallback_h {
                 override fun invoke(lang_specific_context: Pointer?): Unit {
                     return cb();
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_no_args_diplomatCallback_h_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_no_args_diplomatCallback_h_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h(cb_wrap)
+            return Callback_CallbackWrapper_test_no_args_diplomatCallback_h(cb_wrap)
         }
     }
 }
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f
+        = object :  Runner_Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -208,42 +208,42 @@ internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCall
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {}
+internal class Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {
+internal class Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native::class.java).toLong()
 
-        fun fromCallback(cb: (CallbackTestingStruct)->Int): DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
+        fun fromCallback(cb: (CallbackTestingStruct)->Int): Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
+            val callback: Runner_Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f = object :  Runner_Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: CallbackTestingStructNative ): Int {
                     return cb(CallbackTestingStruct.fromNative(arg0));
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f(cb_wrap)
+            return Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f(cb_wrap)
         }
     }
 }
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f: Callback {
     fun invoke(lang_specific_context: Pointer?): Int
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f
+        = object :  Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -264,42 +264,42 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {}
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native::class.java).toLong()
 
-        fun fromCallback(cb: ()->Int): DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
+        fun fromCallback(cb: ()->Int): Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
+            val callback: Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f = object :  Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?): Int {
                     return cb();
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f(cb_wrap)
+            return Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f(cb_wrap)
         }
     }
 }
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g
+        = object :  Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -320,42 +320,42 @@ internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCa
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {}
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {
+internal class Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native::class.java).toLong()
 
-        fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g = object :  Runner_DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
+        fun fromCallback(cb: (Int)->Int): Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
+            val callback: Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g = object :  Runner_Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     return cb(arg0);
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g(cb_wrap)
+            return Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g(cb_wrap)
         }
     }
 }
-internal interface Runner_DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f: Callback {
+internal interface Runner_Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: Slice ): Unit
 }
 
-internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f
-        = object :  Runner_DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
+    internal var run_callback: Runner_Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f
+        = object :  Runner_Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Slice ): Unit {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -376,29 +376,29 @@ internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallba
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {}
+internal class Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder (
+    internal val nativeStruct: Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {}
 
-internal class DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {
+internal class Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f internal constructor (
+    internal val nativeStruct: Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native::class.java).toLong()
 
-        fun fromCallback(cb: (UByteArray)->Unit): DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
-            val callback: Runner_DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f = object :  Runner_DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
+        fun fromCallback(cb: (UByteArray)->Unit): Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
+            val callback: Runner_Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f = object :  Runner_Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Slice ): Unit {
                     return cb(PrimitiveArrayTools.getUByteArray(arg0));
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native()
+            val cb_wrap = Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder(cb_wrap)
+            val holder = Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f(cb_wrap)
+            return Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f(cb_wrap)
         }
     }
 }
@@ -419,28 +419,28 @@ class CallbackWrapper (var cantBeEmpty: Boolean) {
         
         fun testMultiArgCallback(f: (Int)->Int, x: Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_multi_arg_callback(DiplomatCallback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
+            val returnVal = lib.CallbackWrapper_test_multi_arg_callback(Callback_CallbackWrapper_test_multi_arg_callback_diplomatCallback_f.fromCallback(f).nativeStruct, x);
             return (returnVal)
         }
         @JvmStatic
         
         fun testNoArgs(h: ()->Unit): Int {
             
-            val returnVal = lib.CallbackWrapper_test_no_args(DiplomatCallback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_no_args(Callback_CallbackWrapper_test_no_args_diplomatCallback_h.fromCallback(h).nativeStruct);
             return (returnVal)
         }
         @JvmStatic
         
         fun testCbWithStruct(f: (CallbackTestingStruct)->Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_cb_with_struct(DiplomatCallback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f.fromCallback(f).nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_cb_with_struct(Callback_CallbackWrapper_test_cb_with_struct_diplomatCallback_f.fromCallback(f).nativeStruct);
             return (returnVal)
         }
         @JvmStatic
         
         fun testMultipleCbArgs(f: ()->Int, g: (Int)->Int): Int {
             
-            val returnVal = lib.CallbackWrapper_test_multiple_cb_args(DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f.fromCallback(f).nativeStruct, DiplomatCallback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g.fromCallback(g).nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_multiple_cb_args(Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_f.fromCallback(f).nativeStruct, Callback_CallbackWrapper_test_multiple_cb_args_diplomatCallback_g.fromCallback(g).nativeStruct);
             return (returnVal)
         }
         @JvmStatic
@@ -448,7 +448,7 @@ class CallbackWrapper (var cantBeEmpty: Boolean) {
         fun testSliceCbArg(arg: UByteArray, f: (UByteArray)->Unit): Unit {
             val argSliceMemory = PrimitiveArrayTools.borrow(arg)
             
-            val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSliceMemory.slice, DiplomatCallback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
+            val returnVal = lib.CallbackWrapper_test_slice_cb_arg(argSliceMemory.slice, Callback_CallbackWrapper_test_slice_cb_arg_diplomatCallback_f.fromCallback(f).nativeStruct);
             try {
                 
             } finally {

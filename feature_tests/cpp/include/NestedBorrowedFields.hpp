@@ -29,10 +29,10 @@ namespace capi {
 } // namespace
 
 inline somelib::diplomat::result<somelib::NestedBorrowedFields, somelib::diplomat::Utf8Error> somelib::NestedBorrowedFields::from_bar_and_foo_and_strings(const somelib::Bar& bar DIPLOMAT_LIFETIME_BOUND, const somelib::Foo& foo DIPLOMAT_LIFETIME_BOUND, std::u16string_view dstr16_x DIPLOMAT_LIFETIME_BOUND, std::u16string_view dstr16_z DIPLOMAT_LIFETIME_BOUND, std::string_view utf8_str_y DIPLOMAT_LIFETIME_BOUND, std::string_view utf8_str_z DIPLOMAT_LIFETIME_BOUND) {
-    if (!somelib::diplomat::capi::diplomat_is_str(utf8_str_y.data(), utf8_str_y.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(utf8_str_y.data(), utf8_str_y.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
-    if (!somelib::diplomat::capi::diplomat_is_str(utf8_str_z.data(), utf8_str_z.size())) {
+    if (!somelib::diplomat::capi::diplomat_is_utf8_str(utf8_str_z.data(), utf8_str_z.size())) {
     return somelib::diplomat::Err<somelib::diplomat::Utf8Error>();
   }
     auto result = somelib::capi::NestedBorrowedFields_from_bar_and_foo_and_strings(bar.AsFFI(),

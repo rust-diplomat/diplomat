@@ -18,15 +18,15 @@
 namespace somelib {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_CallbackHolder_new_fallible_func_result {union {int32_t ok; somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_CallbackHolder_new_fallible_func_result;
+    typedef struct Callback_CallbackHolder_new_fallible_func_result {union {int32_t ok; somelib::capi::FFIError err;}; bool is_ok;} Callback_CallbackHolder_new_fallible_func_result;
 
-    typedef struct DiplomatCallback_CallbackHolder_new_fallible_func {
+    typedef struct Callback_CallbackHolder_new_fallible_func {
         const void* data;
-        DiplomatCallback_CallbackHolder_new_fallible_func_result (*run_callback)(const void*, int32_t );
+        Callback_CallbackHolder_new_fallible_func_result (*run_callback)(const void*, int32_t );
         void (*destructor)(const void*);
-    } DiplomatCallback_CallbackHolder_new_fallible_func;
+    } Callback_CallbackHolder_new_fallible_func;
 
-    somelib::capi::CallbackHolder* CallbackHolder_new_fallible(DiplomatCallback_CallbackHolder_new_fallible_func func_cb_wrap);
+    somelib::capi::CallbackHolder* CallbackHolder_new_fallible(Callback_CallbackHolder_new_fallible_func func_cb_wrap);
 
     int32_t CallbackHolder_call(const somelib::capi::CallbackHolder* self, int32_t a);
 
@@ -37,7 +37,7 @@ namespace capi {
 } // namespace
 
 inline std::unique_ptr<somelib::CallbackHolder> somelib::CallbackHolder::new_fallible(std::function<somelib::diplomat::result<int32_t, somelib::FFIError>(int32_t)> func) {
-    auto result = somelib::capi::CallbackHolder_new_fallible({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).template c_run_callback_result<int32_t, somelib::FFIError, somelib::capi::DiplomatCallback_CallbackHolder_new_fallible_func_result>, somelib::diplomat::fn_traits(func).c_delete});
+    auto result = somelib::capi::CallbackHolder_new_fallible({new decltype(func)(std::move(func)), somelib::diplomat::fn_traits(func).template c_run_callback_result<int32_t, somelib::FFIError, somelib::capi::Callback_CallbackHolder_new_fallible_func_result>, somelib::diplomat::fn_traits(func).c_delete});
     return std::unique_ptr<somelib::CallbackHolder>(somelib::CallbackHolder::FromFFI(result));
 }
 

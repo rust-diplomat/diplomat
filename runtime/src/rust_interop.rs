@@ -10,7 +10,7 @@
 
 use crate::diplomat_buffer_write_create;
 use crate::diplomat_buffer_write_destroy;
-use crate::DiplomatAbiCompatible;
+use crate::support::AbiCompatibleForWrite;
 use crate::DiplomatWrite;
 use crate::DiplomatWriteGeneric;
 use alloc::vec::Vec;
@@ -69,7 +69,7 @@ impl Drop for RustWriteVec {
 }
 
 /// A [`DiplomatWriteGeneric<T>`] backed by a `Vec<T>`, for convenient use in Rust.
-pub struct RustWriteVecGeneric<T: DiplomatAbiCompatible> {
+pub struct RustWriteVecGeneric<T: AbiCompatibleForWrite> {
     // Safety invariant: `inner.raw`'s `buf`, `len`, and `cap` correspond to a valid
     // `Vec<T>` allocation with `len = inner.raw.len / size_of::<T>()` and
     // `cap = inner.raw.cap / size_of::<T>()`.
@@ -78,7 +78,7 @@ pub struct RustWriteVecGeneric<T: DiplomatAbiCompatible> {
 
 // Note: `this` must be `*mut DiplomatWrite` rather than `&mut DiplomatWrite` to match
 // the `extern "C" fn(*mut DiplomatWrite, usize) -> bool` signature of `DiplomatWrite::grow`.
-extern "C" fn grow_vec<T: DiplomatAbiCompatible>(
+extern "C" fn grow_vec<T: AbiCompatibleForWrite>(
     this: *mut DiplomatWrite,
     new_cap_bytes: usize,
 ) -> bool {
@@ -104,7 +104,7 @@ extern "C" fn grow_vec<T: DiplomatAbiCompatible>(
     true
 }
 
-impl<T: DiplomatAbiCompatible> RustWriteVecGeneric<T> {
+impl<T: AbiCompatibleForWrite> RustWriteVecGeneric<T> {
     /// Creates a new [`RustWriteVecGeneric`] with the given initial element capacity.
     pub fn with_capacity(cap: usize) -> Self {
         extern "C" fn flush(_: *mut DiplomatWrite) {}
@@ -162,13 +162,13 @@ impl<T: DiplomatAbiCompatible> RustWriteVecGeneric<T> {
     }
 }
 
-impl<T: DiplomatAbiCompatible> Borrow<DiplomatWriteGeneric<T>> for RustWriteVecGeneric<T> {
+impl<T: AbiCompatibleForWrite> Borrow<DiplomatWriteGeneric<T>> for RustWriteVecGeneric<T> {
     fn borrow(&self) -> &DiplomatWriteGeneric<T> {
         self.borrow()
     }
 }
 
-impl<T: DiplomatAbiCompatible> Drop for RustWriteVecGeneric<T> {
+impl<T: AbiCompatibleForWrite> Drop for RustWriteVecGeneric<T> {
     fn drop(&mut self) {
         let elem_size = core::mem::size_of::<T>();
         let len_elems = self.inner.raw.len.checked_div(elem_size).unwrap_or(0);

@@ -28,7 +28,7 @@ use core::{fmt, ptr};
 /// Instances of [`DiplomatWrite`] can be created from multiple different sources.
 /// There are two constructors available in `diplomat_runtime`:
 ///
-/// 1. [`diplomat_simple_write()`] to write to a fixed-size buffer.
+/// 1. [`diplomat_array_write_create()`] to write to a fixed-size buffer.
 /// 2. [`diplomat_buffer_write_create()`] to write to a Vec allocated by Rust.
 ///    A wrapper is provided: [`RustWriteVec`](crate::rust_interop::RustWriteVec).
 ///
@@ -53,7 +53,7 @@ use core::{fmt, ptr};
 ///
 /// Diplomat backends guarantee they will only ever hand the same type of `DiplomatWrite` object to Rust
 /// code; this is only something you need to worry about if using [`RustWriteVec`](crate::rust_interop::RustWriteVec),
-/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_simple_write`.
+/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_array_write_create`.
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
@@ -64,8 +64,7 @@ use core::{fmt, ptr};
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size.
 ///  - If grow_failed is true all safety invariants on buf/cap/len MUST still hold.
-///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
-///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
+///  - `DiplomatWrite::flush()` must be idempotent: it must be safe to call multiple times.
 #[repr(C)]
 pub struct DiplomatWrite {
     /// Context pointer for additional data needed by `grow()` and `flush()`. May be `null`.
@@ -100,14 +99,24 @@ pub struct DiplomatWrite {
 }
 
 impl DiplomatWrite {
-    /// Call this function before releasing the buffer to C
-    pub fn flush(&mut self) {
+    /// Internal function called before releasing this buffer to C
+    ///
+    /// This is safe to call, but you should not ever need to.
+    pub fn internal_flush(&mut self) {
         (self.flush)(self);
     }
 
-    /// Returns a pointer to the buffer's bytes.
+    // TODO(#958) remove this before 1.0
+    #[doc(hidden)]
+    #[deprecated(note = "use internal_flush instead")]
+    pub fn flush(&mut self) {
+        self.internal_flush();
+    }
+
+    /// Returns a pointer to the bytes written so far.
     ///
-    /// If growth has failed, this returns what has been written so far.
+    /// If growth has failed, this will continue to return the same bytes that have
+    /// been written so far, even though the writeable may appear unwritten on the FFI side.
     pub fn as_bytes(&self) -> &[u8] {
         if self.buf.is_null() {
             return &[];
@@ -159,7 +168,10 @@ impl fmt::Write for DiplomatWrite {
 ///
 ///  - `buf` must be a valid pointer to a region of memory that can hold at `buf_size` bytes
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) -> DiplomatWrite {
+pub unsafe extern "C" fn diplomat_array_write_create(
+    buf: *mut u8,
+    buf_size: usize,
+) -> DiplomatWrite {
     extern "C" fn grow(_this: *mut DiplomatWrite, _cap: usize) -> bool {
         false
     }
@@ -299,7 +311,7 @@ mod sealed {
 // - Have a fixed, shared layout across the FFI boundary.
 // - Contain no pointers, references, or custom `Drop` glue.
 #[expect(clippy::missing_safety_doc, reason = "sealed trait")]
-pub unsafe trait DiplomatAbiCompatible: Copy + sealed::Sealed {}
+pub unsafe trait AbiCompatibleForWrite: Copy + sealed::Sealed {}
 
 macro_rules! impl_abi_compatible {
     ($($ty:ty),* $(,)?) => {
@@ -307,7 +319,7 @@ macro_rules! impl_abi_compatible {
             impl sealed::Sealed for $ty {}
             // SAFETY: Scalar primitives are Copy, POD, have no pointers or Drop glue,
             // and share a fixed C ABI layout across FFI.
-            unsafe impl DiplomatAbiCompatible for $ty {}
+            unsafe impl AbiCompatibleForWrite for $ty {}
         )*
     };
 }
@@ -316,14 +328,14 @@ impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, us
 
 /// An object that can write a sequence of primitive values of type `T` across FFI.
 ///
-/// `T` must be [`DiplomatAbiCompatible`], which is currently all scalar primitives except `bool`,
+/// `T` must be [`AbiCompatibleForWrite`], which is currently all scalar primitives except `bool`,
 /// but will likely be expanded in the future to support a subset of
 /// structs and potentially references ([#900](https://github.com/rust-diplomat/diplomat/issues/900)).
 ///
 /// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
 /// writing slices, and extending from iterators.
 #[repr(transparent)]
-pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
+pub struct DiplomatWriteGeneric<T: AbiCompatibleForWrite> {
     /// # Safety invariants
     /// - All safety invariants of [`DiplomatWrite`] hold on `self.raw`.
     /// - `self.raw.len` and `self.raw.cap` are measured in bytes, and `self.raw.len` is always
@@ -334,7 +346,7 @@ pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
     pub(crate) _marker: core::marker::PhantomData<T>,
 }
 
-impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
+impl<T: AbiCompatibleForWrite> DiplomatWriteGeneric<T> {
     /// Pushes a single element into the buffer.
     #[inline]
     pub fn push(&mut self, val: T) {
@@ -472,7 +484,8 @@ impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
 
     /// Returns a slice of the elements written so far if the underlying buffer is aligned for `T`.
     ///
-    /// If growth has failed, this returns what has been written so far.
+    /// If growth has failed, this will continue to return the same elements that have
+    /// been written so far, even though the writeable may appear unwritten on the FFI side.
     pub fn as_slice(&self) -> &[T] {
         if self.raw.buf.is_null() || self.raw.len == 0 {
             return &[];
@@ -494,13 +507,22 @@ impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
         unsafe { core::slice::from_raw_parts(self.raw.buf as *const T, count) }
     }
 
-    /// Call this function before releasing the buffer to C.
+    /// Internal function called before releasing this buffer to C
+    ///
+    /// This is safe to call, but you should not ever need to.
+    pub fn internal_flush(&mut self) {
+        self.raw.internal_flush();
+    }
+
+    // TODO(#958) remove this before 1.0
+    #[doc(hidden)]
+    #[deprecated(note = "use internal_flush instead")]
     pub fn flush(&mut self) {
-        self.raw.flush();
+        self.internal_flush();
     }
 }
 
-impl<T: DiplomatAbiCompatible> Extend<T> for DiplomatWriteGeneric<T> {
+impl<T: AbiCompatibleForWrite> Extend<T> for DiplomatWriteGeneric<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         DiplomatWriteGeneric::extend(self, iter);
     }

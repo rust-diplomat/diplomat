@@ -14,7 +14,7 @@ use jni::{
 /// This is largely used internally by the Diplomat macro, and should not need to be constructed
 /// manually outside of that context
 #[repr(C)]
-pub struct DiplomatCallback<ReturnType> {
+pub struct Callback<ReturnType> {
     /// Any data required to run the callback; e.g. a pointer to the
     /// callback wrapper object in the foreign runtime + the runtime itself
     pub data: *mut c_void,
@@ -30,7 +30,7 @@ pub struct DiplomatCallback<ReturnType> {
     pub destructor: Option<unsafe extern "C" fn(*mut c_void)>,
 }
 
-impl<ReturnType> Drop for DiplomatCallback<ReturnType> {
+impl<ReturnType> Drop for Callback<ReturnType> {
     fn drop(&mut self) {
         if let Some(destructor) = self.destructor {
             unsafe {
