@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ca29546b.js";
+            window.path_to_searchindex_js = "searchindex-93a05e38.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-548185b0.js"></script>
@@ -2299,7 +2299,7 @@ to see what is necessary. Documentation for more backends will be added in the f
 } DiplomatWrite;
 </code></pre>
 <p>The C bindings expose the default implementation through the functions:</p>
-<pre><code class="language-c">DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+<pre><code class="language-c">DiplomatWrite diplomat_array_write_create(char* buf, size_t buf_size);
 
 DiplomatWrite* diplomat_buffer_write_create(size_t cap);
 char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);
@@ -2324,13 +2324,13 @@ typedef struct TraitName_VTable {
 <p>The VTable contains all of the pointers to the functions which implement the trait. <code>destructor</code> should be the destructor for <code>void* data</code>. <code>SIZE</code> and <code>ALIGNMENT</code> represent the size and the alignment of the <code>void* data</code> pointer.</p>
 <h3 id="callbacks-1"><a class="header" href="#callbacks-1">Callbacks</a></h3>
 <p>Callback arguments generate a struct:</p>
-<pre><code class="language-c">typedef struct DiplomatCallback_FunctionName_ParameterName {
+<pre><code class="language-c">typedef struct Callback_FunctionName_ParameterName {
     const void* data;
     void (*run_callback)(const void*, /*...*/);
     void (*destructor)(const void*);
-} DiplomatCallback_FunctionName_ParameterName;
+} Callback_FunctionName_ParameterName;
 </code></pre>
-<p><code>data</code> represents the pointer to the <code>DiplomatCallback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).</p>
+<p><code>data</code> represents the pointer to the <code>Callback_FunctionName_ParameterName</code> struct in C. <code>run_callback</code> is a pointer to the C function that implements the callback, and <code>destructor</code> is a pointer to the destructor for <code>data</code>. <code>destructor</code> and <code>data</code> can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).</p>
 <h2 id="supports"><a class="header" href="#supports">Supports</a></h2>
 <ul>
 <li>
