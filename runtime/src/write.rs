@@ -8,6 +8,29 @@ use core::{fmt, ptr};
 /// This allows the C API to write to arbitrary kinds of objects, for example a
 /// C++ std::string or a char buffer.
 ///
+/// # Examples
+///
+/// Pass `&mut DiplomatWrite` as the final parameter of a `#[diplomat::bridge]`
+/// method returning `()`, `Result<(), E>`, or `Option<()>`. Backends expose this
+/// as a method returning the target language's native string type:
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     # use core::fmt::Write;
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn to_string(&self, write: &mut DiplomatWrite) {
+///             let _ = write!(write, "hello");
+///         }
+///     }
+/// }
+/// ```
+///
+/// # C ABI Usage
+///
 /// The way to use this object is to fill out the `buf`, `len`, `cap` fields with
 /// appropriate values for the buffer, its current length, and its current capacity,
 /// and `flush` and `grow` with appropriate callbacks (using `context` to reference any
@@ -334,6 +357,23 @@ impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, us
 ///
 /// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
 /// writing slices, and extending from iterators.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo(Vec<f64>);
+///
+///     impl Foo {
+///         #[diplomat::cfg(supports = generic_writeables)]
+///         pub fn write_values(&self, write: &mut DiplomatWriteGeneric<f64>) {
+///             write.write_slice(&self.0);
+///         }
+///     }
+/// }
+/// ```
 #[repr(transparent)]
 pub struct DiplomatWriteGeneric<T: AbiCompatibleForWrite> {
     /// # Safety invariants
@@ -533,6 +573,24 @@ impl<T: AbiCompatibleForWrite> Extend<T> for DiplomatWriteGeneric<T> {
 /// Over FFI, this acts just like [`DiplomatWrite`], except that the underlying
 /// buffer contains `u16` code units and is converted into a string by backends
 /// that support `utf16_writeables`.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         #[diplomat::cfg(supports = utf16_writeables)]
+///         pub fn to_string16(&self, write: &mut DiplomatWrite16) {
+///             write.write_slice(&[0x0048, 0x0069]); // "Hi"
+///             write.write_char_as_utf16('!');
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatWrite16 = DiplomatWriteGeneric<u16>;
 
 impl DiplomatWriteGeneric<u16> {
