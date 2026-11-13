@@ -402,6 +402,7 @@ dependencies = [
 name = "diplomat-runtime"
 version = "0.16.1"
 dependencies = [
+ "diplomat",
  "jni",
  "log",
 ]

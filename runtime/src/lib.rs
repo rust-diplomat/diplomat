@@ -17,12 +17,17 @@
 //!    - Unvalidated stringy DSTs: [`DiplomatStr`] (`[u8]`), [`DiplomatStr16`] (`[u16]`), for convenient use with `&` and `Box` as function parameters.
 //! - **String output**: [`DiplomatWrite`] and [`DiplomatWrite16`]
 //! - **Primitive buffer output**: [`DiplomatWriteGeneric<T>`]
-//! - **Callbacks**: [`Callback<ReturnType>`] (FFI-safe callback handle).
+//! - **Callbacks**: [`support::Callback<ReturnType>`] (FFI-safe callback handle).
 //! - **Scalars**: [`DiplomatChar`] (`u32`) and [`DiplomatByte`] (`u8`).
 //!
 //! Note that many of these are type aliases; using these types instead of the type alias signals that Diplomat is expected to
 //! generate the equivalent type on the other side. For example, using `DiplomatChar` will signal that a language's `char` type is
 //! to be used, even if the actual type seen by rust is an unvalidated `u32`.
+//!
+//! In `#[diplomat::bridge]` function signatures, standard Rust types ([`Result<T, E>`], [`Option<T>`],
+//! `&[T]`, `&mut [T]`, `Box<[T]>`, `&str`, and `Box<str>`) suffice: Diplomat will automatically
+//! convert them to their FFI-safe `diplomat_runtime` equivalents. The `Diplomat*` slice and option
+//! types only need to be written explicitly when used inside Diplomat structs (or in slices of strings).
 //!
 //! # Features
 //!
@@ -121,40 +126,126 @@ pub mod rust_interop;
 
 /// Like [`char`], but unvalidated.
 ///
-/// This type will usually map to some character type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// Rust's [`char`] has validity invariants (it must be a valid Unicode scalar value)
+/// that are not safe to assume across FFI. Diplomat users can use `DiplomatChar` (`u32`)
+/// to avoid validation overhead across FFI while still mapping to a character type in
+/// the target language.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn print_char(ch: DiplomatChar) {
+///             println!("{:?}", char::from_u32(ch));
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatChar = u32;
 
 /// Like [`str`], but unvalidated.
 ///
-/// This is a dynamically sized type, it should be used behind an `&` or a `Box<T>`
+/// This is a dynamically sized type (`[u8]`) meant to be used behind `&` or `Box<T>`
+/// in `#[diplomat::bridge]` function inputs (`&DiplomatStr` or `Box<DiplomatStr>`).
+/// It maps to the target language's string type without requiring UTF-8 validation
+/// (if validated UTF-8 is acceptable, standard `&str` or `Box<str>` suffices).
 ///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// Because `&DiplomatStr` is not `repr(C)`, it cannot be placed directly in a
+/// Diplomat struct; use [`DiplomatStrSlice`] in structs (or in slices of strings)
+/// instead.
 ///
-/// [`DiplomatStrSlice`] is equivalent to `&DiplomatStr`: both are provided since
-/// `&DiplomatStr` is more convenient but not allowed in Diplomat structs (since it
-/// is not directly FFI safe). Instead, this type can be conveniently used in function
-/// parameter lists.
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn print(text: &DiplomatStr) {
+///             println!("{text:?}");
+///         }
+///     }
+///
+///     // In structs, use `DiplomatStrSlice`:
+///     pub struct MyStruct<'a> {
+///         pub text: DiplomatStrSlice<'a>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{:?}", &*self.text);
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatStr = [u8];
 
 /// Like `Wstr`, but unvalidated.
 ///
-/// This is a dynamically sized type, it should be used behind an `&` or a `Box<T>`
+/// This is a dynamically sized type (`[u16]`) meant to be used behind `&` or `Box<T>`
+/// in `#[diplomat::bridge]` function inputs (`&DiplomatStr16` or `Box<DiplomatStr16>`).
+/// It maps to the target language's string type without requiring UTF-16 validation.
 ///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// Because `&DiplomatStr16` is not `repr(C)`, it cannot be placed directly in a
+/// Diplomat struct; use [`DiplomatStr16Slice`] in structs (or in slices of strings)
+/// instead.
 ///
-/// [`DiplomatStr16Slice`] is equivalent to `&DiplomatStr16`: both are provided since
-/// `&DiplomatStr16` is more convenient but not allowed in Diplomat structs (since it
-/// is not directly FFI safe). Instead, this type can be conveniently used in function
-/// parameter lists.
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn print(text: &DiplomatStr16) {
+///             println!("{text:?}");
+///         }
+///     }
+///
+///     // In structs, use `DiplomatStr16Slice`:
+///     pub struct MyStruct<'a> {
+///         pub text: DiplomatStr16Slice<'a>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{:?}", &*self.text);
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatStr16 = [u16];
 
 /// Like [`u8`], but interpreted explicitly as a raw byte as opposed to a numerical value.
 ///
 /// This matters for languages like JavaScript or Dart, where there's only a single numeric
-/// type, but special types for byte buffers.
+/// type, but special types for byte buffers. When a regular numerical 8-bit integer
+/// suffices, use standard [`u8`] instead.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn print_bytes(bytes: &[DiplomatByte]) {
+///             println!("{bytes:?}");
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatByte = u8;
 
 /// 🔌 \[C API\] Allocates a buffer of a given size in Rust's memory.

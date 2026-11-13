@@ -4,7 +4,37 @@ use core::mem::ManuallyDrop;
 use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
 
-/// This is equivalent to `&[T]`, except it has a stable `repr(C)` layout
+/// This is equivalent to `&[T]`, except it has a stable `repr(C)` layout.
+///
+/// In `#[diplomat::bridge]` function signatures, prefer using standard `&[T]` instead.
+/// Use `DiplomatSlice<'a, T>` explicitly when storing a slice inside a Diplomat struct.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct<'a> {
+///         pub data: DiplomatSlice<'a, u8>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{:?}", &*self.data);
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function signatures, prefer `&[T]`:
+///         pub fn print(data: &[u8]) {
+///             println!("{data:?}");
+///         }
+///     }
+/// }
+/// ```
 #[repr(C)]
 pub struct DiplomatSlice<'a, T> {
     // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation. It may be null if len is null
@@ -54,7 +84,37 @@ impl<T> Deref for DiplomatSlice<'_, T> {
     }
 }
 
-/// This is equivalent to `&mut [T]`, except it has a stable repr(C) layout
+/// This is equivalent to `&mut [T]`, except it has a stable `repr(C)` layout.
+///
+/// In `#[diplomat::bridge]` function signatures, prefer using standard `&mut [T]` instead.
+/// Use `DiplomatSliceMut<'a, T>` explicitly when storing a mutable slice inside a Diplomat struct.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct<'a> {
+///         pub data: DiplomatSliceMut<'a, u8>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn fill_zeros(mut self) {
+///             self.data.fill(0);
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function signatures, prefer `&mut [T]`:
+///         pub fn fill_zeros(data: &mut [u8]) {
+///             data.fill(0);
+///         }
+///     }
+/// }
+/// ```
 #[repr(C)]
 pub struct DiplomatSliceMut<'a, T> {
     // Invariant: ptr is a valid ptr to the beginning of an &[T] allocation.  It may be null if len is null
@@ -117,11 +177,40 @@ impl<T> DerefMut for DiplomatSliceMut<'_, T> {
     }
 }
 
-/// This is equivalent to `Box<[T]>`.
+/// This is equivalent to `Box<[T]>`, except it has a stable `repr(C)` layout.
 ///
-/// By and large, this is useful when a backend like JS or Dart needs to allocate
-/// a new slice in Rust memory to pass data around *anyway*, so we can avoid wasting
-/// allocations by reusing them in Rust.
+/// This type is intended to be accepted as an input argument in Diplomat functions
+/// when a garbage-collected backend like JS or Dart needs to allocate a new slice
+/// in Rust memory to pass data across FFI *anyway*, so Rust can take ownership of
+/// that allocation instead of copying it again. (For backends that share memory like
+/// C or C++, accepting a borrowed `&[T]` suffices.)
+///
+/// In `#[diplomat::bridge]` function inputs, standard `Box<[T]>` suffices and should
+/// be preferred. Owned slices cannot currently be used in Diplomat structs.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // Preferred: use `Box<[T]>` in function inputs
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept(data: Box<[u8]>) {
+///             println!("{data:?}");
+///         }
+///
+///         // Equivalent without sugar:
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept_explicit(data: DiplomatOwnedSlice<u8>) {
+///             println!("{:?}", &*data);
+///         }
+///     }
+/// }
+/// ```
 #[repr(C)]
 pub struct DiplomatOwnedSlice<T> {
     // Invariant: ptr is a valid ptr to the beginning of an owned Box<[T]> allocation.  It may be null if len is null
@@ -194,7 +283,39 @@ impl<T> DerefMut for DiplomatOwnedSlice<T> {
     }
 }
 
-/// This is equivalent to `&str`, except it has a stable `repr(C)` layout
+/// This is equivalent to `&str`, except it has a stable `repr(C)` layout.
+///
+/// In `#[diplomat::bridge]` function signatures, prefer using `&str` instead (or
+/// [`&DiplomatStr`](crate::DiplomatStr) if UTF-8 validation is not required).
+/// Use `DiplomatUtf8StrSlice<'a>` explicitly when storing a validated UTF-8 string
+/// slice inside a Diplomat struct, or as the element type of `&[DiplomatUtf8StrSlice]`.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct<'a> {
+///         pub text: DiplomatUtf8StrSlice<'a>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{}", &*self.text);
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function signatures, prefer `&str`:
+///         pub fn print(text: &str) {
+///             println!("{text}");
+///         }
+///     }
+/// }
+/// ```
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
 #[derive(Copy, Clone)]
@@ -223,7 +344,40 @@ impl Deref for DiplomatUtf8StrSlice<'_> {
     }
 }
 
-/// This is equivalent to `Box<str>`, except it has a stable `repr(C)` layout
+/// This is equivalent to `Box<str>`, except it has a stable `repr(C)` layout.
+///
+/// This type is intended to be accepted as an input argument in Diplomat functions
+/// when a garbage-collected backend like JS or Dart needs to allocate a new buffer
+/// in Rust memory to pass a string across FFI *anyway*, so Rust can take ownership
+/// of that allocation instead of copying it again. (When an owned allocation is not
+/// needed, accepting a borrowed `&str` suffices.)
+///
+/// In `#[diplomat::bridge]` function inputs, standard `Box<str>` suffices and should
+/// be preferred. Owned string slices cannot currently be used in Diplomat structs.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // Preferred: use `Box<str>` in function inputs
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept(text: Box<str>) {
+///             println!("{text}");
+///         }
+///
+///         // Equivalent without sugar:
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept_explicit(text: DiplomatOwnedUtf8StrSlice) {
+///             println!("{}", &*text);
+///         }
+///     }
+/// }
+/// ```
 // Safety invariant: contained slice must be valid UTF-8
 #[repr(transparent)]
 pub struct DiplomatOwnedUtf8StrSlice(DiplomatOwnedSlice<u8>);
@@ -269,35 +423,151 @@ impl Deref for DiplomatOwnedUtf8StrSlice {
     }
 }
 
-/// This is like `&str`, but unvalidated and safe to use over FFI
+/// This is like `&str`, but unvalidated and safe to use over FFI.
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
 ///
-/// Using this type on a function signature is equivalent to using `&DiplomatStr`,
-/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
+/// In `#[diplomat::bridge]` function inputs, prefer using [`&DiplomatStr`](crate::DiplomatStr)
+/// instead (or standard `&str` if UTF-8 validation is acceptable). Use `DiplomatStrSlice<'a>`
+/// explicitly when storing an unvalidated UTF-8 string slice inside a Diplomat struct, or as
+/// the element type of `&[DiplomatStrSlice]`.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct<'a> {
+///         pub text: DiplomatStrSlice<'a>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{:?}", &*self.text);
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function inputs, prefer `&DiplomatStr`:
+///         pub fn print(text: &DiplomatStr) {
+///             println!("{text:?}");
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatStrSlice<'a> = DiplomatSlice<'a, u8>;
-/// This is like `Box<str>`, but unvalidated and safe to use over FFI
+
+/// This is like `Box<str>`, but unvalidated and safe to use over FFI.
 ///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// This type is intended to be accepted as an input argument in Diplomat functions
+/// when a garbage-collected backend like JS or Dart needs to allocate a new buffer
+/// in Rust memory to pass a string across FFI *anyway*, so Rust can take ownership
+/// of that allocation instead of copying it again. (When an owned allocation is not
+/// needed, accepting [`&DiplomatStr`](crate::DiplomatStr) or `&str` suffices.)
 ///
-/// Using this type on a function signature is equivalent to using `Box<DiplomatStr>`,
-/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
+/// In `#[diplomat::bridge]` function inputs, [`Box<DiplomatStr>`](crate::DiplomatStr)
+/// suffices and should be preferred. Owned string slices cannot currently be used in
+/// Diplomat structs.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // Preferred: use `Box<DiplomatStr>` in function inputs
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept(text: Box<DiplomatStr>) {
+///             println!("{text:?}");
+///         }
+///
+///         // Equivalent without sugar:
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept_explicit(text: DiplomatOwnedStrSlice) {
+///             println!("{:?}", &*text);
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatOwnedStrSlice = DiplomatOwnedSlice<u8>;
-/// An unvalidated UTF-16 string that is safe to use over FFI
+
+/// An unvalidated UTF-16 string that is safe to use over FFI.
 ///
 /// This type will usually map to some string type in the target language, and
 /// you will not need to worry about the safety of mismatched string invariants.
 ///
-/// Using this type on a function signature is equivalent to using `&DiplomatStr16`,
-/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
+/// In `#[diplomat::bridge]` function inputs, prefer using [`&DiplomatStr16`](crate::DiplomatStr16)
+/// instead. Use `DiplomatStr16Slice<'a>` explicitly when storing an unvalidated UTF-16 string
+/// slice inside a Diplomat struct, or as the element type of `&[DiplomatStr16Slice]`.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct<'a> {
+///         pub text: DiplomatStr16Slice<'a>,
+///     }
+///
+///     impl<'a> MyStruct<'a> {
+///         pub fn print(self) {
+///             println!("{:?}", &*self.text);
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function inputs, prefer `&DiplomatStr16`:
+///         pub fn print(text: &DiplomatStr16) {
+///             println!("{text:?}");
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatStr16Slice<'a> = DiplomatSlice<'a, u16>;
-/// An unvalidated, owned UTF-16 string that is safe to use over FFI
+
+/// An unvalidated, owned UTF-16 string that is safe to use over FFI.
 ///
-/// This type will usually map to some string type in the target language, and
-/// you will not need to worry about the safety of mismatched string invariants.
+/// This type is intended to be accepted as an input argument in Diplomat functions
+/// when a garbage-collected backend like JS or Dart needs to allocate a new buffer
+/// in Rust memory to pass a UTF-16 string across FFI *anyway*, so Rust can take
+/// ownership of that allocation instead of copying it again. (When an owned allocation
+/// is not needed, accepting [`&DiplomatStr16`](crate::DiplomatStr16) suffices.)
 ///
-/// Using this type on a function signature is equivalent to using `Box<DiplomatStr16>`,
-/// however this type is FFI-safe and therefore also allowed inside Diplomat structs.
+/// In `#[diplomat::bridge]` function inputs, [`Box<DiplomatStr16>`](crate::DiplomatStr16)
+/// suffices and should be preferred. Owned string slices cannot currently be used in
+/// Diplomat structs.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // Preferred: use `Box<DiplomatStr16>` in function inputs
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept(text: Box<DiplomatStr16>) {
+///             println!("{text:?}");
+///         }
+///
+///         // Equivalent without sugar:
+///         #[diplomat::cfg(supports = owned_slices)]
+///         pub fn accept_explicit(text: DiplomatOwnedStr16Slice) {
+///             println!("{:?}", &*text);
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatOwnedStr16Slice<'a> = DiplomatOwnedSlice<u16>;

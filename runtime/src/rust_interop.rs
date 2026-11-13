@@ -20,6 +20,29 @@ use core::mem::ManuallyDrop;
 use core::ptr;
 
 /// A [`DiplomatWrite`] backed by a `Vec`, for convenient use in Rust.
+///
+/// # Examples
+///
+/// ```rust
+/// # use diplomat_runtime::rust_interop::RustWriteVec;
+/// #[diplomat::bridge]
+/// mod ffi {
+///     # use core::fmt::Write;
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         pub fn greet(write: &mut DiplomatWrite) {
+///             let _ = write!(write, "Hello!");
+///         }
+///     }
+/// }
+///
+/// let mut buf = RustWriteVec::with_capacity(16);
+/// // SAFETY: `buf` is the only `DiplomatWrite` in scope and is not swapped.
+/// ffi::Foo::greet(unsafe { buf.borrow_mut() });
+/// assert_eq!(buf.borrow().as_bytes(), b"Hello!");
+/// ```
 pub struct RustWriteVec {
     /// Safety Invariant: must have been created by diplomat_buffer_write_create()
     ptr: *mut DiplomatWrite,
@@ -69,6 +92,29 @@ impl Drop for RustWriteVec {
 }
 
 /// A [`DiplomatWriteGeneric<T>`] backed by a `Vec<T>`, for convenient use in Rust.
+///
+/// # Examples
+///
+/// ```rust
+/// # use diplomat_runtime::rust_interop::RustWriteVecGeneric;
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         #[diplomat::cfg(supports = generic_writeables)]
+///         pub fn fill_numbers(write: &mut DiplomatWriteGeneric<u32>) {
+///             write.write_slice(&[1, 2, 3]);
+///         }
+///     }
+/// }
+///
+/// let mut buf = RustWriteVecGeneric::<u32>::with_capacity(4);
+/// // SAFETY: `buf` is the only `DiplomatWriteGeneric<u32>` in scope and is not swapped.
+/// ffi::Foo::fill_numbers(unsafe { buf.borrow_mut() });
+/// assert_eq!(buf.into_vec(), vec![1, 2, 3]);
+/// ```
 pub struct RustWriteVecGeneric<T: AbiCompatibleForWrite> {
     // Safety invariant: `inner.raw`'s `buf`, `len`, and `cap` correspond to a valid
     // `Vec<T>` allocation with `len = inner.raw.len / size_of::<T>()` and

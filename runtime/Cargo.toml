@@ -23,3 +23,7 @@ log = ["dep:log"]
 [dependencies]
 jni = { version  = "0.22", optional = true }
 log = { version = "0.4", optional = true }
+
+[dev-dependencies]
+diplomat = { workspace = true }
+

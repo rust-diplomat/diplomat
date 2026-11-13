@@ -10,6 +10,32 @@ union DiplomatResultValue<T, E> {
 /// A [`Result`]-like type that can be passed across the FFI boundary
 /// as a value. Used internally to return [`Result`]s and [`Option`]s
 /// from functions.
+///
+/// In `#[diplomat::bridge]` function signatures, prefer returning standard [`Result<T, E>`]
+/// instead; Diplomat will automatically convert it to `DiplomatResult<T, E>`. This type
+/// cannot be used in Diplomat structs.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // Preferred: use `Result<T, E>` in function signatures
+///         pub fn bar() -> Result<i32, ()> {
+///             Ok(42)
+///         }
+///
+///         // Equivalent without sugar:
+///         pub fn bar_explicit() -> DiplomatResult<i32, ()> {
+///             Ok(42).into()
+///         }
+///     }
+/// }
+/// ```
 #[repr(C)]
 pub struct DiplomatResult<T, E> {
     value: DiplomatResultValue<T, E>,
@@ -24,7 +50,42 @@ pub struct DiplomatResult<T, E> {
 /// A type to represent `Option<T>` over FFI.
 ///
 /// Used internally to handle `Option<T>` arguments and return types, and needs to be
-/// used explicitly for optional struct fields.
+/// used explicitly for optional struct fields of non-reference types (primitives, structs,
+/// enums, and slices).
+///
+/// In `#[diplomat::bridge]` function signatures (and for optional references to opaque types
+/// like `Option<&T>`), prefer using standard [`Option<T>`] instead.
+///
+/// # Examples
+///
+/// ```rust
+/// #[diplomat::bridge]
+/// mod ffi {
+///     pub struct MyStruct {
+///         pub field: DiplomatOption<i32>,
+///     }
+///
+///     impl MyStruct {
+///         pub fn print(self) {
+///             if let Some(val) = self.field.into_option() {
+///                 println!("{val}");
+///             }
+///         }
+///     }
+///
+///     #[diplomat::opaque]
+///     pub struct Foo;
+///
+///     impl Foo {
+///         // In function signatures, prefer `Option<T>`:
+///         pub fn print(val: Option<i32>) {
+///             if let Some(val) = val {
+///                 println!("{val}");
+///             }
+///         }
+///     }
+/// }
+/// ```
 pub type DiplomatOption<T> = DiplomatResult<T, ()>;
 
 impl<T, E> DiplomatResult<T, E> {
