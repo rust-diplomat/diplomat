@@ -40,7 +40,7 @@ mod wasm_glue;
 
 mod write;
 pub use write::{
-    diplomat_buffer_write_create, diplomat_buffer_write_destroy, diplomat_simple_write,
+    diplomat_array_write_create, diplomat_buffer_write_create, diplomat_buffer_write_destroy,
     DiplomatWrite, DiplomatWrite16, DiplomatWriteGeneric,
 };
 mod slices;
@@ -92,22 +92,24 @@ pub mod support {
     }
 }
 
-// TODO(#958) remove this before 1.0
-#[doc(hidden)]
-#[deprecated(note = "use support::Callback instead")]
-pub use support::Callback as DiplomatCallback;
-// TODO(#958) remove this before 1.0
-#[doc(hidden)]
-#[deprecated(note = "use support::AbiCompatibleForWrite instead")]
-pub use support::AbiCompatibleForWrite as DiplomatAbiCompatible;
-// TODO(#958) remove this before 1.0
-#[doc(hidden)]
-#[deprecated(note = "use support::diplomat_owned_slice_u8_destroy instead")]
-pub use support::diplomat_owned_slice_u8_destroy;
-// TODO(#958) remove this before 1.0
+// TODO(#958) remove these before 1.0
 #[doc(hidden)]
 #[deprecated(note = "use support::diplomat_is_utf8_str instead")]
 pub use support::diplomat_is_utf8_str as diplomat_is_str;
+#[doc(hidden)]
+#[deprecated(note = "use support::diplomat_owned_slice_u8_destroy instead")]
+pub use support::diplomat_owned_slice_u8_destroy;
+#[doc(hidden)]
+#[deprecated(note = "use support::AbiCompatibleForWrite instead")]
+pub use support::AbiCompatibleForWrite as DiplomatAbiCompatible;
+#[doc(hidden)]
+#[deprecated(note = "use support::Callback instead")]
+pub use support::Callback as DiplomatCallback;
+#[doc(hidden)]
+#[deprecated(note = "use support::diplomat_array_write_create instead")]
+pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) -> DiplomatWrite {
+    diplomat_array_write_create(buf, buf_size)
+}
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};

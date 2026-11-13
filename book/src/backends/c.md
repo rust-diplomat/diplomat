@@ -137,7 +137,7 @@ typedef struct DiplomatWrite {
 The C bindings expose the default implementation through the functions:
 
 ```c
-DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+DiplomatWrite diplomat_array_write_create(char* buf, size_t buf_size);
 
 DiplomatWrite* diplomat_buffer_write_create(size_t cap);
 char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);

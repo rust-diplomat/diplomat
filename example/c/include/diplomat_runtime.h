@@ -72,7 +72,7 @@ MAKE_SLICES_AND_OPTIONS(String16, char16_t)
 MAKE_SLICES_AND_OPTIONS(Strings, DiplomatStringView)
 MAKE_SLICES_AND_OPTIONS(Strings16, DiplomatString16View)
 
-DiplomatWrite diplomat_simple_write(char* buf, size_t buf_size);
+DiplomatWrite diplomat_array_write_create(char* buf, size_t buf_size);
 
 DiplomatWrite* diplomat_buffer_write_create(size_t cap);
 char* diplomat_buffer_write_get_bytes(DiplomatWrite* t);

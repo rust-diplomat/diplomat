@@ -28,7 +28,7 @@ use core::{fmt, ptr};
 /// Instances of [`DiplomatWrite`] can be created from multiple different sources.
 /// There are two constructors available in `diplomat_runtime`:
 ///
-/// 1. [`diplomat_simple_write()`] to write to a fixed-size buffer.
+/// 1. [`diplomat_array_write_create()`] to write to a fixed-size buffer.
 /// 2. [`diplomat_buffer_write_create()`] to write to a Vec allocated by Rust.
 ///    A wrapper is provided: [`RustWriteVec`](crate::rust_interop::RustWriteVec).
 ///
@@ -53,7 +53,7 @@ use core::{fmt, ptr};
 ///
 /// Diplomat backends guarantee they will only ever hand the same type of `DiplomatWrite` object to Rust
 /// code; this is only something you need to worry about if using [`RustWriteVec`](crate::rust_interop::RustWriteVec),
-/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_simple_write`.
+/// or `DiplomatWrite` objects manually created in Rust via APIs like `diplomat_array_write_create`.
 ///
 /// # Safety invariants:
 ///  - `flush()` and `grow()` will be passed `self` including `context` and it should always be safe to do so.
@@ -159,7 +159,10 @@ impl fmt::Write for DiplomatWrite {
 ///
 ///  - `buf` must be a valid pointer to a region of memory that can hold at `buf_size` bytes
 #[no_mangle]
-pub unsafe extern "C" fn diplomat_simple_write(buf: *mut u8, buf_size: usize) -> DiplomatWrite {
+pub unsafe extern "C" fn diplomat_array_write_create(
+    buf: *mut u8,
+    buf_size: usize,
+) -> DiplomatWrite {
     extern "C" fn grow(_this: *mut DiplomatWrite, _cap: usize) -> bool {
         false
     }
