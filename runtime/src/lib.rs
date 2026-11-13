@@ -17,7 +17,7 @@
 //!    - Unvalidated stringy DSTs: [`DiplomatStr`] (`[u8]`), [`DiplomatStr16`] (`[u16]`), for convenient use with `&` and `Box` as function parameters.
 //! - **String output**: [`DiplomatWrite`] and [`DiplomatWrite16`]
 //! - **Primitive buffer output**: [`DiplomatWriteGeneric<T>`]
-//! - **Callbacks**: [`DiplomatCallback<ReturnType>`] (FFI-safe callback handle).
+//! - **Callbacks**: [`Callback<ReturnType>`] (FFI-safe callback handle).
 //! - **Scalars**: [`DiplomatChar`] (`u32`) and [`DiplomatByte`] (`u8`).
 //!
 //! Note that many of these are type aliases; using these types instead of the type alias signals that Diplomat is expected to
@@ -59,13 +59,13 @@ mod callback;
 ///
 /// Users should not need to reference these directly.
 pub mod support {
-    pub use crate::callback::DiplomatCallback;
+    pub use crate::callback::Callback;
 }
 
 // TODO(#958) remove this before 1.0
 #[doc(hidden)]
-#[deprecated(note = "use support::DiplomatCallback instead")]
-pub use support::DiplomatCallback;
+#[deprecated(note = "use support::Callback instead")]
+pub use support::Callback as DiplomatCallback;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};

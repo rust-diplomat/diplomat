@@ -17,13 +17,13 @@
 namespace somelib {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_MutableCallbackHolder_new_func {
+    typedef struct Callback_MutableCallbackHolder_new_func {
         const void* data;
         int32_t (*run_callback)(const void*, int32_t );
         void (*destructor)(const void*);
-    } DiplomatCallback_MutableCallbackHolder_new_func;
+    } Callback_MutableCallbackHolder_new_func;
 
-    somelib::capi::MutableCallbackHolder* MutableCallbackHolder_new(DiplomatCallback_MutableCallbackHolder_new_func func_cb_wrap);
+    somelib::capi::MutableCallbackHolder* MutableCallbackHolder_new(Callback_MutableCallbackHolder_new_func func_cb_wrap);
 
     int32_t MutableCallbackHolder_call(somelib::capi::MutableCallbackHolder* self, int32_t a);
 

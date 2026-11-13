@@ -20,19 +20,19 @@
 namespace somelib::ns {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result {union { somelib::capi::FFIError err;}; bool is_ok;} DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
+    typedef struct Callback_namespace_AttrOpaque1_test_namespaced_callback__t_result {union { somelib::capi::FFIError err;}; bool is_ok;} Callback_namespace_AttrOpaque1_test_namespaced_callback__t_result;
 
-    typedef struct DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t {
+    typedef struct Callback_namespace_AttrOpaque1_test_namespaced_callback__t {
         const void* data;
-        DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result (*run_callback)(const void*);
+        Callback_namespace_AttrOpaque1_test_namespaced_callback__t_result (*run_callback)(const void*);
         void (*destructor)(const void*);
-    } DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t;
+    } Callback_namespace_AttrOpaque1_test_namespaced_callback__t;
 
     somelib::ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new_overload(int32_t _i);
 
     somelib::ns::capi::AttrOpaque1Renamed* namespace_AttrOpaque1_new(void);
 
-    void namespace_AttrOpaque1_test_namespaced_callback(DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t _t_cb_wrap);
+    void namespace_AttrOpaque1_test_namespaced_callback(Callback_namespace_AttrOpaque1_test_namespaced_callback__t _t_cb_wrap);
 
     int32_t namespace_AttrOpaque1_mac_test(void);
 
@@ -63,7 +63,7 @@ inline std::unique_ptr<somelib::ns::AttrOpaque1Renamed> somelib::ns::AttrOpaque1
 }
 
 inline void somelib::ns::AttrOpaque1Renamed::test_namespaced_callback(std::function<somelib::diplomat::result<std::monostate, somelib::FFIError>()> _t) {
-    somelib::ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), somelib::diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, somelib::FFIError, somelib::ns::capi::DiplomatCallback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, somelib::diplomat::fn_traits(_t).c_delete});
+    somelib::ns::capi::namespace_AttrOpaque1_test_namespaced_callback({new decltype(_t)(std::move(_t)), somelib::diplomat::fn_traits(_t).template c_run_callback_result<std::monostate, somelib::FFIError, somelib::ns::capi::Callback_namespace_AttrOpaque1_test_namespaced_callback__t_result>, somelib::diplomat::fn_traits(_t).c_delete});
 }
 
 inline int32_t somelib::ns::AttrOpaque1Renamed::mac_test() {

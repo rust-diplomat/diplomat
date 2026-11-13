@@ -7,19 +7,19 @@ import com.sun.jna.Structure
 
 internal interface CallbackHolderLib: Library {
     fun CallbackHolder_destroy(handle: Pointer)
-    fun CallbackHolder_new(func: DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native): Pointer
+    fun CallbackHolder_new(func: Callback_CallbackHolder_new_diplomatCallback_func_Native): Pointer
     fun CallbackHolder_call(handle: Pointer, a: Int): Int
 }
-internal interface Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func: Callback {
+internal interface Runner_Callback_CallbackHolder_new_diplomatCallback_func: Callback {
     fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int
 }
 
-internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native: Structure(), Structure.ByValue {
+internal class Callback_CallbackHolder_new_diplomatCallback_func_Native: Structure(), Structure.ByValue {
     @JvmField
     internal var data_: Pointer = Pointer(0L);
     @JvmField
-    internal var run_callback: Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func
-        = object :  Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func {
+    internal var run_callback: Runner_Callback_CallbackHolder_new_diplomatCallback_func
+        = object :  Runner_Callback_CallbackHolder_new_diplomatCallback_func {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     throw Exception("Default callback runner -- should be replaced.")
                 }
@@ -40,29 +40,29 @@ internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native:
 // Explicit non-JNA struct wrapper to use as a GC hook; this will wrap the native callback
 // so that the global_ref construction is run on a real object instead of the JNA Structure
 // passed by-value to native code (which results in a null global_ref as it's not an address).
-internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func_holder (
-    internal val nativeStruct: DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native) {}
+internal class Callback_CallbackHolder_new_diplomatCallback_func_holder (
+    internal val nativeStruct: Callback_CallbackHolder_new_diplomatCallback_func_Native) {}
 
-internal class DiplomatCallback_CallbackHolder_new_diplomatCallback_func internal constructor (
-    internal val nativeStruct: DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native) {
+internal class Callback_CallbackHolder_new_diplomatCallback_func internal constructor (
+    internal val nativeStruct: Callback_CallbackHolder_new_diplomatCallback_func_Native) {
     val data_: Pointer = nativeStruct.data_
     val run_callback: Callback = nativeStruct.run_callback
     val destructor: Callback = nativeStruct.destructor
 
     companion object {
-        val NATIVESIZE: Long = Native.getNativeSize(DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native::class.java).toLong()
+        val NATIVESIZE: Long = Native.getNativeSize(Callback_CallbackHolder_new_diplomatCallback_func_Native::class.java).toLong()
 
-        fun fromCallback(cb: (Int)->Int): DiplomatCallback_CallbackHolder_new_diplomatCallback_func {
-            val callback: Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func = object :  Runner_DiplomatCallback_CallbackHolder_new_diplomatCallback_func {
+        fun fromCallback(cb: (Int)->Int): Callback_CallbackHolder_new_diplomatCallback_func {
+            val callback: Runner_Callback_CallbackHolder_new_diplomatCallback_func = object :  Runner_Callback_CallbackHolder_new_diplomatCallback_func {
                 override fun invoke(lang_specific_context: Pointer?, arg0: Int ): Int {
                     return cb(arg0);
                 }
             }
-            val cb_wrap = DiplomatCallback_CallbackHolder_new_diplomatCallback_func_Native()
+            val cb_wrap = Callback_CallbackHolder_new_diplomatCallback_func_Native()
             cb_wrap.run_callback = callback;
-            val holder = DiplomatCallback_CallbackHolder_new_diplomatCallback_func_holder(cb_wrap)
+            val holder = Callback_CallbackHolder_new_diplomatCallback_func_holder(cb_wrap)
             cb_wrap.data_ = DiplomatJVMRuntime.buildRustCookie(holder as Object);
-            return DiplomatCallback_CallbackHolder_new_diplomatCallback_func(cb_wrap)
+            return Callback_CallbackHolder_new_diplomatCallback_func(cb_wrap)
         }
     }
 }
@@ -98,7 +98,7 @@ class CallbackHolder internal constructor (
         
         fun new_(func: (Int)->Int): CallbackHolder {
             
-            val returnVal = lib.CallbackHolder_new(DiplomatCallback_CallbackHolder_new_diplomatCallback_func.fromCallback(func).nativeStruct);
+            val returnVal = lib.CallbackHolder_new(Callback_CallbackHolder_new_diplomatCallback_func.fromCallback(func).nativeStruct);
             val selfEdges: List<Any> = listOf()
             val handle = returnVal 
             val returnOpaque = CallbackHolder(handle, selfEdges, true)

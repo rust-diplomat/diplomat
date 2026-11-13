@@ -172,13 +172,13 @@ The VTable contains all of the pointers to the functions which implement the tra
 Callback arguments generate a struct:
 
 ```c
-typedef struct DiplomatCallback_FunctionName_ParameterName {
+typedef struct Callback_FunctionName_ParameterName {
     const void* data;
     void (*run_callback)(const void*, /*...*/);
     void (*destructor)(const void*);
-} DiplomatCallback_FunctionName_ParameterName;
+} Callback_FunctionName_ParameterName;
 ```
 
-`data` represents the pointer to the `DiplomatCallback_FunctionName_ParameterName` struct in C. `run_callback` is a pointer to the C function that implements the callback, and `destructor` is a pointer to the destructor for `data`. `destructor` and `data` can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).
+`data` represents the pointer to the `Callback_FunctionName_ParameterName` struct in C. `run_callback` is a pointer to the C function that implements the callback, and `destructor` is a pointer to the destructor for `data`. `destructor` and `data` can both be nullptrs if there is no data associated with the callback (i.e., if in C++ you are only passing in a function, not a function and a pointer).
 
 {{supports("c")}}

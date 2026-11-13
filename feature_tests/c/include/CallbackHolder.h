@@ -14,13 +14,13 @@
 
 
 
-typedef struct DiplomatCallback_CallbackHolder_new_func {
+typedef struct Callback_CallbackHolder_new_func {
     const void* data;
     int32_t (*run_callback)(const void*, int32_t );
     void (*destructor)(const void*);
-} DiplomatCallback_CallbackHolder_new_func;
+} Callback_CallbackHolder_new_func;
 
-CallbackHolder* CallbackHolder_new(DiplomatCallback_CallbackHolder_new_func func_cb_wrap);
+CallbackHolder* CallbackHolder_new(Callback_CallbackHolder_new_func func_cb_wrap);
 
 int32_t CallbackHolder_call(const CallbackHolder* self, int32_t a);
 

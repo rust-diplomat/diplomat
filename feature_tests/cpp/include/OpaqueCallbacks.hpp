@@ -18,34 +18,34 @@
 namespace somelib {
 namespace capi {
     extern "C" {
-    typedef struct DiplomatCallback_OpaqueCallbacks_ret_op_f {
+    typedef struct Callback_OpaqueCallbacks_ret_op_f {
         const void* data;
         const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
         void (*destructor)(const void*);
-    } DiplomatCallback_OpaqueCallbacks_ret_op_f;
-    typedef struct DiplomatCallback_OpaqueCallbacks_ctor_f {
+    } Callback_OpaqueCallbacks_ret_op_f;
+    typedef struct Callback_OpaqueCallbacks_ctor_f {
         const void* data;
         const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
         void (*destructor)(const void*);
-    } DiplomatCallback_OpaqueCallbacks_ctor_f;
-    typedef struct DiplomatCallback_OpaqueCallbacks_opaque_cb_self_cb {
+    } Callback_OpaqueCallbacks_ctor_f;
+    typedef struct Callback_OpaqueCallbacks_opaque_cb_self_cb {
         const void* data;
         const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
         void (*destructor)(const void*);
-    } DiplomatCallback_OpaqueCallbacks_opaque_cb_self_cb;
-    typedef struct DiplomatCallback_OpaqueCallbacks_opaque_cb_mut_self_cb {
+    } Callback_OpaqueCallbacks_opaque_cb_self_cb;
+    typedef struct Callback_OpaqueCallbacks_opaque_cb_mut_self_cb {
         const void* data;
         const somelib::capi::MyString* (*run_callback)(const void*, const somelib::capi::MyString* );
         void (*destructor)(const void*);
-    } DiplomatCallback_OpaqueCallbacks_opaque_cb_mut_self_cb;
+    } Callback_OpaqueCallbacks_opaque_cb_mut_self_cb;
 
-    const somelib::capi::MyString* OpaqueCallbacks_ret_op(DiplomatCallback_OpaqueCallbacks_ret_op_f f_cb_wrap, const somelib::capi::MyString* st);
+    const somelib::capi::MyString* OpaqueCallbacks_ret_op(Callback_OpaqueCallbacks_ret_op_f f_cb_wrap, const somelib::capi::MyString* st);
 
-    somelib::capi::OpaqueCallbacks* OpaqueCallbacks_ctor(DiplomatCallback_OpaqueCallbacks_ctor_f f_cb_wrap, const somelib::capi::MyString* st);
+    somelib::capi::OpaqueCallbacks* OpaqueCallbacks_ctor(Callback_OpaqueCallbacks_ctor_f f_cb_wrap, const somelib::capi::MyString* st);
 
-    const somelib::capi::MyString* OpaqueCallbacks_opaque_cb_self(const somelib::capi::OpaqueCallbacks* self, DiplomatCallback_OpaqueCallbacks_opaque_cb_self_cb cb_cb_wrap, const somelib::capi::MyString* st);
+    const somelib::capi::MyString* OpaqueCallbacks_opaque_cb_self(const somelib::capi::OpaqueCallbacks* self, Callback_OpaqueCallbacks_opaque_cb_self_cb cb_cb_wrap, const somelib::capi::MyString* st);
 
-    const somelib::capi::MyString* OpaqueCallbacks_opaque_cb_mut_self(somelib::capi::OpaqueCallbacks* self, DiplomatCallback_OpaqueCallbacks_opaque_cb_mut_self_cb cb_cb_wrap, const somelib::capi::MyString* st);
+    const somelib::capi::MyString* OpaqueCallbacks_opaque_cb_mut_self(somelib::capi::OpaqueCallbacks* self, Callback_OpaqueCallbacks_opaque_cb_mut_self_cb cb_cb_wrap, const somelib::capi::MyString* st);
 
     void OpaqueCallbacks_destroy(OpaqueCallbacks* self);
 
