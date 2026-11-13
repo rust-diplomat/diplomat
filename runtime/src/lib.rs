@@ -41,7 +41,7 @@ mod wasm_glue;
 mod write;
 pub use write::{
     diplomat_buffer_write_create, diplomat_buffer_write_destroy, diplomat_simple_write,
-    DiplomatAbiCompatible, DiplomatWrite, DiplomatWrite16, DiplomatWriteGeneric,
+    DiplomatWrite, DiplomatWrite16, DiplomatWriteGeneric,
 };
 mod slices;
 pub use slices::{
@@ -60,12 +60,17 @@ mod callback;
 /// Users should not need to reference these directly.
 pub mod support {
     pub use crate::callback::Callback;
+    pub use crate::write::AbiCompatibleForWrite;
 }
 
 // TODO(#958) remove this before 1.0
 #[doc(hidden)]
 #[deprecated(note = "use support::Callback instead")]
 pub use support::Callback as DiplomatCallback;
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use support::AbiCompatibleForWrite instead")]
+pub use support::AbiCompatibleForWrite as DiplomatAbiCompatible;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};

@@ -299,7 +299,7 @@ mod sealed {
 // - Have a fixed, shared layout across the FFI boundary.
 // - Contain no pointers, references, or custom `Drop` glue.
 #[expect(clippy::missing_safety_doc, reason = "sealed trait")]
-pub unsafe trait DiplomatAbiCompatible: Copy + sealed::Sealed {}
+pub unsafe trait AbiCompatibleForWrite: Copy + sealed::Sealed {}
 
 macro_rules! impl_abi_compatible {
     ($($ty:ty),* $(,)?) => {
@@ -307,7 +307,7 @@ macro_rules! impl_abi_compatible {
             impl sealed::Sealed for $ty {}
             // SAFETY: Scalar primitives are Copy, POD, have no pointers or Drop glue,
             // and share a fixed C ABI layout across FFI.
-            unsafe impl DiplomatAbiCompatible for $ty {}
+            unsafe impl AbiCompatibleForWrite for $ty {}
         )*
     };
 }
@@ -316,14 +316,14 @@ impl_abi_compatible!(i8, u8, i16, u16, i32, u32, i64, u64, i128, u128, isize, us
 
 /// An object that can write a sequence of primitive values of type `T` across FFI.
 ///
-/// `T` must be [`DiplomatAbiCompatible`], which is currently all scalar primitives except `bool`,
+/// `T` must be [`AbiCompatibleForWrite`], which is currently all scalar primitives except `bool`,
 /// but will likely be expanded in the future to support a subset of
 /// structs and potentially references ([#900](https://github.com/rust-diplomat/diplomat/issues/900)).
 ///
 /// This wraps an underlying [`DiplomatWrite`] with a type-safe API for pushing elements,
 /// writing slices, and extending from iterators.
 #[repr(transparent)]
-pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
+pub struct DiplomatWriteGeneric<T: AbiCompatibleForWrite> {
     /// # Safety invariants
     /// - All safety invariants of [`DiplomatWrite`] hold on `self.raw`.
     /// - `self.raw.len` and `self.raw.cap` are measured in bytes, and `self.raw.len` is always
@@ -334,7 +334,7 @@ pub struct DiplomatWriteGeneric<T: DiplomatAbiCompatible> {
     pub(crate) _marker: core::marker::PhantomData<T>,
 }
 
-impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
+impl<T: AbiCompatibleForWrite> DiplomatWriteGeneric<T> {
     /// Pushes a single element into the buffer.
     #[inline]
     pub fn push(&mut self, val: T) {
@@ -500,7 +500,7 @@ impl<T: DiplomatAbiCompatible> DiplomatWriteGeneric<T> {
     }
 }
 
-impl<T: DiplomatAbiCompatible> Extend<T> for DiplomatWriteGeneric<T> {
+impl<T: AbiCompatibleForWrite> Extend<T> for DiplomatWriteGeneric<T> {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         DiplomatWriteGeneric::extend(self, iter);
     }
