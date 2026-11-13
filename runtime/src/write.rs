@@ -64,8 +64,7 @@ use core::{fmt, ptr};
 ///  - `grow()` must either return false or update `buf` and `cap` for a valid buffer
 ///    of at least the requested buffer size.
 ///  - If grow_failed is true all safety invariants on buf/cap/len MUST still hold.
-///  - `DiplomatWrite::flush()` will be automatically called by Diplomat. `flush()` might also be called
-///    (erroneously) on the Rust side (it's a public method), so it must be idempotent.
+///  - `DiplomatWrite::flush()` must be idempotent: it must be safe to call multiple times.
 #[repr(C)]
 pub struct DiplomatWrite {
     /// Context pointer for additional data needed by `grow()` and `flush()`. May be `null`.
@@ -100,9 +99,18 @@ pub struct DiplomatWrite {
 }
 
 impl DiplomatWrite {
-    /// Call this function before releasing the buffer to C
-    pub fn flush(&mut self) {
+    /// Internal function called before releasing this buffer to C
+    ///
+    /// This is safe to call, but you should not ever need to.
+    pub fn internal_flush(&mut self) {
         (self.flush)(self);
+    }
+
+    // TODO(#958) remove this before 1.0
+    #[doc(hidden)]
+    #[deprecated(note = "use internal_flush instead")]
+    pub fn flush(&mut self) {
+        self.internal_flush();
     }
 
     /// Returns a pointer to the buffer's bytes.
@@ -497,9 +505,18 @@ impl<T: AbiCompatibleForWrite> DiplomatWriteGeneric<T> {
         unsafe { core::slice::from_raw_parts(self.raw.buf as *const T, count) }
     }
 
-    /// Call this function before releasing the buffer to C.
+    /// Internal function called before releasing this buffer to C
+    ///
+    /// This is safe to call, but you should not ever need to.
+    pub fn internal_flush(&mut self) {
+        self.raw.internal_flush();
+    }
+
+    // TODO(#958) remove this before 1.0
+    #[doc(hidden)]
+    #[deprecated(note = "use internal_flush instead")]
     pub fn flush(&mut self) {
-        self.raw.flush();
+        self.internal_flush();
     }
 }
 

@@ -419,7 +419,7 @@ fn gen_custom_function(func_info: FuncGen) -> Item {
         .filter(|p| p.is_write())
         .map(|p| {
             let p = &p.name;
-            quote! { #p.flush(); }
+            quote! { #p.internal_flush(); }
         })
         .collect::<Vec<_>>();
 

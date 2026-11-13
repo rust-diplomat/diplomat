@@ -71,7 +71,6 @@ pub mod ffi {
         #[diplomat::rust_link(icu::decimal::FixedDecimalFormatter::format, FnInStruct)]
         pub fn format_write(&self, value: &FixedDecimal, write: &mut DiplomatWrite) {
             self.0.format(&value.0).write_to(write).unwrap();
-            write.flush();
         }
     }
 }

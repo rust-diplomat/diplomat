@@ -20,7 +20,7 @@ mod ffi {
         out: &mut diplomat_runtime::DiplomatWriteGeneric<u32>,
     ) {
         let ret = this.get_ints(out);
-        out.flush();
+        out.internal_flush();
         ret
     }
 }
