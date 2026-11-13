@@ -65,6 +65,9 @@ pub mod support {
     /// 🔌 \[C API\] Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
     /// pair (e.g. via `DiplomatOwnedSlice<u8>`).
     ///
+    /// Currently this is used by the `.NET` backend when Rust returns `Box<[u8]>` across FFI. Other
+    /// backends may eventually use this as well for highly efficient byte slice transfer.
+    ///
     /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
     ///
     /// # Safety
