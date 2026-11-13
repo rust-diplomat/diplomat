@@ -53,7 +53,7 @@ typedef struct DiplomatWrite {
     bool (*grow)(struct DiplomatWrite*, size_t);
 } DiplomatWrite;
 
-bool diplomat_is_str(const char* buf, size_t len);
+bool diplomat_is_utf8_str(const char* buf, size_t len);
 
 #define MAKE_SLICES(name, c_ty) \
     typedef struct Diplomat##name##View { \

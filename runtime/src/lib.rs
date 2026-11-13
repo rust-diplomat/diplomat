@@ -61,6 +61,35 @@ mod callback;
 pub mod support {
     pub use crate::callback::Callback;
     pub use crate::write::AbiCompatibleForWrite;
+
+    /// 🔌 \[C API\] Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
+    /// pair (e.g. via `DiplomatOwnedSlice<u8>`).
+    ///
+    /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
+    ///
+    /// # Safety
+    /// - `ptr`/`len` must be the raw parts of a `Box<[u8]>` that Rust allocated and handed across
+    ///   FFI; this reconstructs that box and drops it, so the same allocator that made it frees it.
+    /// - Must not be called more than once for the same `ptr`.
+    #[no_mangle]
+    pub unsafe extern "C" fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize) {
+        if !ptr.is_null() {
+            drop(alloc::boxed::Box::from_raw(
+                core::ptr::slice_from_raw_parts_mut(ptr, len),
+            ));
+        }
+    }
+
+    /// 🔌 \[C API\] Whether a `&[u8]` is a `&str`.
+    ///
+    /// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
+    ///
+    /// # Safety
+    /// - `ptr` and `size` must be a valid `&[u8]`
+    #[no_mangle]
+    pub unsafe extern "C" fn diplomat_is_utf8_str(ptr: *const u8, size: usize) -> bool {
+        core::str::from_utf8(core::slice::from_raw_parts(ptr, size)).is_ok()
+    }
 }
 
 // TODO(#958) remove this before 1.0
@@ -71,6 +100,14 @@ pub use support::Callback as DiplomatCallback;
 #[doc(hidden)]
 #[deprecated(note = "use support::AbiCompatibleForWrite instead")]
 pub use support::AbiCompatibleForWrite as DiplomatAbiCompatible;
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use support::diplomat_owned_slice_u8_destroy instead")]
+pub use support::diplomat_owned_slice_u8_destroy;
+// TODO(#958) remove this before 1.0
+#[doc(hidden)]
+#[deprecated(note = "use support::diplomat_is_utf8_str instead")]
+pub use support::diplomat_is_utf8_str as diplomat_is_str;
 
 mod result;
 pub use result::{DiplomatOption, DiplomatResult};
@@ -135,33 +172,4 @@ pub unsafe extern "C" fn diplomat_alloc(size: usize, align: usize) -> *mut u8 {
 #[no_mangle]
 pub unsafe extern "C" fn diplomat_free(ptr: *mut u8, size: usize, align: usize) {
     alloc::alloc::dealloc(ptr, Layout::from_size_align(size, align).unwrap())
-}
-
-/// 🔌 \[C API\] Frees a `Box<[u8]>` that was returned across FFI as a raw `(ptr, len)`
-/// pair (e.g. via `DiplomatOwnedSlice<u8>`).
-///
-/// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
-///
-/// # Safety
-/// - `ptr`/`len` must be the raw parts of a `Box<[u8]>` that Rust allocated and handed across
-///   FFI; this reconstructs that box and drops it, so the same allocator that made it frees it.
-/// - Must not be called more than once for the same `ptr`.
-#[no_mangle]
-pub unsafe extern "C" fn diplomat_owned_slice_u8_destroy(ptr: *mut u8, len: usize) {
-    if !ptr.is_null() {
-        drop(alloc::boxed::Box::from_raw(
-            core::ptr::slice_from_raw_parts_mut(ptr, len),
-        ));
-    }
-}
-
-/// 🔌 \[C API\] Whether a `&[u8]` is a `&str`.
-///
-/// Primarily to be called by generated FFI bindings, not Rust code, but is available if needed.
-///
-/// # Safety
-/// - `ptr` and `size` must be a valid `&[u8]`
-#[no_mangle]
-pub unsafe extern "C" fn diplomat_is_str(ptr: *const u8, size: usize) -> bool {
-    core::str::from_utf8(core::slice::from_raw_parts(ptr, size)).is_ok()
 }

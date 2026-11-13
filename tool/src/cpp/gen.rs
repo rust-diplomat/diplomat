@@ -757,7 +757,7 @@ impl<'ccx, 'tcx: 'ccx> ItemGenContext<'ccx, 'tcx, '_> {
                 Type::Slice(hir::Slice::Str(_, hir::StringEncoding::Utf8))
             ) {
                 param_validations.push(format!(
-                    "if (!{lib_name_ns_prefix}diplomat::capi::diplomat_is_str({param_name}.data(), {param_name}.size())) {{\n  return {lib_name_ns_prefix}diplomat::Err<{lib_name_ns_prefix}diplomat::Utf8Error>();\n}}",
+                    "if (!{lib_name_ns_prefix}diplomat::capi::diplomat_is_utf8_str({param_name}.data(), {param_name}.size())) {{\n  return {lib_name_ns_prefix}diplomat::Err<{lib_name_ns_prefix}diplomat::Utf8Error>();\n}}",
                 ));
                 returns_utf8_err = true;
             }
