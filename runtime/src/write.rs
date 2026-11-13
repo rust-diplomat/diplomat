@@ -113,9 +113,10 @@ impl DiplomatWrite {
         self.internal_flush();
     }
 
-    /// Returns a pointer to the buffer's bytes.
+    /// Returns a pointer to the bytes written so far.
     ///
-    /// If growth has failed, this returns what has been written so far.
+    /// If growth has failed, this will continue to return the same bytes that have
+    /// been written so far, even though the writeable may appear unwritten on the FFI side.
     pub fn as_bytes(&self) -> &[u8] {
         if self.buf.is_null() {
             return &[];
@@ -483,7 +484,8 @@ impl<T: AbiCompatibleForWrite> DiplomatWriteGeneric<T> {
 
     /// Returns a slice of the elements written so far if the underlying buffer is aligned for `T`.
     ///
-    /// If growth has failed, this returns what has been written so far.
+    /// If growth has failed, this will continue to return the same elements that have
+    /// been written so far, even though the writeable may appear unwritten on the FFI side.
     pub fn as_slice(&self) -> &[T] {
         if self.raw.buf.is_null() || self.raw.len == 0 {
             return &[];
