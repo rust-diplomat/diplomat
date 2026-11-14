@@ -2,16 +2,23 @@
 
 impl {{ ty_name }} {
 {%- for m in methods %}
-{{ m.docs }}    pub fn {{ m.name }}({{ m.params|join(", ") }}){% if let Some(ret) = m.ret %} -> {{ ret }}{% endif %} {
-{%- if let Some(wrapper) = m.opaque_ret %}
-        // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe {
-            {{ wrapper }}(core::ptr::NonNull::new_unchecked(
-                {{ m.abi_name }}({{ m.args|join(", ") }}),
-            ))
-        }
+{{ m.docs }}    pub fn {{ m.name }}{{ m.generics }}({{ m.params|join(", ") }}){% if let Some(ret) = m.ret %} -> {{ ret }}{% endif %}{{ m.where_clause }} {
+{%- for line in m.safety %}
+        // Safety: {{ line }}
+{%- endfor %}
+{%- if let Some(converted) = m.opaque_ret %}
+        unsafe { {{ converted }} }
+{%- else if let Some(result) = m.result %}
+        unsafe { {{ m.call }} }
+            .into_result()
+{%- if let Some(convert) = result.ok_convert %}
+            .map(|ok| unsafe { {{ convert }} })
+{%- endif %}
+{%- if let Some(convert) = result.err_convert %}
+            .map_err(|err| unsafe { {{ convert }} })
+{%- endif %}
 {%- else %}
-        unsafe { {{ m.abi_name }}({{ m.args|join(", ") }}) }
+        unsafe { {{ m.call }} }
 {%- endif %}
     }
 {% endfor -%}

@@ -7,7 +7,7 @@ mod formatter;
 mod gen;
 
 use self::formatter::RustFormatter;
-use self::gen::{ItemGenContext, UsedSlices};
+use self::gen::{ItemGenContext, UsedRuntimeTypes};
 use crate::{ErrorStore, FileMap};
 use askama::Template;
 use diplomat_core::hir::{self, BackendAttrSupport, DocsUrlGenerator};
@@ -28,6 +28,8 @@ struct LibTemplate {
     modules: Vec<(String, String)>,
     slice: bool,
     slice_mut: bool,
+    result: bool,
+    opaque: bool,
 }
 
 pub(crate) fn run<'tcx>(
@@ -37,7 +39,7 @@ pub(crate) fn run<'tcx>(
     let files = FileMap::default();
     let formatter = RustFormatter::new(tcx, docs_url_gen);
     let errors = ErrorStore::default();
-    let used_slices = UsedSlices::default();
+    let used_types = UsedRuntimeTypes::default();
 
     let mut modules = vec![];
 
@@ -51,7 +53,7 @@ pub(crate) fn run<'tcx>(
             tcx,
             formatter: &formatter,
             errors: &errors,
-            used_slices: &used_slices,
+            used_types: &used_types,
         };
 
         let body = match id {
@@ -70,8 +72,10 @@ pub(crate) fn run<'tcx>(
     modules.sort();
     let lib = LibTemplate {
         modules,
-        slice: used_slices.slice.get(),
-        slice_mut: used_slices.slice_mut.get(),
+        slice: used_types.slice.get(),
+        slice_mut: used_types.slice_mut.get(),
+        result: used_types.result.get(),
+        opaque: used_types.opaque.get(),
     };
     files.add_file("lib.rs".into(), lib.to_string());
 

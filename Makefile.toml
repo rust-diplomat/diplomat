@@ -65,7 +65,7 @@ dependencies = ["test-dotnet-feature"]
 
 [tasks.test-rust]
 category = "Tests"
-dependencies = ["test-rust-example"]
+dependencies = ["test-rust-feature", "test-rust-example"]
 
 [tasks.test-nanobind]
 category = "Tests"
@@ -93,6 +93,7 @@ dependencies = [
     "test-kotlin-feature",
     "test-nanobind-feature",
     "test-dotnet-feature",
+    "test-rust-feature",
 ]
 
 [tasks.test-cpp-example]
@@ -198,6 +199,16 @@ dependencies = ["build-example-jvm"]
 script = '''
 exit_on_error true
 cp target/debug/libdiplomat_example.${OUT_FILE} example/kotlin/somelib/libdiplomat_example.${OUT_FILE}
+'''
+
+[tasks.test-rust-feature]
+category = "Tests"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+cd feature_tests/rust
+exec --fail-on-error cargo test
+exec --fail-on-error cargo clippy --all-targets -- -D warnings
 '''
 
 [tasks.test-rust-example]
@@ -424,6 +435,7 @@ dependencies = [
     "gen-kotlin-feature",
     "gen-nanobind-feature",
     "gen-dotnet-feature",
+    "gen-rust-feature",
 ]
 
 [tasks.gen-example]
@@ -464,7 +476,7 @@ dependencies = ["gen-dotnet-feature", "gen-dotnet-example"]
 
 [tasks.gen-rust]
 category = "Code generation"
-dependencies = ["gen-rust-example"]
+dependencies = ["gen-rust-feature", "gen-rust-example"]
 
 [tasks.gen-c-feature]
 category = "Code generation"
@@ -561,6 +573,15 @@ generate_generic example dotnet Generated
 
 # The Rust backend only generates `src/`. It formats its own output, so there is
 # no formatter step here.
+[tasks.gen-rust-feature]
+category = "Code generation"
+script_runner = "@duckscript"
+script = '''
+exit_on_error true
+!include_files ./support/functions.ds
+generate_generic feature_tests rust src
+'''
+
 [tasks.gen-rust-example]
 category = "Code generation"
 script_runner = "@duckscript"

@@ -1,36 +1,41 @@
-/// The type behind `DataProvider` pointers at the ABI level.
-#[repr(C)]
-pub(crate) struct DataProviderRaw {
-    _private: [u8; 0],
-}
-
 /// An  data provider, capable of loading  data keys from some source.
 ///
 /// See the [Rust documentation for `icu_provider`](https://docs.rs/icu_provider/latest/icu_provider/index.html) for more information.
-pub struct DataProvider(pub(crate) core::ptr::NonNull<DataProviderRaw>);
+#[repr(C)]
+pub struct DataProvider {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
+    _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
 
 impl DataProvider {
     /// See the [Rust documentation for `get_static_provider`](https://docs.rs/icu_testdata/latest/icu_testdata/fn.get_static_provider.html) for more information.
-    pub fn new_static() -> crate::DataProvider {
-        // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe {
-            crate::DataProvider(core::ptr::NonNull::new_unchecked(
-                icu4x_DataProvider_new_static_mv1(),
-            ))
-        }
+    pub fn new_static() -> crate::DiplomatBox<crate::DataProvider> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { crate::DiplomatBox::from_raw(icu4x_DataProvider_new_static_mv1()) }
+    }
+
+    /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+    pub fn returns_result() -> Result<(), ()> {
+        unsafe { icu4x_DataProvider_returns_result_mv1() }
+            .into_result()
     }
 }
 
 extern "C" {
-    fn icu4x_DataProvider_new_static_mv1() -> *mut crate::data_provider::DataProviderRaw;
+    fn icu4x_DataProvider_new_static_mv1() -> *mut crate::DataProvider;
+    fn icu4x_DataProvider_returns_result_mv1() -> crate::DiplomatResult<(), ()>;
 }
 
-impl Drop for DataProvider {
-    fn drop(&mut self) {
-        unsafe { icu4x_DataProvider_destroy_mv1(self.0.as_ptr()) }
+// Safety: `icu4x_DataProvider_destroy_mv1` frees a `Box<DataProvider>` returned by the library.
+unsafe impl crate::DiplomatOpaque for DataProvider {
+    unsafe fn destroy(ptr: *mut Self) {
+        icu4x_DataProvider_destroy_mv1(ptr)
     }
 }
 
 extern "C" {
-    fn icu4x_DataProvider_destroy_mv1(this: *mut DataProviderRaw);
+    fn icu4x_DataProvider_destroy_mv1(this: *mut DataProvider);
 }

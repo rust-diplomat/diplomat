@@ -1,0 +1,50 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(quote!\n{\n    #[diplomat::bridge] mod ffi\n    {\n        #[diplomat::opaque] struct MyError(i32); #[diplomat::opaque] struct\n        MyView<'a>(&'a i32); enum ErrorKind { A, B, } #[diplomat::opaque]\n        struct MyOpaque(i32); impl MyOpaque\n        {\n            pub fn try_new(value: i32) -> Result<Box<MyOpaque>, ()>\n            { unimplemented!() } pub fn check(&self) -> Result<(), ErrorKind>\n            { unimplemented!() } pub fn get(&self) -> Result<i32,\n            Box<MyError>> { unimplemented!() }\n            #[doc = r\" Skipped: the returned opaque borrows from `self`\"] pub\n            fn view<'a>(&'a self) -> Result<Box<MyView<'a>>, ()>\n            { unimplemented!() }\n            #[doc = r\" Skipped: optional returns are not supported yet\"] pub\n            fn maybe(&self) -> Option<i32> { unimplemented!() }\n        }\n    }\n}, \"MyOpaque\")"
+---
+#[repr(C)]
+pub struct MyOpaque {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
+    _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl MyOpaque {
+    pub fn try_new(value: i32) -> Result<crate::DiplomatBox<crate::MyOpaque>, ()> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { MyOpaque_try_new(value) }
+            .into_result()
+            .map(|ok| unsafe { crate::DiplomatBox::from_raw(ok) })
+    }
+
+    pub fn check(&self) -> Result<(), crate::ErrorKind> {
+        unsafe { MyOpaque_check(self) }
+            .into_result()
+    }
+
+    pub fn get(&self) -> Result<i32, crate::DiplomatBox<crate::MyError>> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { MyOpaque_get(self) }
+            .into_result()
+            .map_err(|err| unsafe { crate::DiplomatBox::from_raw(err) })
+    }
+}
+
+extern "C" {
+    fn MyOpaque_try_new(value: i32) -> crate::DiplomatResult<*mut crate::MyOpaque, ()>;
+    fn MyOpaque_check(this: *const MyOpaque) -> crate::DiplomatResult<(), crate::ErrorKind>;
+    fn MyOpaque_get(this: *const MyOpaque) -> crate::DiplomatResult<i32, *mut crate::MyError>;
+}
+
+// Safety: `MyOpaque_destroy` frees a `Box<MyOpaque>` returned by the library.
+unsafe impl crate::DiplomatOpaque for MyOpaque {
+    unsafe fn destroy(ptr: *mut Self) {
+        MyOpaque_destroy(ptr)
+    }
+}
+
+extern "C" {
+    fn MyOpaque_destroy(this: *mut MyOpaque);
+}
