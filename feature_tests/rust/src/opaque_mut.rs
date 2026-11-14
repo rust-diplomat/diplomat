@@ -1,32 +1,30 @@
-/// The type behind `OpaqueMut` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct OpaqueMutRaw {
+pub struct OpaqueMut {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
-
-pub struct OpaqueMut(pub(crate) core::ptr::NonNull<OpaqueMutRaw>);
 
 impl OpaqueMut {
-    pub fn new() -> crate::OpaqueMut {
-        // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe {
-            crate::OpaqueMut(core::ptr::NonNull::new_unchecked(
-                OpaqueMut_new(),
-            ))
-        }
+    pub fn new() -> crate::DiplomatBox<crate::OpaqueMut> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { crate::DiplomatBox::from_raw(OpaqueMut_new()) }
     }
 }
 
 extern "C" {
-    fn OpaqueMut_new() -> *mut crate::opaque_mut::OpaqueMutRaw;
+    fn OpaqueMut_new() -> *mut crate::OpaqueMut;
 }
 
-impl Drop for OpaqueMut {
-    fn drop(&mut self) {
-        unsafe { OpaqueMut_destroy(self.0.as_ptr()) }
+// Safety: `OpaqueMut_destroy` frees a `Box<OpaqueMut>` returned by the library.
+unsafe impl crate::DiplomatOpaque for OpaqueMut {
+    unsafe fn destroy(ptr: *mut Self) {
+        OpaqueMut_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn OpaqueMut_destroy(this: *mut OpaqueMutRaw);
+    fn OpaqueMut_destroy(this: *mut OpaqueMut);
 }

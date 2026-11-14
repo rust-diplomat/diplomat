@@ -1,17 +1,19 @@
-/// The type behind `One` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct OneRaw {
+pub struct One {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct One(pub(crate) core::ptr::NonNull<OneRaw>);
-
-impl Drop for One {
-    fn drop(&mut self) {
-        unsafe { One_destroy(self.0.as_ptr()) }
+// Safety: `One_destroy` frees a `Box<One>` returned by the library.
+unsafe impl crate::DiplomatOpaque for One {
+    unsafe fn destroy(ptr: *mut Self) {
+        One_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn One_destroy(this: *mut OneRaw);
+    fn One_destroy(this: *mut One);
 }
