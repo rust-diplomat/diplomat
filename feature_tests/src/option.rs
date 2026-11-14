@@ -35,6 +35,7 @@ pub mod ffi {
 
     #[diplomat::out]
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct OptionStruct {
         a: Option<Box<OptionOpaque>>,
         b: Option<Box<OptionOpaqueChar>>,
@@ -125,6 +126,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(rust, disable)]
         pub fn new_struct() -> OptionStruct {
             OptionStruct {
                 a: Some(Box::new(OptionOpaque(101))),
@@ -135,6 +137,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(rust, disable)]
         pub fn new_struct_nones() -> OptionStruct {
             OptionStruct {
                 a: None,

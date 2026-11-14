@@ -57,6 +57,7 @@ pub mod ffi {
 
     #[diplomat::attr(auto, mut_struct_ref)]
     #[diplomat::attr(auto, abi_compatible)]
+    #[diplomat::attr(rust, disable)]
     pub struct MyStruct {
         a: u8,
         b: bool,
@@ -70,6 +71,7 @@ pub mod ffi {
     // Related to issue https://github.com/rust-diplomat/diplomat/issues/803
     // `diplomat-tool js` was crashing when trying to process options-in-structs
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct MyStructContainingAnOption {
         pub(crate) a: DiplomatOption<MyStruct>,
         pub(crate) b: DiplomatOption<DefaultEnum>,
@@ -102,6 +104,7 @@ pub mod ffi {
         #[diplomat::rust_link(Something::something_small, FnInStruct, compact)]
         #[diplomat::rust_link(SomethingElse::something, FnInStruct, compact)]
         #[diplomat::rust_link(SomethingElse::something_else, FnInStruct, hidden)]
+        #[diplomat::attr(rust, disable)]
         pub fn assert_struct(&self, s: MyStruct) {
             s.assert_value();
         }
@@ -524,6 +527,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct StructWithSlices<'a> {
         pub first: DiplomatStrSlice<'a>,
         pub second: DiplomatSlice<'a, u16>,
@@ -538,6 +542,7 @@ pub mod ffi {
     #[diplomat::attr(auto, abi_compatible)]
     #[diplomat::attr(auto, mut_struct_ref)]
     #[derive(Clone)]
+    #[diplomat::attr(rust, disable)]
     pub struct PrimitiveStruct {
         x: f32,
         a: bool,
@@ -635,6 +640,7 @@ pub mod ffi {
     #[diplomat::attr(dart, disable)]
     #[diplomat::attr(dotnet, disable)]
     #[diplomat::attr(auto, mut_struct_ref)]
+    #[diplomat::attr(rust, disable)]
     pub struct StructOfOpaque<'a> {
         i: &'a Opaque,
         j: &'a mut OpaqueMut,
