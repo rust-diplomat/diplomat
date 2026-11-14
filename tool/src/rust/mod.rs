@@ -29,6 +29,7 @@ struct LibTemplate {
     slice: bool,
     slice_mut: bool,
     result: bool,
+    opaque: bool,
 }
 
 pub(crate) fn run<'tcx>(
@@ -74,6 +75,7 @@ pub(crate) fn run<'tcx>(
         slice: used_types.slice.get(),
         slice_mut: used_types.slice_mut.get(),
         result: used_types.result.get(),
+        opaque: used_types.opaque.get(),
     };
     files.add_file("lib.rs".into(), lib.to_string());
 

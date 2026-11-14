@@ -2,12 +2,14 @@
 
 // Method names come from the Diplomat definitions, e.g. an inherent `default`
 // or a `new` / `len` without `Default` / `is_empty`, and so do their error
-// types, e.g. `Result<T, ()>`.
+// types, e.g. `Result<T, ()>`. Methods returning a borrow spell out all their
+// lifetimes, even where elision would do.
 #![allow(
     clippy::should_implement_trait,
     clippy::result_unit_err,
     clippy::new_without_default,
-    clippy::len_without_is_empty
+    clippy::len_without_is_empty,
+    clippy::needless_lifetimes
 )]
 
 mod attr_opaque1_renamed;
@@ -108,6 +110,57 @@ mod unnamespaced;
 pub use unnamespaced::Unnamespaced;
 mod utf16_wrap;
 pub use utf16_wrap::Utf16Wrap;
+
+/// An opaque type of the library. Its values live in the library's memory and are
+/// only reached through `&`, `&mut` or [`DiplomatBox`].
+///
+/// # Safety
+///
+/// `destroy` must free a pointer the library returned as a `Box<Self>`.
+pub unsafe trait DiplomatOpaque {
+    /// Frees `ptr`, which the library returned as a `Box<Self>`.
+    ///
+    /// # Safety
+    ///
+    /// `ptr` must be owned by the caller and is not used afterwards.
+    unsafe fn destroy(ptr: *mut Self);
+}
+
+/// An opaque value owned by the caller, like a `Box<T>`. Dropping it hands the
+/// value back to the library to free.
+pub struct DiplomatBox<T: DiplomatOpaque>(core::ptr::NonNull<T>);
+
+impl<T: DiplomatOpaque> DiplomatBox<T> {
+    /// # Safety
+    ///
+    /// `ptr` is non-null, and the library returned it as a `Box<T>`.
+    pub(crate) unsafe fn from_raw(ptr: *mut T) -> Self {
+        Self(core::ptr::NonNull::new_unchecked(ptr))
+    }
+}
+
+impl<T: DiplomatOpaque> core::ops::Deref for DiplomatBox<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        // Safety: the pointer is valid until `drop`.
+        unsafe { self.0.as_ref() }
+    }
+}
+
+impl<T: DiplomatOpaque> core::ops::DerefMut for DiplomatBox<T> {
+    fn deref_mut(&mut self) -> &mut T {
+        // Safety: the pointer is valid until `drop`, and `self` is borrowed mutably.
+        unsafe { self.0.as_mut() }
+    }
+}
+
+impl<T: DiplomatOpaque> Drop for DiplomatBox<T> {
+    fn drop(&mut self) {
+        // Safety: `self` owns the pointer.
+        unsafe { T::destroy(self.0.as_ptr()) }
+    }
+}
 
 /// A `&[T]` as it crosses the ABI. Only lives for the duration of a call.
 #[repr(C)]

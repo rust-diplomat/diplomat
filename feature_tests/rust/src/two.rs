@@ -1,17 +1,19 @@
-/// The type behind `Two` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct TwoRaw {
+pub struct Two {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct Two(pub(crate) core::ptr::NonNull<TwoRaw>);
-
-impl Drop for Two {
-    fn drop(&mut self) {
-        unsafe { Two_destroy(self.0.as_ptr()) }
+// Safety: `Two_destroy` frees a `Box<Two>` returned by the library.
+unsafe impl crate::DiplomatOpaque for Two {
+    unsafe fn destroy(ptr: *mut Self) {
+        Two_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn Two_destroy(this: *mut TwoRaw);
+    fn Two_destroy(this: *mut Two);
 }

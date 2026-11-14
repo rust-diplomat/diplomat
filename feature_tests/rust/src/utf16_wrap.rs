@@ -1,32 +1,30 @@
-/// The type behind `Utf16Wrap` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct Utf16WrapRaw {
+pub struct Utf16Wrap {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
-
-pub struct Utf16Wrap(pub(crate) core::ptr::NonNull<Utf16WrapRaw>);
 
 impl Utf16Wrap {
-    pub fn from_utf16(input: &[u16]) -> crate::Utf16Wrap {
-        // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe {
-            crate::Utf16Wrap(core::ptr::NonNull::new_unchecked(
-                Utf16Wrap_from_utf16(crate::DiplomatSlice::new(input)),
-            ))
-        }
+    pub fn from_utf16(input: &[u16]) -> crate::DiplomatBox<crate::Utf16Wrap> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { crate::DiplomatBox::from_raw(Utf16Wrap_from_utf16(crate::DiplomatSlice::new(input))) }
     }
 }
 
 extern "C" {
-    fn Utf16Wrap_from_utf16(input: crate::DiplomatSlice<u16>) -> *mut crate::utf16_wrap::Utf16WrapRaw;
+    fn Utf16Wrap_from_utf16(input: crate::DiplomatSlice<u16>) -> *mut crate::Utf16Wrap;
 }
 
-impl Drop for Utf16Wrap {
-    fn drop(&mut self) {
-        unsafe { Utf16Wrap_destroy(self.0.as_ptr()) }
+// Safety: `Utf16Wrap_destroy` frees a `Box<Utf16Wrap>` returned by the library.
+unsafe impl crate::DiplomatOpaque for Utf16Wrap {
+    unsafe fn destroy(ptr: *mut Self) {
+        Utf16Wrap_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn Utf16Wrap_destroy(this: *mut Utf16WrapRaw);
+    fn Utf16Wrap_destroy(this: *mut Utf16Wrap);
 }

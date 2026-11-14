@@ -1,42 +1,40 @@
-/// The type behind `RenamedVectorTest` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct RenamedVectorTestRaw {
+pub struct RenamedVectorTest {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct RenamedVectorTest(pub(crate) core::ptr::NonNull<RenamedVectorTestRaw>);
-
 impl RenamedVectorTest {
-    pub fn new() -> crate::RenamedVectorTest {
-        // Safety: `Box` returns are never null, and the wrapper takes ownership.
-        unsafe {
-            crate::RenamedVectorTest(core::ptr::NonNull::new_unchecked(
-                namespace_VectorTest_new(),
-            ))
-        }
+    pub fn new() -> crate::DiplomatBox<crate::RenamedVectorTest> {
+        // Safety: `Box` returns are never null, and the caller owns them.
+        unsafe { crate::DiplomatBox::from_raw(namespace_VectorTest_new()) }
     }
 
     pub fn len(&self) -> usize {
-        unsafe { namespace_VectorTest_len(self.0.as_ptr()) }
+        unsafe { namespace_VectorTest_len(self) }
     }
 
     pub fn push(&mut self, value: f64) {
-        unsafe { namespace_VectorTest_push(self.0.as_ptr(), value) }
+        unsafe { namespace_VectorTest_push(self, value) }
     }
 }
 
 extern "C" {
-    fn namespace_VectorTest_new() -> *mut crate::renamed_vector_test::RenamedVectorTestRaw;
-    fn namespace_VectorTest_len(this: *const RenamedVectorTestRaw) -> usize;
-    fn namespace_VectorTest_push(this: *mut RenamedVectorTestRaw, value: f64);
+    fn namespace_VectorTest_new() -> *mut crate::RenamedVectorTest;
+    fn namespace_VectorTest_len(this: *const RenamedVectorTest) -> usize;
+    fn namespace_VectorTest_push(this: *mut RenamedVectorTest, value: f64);
 }
 
-impl Drop for RenamedVectorTest {
-    fn drop(&mut self) {
-        unsafe { namespace_VectorTest_destroy(self.0.as_ptr()) }
+// Safety: `namespace_VectorTest_destroy` frees a `Box<RenamedVectorTest>` returned by the library.
+unsafe impl crate::DiplomatOpaque for RenamedVectorTest {
+    unsafe fn destroy(ptr: *mut Self) {
+        namespace_VectorTest_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn namespace_VectorTest_destroy(this: *mut RenamedVectorTestRaw);
+    fn namespace_VectorTest_destroy(this: *mut RenamedVectorTest);
 }
