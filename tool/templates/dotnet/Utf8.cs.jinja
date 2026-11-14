@@ -10,5 +10,7 @@ namespace {{ namespace }}.Diplomat;
 /// </summary>
 internal static class Utf8
 {
-    public static byte[] Clone(string value) => System.Text.Encoding.UTF8.GetBytes(value);
+    private static readonly System.Text.UTF8Encoding Strict = new System.Text.UTF8Encoding(false, true);
+
+    public static byte[] Clone(string value) => Strict.GetBytes(value);
 }
