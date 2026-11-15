@@ -22,21 +22,23 @@ pub(super) struct ItemGenContext<'cx, 'tcx> {
     pub tcx: &'tcx TypeContext,
     pub formatter: &'cx RustFormatter<'tcx>,
     pub errors: &'cx ErrorStore<'tcx, String>,
-    pub used_slices: &'cx UsedSlices,
+    pub used_types: &'cx UsedRuntimeTypes,
 }
 
-/// Which of the slice types defined in `lib.rs` the generated methods use
+/// Which of the types defined in `lib.rs` the generated methods use
 #[derive(Default)]
-pub(super) struct UsedSlices {
+pub(super) struct UsedRuntimeTypes {
     pub slice: Cell<bool>,
     pub slice_mut: Cell<bool>,
+    pub result: Cell<bool>,
 }
 
-impl UsedSlices {
-    fn mark(&self, kind: SliceKind) {
-        match kind {
-            SliceKind::Slice => self.slice.set(true),
-            SliceKind::SliceMut => self.slice_mut.set(true),
+impl UsedRuntimeTypes {
+    fn mark(&self, ty: RuntimeType) {
+        match ty {
+            RuntimeType::Slice => self.slice.set(true),
+            RuntimeType::SliceMut => self.slice_mut.set(true),
+            RuntimeType::Result => self.result.set(true),
         }
     }
 }
@@ -172,41 +174,53 @@ impl ItemGenContext<'_, '_> {
         }
 
         let storable = storable_lifetimes(method);
-        let mut slices = vec![];
+        let mut runtime_types = vec![];
         for param in &method.params {
             let param = self.gen_param(param, &storable)?;
             params.push(param.decl);
             abi_params.push(param.abi_decl);
             args.push(param.arg);
-            slices.extend(param.slice);
+            runtime_types.extend(param.runtime_type);
         }
 
-        let (ret, abi_ret, opaque_ret) = match &method.output {
-            ReturnType::Infallible(SuccessType::Unit) => (None, None, None),
-            // The wrapper has no lifetime, so it cannot hold on to a borrow
-            ReturnType::Infallible(SuccessType::OutType(Type::Opaque(path)))
-                if path.is_owned()
-                    && !path.is_optional()
-                    && path.lifetimes.lifetimes().len() == 0 =>
-            {
-                let id = path.tcx_id.into();
-                let wrapper = self.fmt_type_path(id);
-                (
-                    Some(wrapper.clone()),
-                    Some(format!("*mut {}", self.fmt_opaque_raw(id))),
-                    Some(wrapper),
-                )
-            }
+        let (ret, abi_ret, opaque_ret, result) = match &method.output {
+            ReturnType::Infallible(SuccessType::Unit) => (None, None, None, None),
             ReturnType::Infallible(SuccessType::OutType(ty)) => {
-                let ty = self.gen_value_type(ty)?;
-                (Some(ty.clone()), Some(ty), None)
+                let out = self.gen_out_type(ty)?;
+                (Some(out.ty), Some(out.abi_ty), out.wrapper, None)
+            }
+            ReturnType::Fallible(ok, err) => {
+                let ok = match ok {
+                    SuccessType::Unit => OutTypeInfo::unit(),
+                    SuccessType::OutType(ty) => self.gen_out_type(ty)?,
+                    _ => return None,
+                };
+                let err = match err {
+                    Some(ty) => self.gen_out_type(ty)?,
+                    None => OutTypeInfo::unit(),
+                };
+                runtime_types.push(RuntimeType::Result);
+                (
+                    Some(format!("Result<{}, {}>", ok.ty, err.ty)),
+                    Some(format!(
+                        "crate::{}<{}, {}>",
+                        RuntimeType::Result.type_name(),
+                        ok.abi_ty,
+                        err.abi_ty
+                    )),
+                    None,
+                    Some(ResultInfo {
+                        ok_wrapper: ok.wrapper,
+                        err_wrapper: err.wrapper,
+                    }),
+                )
             }
             _ => return None,
         };
 
-        // Only record the slice types once the method is known to be generated
-        for kind in slices {
-            self.used_slices.mark(kind);
+        // Only record the runtime types once the method is known to be generated
+        for ty in runtime_types {
+            self.used_types.mark(ty);
         }
 
         Some(MethodInfo {
@@ -219,7 +233,37 @@ impl ItemGenContext<'_, '_> {
             ret,
             abi_ret,
             opaque_ret,
+            result,
         })
+    }
+
+    /// Lowers a type returned by the library. A `Box<Opaque>` comes back as a pointer
+    /// that the safe method wraps; value types come back as-is.
+    fn gen_out_type(&self, ty: &hir::OutType) -> Option<OutTypeInfo> {
+        match ty {
+            // The wrapper has no lifetime, so it cannot hold on to a borrow
+            Type::Opaque(path)
+                if path.is_owned()
+                    && !path.is_optional()
+                    && path.lifetimes.lifetimes().len() == 0 =>
+            {
+                let id = path.tcx_id.into();
+                let wrapper = self.fmt_type_path(id);
+                Some(OutTypeInfo {
+                    ty: wrapper.clone(),
+                    abi_ty: format!("*mut {}", self.fmt_opaque_raw(id)),
+                    wrapper: Some(wrapper),
+                })
+            }
+            ty => {
+                let ty = self.gen_value_type(ty)?;
+                Some(OutTypeInfo {
+                    ty: ty.clone(),
+                    abi_ty: ty,
+                    wrapper: None,
+                })
+            }
+        }
     }
 
     /// Lowers a parameter of the safe method. Borrowed parameters are only supported
@@ -231,7 +275,7 @@ impl ItemGenContext<'_, '_> {
             MaybeStatic::NonStatic(lifetime) => !storable.contains(lifetime),
         };
         let name = &param.name;
-        let (ty, abi_ty, arg, slice) = match &param.ty {
+        let (ty, abi_ty, arg, runtime_type) = match &param.ty {
             Type::Opaque(path)
                 if !path.is_optional()
                     && path.lifetimes.lifetimes().len() == 0
@@ -260,7 +304,7 @@ impl ItemGenContext<'_, '_> {
                     ty.to_string(),
                     format!("crate::DiplomatSlice<{elem}>"),
                     format!("crate::DiplomatSlice::new({name}{bytes})"),
-                    Some(SliceKind::Slice),
+                    Some(RuntimeType::Slice),
                 )
             }
             Type::Slice(Slice::Primitive(MaybeOwn::Borrow(borrow), prim))
@@ -268,8 +312,8 @@ impl ItemGenContext<'_, '_> {
             {
                 let elem = Self::gen_primitive(prim)?;
                 let (reference, kind) = match borrow.mutability {
-                    Mutability::Mutable => ("&mut ", SliceKind::SliceMut),
-                    Mutability::Immutable => ("&", SliceKind::Slice),
+                    Mutability::Mutable => ("&mut ", RuntimeType::SliceMut),
+                    Mutability::Immutable => ("&", RuntimeType::Slice),
                 };
                 let slice = kind.type_name();
                 (
@@ -288,7 +332,7 @@ impl ItemGenContext<'_, '_> {
             decl: format!("{name}: {ty}"),
             abi_decl: format!("{name}: {abi_ty}"),
             arg,
-            slice,
+            runtime_type,
         })
     }
 }
@@ -310,18 +354,20 @@ fn storable_lifetimes(method: &hir::Method) -> BTreeSet<Lifetime> {
         .collect()
 }
 
-/// A slice type defined in `lib.rs`
+/// A type defined in `lib.rs` for crossing the ABI
 #[derive(Clone, Copy)]
-enum SliceKind {
+enum RuntimeType {
     Slice,
     SliceMut,
+    Result,
 }
 
-impl SliceKind {
+impl RuntimeType {
     fn type_name(self) -> &'static str {
         match self {
-            SliceKind::Slice => "DiplomatSlice",
-            SliceKind::SliceMut => "DiplomatSliceMut",
+            RuntimeType::Slice => "DiplomatSlice",
+            RuntimeType::SliceMut => "DiplomatSliceMut",
+            RuntimeType::Result => "DiplomatResult",
         }
     }
 }
@@ -334,8 +380,36 @@ struct ParamInfo {
     abi_decl: String,
     /// The argument passed to the `extern "C"` function
     arg: String,
-    /// The slice type in `lib.rs` that the argument is passed as, if any
-    slice: Option<SliceKind>,
+    /// The type in `lib.rs` that the argument is passed as, if any
+    runtime_type: Option<RuntimeType>,
+}
+
+/// A type returned by a [`MethodInfo`], or one side of its `Result`
+struct OutTypeInfo {
+    /// The type the safe method returns
+    ty: String,
+    /// The type the `extern "C"` function returns
+    abi_ty: String,
+    /// For a `Box<Opaque>`, the wrapper type that takes ownership of the pointer
+    wrapper: Option<String>,
+}
+
+impl OutTypeInfo {
+    fn unit() -> Self {
+        OutTypeInfo {
+            ty: "()".into(),
+            abi_ty: "()".into(),
+            wrapper: None,
+        }
+    }
+}
+
+/// How a [`MethodInfo`] converts the `DiplomatResult` it gets from the library
+struct ResultInfo {
+    /// For a `Box<Opaque>` in `Ok`, the wrapper type that takes ownership of the pointer
+    ok_wrapper: Option<String>,
+    /// For a `Box<Opaque>` in `Err`, the wrapper type that takes ownership of the pointer
+    err_wrapper: Option<String>,
 }
 
 /// A method that can be called through the safe wrapper.
@@ -358,6 +432,8 @@ struct MethodInfo {
     abi_ret: Option<String>,
     /// For a `Box<Opaque>` return, the wrapper type that takes ownership of the pointer
     opaque_ret: Option<String>,
+    /// For a `Result` return, how to convert it
+    result: Option<ResultInfo>,
 }
 
 #[derive(Template)]
@@ -402,7 +478,7 @@ struct OpaqueTemplate<'a> {
 #[cfg(test)]
 mod test {
     use super::super::formatter::RustFormatter;
-    use super::{ItemGenContext, UsedSlices};
+    use super::{ItemGenContext, UsedRuntimeTypes};
     use crate::ErrorStore;
     use diplomat_core::hir::{self, DocsUrlGenerator, TypeContext};
     use proc_macro2::TokenStream;
@@ -425,12 +501,12 @@ mod test {
         let docs_url_gen = DocsUrlGenerator::default();
         let formatter = RustFormatter::new(&tcx, &docs_url_gen);
         let errors = ErrorStore::default();
-        let used_slices = UsedSlices::default();
+        let used_types = UsedRuntimeTypes::default();
         let context = ItemGenContext {
             tcx: &tcx,
             formatter: &formatter,
             errors: &errors,
-            used_slices: &used_slices,
+            used_types: &used_types,
         };
 
         let (id, _) = tcx
@@ -558,6 +634,55 @@ mod test {
         };
         insta::assert_snapshot!(gen_type(module.clone(), "MyOpaque"));
         insta::assert_snapshot!("borrowed_params_view", gen_type(module, "MyView"));
+    }
+
+    #[test]
+    fn test_result() {
+        insta::assert_snapshot!(gen_type(
+            quote! {
+                #[diplomat::bridge]
+                mod ffi {
+                    #[diplomat::opaque]
+                    struct MyError(i32);
+
+                    #[diplomat::opaque]
+                    struct MyView<'a>(&'a i32);
+
+                    enum ErrorKind {
+                        A,
+                        B,
+                    }
+
+                    #[diplomat::opaque]
+                    struct MyOpaque(i32);
+
+                    impl MyOpaque {
+                        pub fn try_new(value: i32) -> Result<Box<MyOpaque>, ()> {
+                            unimplemented!()
+                        }
+
+                        pub fn check(&self) -> Result<(), ErrorKind> {
+                            unimplemented!()
+                        }
+
+                        pub fn get(&self) -> Result<i32, Box<MyError>> {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: the returned opaque borrows from `self`
+                        pub fn view<'a>(&'a self) -> Result<Box<MyView<'a>>, ()> {
+                            unimplemented!()
+                        }
+
+                        /// Skipped: optional returns are not supported yet
+                        pub fn maybe(&self) -> Option<i32> {
+                            unimplemented!()
+                        }
+                    }
+                }
+            },
+            "MyOpaque"
+        ));
     }
 
     #[test]

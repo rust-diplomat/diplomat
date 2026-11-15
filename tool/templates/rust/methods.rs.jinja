@@ -10,6 +10,18 @@ impl {{ ty_name }} {
                 {{ m.abi_name }}({{ m.args|join(", ") }}),
             ))
         }
+{%- else if let Some(result) = m.result %}
+{%- if result.ok_wrapper.is_some() || result.err_wrapper.is_some() %}
+        // Safety: `Box` returns are never null, and the wrapper takes ownership.
+{%- endif %}
+        unsafe { {{ m.abi_name }}({{ m.args|join(", ") }}) }
+            .into_result()
+{%- if let Some(wrapper) = result.ok_wrapper %}
+            .map(|ok| unsafe { {{ wrapper }}(core::ptr::NonNull::new_unchecked(ok)) })
+{%- endif %}
+{%- if let Some(wrapper) = result.err_wrapper %}
+            .map_err(|err| unsafe { {{ wrapper }}(core::ptr::NonNull::new_unchecked(err)) })
+{%- endif %}
 {%- else %}
         unsafe { {{ m.abi_name }}({{ m.args|join(", ") }}) }
 {%- endif %}

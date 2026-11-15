@@ -19,10 +19,17 @@ impl DataProvider {
             ))
         }
     }
+
+    /// This exists as a regression test for https://github.com/rust-diplomat/diplomat/issues/155
+    pub fn returns_result() -> Result<(), ()> {
+        unsafe { icu4x_DataProvider_returns_result_mv1() }
+            .into_result()
+    }
 }
 
 extern "C" {
     fn icu4x_DataProvider_new_static_mv1() -> *mut crate::data_provider::DataProviderRaw;
+    fn icu4x_DataProvider_returns_result_mv1() -> crate::DiplomatResult<(), ()>;
 }
 
 impl Drop for DataProvider {

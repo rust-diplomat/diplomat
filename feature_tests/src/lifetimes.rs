@@ -46,6 +46,7 @@ pub mod ffi {
     pub struct Bar<'b, 'a: 'b>(&'b Foo<'a>);
 
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct BorrowedFields<'a> {
         a: DiplomatStr16Slice<'a>,
         b: DiplomatStrSlice<'a>,
@@ -53,6 +54,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct BorrowedFieldsWithBounds<'a, 'b: 'a, 'c: 'b> {
         field_a: DiplomatStr16Slice<'a>,
         field_b: DiplomatStrSlice<'b>,
@@ -60,6 +62,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct BorrowedFieldsReturning<'a> {
         bytes: DiplomatStrSlice<'a>,
     }
@@ -88,6 +91,7 @@ pub mod ffi {
         }
 
         #[diplomat::attr(dotnet, disable)]
+        #[diplomat::attr(rust, disable)]
         pub fn as_returning(&self) -> BorrowedFieldsReturning<'a> {
             BorrowedFieldsReturning {
                 bytes: self.0.into(),
@@ -145,6 +149,7 @@ pub mod ffi {
     }
 
     #[diplomat::attr(dotnet, disable)]
+    #[diplomat::attr(rust, disable)]
     pub struct NestedBorrowedFields<'x, 'y: 'x, 'z> {
         fields: BorrowedFields<'x>,
         bounds: BorrowedFieldsWithBounds<'x, 'y, 'y>,
