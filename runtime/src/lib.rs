@@ -10,7 +10,7 @@
 //!
 //! - **Option and Result**: [`DiplomatResult<T, E>`] (FFI-safe `Result`) and [`DiplomatOption<T>`] (type alias for [`DiplomatResult<T, ()>`]).
 //! - **Slices**: [`DiplomatSlice<'a, T>`] (`&'a [T]`), [`DiplomatSliceMut<'a, T>`] (`&'a mut [T]`), and [`DiplomatOwnedSlice<T>`] (`Box<[T]>`).
-//! - **String input**: These all map to appropriate string types across FFI.
+//! - **String input**: These all map to appropriate string types across FFI. See "String types" below
 //!    - Unvalidated UTF-8: [`DiplomatStrSlice<'a>`] (`&'a [u8]`), [`DiplomatOwnedStrSlice`] (`Box<[u8]>`)
 //!    - Unvalidated UTF-16: [`DiplomatStr16Slice<'a>`] (`&'a [u16]`), [`DiplomatOwnedStr16Slice`]  (`Box<[u16]>`)
 //!    - Validated UTF-8: [`DiplomatUtf8StrSlice<'a>`] (`&'a str`), [`DiplomatOwnedUtf8StrSlice`] (`Box<str>`)
@@ -28,6 +28,46 @@
 //! `&[T]`, `&mut [T]`, `Box<[T]>`, `&str`, and `Box<str>`) suffice: Diplomat will automatically
 //! convert them to their FFI-safe `diplomat_runtime` equivalents. The `Diplomat*` slice and option
 //! types only need to be written explicitly when used inside Diplomat structs (or in slices of strings).
+//!
+//! # String types
+//!
+//! More documentation on this can be found in [the book][book-strings].
+//!
+//! Different backends have different string norms:
+//! - C++ has `std::string` and `std::u16string`, which have no strict validity requirements but are usually UTF-8 and UTF-16 respectively
+//! - JS, Dart, C#, and Java/Kotlin natively have UTF-16 strings but allow unpaired surrogates
+//! - Python marks the string encoding at runtime
+//! - Rust and Swift (not yet in Diplomat) have required-valid-UTF8 string types
+//!
+//! Different backends set different combinations of the `utf8_strings` and `utf16_strings` features to signal what is going on here.
+//! Most UTF-16 backends when asked to convert to UTF-8 will anyway produce valid UTF-8, so if you care about performance here you probably
+//! do not wish to revalidate those.
+//!
+//! The core rule is: if you need a validated string, use the validated types, if you don't need a validated string, use the unvalidated types.
+//! You can use  the`utf8_strings` and `utf16_strings` cfg toggles to do more fine-grained per-backend stuff if you want.
+//!
+//! Beyond valid/unvalid, these types work in different contexts. This is set up so that you can use more ergonomic types like `&str`
+//! in function parameters (where Diplomat is able to convert to an FFI safe type), but have fallback types to use in structs and `DiplomatSlice`
+//! as needed.
+//!
+//! In this table, "Slice" refers to slice types like `&[u8]`, "DST" refers to unsized types like `[u8]`, and "Owned" refers to types like
+//! `Box<[u8]>`. "In structs" / etc refers to where the type is allowed to be used: can it be used as the field of a Diplomat struct,
+//! can/ought it be used in a function parameter, and can it be nested inside a `&[T]` or `DiplomatSlice<T>` (for when you wish to represent types like `&[&str]`).
+//!
+//! | Encoding           | Kind  | Types                       | In structs  | In function parameters      | In `DiplomatSlice`  |
+//! |--------------------|-------|-----------------------------|-------------|-----------------------------|---------------------|
+//! | Unvalidated UTF-8  | Slice | `DiplomatStrSlice`          | ✅          | Prefer `&DiplomatStr`       | ✅                  |
+//! |                    | Owned | `DiplomatOwnedStrSlice`     | ✅          | Prefer `Box<DiplomatStr>`   | ❌                  |
+//! |                    | DST   | `DiplomatStr`               | ❌          | ✅                          | ❌                  |
+//! | Unvalidated UTF-16 | Slice | `DiplomatStrSlice`          | ✅          | Prefer `&DiplomatStr16`     | ✅                  |
+//! |                    | Owned | `DiplomatOwnedStrSlice`     | ✅          | Prefer `Box<DiplomatStr16>` | ❌                  |
+//! |                    | DST   | `DiplomatStr16`             | ❌          | ✅                          | ❌                  |
+//! | Validated UTF-8    | Slice | `DiplomatUtf8StrSlice`      | ✅          | Prefer `&str`               | ✅                  |
+//! |                    | Owned | `DiplomatOwnedUtf8StrSlice` | ✅          | Prefer `Box<str>`           | ❌                  |
+//! |                    | DST   | `str`                       | ❌          | ✅                          | ❌                  |
+//!
+//!
+//!  [book-strings]: https://rust-diplomat.github.io/diplomat/types/slices.html#strings-utf8_strings-and-utf16_strings
 //!
 //! # Features
 //!
