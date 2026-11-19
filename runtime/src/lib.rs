@@ -50,7 +50,8 @@
 //! in function parameters (where Diplomat is able to convert to an FFI safe type), but have fallback types to use in structs and `DiplomatSlice`
 //! as needed.
 //!
-//! In this table, "Slice" refers to slice types like `&[u8]`, "DST" refers to unsized types like `[u8]`, and "Owned" refers to types like
+//! In this table, "Slice" refers to slice types like `&[u8]`, "DST" ([Dynamically sized type](https://doc.rust-lang.org/reference/dynamically-sized-types.html))
+//! refers to unsized types like `[u8]`, and "Owned" refers to types like
 //! `Box<[u8]>`. "In structs" / etc refers to where the type is allowed to be used: can it be used as the field of a Diplomat struct,
 //! can/ought it be used in a function parameter, and can it be nested inside a `&[T]` or `DiplomatSlice<T>` (for when you wish to represent types like `&[&str]`).
 //!
