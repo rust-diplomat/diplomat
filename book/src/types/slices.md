@@ -96,3 +96,22 @@ With these attributes:
 - In **JS, Dart, Kotlin, and .NET** (`utf8_strings = false, utf16_strings = true`), `is_normalized_utf8` is disabled and `is_normalized_utf16` is renamed to `is_normalized` (or `isNormalized` / `IsNormalized`).
 - In **Nanobind** (`utf8_strings = true, utf16_strings = false`), `is_normalized_utf16` is disabled and `is_normalized_utf8` is renamed to `is_normalized`.
 - In **C and C++** (`utf8_strings = true, utf16_strings = true`), both methods are enabled as `is_normalized` (taking `std::string_view`) and `is_normalized16` (taking `std::u16string_view`).
+
+Beyond valid/unvalid, these types work in different contexts. This is set up so that you can use more ergonomic types like `&str`
+in function parameters (where Diplomat is able to convert to an FFI safe type), but have fallback types to use in structs and `DiplomatSlice`
+as needed.
+
+In this table, "Slice" refers to slice types like `&[u8]`, "DST" ([Dynamically sized type](https://doc.rust-lang.org/reference/dynamically-sized-types.html)) refers to unsized types like `[u8]`, and "Owned" refers to types like `Box<[u8]>`. "In structs" / etc refers to where the type is allowed to be used: can it be used as the field of a Diplomat struct, can/ought it be used in a function parameter, and can it be nested inside a `&[T]` or `DiplomatSlice<T>` (for when you wish to represent types like `&[&str]`).
+
+| Encoding           | Kind  | Types                       | In structs  | In function parameters      | In `DiplomatSlice`  |
+|--------------------|-------|-----------------------------|-------------|-----------------------------|---------------------|
+| Unvalidated UTF-8  | Slice | `DiplomatStrSlice`          | ✅          | Prefer `&DiplomatStr`       | ✅                  |
+|                    | Owned | `DiplomatOwnedStrSlice`     | ✅          | Prefer `Box<DiplomatStr>`   | ❌                  |
+|                    | DST   | `DiplomatStr`               | ❌          | ✅                          | ❌                  |
+| Unvalidated UTF-16 | Slice | `DiplomatStrSlice`          | ✅          | Prefer `&DiplomatStr16`     | ✅                  |
+|                    | Owned | `DiplomatOwnedStrSlice`     | ✅          | Prefer `Box<DiplomatStr16>` | ❌                  |
+|                    | DST   | `DiplomatStr16`             | ❌          | ✅                          | ❌                  |
+| Validated UTF-8    | Slice | `DiplomatUtf8StrSlice`      | ✅          | Prefer `&str`               | ✅                  |
+|                    | Owned | `DiplomatOwnedUtf8StrSlice` | ✅          | Prefer `Box<str>`           | ❌                  |
+|                    | DST   | `str`                       | ❌          | ✅                          | ❌                  |
+
