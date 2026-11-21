@@ -1,0 +1,19 @@
+error[E0277]: `NonNull<diplomat_feature_tests_rust::ResultOpaque>` cannot be shared between threads safely
+ --> tests/borrow_check/fail/not_sync.rs:9:17
+  |
+9 |     assert_sync(&opaque);
+  |     ----------- ^^^^^^^ `NonNull<diplomat_feature_tests_rust::ResultOpaque>` cannot be shared between threads safely
+  |     |
+  |     required by a bound introduced by this call
+  |
+  = help: within `DiplomatBox<diplomat_feature_tests_rust::ResultOpaque>`, the trait `Sync` is not implemented for `NonNull<diplomat_feature_tests_rust::ResultOpaque>`
+note: required because it appears within the type `DiplomatBox<diplomat_feature_tests_rust::ResultOpaque>`
+ --> src/lib.rs
+  |
+  | pub struct DiplomatBox<T: DiplomatOpaque>(core::ptr::NonNull<T>);
+  |            ^^^^^^^^^^^
+note: required by a bound in `assert_sync`
+ --> tests/borrow_check/fail/not_sync.rs:5:19
+  |
+5 | fn assert_sync<T: Sync>(_: &T) {}
+  |                   ^^^^ required by this bound in `assert_sync`

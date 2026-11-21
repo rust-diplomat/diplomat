@@ -1,0 +1,60 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(module.clone(), \"Foo\")"
+---
+#[repr(C)]
+pub struct Foo {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
+    _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+impl Foo {
+    pub fn bar<'a>(&'a self) -> &'a crate::Bar {
+        // Safety: Borrowed returns are never null, and live as long as the signature says.
+        unsafe { &*Foo_bar(self) }
+    }
+
+    pub fn bar_mut<'a>(&'a mut self) -> &'a mut crate::Bar {
+        // Safety: Borrowed returns are never null, and live as long as the signature says.
+        unsafe { &mut *Foo_bar_mut(self) }
+    }
+
+    pub fn try_bar<'a>(&'a self) -> Result<&'a crate::Bar, ()> {
+        // Safety: Borrowed returns are never null, and live as long as the signature says.
+        unsafe { Foo_try_bar(self) }
+            .into_result()
+            .map(|ok| unsafe { &*ok })
+    }
+
+    pub fn pick<'a, 'b, 'anon_0>(&'a self, other: &'b crate::Bar, s: &'anon_0 str) -> &'a crate::Bar where 'b: 'a {
+        // Safety: Borrowed returns are never null, and live as long as the signature says.
+        unsafe { &*Foo_pick(self, other, crate::DiplomatSlice::new(s.as_bytes())) }
+    }
+
+    pub fn global() -> &'static crate::Bar {
+        // Safety: Borrowed returns are never null, and live as long as the signature says.
+        unsafe { &*Foo_global() }
+    }
+}
+
+extern "C" {
+    fn Foo_bar(this: *const Foo) -> *const crate::Bar;
+    fn Foo_bar_mut(this: *mut Foo) -> *mut crate::Bar;
+    fn Foo_try_bar(this: *const Foo) -> crate::DiplomatResult<*const crate::Bar, ()>;
+    fn Foo_pick(this: *const Foo, other: *const crate::Bar, s: crate::DiplomatSlice<u8>) -> *const crate::Bar;
+    fn Foo_global() -> *const crate::Bar;
+}
+
+// Safety: `Foo_destroy` frees a `Box<Foo>` returned by the library.
+unsafe impl crate::DiplomatOpaque for Foo {
+    unsafe fn destroy(ptr: *mut Self) {
+        Foo_destroy(ptr)
+    }
+}
+
+extern "C" {
+    fn Foo_destroy(this: *mut Foo);
+}

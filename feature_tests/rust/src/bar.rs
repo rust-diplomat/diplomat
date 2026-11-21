@@ -1,17 +1,19 @@
-/// The type behind `Bar` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct BarRaw {
+pub struct Bar {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct Bar(pub(crate) core::ptr::NonNull<BarRaw>);
-
-impl Drop for Bar {
-    fn drop(&mut self) {
-        unsafe { Bar_destroy(self.0.as_ptr()) }
+// Safety: `Bar_destroy` frees a `Box<Bar>` returned by the library.
+unsafe impl crate::DiplomatOpaque for Bar {
+    unsafe fn destroy(ptr: *mut Self) {
+        Bar_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn Bar_destroy(this: *mut BarRaw);
+    fn Bar_destroy(this: *mut Bar);
 }

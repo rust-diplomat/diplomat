@@ -1,17 +1,19 @@
-/// The type behind `RenamedNested2` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct RenamedNested2Raw {
+pub struct RenamedNested2 {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct RenamedNested2(pub(crate) core::ptr::NonNull<RenamedNested2Raw>);
-
-impl Drop for RenamedNested2 {
-    fn drop(&mut self) {
-        unsafe { namespace_Nested2_destroy(self.0.as_ptr()) }
+// Safety: `namespace_Nested2_destroy` frees a `Box<RenamedNested2>` returned by the library.
+unsafe impl crate::DiplomatOpaque for RenamedNested2 {
+    unsafe fn destroy(ptr: *mut Self) {
+        namespace_Nested2_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn namespace_Nested2_destroy(this: *mut RenamedNested2Raw);
+    fn namespace_Nested2_destroy(this: *mut RenamedNested2);
 }

@@ -1,0 +1,9 @@
+error[E0451]: fields `_private` and `_marker` of struct `ResultOpaque` are private
+ --> tests/borrow_check/fail/construct.rs:6:9
+  |
+5 |     let _opaque = ResultOpaque {
+  |                   ------------ in this type
+6 |         _private: [],
+  |         ^^^^^^^^ private field
+7 |         _marker: core::marker::PhantomData,
+  |         ^^^^^^^ private field

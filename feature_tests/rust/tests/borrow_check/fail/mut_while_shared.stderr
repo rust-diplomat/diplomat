@@ -1,0 +1,9 @@
+error[E0502]: cannot borrow `opaque` as mutable because it is also borrowed as immutable
+ --> tests/borrow_check/fail/mut_while_shared.rs:8:5
+  |
+7 |     let Err(shared) = opaque.give_self() else { panic!() };
+  |                       ------ immutable borrow occurs here
+8 |     opaque.takes_str("x");
+  |     ^^^^^^ mutable borrow occurs here
+9 |     shared.assert_integer(5);
+  |     ------ immutable borrow later used here

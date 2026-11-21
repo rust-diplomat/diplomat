@@ -1,0 +1,23 @@
+---
+source: tool/src/rust/gen.rs
+expression: "gen_type(module, \"MyView\")"
+---
+#[repr(C)]
+pub struct MyView {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
+    _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
+}
+
+// Safety: `MyView_destroy` frees a `Box<MyView>` returned by the library.
+unsafe impl crate::DiplomatOpaque for MyView {
+    unsafe fn destroy(ptr: *mut Self) {
+        MyView_destroy(ptr)
+    }
+}
+
+extern "C" {
+    fn MyView_destroy(this: *mut MyView);
+}

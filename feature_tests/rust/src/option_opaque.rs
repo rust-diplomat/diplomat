@@ -1,27 +1,29 @@
-/// The type behind `OptionOpaque` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct OptionOpaqueRaw {
+pub struct OptionOpaque {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
-
-pub struct OptionOpaque(pub(crate) core::ptr::NonNull<OptionOpaqueRaw>);
 
 impl OptionOpaque {
     pub fn assert_integer(&self, i: i32) {
-        unsafe { OptionOpaque_assert_integer(self.0.as_ptr(), i) }
+        unsafe { OptionOpaque_assert_integer(self, i) }
     }
 }
 
 extern "C" {
-    fn OptionOpaque_assert_integer(this: *const OptionOpaqueRaw, i: i32);
+    fn OptionOpaque_assert_integer(this: *const OptionOpaque, i: i32);
 }
 
-impl Drop for OptionOpaque {
-    fn drop(&mut self) {
-        unsafe { OptionOpaque_destroy(self.0.as_ptr()) }
+// Safety: `OptionOpaque_destroy` frees a `Box<OptionOpaque>` returned by the library.
+unsafe impl crate::DiplomatOpaque for OptionOpaque {
+    unsafe fn destroy(ptr: *mut Self) {
+        OptionOpaque_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn OptionOpaque_destroy(this: *mut OptionOpaqueRaw);
+    fn OptionOpaque_destroy(this: *mut OptionOpaque);
 }

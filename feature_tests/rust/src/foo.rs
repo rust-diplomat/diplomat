@@ -1,17 +1,19 @@
-/// The type behind `Foo` pointers at the ABI level.
 #[repr(C)]
-pub(crate) struct FooRaw {
+pub struct Foo {
+    // Lives in the library's memory, so it is only ever reached through `&`, `&mut`
+    // or `DiplomatBox`. Not `Send`, `Sync` or `Unpin`: the library does not say
+    // whether that would be safe.
     _private: [u8; 0],
+    _marker: core::marker::PhantomData<(*mut u8, core::marker::PhantomPinned)>,
 }
 
-pub struct Foo(pub(crate) core::ptr::NonNull<FooRaw>);
-
-impl Drop for Foo {
-    fn drop(&mut self) {
-        unsafe { Foo_destroy(self.0.as_ptr()) }
+// Safety: `Foo_destroy` frees a `Box<Foo>` returned by the library.
+unsafe impl crate::DiplomatOpaque for Foo {
+    unsafe fn destroy(ptr: *mut Self) {
+        Foo_destroy(ptr)
     }
 }
 
 extern "C" {
-    fn Foo_destroy(this: *mut FooRaw);
+    fn Foo_destroy(this: *mut Foo);
 }

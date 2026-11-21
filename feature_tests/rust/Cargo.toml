@@ -13,3 +13,5 @@ publish = false
 # Provides the `extern "C"` symbols the bindings call. Any way of linking the
 # library works; depending on it is simply the easiest in this repository.
 diplomat-feature-tests = { path = ".." }
+# Checks that misusing borrowed opaques fails to compile (`tests/borrow_check.rs`).
+trybuild = "1"
