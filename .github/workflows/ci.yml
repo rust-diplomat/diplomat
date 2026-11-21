@@ -171,6 +171,18 @@ jobs:
     - name: Install cargo-make
       uses: taiki-e/install-action@cargo-make
 
+    # The preinstalled LLVM can be older than what Visual Studio's STL requires
+    # (STL1000), so use the clang that ships with Visual Studio instead.
+    - name: Use Visual Studio's clang
+      if: ${{ matrix.os == 'windows-latest' }}
+      shell: pwsh
+      run: |
+        $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+        Add-Content $env:GITHUB_PATH "$vs\VC\Tools\Llvm\x64\bin"
+
+    - name: clang version
+      run: clang --version
+
     - name: clang, c++17
       run: cargo make check-cpp
       env:
