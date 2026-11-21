@@ -1,0 +1,11 @@
+error[E0507]: cannot move out of dereference of `DiplomatBox<diplomat_feature_tests_rust::ResultOpaque>`
+ --> tests/borrow_check/fail/move_out_of_box.rs:7:31
+  |
+7 |     let moved: ResultOpaque = *opaque;
+  |                               ^^^^^^^ move occurs because value has type `diplomat_feature_tests_rust::ResultOpaque`, which does not implement the `Copy` trait
+  |
+help: consider removing the dereference here
+  |
+7 -     let moved: ResultOpaque = *opaque;
+7 +     let moved: ResultOpaque = opaque;
+  |

@@ -1,0 +1,11 @@
+error[E0505]: cannot move out of `opaque` because it is borrowed
+ --> tests/borrow_check/fail/drop_while_borrowed.rs:8:10
+  |
+6 |     let Ok(opaque) = ResultOpaque::new(5) else { panic!() };
+  |            ------ binding `opaque` declared here
+7 |     let Err(borrowed) = opaque.give_self() else { panic!() };
+  |                         ------ borrow of `opaque` occurs here
+8 |     drop(opaque);
+  |          ^^^^^^ move out of `opaque` occurs here
+9 |     borrowed.assert_integer(5);
+  |     -------- borrow later used here

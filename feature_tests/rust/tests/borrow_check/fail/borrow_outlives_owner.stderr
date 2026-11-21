@@ -1,0 +1,7 @@
+error[E0515]: cannot return value referencing local variable `opaque`
+ --> tests/borrow_check/fail/borrow_outlives_owner.rs:8:5
+  |
+7 |     let Err(borrowed) = opaque.give_self() else { panic!() };
+  |                         ------ `opaque` is borrowed here
+8 |     borrowed
+  |     ^^^^^^^^ returns a value referencing data owned by the current function
